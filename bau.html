@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baufortschritt — Wärmepumpe &amp; Umbau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #15181a;
+    --ink: #ece7dc;
+    --ink-soft: #8d9691;
+    --line: #383f3c;
+    --confirmed: #74c4a5;
+    --confirmed-soft: rgba(116,196,165,0.14);
+    --pending: #e3a75c;
+    --pending-soft: rgba(227,167,92,0.14);
+    --card-bg: #1f2426;
+    --card-shadow: 0 16px 40px rgba(0,0,0,0.55);
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 56px 24px 80px;
+  }
+
+  .wrap{ max-width: 1040px; margin: 0 auto; }
+
+  .eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.15;
+    margin: 0 0 72px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---- Timeline ---- */
+  .timeline{ position: relative; }
+
+  .track{
+    position: relative;
+    height: 4px;
+    background: var(--line);
+    border-radius: 3px;
+  }
+
+  .track-fill{
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--confirmed);
+    border-radius: 3px;
+  }
+
+  .track-pending{
+    position: absolute;
+    top: 0; height: 100%;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--pending) 0px, var(--pending) 6px,
+      transparent 6px, transparent 12px
+    );
+  }
+
+  .nodes{
+    position: relative;
+    display: flex;
+    margin-top: -2px;
+  }
+
+  .node{
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .dot{
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 3px solid var(--confirmed);
+    margin-top: -7px;
+    transition: box-shadow 0.15s ease;
+    z-index: 2;
+    position: relative;
+  }
+
+  .node.pending .dot{ border-color: var(--pending); border-style: dashed; }
+  .node.future .dot{ border-color: var(--ink-soft); background: var(--bg); }
+
+  .node:hover .dot{ box-shadow: 0 0 0 6px rgba(116,196,165,0.18); }
+  .node.pending:hover .dot{ box-shadow: 0 0 0 6px rgba(227,167,92,0.18); }
+  .node.future:hover .dot{ box-shadow: 0 0 0 6px rgba(141,150,145,0.18); }
+
+  .label{
+    margin-top: 16px;
+    text-align: left;
+    width: 118px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .label .step-title{
+    font-weight: 600;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .label .step-date{
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status-pill{
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 8px;
+  }
+  .node .status-pill{ background: var(--confirmed-soft); color: var(--confirmed); }
+  .node.pending .status-pill{ background: var(--pending-soft); color: var(--pending); }
+  .node.future .status-pill{ background: rgba(255,255,255,0.07); color: var(--ink-soft); }
+
+  /* ---- Tooltip ---- */
+  .tooltip{
+    position: absolute;
+    bottom: calc(100% + 22px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 270px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 16px 18px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+    text-align: left;
+  }
+
+  .node:first-child .tooltip{ left: 0; transform: none; }
+  .node:last-child .tooltip{ left: auto; right: 0; transform: none; }
+
+  .node:hover .tooltip{ opacity: 1; pointer-events: auto; }
+
+  .tooltip::after{
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: var(--card-bg);
+  }
+  .node:first-child .tooltip::after{ left: 20px; transform: none; }
+  .node:last-child .tooltip::after{ left: auto; right: 20px; transform: none; }
+
+  .tooltip-title{
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+
+  .tooltip-body{
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .tooltip-body b{ color: var(--ink); font-weight: 600; }
+
+  /* ---- Mobile: vertikal ---- */
+  @media (max-width: 900px){
+    .track{ display: none; }
+    .nodes{ flex-direction: column; margin-top: 0; }
+    .node{
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      width: 100%;
+      padding: 0 0 34px 0;
+    }
+    .node:not(:last-child)::before{
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 22px;
+      bottom: 0;
+      width: 2px;
+      background: var(--line);
+    }
+    .node.pending:not(:last-child)::before{
+      background: repeating-linear-gradient(180deg, var(--pending) 0 4px, transparent 4px 8px);
+    }
+    .dot{ margin-top: 2px; margin-right: 18px; flex-shrink: 0; }
+    .label{ width: auto; margin-top: 0; }
+    .tooltip,
+    .node:first-child .tooltip,
+    .node:last-child .tooltip{
+      position: static;
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+      box-shadow: none;
+      background: transparent;
+      flex-basis: 100%;
+      width: calc(100% - 36px);
+      padding: 0;
+      margin: 10px 0 0 36px;
+    }
+    .tooltip::after{ display: none; }
+  }
+
+  .legend{
+    display: flex;
+    gap: 24px;
+    margin-top: 72px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .legend-item{ display: flex; align-items: center; gap: 8px; }
+  .legend-swatch{ width: 18px; height: 3px; border-radius: 2px; }
+  .legend-swatch.confirmed{ background: var(--confirmed); }
+  .legend-swatch.pending{ background: repeating-linear-gradient(90deg, var(--pending) 0 4px, transparent 4px 8px); }
+  .legend-swatch.future{ background: var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Baufortschritt · Bauentscheid Nr. 2026-0196</div>
+  <h1>Wärmepumpe &amp; Umbau — Bau läuft</h1>
+
+  <div class="timeline">
+    <div class="track">
+      <div class="track-fill" style="width: 21.43%"></div>
+      <div class="track-pending" style="left: 21.43%; width: 78.57%"></div>
+    </div>
+
+    <div class="nodes">
+
+      <div class="node">
+        <div class="dot"></div>
+        <div class="label">
+          <span class="step-title">Baubewilligung</span>
+          <span class="step-date">01.09.2026</span>
+          <span class="status-pill">Erteilt</span>
+        </div>
+        <div class="tooltip">
+          <p class="tooltip-title">Baubewilligung erteilt</p>
+          <p class="tooltip-body">Bauentscheid Nr. 2026-0196 der Stadt Chur vom <b>1. September 2026</b>. Es gingen <b>keine Einsprachen</b> ein, das Tiefbauamt hatte keine Einwände.</p>
+        </div>
+      </div>
+
+      <div class="node">
+        <div class="dot"></div>
+        <div class="label">
+          <span class="step-title">Baubeginn</span>
+          <span class="step-date">ca. 24.09.2026</span>
+          <span class="status-pill">Gestartet</span>
+        </div>
+        <div class="tooltip">
+          <p class="tooltip-title">Bauarbeiten gestartet</p>
+          <p class="tooltip-body">Die Bauarbeiten haben ca. am <b>24. September 2026</b> begonnen.</p>
+        </div>
+      </div>
+
+      <div class="node pending">
+        <div class="dot"></div>
+        <div class="label">
+          <span class="step-title">Wärmepumpe &amp; Hydraulik</span>
+          <span class="step-date">bis Ende Woche</span>
+          <span class="status-pill">Läuft</span>
+        </div>
+        <div class="tooltip">
+          <p class="tooltip-title">Montage Wärmepumpe</p>
+          <p class="tooltip-body">Die Wärmepumpe wurde in den Betrieb von Lucchinetti geliefert und wird von den Monteuren <b>in Kürze vor Ort installiert</b>. Sämtliche <b>hydraulischen Anschlüsse</b> sollen bis Ende dieser Woche fertig sein.</p>
+        </div>
+      </div>
+
+      <div class="node pending">
+        <div class="dot"></div>
+        <div class="label">
+          <span class="step-title">Abdichtung Terrasse</span>
+          <span class="step-date">in den nächsten Tagen</span>
+          <span class="status-pill">Termin offen</span>
+        </div>
+        <div class="tooltip">
+          <p class="tooltip-title">Spengler / Abdichter</p>
+          <p class="tooltip-body">Der Spengler/Abdichter kommt <b>in den nächsten Tagen</b> vorbei, schaut sich die Situation an und plant die fachgerechte Abdichtung. Der genaue Termin ist noch offen. Die betroffene Stelle auf der Terrasse <b>vorher abdecken</b>.</p>
+        </div>
+      </div>
+
+      <div class="node pending">
+        <div class="dot"></div>
+        <div class="label">
+          <span class="step-title">Holzwand &amp; Fassade</span>
+          <span class="step-date">nach Türlieferung</span>
+          <span class="status-pill">Wartet</span>
+        </div>
+        <div class="tooltip">
+          <p class="tooltip-title">Holzwand und Aussenbereich</p>
+          <p class="tooltip-body">Es wird noch auf die <b>Lieferung der Türe</b> gewartet. Danach wird das Holz passgenau zugeschnitten und die Wand fertiggestellt. Anschliessend folgen aussen die <b>Zementfaserplatten</b> und die <b>Verputzarbeiten</b>.</p>
+        </div>
+      </div>
+
+      <div class="node future">
+        <div class="dot"></div>
+        <div class="label">
+          <span class="step-title">Elektro &amp; Inbetriebnahme</span>
+          <span class="step-date">nach Hydraulik</span>
+          <span class="status-pill">Ausstehend</span>
+        </div>
+        <div class="tooltip">
+          <p class="tooltip-title">Elektro und Inbetriebnahme</p>
+          <p class="tooltip-body">Nach den hydraulischen Arbeiten übernimmt der <b>Elektriker</b>. Danach werden die Wasseranschlüsse verbunden, die <b>alte Ölheizung abgekoppelt</b> und die <b>neue Wärmepumpe in Betrieb genommen</b>.</p>
+        </div>
+      </div>
+
+      <div class="node future">
+        <div class="dot"></div>
+        <div class="label">
+          <span class="step-title">Öltank &amp; Türausschnitt</span>
+          <span class="step-date">zum Schluss</span>
+          <span class="status-pill">Ausstehend</span>
+        </div>
+        <div class="tooltip">
+          <p class="tooltip-title">Entsorgung und Türdurchbruch</p>
+          <p class="tooltip-body">Der alte <b>Öltank</b> wird fachgerecht entsorgt, danach wird der endgültige <b>Türausschnitt</b> fertiggestellt.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch confirmed"></span> Erledigt</div>
+    <div class="legend-item"><span class="legend-swatch pending"></span> Läuft / in Planung</div>
+    <div class="legend-item"><span class="legend-swatch future"></span> Noch offen</div>
+  </div>
+
+</div>
+</body>
+</html>
