@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- saved from url=(0041)https://dombuzz.ch/data/files/suncal.html -->
-<html lang="de"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="de">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>☀ Sonnenkalender · Geländeverschattung</title>
-<link href="./☀ Sonnenkalender · Geländeverschattung_files/css2" rel="stylesheet">
-<script src="./☀ Sonnenkalender · Geländeverschattung_files/jspdf.umd.min.js.Herunterladen"></script>
-<script src="./☀ Sonnenkalender · Geländeverschattung_files/jspdf.plugin.autotable.min.js.Herunterladen"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -132,17 +132,17 @@ canvas{display:block}
 </style>
 </head>
 <body>
-<header style="background: linear-gradient(90deg, rgb(9, 16, 31), rgb(7, 16, 28));">
+<header>
   <div><div class="htitle">☀ Sonnenkalender</div><div class="hsub">Geländeverschattung · Beliebige Orte</div></div>
   <div class="hrow">
     <input id="li" class="if" type="text" list="prs" placeholder="Ort oder lat, lon (z.B. Chur oder 46.85, 9.53)">
     <datalist id="prs">
-      <option value="Chur, Graubünden"></option><option value="Davos, GR"></option><option value="Zermatt, VS">
-      </option><option value="St. Moritz, GR"></option><option value="Zürich"></option><option value="Bern">
-      </option><option value="Lugano, TI"></option><option value="Interlaken, BE"></option><option value="Andermatt, UR">
-      </option><option value="Laax, GR"></option><option value="Arosa, GR">
-    </option></datalist>
-    <select id="yr" class="if"><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option></select>
+      <option value="Chur, Graubünden"><option value="Davos, GR"><option value="Zermatt, VS">
+      <option value="St. Moritz, GR"><option value="Zürich"><option value="Bern">
+      <option value="Lugano, TI"><option value="Interlaken, BE"><option value="Andermatt, UR">
+      <option value="Laax, GR"><option value="Arosa, GR">
+    </datalist>
+    <select id="yr" class="if"></select>
     <input type="date" id="date-picker" class="if" title="Bestimmtes Datum anzeigen" style="display:none">
     <button class="btn" id="rb" onclick="run()">Berechnen</button>
   </div>
@@ -184,7 +184,7 @@ canvas{display:block}
     <div class="tpanel act" id="tp0">
       <div class="plbl">Solarigram — Sonnenverlauf übers Jahr (Maus für Tagesdetail)</div>
       <div style="display:flex;gap:0">
-        <div id="yax" style="display:flex;flex-direction:column;justify-content:space-between;width:26px;flex-shrink:0;padding-right:5px"><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">00</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">03</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">06</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">09</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">12</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">15</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">18</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">21</span><span style="font-size: 9px; color: rgb(74, 93, 122); text-align: right; line-height: 1;">24</span></div>
+        <div id="yax" style="display:flex;flex-direction:column;justify-content:space-between;width:26px;flex-shrink:0;padding-right:5px"></div>
         <div class="cvwrap" style="flex:1"><canvas id="solcv"></canvas><div id="cur"></div></div>
       </div>
       <div id="xax" style="display:flex;justify-content:space-between;padding-left:26px;padding-top:4px"></div>
@@ -205,7 +205,7 @@ canvas{display:block}
 
     <!-- TAB 2: Jahresverlauf -->
     <div class="tpanel" id="tp2">
-      <div class="plbl">Sonnenaufgang &amp; Sonnenuntergang (Gelb = direkte Sonne · Blau = Geländeschatten)</div>
+      <div class="plbl">Sonnenaufgang & Sonnenuntergang (Gelb = direkte Sonne · Blau = Geländeschatten)</div>
       <canvas id="rscv" width="730" height="200" style="width:100%;cursor:crosshair"></canvas>
       <div class="plbl2">Tägliche Sonnenscheindauer (Gelb = direkt · Grau gestrichelt = astronomisch möglich)</div>
       <canvas id="dcv" width="730" height="160" style="width:100%;cursor:crosshair"></canvas>
@@ -216,7 +216,7 @@ canvas{display:block}
     <!-- TAB 3: Tabellen -->
     <div class="tpanel" id="tp3">
       <div class="tbswitch">
-        <button class="tsw act" id="t0" onclick="swT(0)">Auf- &amp; Untergang</button>
+        <button class="tsw act" id="t0" onclick="swT(0)">Auf- & Untergang</button>
         <button class="tsw" id="t1" onclick="swT(1)">Sonnendauer</button>
         <button class="tsw" id="t2" onclick="swT(2)">Horizontdaten</button>
       </div>
@@ -1417,6 +1417,5 @@ async function run(){
   document.getElementById('rb').disabled=false;
 }
 </script>
-
-
-</body></html>
+</body>
+</html>
