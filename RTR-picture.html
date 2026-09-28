@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RTR Bild-Downloader</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23c8102e'/%3E%3Crect x='20' y='28' width='60' height='44' rx='6' fill='none' stroke='white' stroke-width='6'/%3E%3Ccircle cx='34' cy='42' r='6' fill='white'/%3E%3Cpath d='M24,66 L40,50 L50,60 L62,44 L76,66 Z' fill='white'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f5f4f2; --card:#ffffff; --text:#1c1c1c; --muted:#6b6b6b;
+    --accent:#c8102e; --accent-dark:#9c0c23; --border:#e2e0dc;
+    --ok:#1f7a3d; --err:#b3261e; --mono:#f0efec;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17171a; --card:#212124; --text:#eeeeee; --muted:#9a9a9a;
+      --accent:#e0384f; --accent-dark:#c8102e; --border:#333336;
+      --ok:#4caf6f; --err:#e0574c; --mono:#2a2a2d;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:40px 16px; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+  }
+  .container{ width:100%; max-width:620px; }
+  h1{ font-size:1.4rem; margin:0 0 4px; letter-spacing:-0.01em; }
+  h2{ font-size:1rem; margin:0 0 4px; letter-spacing:-0.01em; }
+  .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
+  .tabs{ display:flex; gap:4px; background:var(--mono); border:1px solid var(--border); border-radius:10px; padding:4px; margin-bottom:16px; }
+  .tab-btn{ flex:1; background:transparent; color:var(--muted); border:none; border-radius:7px; padding:9px 12px; font-size:0.85rem; font-weight:600; cursor:pointer; }
+  .tab-btn:hover{ filter:none; color:var(--text); }
+  .tab-btn.active{ background:var(--card); color:var(--text); box-shadow:0 1px 2px rgba(0,0,0,0.06); }
+  .section-desc{ color:var(--muted); font-size:0.82rem; margin:0 0 16px; line-height:1.5; }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:24px; margin-bottom:20px;
+  }
+  label{ display:block; font-size:0.8rem; font-weight:600; margin-bottom:6px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  input[type=text], textarea{
+    width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:84px; line-height:1.5; }
+  input[type=text]:focus, textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .field{ margin-bottom:16px; }
+  .row{ display:flex; gap:8px; align-items:stretch; }
+  .row input{ flex:1; }
+  button{
+    font-family:inherit; font-size:0.9rem; font-weight:600; border-radius:8px; border:none;
+    cursor:pointer; padding:11px 16px; transition:filter .15s ease;
+  }
+  button:hover{ filter:brightness(1.06); }
+  button:active{ filter:brightness(0.94); }
+  button:disabled{ opacity:0.5; cursor:default; }
+  .btn-primary{ background:var(--accent); color:#fff; width:100%; padding:13px; font-size:0.95rem; }
+  .btn-secondary{ background:var(--mono); color:var(--text); border:1px solid var(--border); white-space:nowrap; }
+  .btn-block{ width:100%; margin-top:12px; }
+  #result{ margin-top:4px; }
+  .preview-wrap{
+    display:flex; align-items:center; justify-content:center; background:var(--mono);
+    border:1px solid var(--border); border-radius:10px; min-height:140px; overflow:hidden; margin-bottom:16px;
+  }
+  .preview-wrap img{ max-width:100%; max-height:280px; display:block; }
+  .preview-wrap .placeholder{ color:var(--muted); font-size:0.85rem; padding:24px; text-align:center; }
+  .resolution{ display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:var(--muted); margin:6px 2px 16px; min-height:1.1em; }
+  #resolution.low-res{ color:var(--err); font-weight:700; }
+  .badge-row{ text-align:right; margin:-10px 2px 12px; }
+  .badge-low{ display:inline-block; background:var(--err); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; }
+  .note{ font-size:0.78rem; margin:-8px 2px 16px; line-height:1.5; font-weight:600; }
+  .note-sub{ font-size:0.78rem; font-weight:400; }
+  .url-display{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:0.78rem;
+    background:var(--mono); border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+    word-break:break-all; color:var(--muted); margin-bottom:16px;
+  }
+  #status{ margin-top:14px; font-size:0.85rem; line-height:1.5; }
+  #status.ok{ color:var(--ok); }
+  #status.err{ color:var(--err); }
+  #fallback{
+    margin-top:14px; padding:14px; background:var(--mono); border-radius:8px; font-size:0.85rem; line-height:1.6;
+  }
+  #fallback a{ color:var(--accent); font-weight:600; text-decoration:none; }
+  #fallback a:hover{ text-decoration:underline; }
+  .hint{ color:var(--muted); font-size:0.78rem; margin-top:10px; }
+  [hidden]{ display:none !important; }
+
+  /* Batch-Ergebnisliste */
+  .result-list{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  .result-card{
+    display:flex; gap:10px; align-items:center; background:var(--mono); border:1px solid var(--border);
+    border-radius:10px; padding:10px;
+  }
+  .rc-thumb{ width:64px; height:64px; flex:none; border-radius:6px; overflow:hidden; background:var(--card); display:flex; align-items:center; justify-content:center; }
+  .rc-thumb img{ max-width:100%; max-height:100%; object-fit:cover; }
+  .rc-info{ flex:1; min-width:0; }
+  .rc-filename{ width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--text); font-size:0.82rem; font-family:inherit; margin-bottom:4px; }
+  .rc-caption{ font-size:0.72rem; color:var(--muted); margin:0 0 4px; line-height:1.4; }
+  .rc-meta{ display:flex; gap:8px; align-items:center; font-size:0.72rem; color:var(--muted); }
+  .rc-res.low-res{ color:var(--err); font-weight:700; }
+  .rc-badge{ display:inline-block; background:var(--err); color:#fff; font-size:0.62rem; font-weight:700; padding:1px 6px; border-radius:4px; }
+  .rc-status{ font-size:0.72rem; margin-top:3px; min-height:1em; }
+  .rc-status.ok{ color:var(--ok); }
+  .rc-status.err{ color:var(--err); }
+  .rc-error{ font-size:0.82rem; color:var(--err); padding:8px 2px; }
+  .rc-download{ flex:none; font-size:0.8rem; padding:9px 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>RTR Bild-Downloader</h1>
+  <p class="subtitle">Bild-Link von rtr.ch einfügen &rarr; beste verfügbare Auflösung.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" id="tabSingleBtn" role="tab" aria-selected="true">Einzelnes Bild</button>
+    <button class="tab-btn" id="tabBatchBtn" role="tab" aria-selected="false">Mehrere Bilder</button>
+  </div>
+
+  <div class="card" id="singlePanel">
+    <div class="field">
+      <label for="urlInput">BILD-URL oder DATEINAME</label>
+      <input id="urlInput" type="text" placeholder="URL oder z.B. f1a20b.webp" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div id="result" hidden>
+      <div class="preview-wrap" id="previewWrap">
+        <span class="placeholder">Vorschau wird geladen…</span>
+      </div>
+      <div class="resolution">
+        <span id="sourceTag"></span>
+        <span id="resolution"></span>
+      </div>
+      <div class="badge-row"><span class="badge-low" id="lowResBadge" hidden>Nicht optimal</span></div>
+      <p class="note" id="teaserNote" hidden>Das Bild ist scheinbar nur in 1280 × 720 px abgelegt (typisch für Artikelteaser).<br><span class="note-sub">Dies sollte jedoch wie bisher für die meisten Anwendungen ausreichen.</span></p>
+      <p class="rc-caption" id="singleCaption" hidden></p>
+
+      <div class="field">
+        <label for="filenameInput">Dateiname zum Speichern</label>
+        <input id="filenameInput" type="text" spellcheck="false">
+      </div>
+
+      <label>Hochauflösende URL</label>
+      <div class="url-display" id="urlDisplay"></div>
+
+      <div class="row">
+        <button class="btn-primary" id="downloadBtn">Bild herunterladen</button>
+        <button class="btn-secondary" id="copyUrlBtn" title="URL kopieren">URL kopieren</button>
+      </div>
+
+      <div id="status"></div>
+      <div id="fallback" hidden></div>
+    </div>
+  </div>
+
+  <div class="card" id="batchPanel" hidden>
+    <label for="batchInput">ARTIKEL-URL, BILD-URLS ODER DATEINAMEN</label>
+    <div class="field">
+      <textarea id="batchInput" rows="5" placeholder="https://www.rtr.ch/... (Artikel-Link)&#10;&#10;oder mehrere Bild-Links/Dateinamen, einen pro Zeile:&#10;https://www.rtr.ch/static/cms/images/...&#10;f1a20b.webp"></textarea>
+    </div>
+    <button class="btn-secondary btn-block" id="batchProcessBtn">Verarbeiten</button>
+    <p class="hint" id="batchStatus"></p>
+
+    <div class="result-list" id="batchResults"></div>
+    <button class="btn-primary btn-block" id="batchDownloadAllBtn" hidden>Alle herunterladen</button>
+    <p class="hint" id="batchHint" hidden>Der Browser fragt bei vielen gleichzeitigen Downloads evtl. einmalig um Erlaubnis.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ---------- Tabs ---------- */
+  const tabSingleBtn = document.getElementById('tabSingleBtn');
+  const tabBatchBtn = document.getElementById('tabBatchBtn');
+  const singlePanel = document.getElementById('singlePanel');
+  const batchPanel = document.getElementById('batchPanel');
+
+  function showTab(name){
+    const isSingle = name === 'single';
+    singlePanel.hidden = !isSingle;
+    batchPanel.hidden = isSingle;
+    tabSingleBtn.classList.toggle('active', isSingle);
+    tabBatchBtn.classList.toggle('active', !isSingle);
+    tabSingleBtn.setAttribute('aria-selected', String(isSingle));
+    tabBatchBtn.setAttribute('aria-selected', String(!isSingle));
+  }
+
+  tabSingleBtn.addEventListener('click', function(){ showTab('single'); });
+  tabBatchBtn.addEventListener('click', function(){ showTab('batch'); });
+
+  /* ---------- Helpers ---------- */
+  const DEFAULT_BASE = 'https://www.rtr.ch/static/cms/images/dynamic/noop/';
+
+  function convertOne(rawInput){
+    const trimmed = (rawInput || '').trim();
+    if (!trimmed) return { error: 'Leer.' };
+
+    // Nur ein Dateiname eingegeben (z.B. "f1a20b.webp"), keine URL
+    if (!/^[a-z]+:\/\//i.test(trimmed) && /^[\w-]+\.\w+$/i.test(trimmed)) {
+      return { url: DEFAULT_BASE + trimmed, filename: trimmed };
+    }
+
+    // Relativer Pfad ohne Domain (typisch für srcset in Bildergalerien),
+    // z.B. "/static/cms/images/1280w/o-dpr-1/685636.webp"
+    let toParse = trimmed;
+    if (/^\/.*\/cms\/images\//i.test(trimmed)) {
+      toParse = 'https://www.rtr.ch' + trimmed;
+    }
+
+    let u;
+    try {
+      u = new URL(toParse);
+    } catch(e){
+      return { error: 'Keine gültige URL oder Dateiname.' };
+    }
+
+    // SRF-Bildproxy (il.srf.ch/images/?imageUrl=...&width=...)
+    if (u.searchParams.has('imageUrl')) {
+      u.searchParams.set('width', '1920');
+      let stem = 'bild';
+      let ext = u.searchParams.get('format') || 'webp';
+      try {
+        const inner = new URL(u.searchParams.get('imageUrl'));
+        const baseName = inner.pathname.split('/').pop();
+        if (baseName) {
+          stem = baseName.replace(/\.[^./]+$/, '') || baseName;
+        }
+      } catch(e){ /* imageUrl nicht parsbar, Fallback-Namen verwenden */ }
+      return { url: u.toString(), filename: stem + '.' + ext, source: 'srf-thumbnail' };
+    }
+
+    const marker = '/cms/images/';
+    const idx = u.pathname.indexOf(marker);
+    if (idx === -1) {
+      return { error: 'Kein bekanntes Bildformat erkannt.' };
+    }
+    const prefix = u.pathname.slice(0, idx + marker.length);
+    const lastSlash = u.pathname.lastIndexOf('/');
+    const filename = u.pathname.slice(lastSlash + 1);
+    if (!filename) {
+      return { error: 'Konnte keinen Dateinamen aus dem Link lesen.' };
+    }
+    const newPath = prefix + 'dynamic/noop/' + filename;
+    const newUrl = u.origin + newPath;
+    return { url: newUrl, filename: filename };
+  }
+
+  async function downloadImage(url, filename){
+    try {
+      const resp = await fetch(url, { mode: 'cors', cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(blobUrl), 15000);
+      return true;
+    } catch(e){
+      return false;
+    }
+  }
+
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  /* ---------- Einzelnes Bild ---------- */
+  const urlInput = document.getElementById('urlInput');
+  const result = document.getElementById('result');
+  const previewWrap = document.getElementById('previewWrap');
+  const filenameInput = document.getElementById('filenameInput');
+  const urlDisplay = document.getElementById('urlDisplay');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const copyUrlBtn = document.getElementById('copyUrlBtn');
+  const statusEl = document.getElementById('status');
+  const fallbackEl = document.getElementById('fallback');
+  const resolutionEl = document.getElementById('resolution');
+  const sourceTagEl = document.getElementById('sourceTag');
+  const teaserNoteEl = document.getElementById('teaserNote');
+  const lowResBadgeEl = document.getElementById('lowResBadge');
+  const singleCaptionEl = document.getElementById('singleCaption');
+
+  let currentUrl = '';
+  let singleRequestToken = 0;
+  let singleDebounceTimer = null;
+
+  function reset(){
+    result.hidden = true;
+    statusEl.textContent = '';
+    statusEl.className = '';
+    fallbackEl.hidden = true;
+    fallbackEl.innerHTML = '';
+    resolutionEl.textContent = '';
+    resolutionEl.classList.remove('low-res');
+    sourceTagEl.textContent = '';
+    teaserNoteEl.hidden = true;
+    lowResBadgeEl.hidden = true;
+    singleCaptionEl.hidden = true;
+    singleCaptionEl.textContent = '';
+  }
+
+  // Zeigt ein konvertiertes Bild an — optional mit Bildbeschreibung/Quelle,
+  // wenn diese aus einer Artikelseite mitgeliefert wurden.
+  function showSingleResult(res, meta){
+    downloadBtn.disabled = false;
+    currentUrl = res.url;
+    urlDisplay.textContent = res.url;
+    filenameInput.value = res.filename;
+    statusEl.textContent = '';
+    statusEl.className = '';
+    fallbackEl.hidden = true;
+    resolutionEl.textContent = '';
+    resolutionEl.classList.remove('low-res');
+    lowResBadgeEl.hidden = true;
+    sourceTagEl.textContent = res.source === 'srf-thumbnail' ? 'Thumbnail von Audio/Video' : '';
+    if (meta && (meta.caption || meta.credit)) {
+      singleCaptionEl.textContent = meta.caption && meta.credit
+        ? meta.caption + ' — Quelle: ' + meta.credit
+        : meta.caption
+          ? meta.caption
+          : 'Quelle: ' + meta.credit;
+      singleCaptionEl.hidden = false;
+    } else {
+      singleCaptionEl.textContent = '';
+      singleCaptionEl.hidden = true;
+    }
+    previewWrap.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = res.url;
+    img.alt = 'Vorschau';
+    img.onload = function(){
+      const isLow = img.naturalWidth < 1280 || img.naturalHeight < 720;
+      resolutionEl.textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
+      resolutionEl.classList.toggle('low-res', isLow);
+      lowResBadgeEl.hidden = !isLow;
+      teaserNoteEl.hidden = !(img.naturalWidth === 1280 && img.naturalHeight === 720);
+    };
+    img.onerror = function(){
+      previewWrap.innerHTML = '<span class="placeholder">Vorschau nicht verfügbar (Bild konnte nicht geladen werden)</span>';
+      resolutionEl.textContent = '';
+      resolutionEl.classList.remove('low-res');
+      lowResBadgeEl.hidden = true;
+      teaserNoteEl.hidden = true;
+    };
+    previewWrap.appendChild(img);
+    result.hidden = false;
+  }
+
+  // Falls die Eingabe wie eine ganze Artikel-URL aussieht (statt eines direkten
+  // Bildlinks): Seite im Hintergrund laden, erstes gefundenes Bild inkl.
+  // Bildbeschreibung/Quelle übernehmen — dieselbe Erkennung wie im Tab "Mehrere Bilder".
+  async function fetchArticleForSingle(url, myToken){
+    try {
+      const resp = await fetch(url, { mode: 'cors', cache: 'no-store' });
+      if (myToken !== singleRequestToken) return;
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const html = await resp.text();
+      if (myToken !== singleRequestToken) return;
+      const candidates = extractCandidates(html);
+      if (!candidates.length) {
+        statusEl.textContent = 'Kein Bild auf dieser Seite gefunden. Alternativ den Quellcode der Seite in den Tab „Mehrere Bilder" einfügen.';
+        statusEl.className = 'err';
+        previewWrap.innerHTML = '<span class="placeholder">Kein Bild gefunden</span>';
+        downloadBtn.disabled = true;
+        return;
+      }
+      const metaMap = extractGalleryMeta(html);
+      const first = convertOne(candidates[0]);
+      if (first.error) {
+        statusEl.textContent = first.error;
+        statusEl.className = 'err';
+        return;
+      }
+      const stem = first.filename.replace(/\.[^.]+$/, '');
+      showSingleResult(first, metaMap[stem]);
+    } catch(e){
+      if (myToken !== singleRequestToken) return;
+      statusEl.textContent = 'Direkter Zugriff auf diese Seite nicht möglich. Alternativ den Quellcode der Seite in den Tab „Mehrere Bilder" einfügen.';
+      statusEl.className = 'err';
+      previewWrap.innerHTML = '<span class="placeholder">Kein Zugriff möglich</span>';
+      downloadBtn.disabled = true;
+    }
+  }
+
+  function handleInput(){
+    const val = urlInput.value.trim();
+    if (singleDebounceTimer) { clearTimeout(singleDebounceTimer); singleDebounceTimer = null; }
+    singleRequestToken++;
+    if (!val) { reset(); return; }
+
+    const res = convertOne(val);
+    if (!res.error) {
+      showSingleResult(res, null);
+      return;
+    }
+
+    // Kein bekannter Bild-Link, aber eine vollständige URL — evtl. eine
+    // Artikelseite: nach kurzer Tippschreibpause automatisch laden.
+    if (/^https?:\/\//i.test(val)) {
+      reset();
+      statusEl.textContent = 'Prüfe Link…';
+      statusEl.className = '';
+      result.hidden = false;
+      previewWrap.innerHTML = '<span class="placeholder">Prüfe Link…</span>';
+      downloadBtn.disabled = true;
+      const myToken = singleRequestToken;
+      singleDebounceTimer = setTimeout(function(){
+        fetchArticleForSingle(val, myToken);
+      }, 600);
+      return;
+    }
+
+    reset();
+    statusEl.textContent = res.error;
+    statusEl.className = 'err';
+    result.hidden = false;
+    previewWrap.innerHTML = '<span class="placeholder">Kein gültiger RTR-Bildlink</span>';
+    downloadBtn.disabled = true;
+  }
+
+  urlInput.addEventListener('input', handleInput);
+
+  copyUrlBtn.addEventListener('click', async function(){
+    if (!currentUrl) return;
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      copyUrlBtn.textContent = 'Kopiert ✓';
+      setTimeout(()=>{ copyUrlBtn.textContent = 'URL kopieren'; }, 1500);
+    } catch(e){
+      statusEl.textContent = 'Kopieren nicht möglich — URL manuell markieren.';
+      statusEl.className = 'err';
+    }
+  });
+
+  downloadBtn.addEventListener('click', async function(){
+    if (!currentUrl) return;
+    const filename = (filenameInput.value || 'bild.webp').trim();
+    statusEl.textContent = 'Lade Bild…';
+    statusEl.className = '';
+    fallbackEl.hidden = true;
+
+    const ok = await downloadImage(currentUrl, filename);
+    if (ok) {
+      statusEl.textContent = 'Heruntergeladen als „' + filename + '".';
+      statusEl.className = 'ok';
+    } else {
+      statusEl.textContent = 'Automatischer Download nicht möglich (Browser blockiert den Zugriff).';
+      statusEl.className = 'err';
+      fallbackEl.hidden = false;
+      fallbackEl.innerHTML =
+        'Manuell speichern: <a href="' + currentUrl + '" target="_blank" rel="noopener">Bild in neuem Tab öffnen</a>, ' +
+        'dann Rechtsklick &rarr; „Bild speichern unter…" &rarr; Dateiname <strong>' + filename + '</strong>.';
+    }
+  });
+
+  /* ---------- Mehrere Links auf einmal ---------- */
+  function buildResultCard(item){
+    if (item.error) {
+      const errWrap = document.createElement('div');
+      errWrap.className = 'rc-error';
+      errWrap.textContent = (item.raw || '') + ' — ' + item.error;
+      return { el: errWrap, valid: false };
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'result-card';
+
+    const thumbWrap = document.createElement('div');
+    thumbWrap.className = 'rc-thumb';
+    const img = document.createElement('img');
+    img.alt = 'Vorschau';
+    thumbWrap.appendChild(img);
+
+    const info = document.createElement('div');
+    info.className = 'rc-info';
+
+    const filenameField = document.createElement('input');
+    filenameField.type = 'text';
+    filenameField.className = 'rc-filename';
+    filenameField.value = item.filename;
+    filenameField.spellcheck = false;
+
+    const meta = document.createElement('div');
+    meta.className = 'rc-meta';
+    const resSpan = document.createElement('span');
+    resSpan.className = 'rc-res';
+    resSpan.textContent = 'lädt…';
+    const badge = document.createElement('span');
+    badge.className = 'rc-badge';
+    badge.textContent = 'Nicht optimal';
+    badge.hidden = true;
+    meta.appendChild(resSpan);
+    meta.appendChild(badge);
+
+    const statusLine = document.createElement('div');
+    statusLine.className = 'rc-status';
+
+    info.appendChild(filenameField);
+
+    if (item.caption || item.credit) {
+      const captionLine = document.createElement('div');
+      captionLine.className = 'rc-caption';
+      captionLine.textContent = item.caption && item.credit
+        ? item.caption + ' — Quelle: ' + item.credit
+        : item.caption
+          ? item.caption
+          : 'Quelle: ' + item.credit;
+      info.appendChild(captionLine);
+    }
+
+    info.appendChild(meta);
+    info.appendChild(statusLine);
+
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'btn-secondary rc-download';
+    dlBtn.textContent = 'Herunterladen';
+
+    wrap.appendChild(thumbWrap);
+    wrap.appendChild(info);
+    wrap.appendChild(dlBtn);
+
+    img.src = item.url;
+    img.onload = function(){
+      const isLow = img.naturalWidth < 1280 || img.naturalHeight < 720;
+      resSpan.textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
+      resSpan.classList.toggle('low-res', isLow);
+      badge.hidden = !isLow;
+    };
+    img.onerror = function(){
+      resSpan.textContent = 'Vorschau fehlgeschlagen';
+    };
+
+    const card = { el: wrap, valid: true, downloadBtn: dlBtn, url: item.url };
+
+    dlBtn.addEventListener('click', async function(){
+      const filename = filenameField.value.trim() || item.filename;
+      statusLine.textContent = 'Lade…';
+      statusLine.className = 'rc-status';
+      const ok = await downloadImage(item.url, filename);
+      if (ok) {
+        statusLine.textContent = 'Heruntergeladen ✓';
+        statusLine.className = 'rc-status ok';
+      } else {
+        statusLine.textContent = 'Fehlgeschlagen — Vorschau: Rechtsklick → Bild speichern unter…';
+        statusLine.className = 'rc-status err';
+      }
+    });
+
+    return card;
+  }
+
+  function renderResultsInto(container, items){
+    container.innerHTML = '';
+    const cards = [];
+    items.forEach(function(item){
+      const card = buildResultCard(item);
+      container.appendChild(card.el);
+      if (card.valid) cards.push(card);
+    });
+    return cards;
+  }
+
+  async function downloadAllFromCards(cards){
+    for (const c of cards) {
+      c.downloadBtn.click();
+      await sleep(400);
+    }
+  }
+
+  const batchInput = document.getElementById('batchInput');
+  const batchProcessBtn = document.getElementById('batchProcessBtn');
+  const batchResultsEl = document.getElementById('batchResults');
+  const batchDownloadAllBtn = document.getElementById('batchDownloadAllBtn');
+  const batchHintEl = document.getElementById('batchHint');
+  const batchStatusEl = document.getElementById('batchStatus');
+  let currentBatchCards = [];
+
+  // Entkommt gängige Escapes, wie sie in eingebettetem JSON/JS-Quelltext vorkommen
+  // (z.B. "https:\/\/..." oder "&quot;"), damit Links und Begleittexte auch dort erkannt werden.
+  function decodeHtml(text){
+    return text
+      .replace(/&quot;/g, '"')
+      .replace(/&#0?39;|&apos;/g, "'")
+      .replace(/&amp;/g, '&')
+      .replace(/\\u002[fF]/g, '/')
+      .replace(/\\\//g, '/');
+  }
+
+  // Entfernt HTML-Tags aus einem Textbaustein und normalisiert Whitespace.
+  function stripTags(html){
+    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  // Dekodiert auch benannte HTML-Entities (z.B. &uuml;, &ndash;) über den Browser
+  // selbst — zuverlässiger als eine manuell gepflegte Liste.
+  function decodeEntitiesFinal(str){
+    if (!str) return str;
+    const ta = document.createElement('textarea');
+    ta.innerHTML = str;
+    return ta.value;
+  }
+
+  // Liest zu jeder Bild-ID die Bildbeschreibung und die Bildquelle aus der
+  // Umgebung von "data-image-id" im Quelltext, sofern vorhanden.
+  function extractGalleryMeta(text){
+    const decoded = decodeHtml(text);
+    const meta = {};
+    const idMatches = Array.from(decoded.matchAll(/data-image-id="([a-z0-9]+)"/gi));
+    const descRe = /<span[^>]*data-app-image-description[^>]*>([\s\S]*?)<\/span>/i;
+    // Bevorzugt: dediziertes Quelle-Element (analog zur Beschreibung), sonst
+    // Rückfall auf den älteren "Bildquelle: ..."-Text in Offscreen-Spans.
+    const sourceRe = /<span[^>]*data-app-image-source[^>]*>([\s\S]*?)<\/span>/i;
+    idMatches.forEach(function(m, i){
+      const id = m[1];
+      const idPos = m.index;
+      const backStart = i > 0 ? idMatches[i-1].index : Math.max(0, idPos - 1200);
+      const fwdEnd = i < idMatches.length - 1 ? idMatches[i+1].index : Math.min(decoded.length, idPos + 1200);
+      const backText = decoded.slice(backStart, idPos);
+      const fwdText = decoded.slice(idPos, fwdEnd);
+      const descMatch = descRe.exec(fwdText) || descRe.exec(backText);
+      const altMatch = /alt="([^"]*)"/i.exec(fwdText);
+      const rawCaption = descMatch ? stripTags(descMatch[1]) : (altMatch ? altMatch[1].trim() : '');
+      const caption = decodeEntitiesFinal(rawCaption);
+      const sourceMatch = sourceRe.exec(fwdText) || sourceRe.exec(backText);
+      let rawCredit = '';
+      if (sourceMatch) {
+        rawCredit = stripTags(sourceMatch[1]);
+      } else {
+        const creditMatches = Array.from(backText.matchAll(/Bildquelle:\s*([^<]+)/gi));
+        rawCredit = creditMatches.length ? creditMatches[creditMatches.length - 1][1].trim() : '';
+      }
+      const credit = decodeEntitiesFinal(rawCredit);
+      if (caption || credit) meta[id] = { caption: caption, credit: credit };
+    });
+    return meta;
+  }
+
+  // Findet RTR-/SRF-Bildlinks auch mitten in Fliesstext oder HTML-Quelltext,
+  // plus reine Dateinamen, wenn sie allein auf einer Zeile stehen.
+  function extractCandidates(text){
+    const decoded = decodeHtml(text);
+    const patterns = [
+      /https?:\/\/[^\s"'<>\\]+\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif)/gi,
+      // il.srf.ch, il.rtr.ch, il.rsi.ch, il.rts.ch, il.swissinfo.ch — derselbe SRG-SSR-Bildproxy auf allen Portalen
+      /https?:\/\/il\.[a-z0-9-]+\.ch\/images\/\?[^\s"'<>\\]+/gi
+    ];
+    const found = new Set();
+    patterns.forEach(function(re){
+      let m;
+      while ((m = re.exec(decoded))) {
+        found.add(m[0].replace(/[)\].,;:'"]+$/, ''));
+      }
+    });
+
+    // Relative Pfade ohne Domain, typisch im srcset von Bildergalerien,
+    // z.B. srcset="/static/cms/images/1280w/o-dpr-1/685636.webp"
+    // (nur wenn direkt nach Anführungszeichen/Whitespace, nicht Teil einer bereits gefundenen absoluten URL)
+    const relRe = /(?:^|["'\s,])(\/[a-z0-9/_-]*\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif))/gi;
+    let rm;
+    while ((rm = relRe.exec(decoded))) {
+      found.add(rm[1].replace(/[)\].,;:'"]+$/, ''));
+    }
+
+    // data-image-id="6d8f4a" — Bildergalerien vermerken die Bild-ID so, unabhängig vom Lazy-Load-Zustand
+    const idRe = /data-image-id="([a-z0-9]+)"/gi;
+    let im;
+    while ((im = idRe.exec(decoded))) {
+      found.add('https://www.rtr.ch/static/cms/images/1280w/o-dpr-1/' + im[1] + '.webp');
+    }
+
+    decoded.split('\n').forEach(function(line){
+      const trimmed = line.trim();
+      if (/^[\w-]+\.\w+$/i.test(trimmed)) found.add(trimmed);
+    });
+    return Array.from(found);
+  }
+
+  function showBatchResults(items){
+    currentBatchCards = renderResultsInto(batchResultsEl, items);
+    batchDownloadAllBtn.hidden = currentBatchCards.length === 0;
+    batchHintEl.hidden = currentBatchCards.length === 0;
+    return currentBatchCards.length;
+  }
+
+  function processCandidates(candidates, metaMap){
+    const seen = new Set();
+    const items = [];
+    candidates.forEach(function(candidate){
+      const res = convertOne(candidate);
+      if (res.error) { items.push({ raw: candidate, error: res.error }); return; }
+      if (seen.has(res.url)) return;
+      seen.add(res.url);
+      if (metaMap) {
+        const stem = res.filename.replace(/\.[^.]+$/, '');
+        const meta = metaMap[stem];
+        if (meta) {
+          res.caption = meta.caption;
+          res.credit = meta.credit;
+        }
+      }
+      items.push(res);
+    });
+    return items;
+  }
+
+  batchProcessBtn.addEventListener('click', async function(){
+    const raw = batchInput.value;
+    if (!raw.trim()) return;
+
+    const candidates = extractCandidates(raw);
+    if (candidates.length) {
+      const metaMap = extractGalleryMeta(raw);
+      const count = showBatchResults(processCandidates(candidates, metaMap));
+      batchStatusEl.textContent = count + ' Bild(er) gefunden.';
+      batchStatusEl.className = 'hint ok';
+      return;
+    }
+
+    // Keine Bildlinks direkt erkannt — wenn es wie eine einzelne Artikel-URL aussieht,
+    // wird die Seite automatisch geladen und darin nach Bildern gesucht.
+    const trimmed = raw.trim();
+    const looksLikeSingleUrl = !trimmed.includes('\n') && /^https?:\/\//i.test(trimmed);
+    if (!looksLikeSingleUrl) {
+      batchResultsEl.innerHTML = '';
+      batchDownloadAllBtn.hidden = true;
+      batchStatusEl.textContent = 'Keine passenden Bild-Links gefunden.';
+      batchStatusEl.className = 'hint err';
+      return;
+    }
+
+    batchStatusEl.textContent = 'Lade Artikel-Seite…';
+    batchStatusEl.className = 'hint';
+    batchResultsEl.innerHTML = '';
+    batchDownloadAllBtn.hidden = true;
+    try {
+      const resp = await fetch(trimmed, { mode: 'cors', cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const html = await resp.text();
+      const found = extractCandidates(html);
+      if (!found.length) {
+        batchStatusEl.textContent = 'Seite geladen, aber keine passenden Bild-Links gefunden.';
+        batchStatusEl.className = 'hint err';
+        return;
+      }
+      const metaMap = extractGalleryMeta(html);
+      const count = showBatchResults(processCandidates(found, metaMap));
+      batchStatusEl.textContent = count + ' Bild(er) gefunden.';
+      batchStatusEl.className = 'hint ok';
+    } catch(e){
+      batchStatusEl.textContent = 'Automatischer Abruf dieser Seite nicht möglich. Stattdessen: Seitenquelltext holen (auf der Artikelseite Rechtsklick → „Seitenquelltext anzeigen" bzw. Strg/Cmd+U → alles kopieren), hier ins Feld einfügen und nochmals auf „Verarbeiten" klicken.';
+      batchStatusEl.className = 'hint err';
+    }
+  });
+
+  batchDownloadAllBtn.addEventListener('click', function(){
+    downloadAllFromCards(currentBatchCards);
+  });
+})();
+</script>
+</body>
+</html>
