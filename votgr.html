@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abstimmungskarten 16:9</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23333333%22/%3E%3Cpolygon%20points%3D%2224.18%2C36.09%2017.10%2C40.17%2010.03%2C36.09%2010.03%2C27.91%2017.10%2C23.83%2024.18%2C27.91%22%20fill%3D%22%238e0012%22/%3E%3Cpolygon%20points%3D%2239.08%2C36.09%2032.00%2C40.17%2024.92%2C36.09%2024.92%2C27.91%2032.00%2C23.83%2039.08%2C27.91%22%20fill%3D%22%23e0213a%22/%3E%3Cpolygon%20points%3D%2253.97%2C36.09%2046.90%2C40.17%2039.82%2C36.09%2039.82%2C27.91%2046.90%2C23.83%2053.97%2C27.91%22%20fill%3D%22%23f08a96%22/%3E%3Cpolygon%20points%3D%2231.63%2C22.93%2024.55%2C27.01%2017.48%2C22.93%2017.48%2C14.76%2024.55%2C10.67%2031.63%2C14.76%22%20fill%3D%22%23e0213a%22/%3E%3Cpolygon%20points%3D%2246.52%2C22.93%2039.45%2C27.01%2032.37%2C22.93%2032.37%2C14.76%2039.45%2C10.67%2046.52%2C14.76%22%20fill%3D%22%23b3001c%22/%3E%3Cpolygon%20points%3D%2231.63%2C49.24%2024.55%2C53.33%2017.48%2C49.24%2017.48%2C41.07%2024.55%2C36.99%2031.63%2C41.07%22%20fill%3D%22%23f08a96%22/%3E%3Cpolygon%20points%3D%2246.52%2C49.24%2039.45%2C53.33%2032.37%2C49.24%2032.37%2C41.07%2039.45%2C36.99%2046.52%2C41.07%22%20fill%3D%22%23e0213a%22/%3E%3C/svg%3E">
+<style>
+  :root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--ink:#ececef;--mute:#9a9aa2;--line:#2f2f34;--acc:#e0213a;--acc2:#8e0012;--link:#ff6b7d;color-scheme:dark}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:980px;margin:0 auto;padding:28px 16px 60px;position:relative}
+  #gear{position:absolute;top:22px;right:16px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--mute);font-size:22px;line-height:1;padding:0;cursor:pointer}
+  #gear:hover,#gear[aria-expanded=true]{color:var(--ink);border-color:var(--ink)}
+  h1{padding-right:56px}
+  h1{font-size:26px;margin:0 0 4px}
+  h2{font-size:17px;margin:0 0 10px}
+  p.sub{color:var(--mute);margin:0 0 24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:18px}
+  input[type=number],select{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--field);color:var(--ink)}
+  .opts{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center}
+  .opts input[type=number]{width:80px}
+  .bm{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px;cursor:grab;box-shadow:0 2px 0 var(--acc2)}
+  .bm:hover{filter:brightness(1.1)}
+  table{border-collapse:collapse;width:100%;margin-top:8px}
+  td{padding:7px 8px;border-top:1px solid var(--line);vertical-align:top}
+  td:first-child{white-space:nowrap;font-weight:600;width:230px}
+  ol{margin:8px 0 0;padding-left:20px}
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--mute);cursor:pointer}
+  .drop.over{border-color:var(--link);color:var(--link)}
+  #log{font:13px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:var(--mute);margin-top:10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:14px}
+  .grid figure{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+  .grid img{background:#fff;display:block;width:100%;aspect-ratio:16/9}
+  .grid figcaption{padding:8px 10px;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+  .grid a{color:var(--link);font-weight:600}
+  a{color:var(--link)}
+  code{background:var(--field);padding:1px 5px;border-radius:4px}
+  small{color:var(--mute)}
+  @media (max-width:640px){td:first-child{white-space:normal;width:auto}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Abstimmungskarten 16:9</h1>
+  <p class="sub">Gemeindekarten von abstimmungen.gr.ch als PNG in 4K (16:9) – für jede Abstimmung, auch künftige. Keine Links nötig.</p>
+
+  <button id="gear" type="button" aria-label="Einstellungen" title="Einstellungen" aria-expanded="false">⚙</button>
+  <section class="card" id="settings" hidden>
+    <h2>Einstellungen</h2>
+    <div class="opts">
+      <label>Auflösung <select id="w"><option value="3840" selected>4K 3840×2160</option><option value="1920">Full HD 1920×1080</option></select></label>
+      <label>Rand oben/unten <input type="number" id="pad" value="45" min="0" max="300"> px</label>
+      <label>Dateinamen <select id="lang"><option value="rm_CH" selected>Rumantsch</option><option value="de_CH">Deutsch</option></select></label>
+    </div>
+    <p style="margin:10px 0 0"><small>Standard: 4K · Rand 45 px · Rumantsch. Nach einer Änderung den Button unten neu in die Lesezeichenleiste ziehen.</small></p>
+  </section>
+
+  <section class="card">
+    <h2>1 · Ein-Klick-Download (Lesezeichen)</h2>
+    <p><a class="bm" id="bm" href="#" title="In die Lesezeichenleiste ziehen">⬇ GR-Karten 16:9</a></p>
+    <ol>
+      <li>Den roten Button <b>einmal in die Lesezeichenleiste ziehen</b> (Leiste einblenden: Cmd/Ctrl + Shift + B).</li>
+      <li><a href="https://abstimmungen.gr.ch/" target="_blank" rel="noopener">abstimmungen.gr.ch</a> öffnen und auf das Lesezeichen klicken.</li>
+    </ol>
+    <p style="margin-bottom:4px">Beim Klick öffnet sich auf der Kantonsseite eine Auswahl:</p>
+    <table>
+      <tr><td>Jahr wählen</td><td>alle Jahre, die der Kanton im Archiv führt (zurück bis 2013)</td></tr>
+      <tr><td>Abstimmungstag / Vorlagen anhaken</td><td>ganzer Sonntag oder einzelne Vorlagen – beliebig viele, auch über mehrere Daten</td></tr>
+      <tr><td>Vorauswahl</td><td>Startseite → aktuellster Sonntag · Archivseite → dieses Datum · Vorlagenseite → nur diese Vorlage</td></tr>
+    </table>
+    <p style="margin-bottom:0"><small>Die Liste wird bei jedem Klick live beim Kanton abgefragt – neue Abstimmungen erscheinen automatisch, es muss nichts angepasst werden. Gegenvorschlag/Stichfrage erhalten je eine eigene Karte. Meldet es «noch nicht erstellt», generiert der Kanton die Karte noch – einige Minuten warten. Personenwahlen sind nicht enthalten.</small></p>
+  </section>
+
+  <section class="card">
+    <h2>2 · Alternative: SVG-Dateien hier hineinziehen</h2>
+    <p style="margin-top:0">Falls das Lesezeichen einmal nicht geht: SVG-Karte öffnen, mit Cmd/Ctrl + S speichern und hier ablegen.</p>
+    <div class="drop" id="drop">SVG-Dateien hierher ziehen oder klicken<input type="file" id="file" accept=".svg,image/svg+xml" multiple hidden></div>
+    <div id="log"></div>
+    <div class="grid" id="out"></div>
+  </section>
+</main>
+
+<script>
+/* ---------- Kern: SVG-Text -> PNG-Blob im 16:9-Format ---------- */
+async function gr169(svgText, o) {
+  o = o || {};
+  var W = o.w || 1920, H = Math.round(W * 9 / 16), P = (o.pad == null ? 45 : o.pad) * W / 1920;
+  var doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  var s = doc.documentElement;
+  if (!s || s.nodeName.toLowerCase() !== 'svg') throw new Error('Keine SVG-Datei');
+  if (o.noLegend) {
+    s.querySelectorAll('g').forEach(function (g) {
+      var k = Array.prototype.slice.call(g.children);
+      if (k.length && k.every(function (c) { return /^(rect|text|line)$/i.test(c.tagName); })) g.remove();
+    });
+    s.querySelectorAll('text,[class*=legend],[id*=legend]').forEach(function (e) { e.remove(); });
+  }
+  s.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  s.setAttribute('shape-rendering', 'geometricPrecision');
+  var num = function (a) { var v = s.getAttribute(a); return v && v.indexOf('%') < 0 ? parseFloat(v) : 0; };
+  var vb = s.getAttribute('viewBox'), V;
+  if (vb) V = vb.trim().split(/[\s,]+/).map(Number);
+  else V = [0, 0, num('width') || 1000, num('height') || 700];
+  var load = function (pw, ph) {
+    s.setAttribute('width', pw); s.setAttribute('height', ph);
+    var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(s))));
+    return new Promise(function (res, rej) { var i = new Image(); i.onload = function () { res(i); }; i.onerror = function () { rej(new Error('SVG konnte nicht gerendert werden')); }; i.src = url; });
+  };
+  /* 1) Inhalt vermessen (Rand der Karte in SVG-Koordinaten) */
+  s.setAttribute('viewBox', V.join(' ')); s.setAttribute('preserveAspectRatio', 'none');
+  var K = 3000 / Math.max(V[2], V[3]), cw = Math.round(V[2] * K), ch = Math.round(V[3] * K);
+  var img = await load(cw, ch);
+  var c1 = document.createElement('canvas'); c1.width = cw; c1.height = ch;
+  var x1 = c1.getContext('2d'); x1.drawImage(img, 0, 0, cw, ch);
+  var d = x1.getImageData(0, 0, cw, ch).data, minX = cw, minY = ch, maxX = -1, maxY = -1;
+  for (var y = 0; y < ch; y++) for (var x = 0; x < cw; x++) {
+    var k = (y * cw + x) * 4;
+    if (d[k + 3] > 20 && !(d[k] > 245 && d[k + 1] > 245 && d[k + 2] > 245)) {
+      if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) throw new Error('SVG ist leer');
+  var ux = V[0] + minX / (cw / V[2]), uy = V[1] + minY / (ch / V[3]);
+  var uw = (maxX - minX + 1) / (cw / V[2]), uh = (maxY - minY + 1) / (ch / V[3]);
+  /* 2) 16:9-Ausschnitt direkt als Vektor in Zielgrösse rendern -> gestochen scharf */
+  var sc = Math.min((W - 2 * P) / uw, (H - 2 * P) / uh);
+  var vw = W / sc, vh = H / sc;
+  s.setAttribute('viewBox', [ux + uw / 2 - vw / 2, uy + uh / 2 - vh / 2, vw, vh].join(' '));
+  s.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  img = await load(W, H);
+  var c = document.createElement('canvas'); c.width = W; c.height = H;
+  var cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, W, H);
+  cx.drawImage(img, 0, 0, W, H);
+  return await new Promise(function (res) { c.toBlob(res, 'image/png'); });
+}
+
+function grSave(blob, name) {
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+}
+
+/* ---------- Läuft im Lesezeichen auf abstimmungen.gr.ch ---------- */
+async function grRun(C) {
+  var old = document.getElementById('gr169box'); if (old) old.remove();
+  var box = document.createElement('div'); box.id = 'gr169box'; document.body.appendChild(box);
+  box.style.cssText = 'position:fixed;z-index:99999;right:16px;top:16px;width:440px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow:auto;background:#1d1d1f;color:#fff;font:14px/1.45 system-ui,sans-serif;padding:14px 16px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35);text-align:left';
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  box.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>GR-Karten 16:9</b><span id="grX" style="cursor:pointer;font-size:20px;line-height:1">×</span></div><div id="grBody">Lade Übersicht …</div><div id="grLog" style="margin-top:10px"></div>';
+  box.querySelector('#grX').onclick = function () { box.remove(); };
+  var body = box.querySelector('#grBody'), logEl = box.querySelector('#grLog');
+  var say = function (t) { logEl.innerHTML += t + '<br>'; logEl.scrollIntoView({ block: 'end' }); };
+  if (!/(^|\.)abstimmungen\.gr\.ch$/.test(location.hostname)) {
+    body.innerHTML = 'Bitte zuerst abstimmungen.gr.ch öffnen und dann nochmals klicken …';
+    setTimeout(function () { location.href = 'https://abstimmungen.gr.ch/'; }, 2500); return;
+  }
+  var getJ = function (u) { return fetch(u, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
+  var slug = function (s) { return (s || '').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/[àâ]/g, 'a').replace(/[èéê]/g, 'e').replace(/[ìî]/g, 'i').replace(/[òô]/g, 'o').replace(/[ùû]/g, 'u').replace(/[^A-Za-z0-9]+/g, '').slice(0, 60) || 'Karte'; };
+  var tr = function (o) { return o ? (o[C.lang] || o.de_CH || o[Object.keys(o)[0]]) : ''; };
+  var pathOf = function (u) { return new URL(u, location.origin).pathname; };
+  var fmt = function (d) { var p = d.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; };
+
+  /* Kontext: auf welcher Seite wurde geklickt? */
+  var p = location.pathname, m, ctxVote = null, ctxDate = null;
+  if ((m = p.match(/^\/vote\/([^\/]+)/))) ctxVote = '/vote/' + m[1];
+  if ((m = p.match(/^\/archive\/(\d{4}-\d{2}-\d{2})/))) ctxDate = m[1];
+  var idx;
+  try { idx = await getJ('/json'); } catch (e) { body.innerHTML = '❌ Übersicht nicht lesbar: ' + esc(e.message); return; }
+  var latest = (idx.results || []).filter(function (r) { return r.type === 'vote'; }).map(function (r) { return r.date; }).sort().pop();
+  if (ctxVote) { try { ctxDate = (await getJ(ctxVote + '/json')).date; } catch (e) {} }
+  var selDate = ctxDate || latest || '';
+  var years = Object.keys(idx.archive || {}).sort().reverse();
+  if (selDate && years.indexOf(selDate.slice(0, 4)) < 0) years.unshift(selDate.slice(0, 4));
+  var sel = 'background:#2a2a2e;color:#fff;border:1px solid #444;color-scheme:dark;border-radius:6px;padding:5px 8px;font:inherit';
+  body.innerHTML = '<label>Jahr <select id="grY" style="' + sel + '">' + years.map(function (y) { return '<option>' + y + '</option>'; }).join('') + '</select></label>' +
+    '<div id="grList" style="margin:10px 0;max-height:52vh;overflow:auto;border-top:1px solid #444;border-bottom:1px solid #444;padding:6px 0"></div>' +
+    '<button id="grGo" style="background:#c00018;color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer">Ausgewählte herunterladen</button>';
+  var ySel = body.querySelector('#grY'), list = body.querySelector('#grList');
+  if (selDate) ySel.value = selDate.slice(0, 4);
+
+  async function loadYear(y) {
+    list.innerHTML = 'Lade ' + y + ' …';
+    var L; try { L = await getJ('/archive/' + y + '/json'); } catch (e) { list.innerHTML = '❌ ' + esc(e.message); return; }
+    var byDate = {};
+    (L.results || []).filter(function (r) { return r.type === 'vote'; }).forEach(function (r) { (byDate[r.date] = byDate[r.date] || []).push(r); });
+    var dates = Object.keys(byDate).sort().reverse();
+    if (!dates.length) { list.innerHTML = 'Keine Abstimmungen in ' + y + '.'; return; }
+    list.innerHTML = dates.map(function (d) {
+      var on = d === selDate;
+      return '<details ' + (on ? 'open' : '') + ' style="margin:2px 0"><summary style="cursor:pointer;padding:3px 0"><label><input type="checkbox" class="grD" ' + (on && !ctxVote ? 'checked' : '') + '> <b>' + fmt(d) + '</b> <span style="opacity:.6">(' + byDate[d].length + ')</span></label></summary>' +
+        byDate[d].map(function (r) {
+          var u = pathOf(r.url), chk = on && (!ctxVote || ctxVote === u);
+          return '<label style="display:block;padding:2px 0 2px 22px"><input type="checkbox" class="grV" data-u="' + esc(u) + '" ' + (chk ? 'checked' : '') + '> ' + esc(tr(r.title)) + '</label>';
+        }).join('') + '</details>';
+    }).join('');
+    list.querySelectorAll('.grD').forEach(function (cb) {
+      cb.onclick = function (e) { e.stopPropagation(); cb.closest('details').querySelectorAll('.grV').forEach(function (v) { v.checked = cb.checked; }); };
+    });
+  }
+  ySel.onchange = function () { loadYear(ySel.value); };
+  await loadYear(ySel.value);
+
+  body.querySelector('#grGo').onclick = async function () {
+    var votes = Array.prototype.map.call(list.querySelectorAll('.grV:checked'), function (v) { return v.getAttribute('data-u'); });
+    logEl.innerHTML = '';
+    if (!votes.length) { say('Bitte mindestens eine Vorlage anhaken.'); return; }
+    var btn = this; btn.disabled = true; btn.style.opacity = .5;
+    var LBL = { 'proposal': 'Vorlage', 'counter-proposal': 'Gegenvorschlag', 'tie-breaker': 'Stichfrage' };
+    for (var i = 0; i < votes.length; i++) {
+      var V, name;
+      try { V = await getJ(votes[i] + '/json'); } catch (e) { say('❌ ' + esc(votes[i]) + ': ' + esc(e.message)); continue; }
+      name = tr(V.short_title) || tr(V.title) || votes[i].split('/').pop();
+      var found = [];
+      (function walk(o, path) {
+        if (!o) return;
+        if (typeof o === 'string') { if (/entities-map-svg/.test(o) || (C.districts && /districts-map-svg/.test(o))) found.push({ url: o, path: path }); return; }
+        if (typeof o === 'object') Object.keys(o).forEach(function (k) { walk(o[k], path.concat(k)); });
+      })((V.media || {}).maps, []);
+      if (!found.length) { say('⏳ ' + esc(name) + ': noch keine Karte verfügbar.'); continue; }
+      for (var j = 0; j < found.length; j++) {
+        var f = found[j];
+        var extra = f.path.map(function (k) { return k.replace(/-?(entities|districts)$/, ''); }).filter(function (k) { return k && !/^\d+$/.test(k); }).map(function (k) { return LBL[k] || k; }).join('-');
+        var suf = (extra ? '_' + slug(extra) : '') + (/districts/.test(f.url) ? '_Regionen' : '');
+        var label = name + (suf ? ' (' + suf.replace(/^_/, '').replace(/_/g, ', ') + ')' : '');
+        try {
+          var r = await fetch(pathOf(f.url), { cache: 'no-store' });
+          var t = await r.text();
+          if (r.status !== 200 || !((r.headers.get('content-type') || '').indexOf('svg') >= 0 || /^\s*(<\?xml|<svg)/.test(t))) { say('⏳ ' + esc(label) + ': noch nicht erstellt – später nochmals.'); continue; }
+          grSave(await gr169(t, C), (V.date || '') + '_' + slug(name) + suf + '_16x9.png');
+          say('✅ ' + esc(label));
+          await new Promise(function (z) { setTimeout(z, 500); });
+        } catch (e) { say('❌ ' + esc(label) + ': ' + esc(e.message)); }
+      }
+    }
+    say('<span style="opacity:.6">Fertig.</span>');
+    btn.disabled = false; btn.style.opacity = 1;
+  };
+}
+
+/* ---------- Seitenlogik ---------- */
+var $ = function (id) { return document.getElementById(id); };
+function cfg() {
+  return { noLegend: true, districts: false, lang: $('lang').value, pad: +$('pad').value || 0, w: +$('w').value || 1920 };
+}
+function buildBookmarklet() {
+  var code = '(function(){' + gr169.toString() + grSave.toString() + grRun.toString() + 'grRun(' + JSON.stringify(cfg()) + ');})();';
+  $('bm').href = 'javascript:' + encodeURIComponent(code);
+}
+$('gear').onclick = function () { var s = $('settings'); s.hidden = !s.hidden; this.setAttribute('aria-expanded', String(!s.hidden)); };
+document.querySelectorAll('input,select').forEach(function (i) { i.addEventListener('change', buildBookmarklet); i.addEventListener('input', buildBookmarklet); });
+buildBookmarklet();
+$('bm').addEventListener('click', function (e) { e.preventDefault(); log('Den Button bitte in die Lesezeichenleiste ziehen – nicht hier anklicken.'); });
+
+function log(t) { $('log').textContent += t + '\n'; }
+function show(blob, name) {
+  var u = URL.createObjectURL(blob), f = document.createElement('figure');
+  f.innerHTML = '<img alt=""><figcaption><span></span><a download>PNG speichern</a></figcaption>';
+  f.querySelector('img').src = u; f.querySelector('span').textContent = name;
+  var a = f.querySelector('a'); a.href = u; a.download = name;
+  $('out').prepend(f);
+}
+var drop = $('drop'), file = $('file');
+drop.onclick = function () { file.click(); };
+drop.ondragover = function (e) { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = function () { drop.classList.remove('over'); };
+drop.ondrop = function (e) { e.preventDefault(); drop.classList.remove('over'); files(e.dataTransfer.files); };
+file.onchange = function () { files(file.files); file.value = ''; };
+async function files(list) {
+  for (var f of list) {
+    try {
+      var name = f.name.replace(/\.svg$/i, '') + '_16x9.png', blob = await gr169(await f.text(), cfg());
+      show(blob, name); grSave(blob, name); log('✅ ' + name);
+    } catch (e) { log('❌ ' + f.name + ': ' + e.message); }
+  }
+}
+</script>
+</body>
+</html>
