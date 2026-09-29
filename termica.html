@@ -88,7 +88,7 @@ td.plain{padding:0 4px}
 .err{color:var(--temp)}
 .leaflet-container{font:12px var(--f-body)}
 .wa{pointer-events:none}
-.wa div{font:700 8px var(--f-mono);text-align:center;color:#fff;position:absolute;left:-4px;right:-4px;top:20px;text-shadow:0 0 2px #000,0 0 2px #000,0 0 1px #000}
+.wa div{font:700 10px var(--f-mono);text-align:center;color:#fff;position:absolute;left:-4px;right:-4px;top:31px;text-shadow:0 0 2px #000,0 0 2px #000,0 0 1px #000}
 
 .nums{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted)}
 .nums input{width:auto;accent-color:var(--accent)}
@@ -243,7 +243,14 @@ function analyse(d,i){
 
 /* ---------- Daten laden ---------- */
 function modelParam(){return state.model==="best_match"?"":`&models=${state.model}`;}
-async function getJSON(u){const r=await fetch(u);const j=await r.json();if(!r.ok||j.error)throw new Error(j.reason||("HTTP "+r.status));return j;}
+async function getJSON(u){const r=await fetch(u);let j={};try{j=await r.json();}catch(_){}
+  if(!r.ok||j.error){const e=new Error(j.reason||("HTTP "+r.status));e.limit=r.status===429||/limit/i.test(j.reason||"");throw e;}return j;}
+/* Bei Überschreiten des Minutenlimits von Open-Meteo automatisch nach 65 s erneut versuchen */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function withRetry(fn,onWait,tries=3){
+  for(let t=0;;t++){try{return await fn();}catch(e){if(!e.limit||t>=tries)throw e;
+    for(let s=65;s>0;s--){onWait(s);await sleep(1000);}}}
+}
 function pointUrl(loc){
   const sfc=["temperature_2m","dew_point_2m","precipitation","cloud_cover_low","cloud_cover_mid","cloud_cover_high","wind_speed_10m","wind_direction_10m","wind_gusts_10m","cape","freezing_level_height","surface_pressure","weather_code"];
   const lv=[];for(const p of LEVELS)for(const v of["temperature","relative_humidity","wind_speed","wind_direction","geopotential_height","cloud_cover"])lv.push(`${v}_${p}hPa`);
@@ -257,9 +264,12 @@ async function loadPoint(loc){
   $("locName").textContent=loc.name;$("locMeta").textContent="Lade Prognose …";
   $("locPlace").hidden=true;if(loc.point)placeName(loc);
   try{
-    state.data=await getJSON(pointUrl(loc));
+    state.pointBusy=true;
+    state.data=await withRetry(()=>getJSON(pointUrl(loc)),s=>{if(state.loc===loc)$("locMeta").textContent=`Abfragelimit von Open-Meteo erreicht – neuer Versuch in ${s} s …`;});
+    if(state.loc!==loc)return;
     renderDays();renderPanel();
   }catch(e){$("locMeta").innerHTML=`<span class="err">Prognose nicht geladen: ${e.message}. Modell wechseln oder später erneut versuchen.</span>`;$("tbl").innerHTML="";$("summary").innerHTML="";}
+  finally{state.pointBusy=false;}
   if(marker)marker.setLatLng([loc.lat,loc.lon]);else marker=L.circleMarker([loc.lat,loc.lon],{radius:8,color:"#fff",weight:2,fillColor:css("--accent"),fillOpacity:1}).addTo(map);
 }
 function dayList(){
@@ -275,7 +285,7 @@ function renderDays(){
 }
 $("days").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;state.day=+b.dataset.k;renderDays();renderPanel();renderGrid();});
 $("hour").addEventListener("input",e=>{state.hour=+e.target.value;$("hourOut").textContent=pad(state.hour)+":00";renderPanel(true);renderGrid();});
-$("layer").addEventListener("change",e=>{state.layer=e.target.value;renderGrid();});
+$("layer").addEventListener("change",e=>{state.layer=e.target.value;renderGrid();loadGrid();});
 $("nums").addEventListener("change",e=>{state.nums=e.target.checked;try{localStorage.setItem("termica-nums",state.nums?"1":"")}catch(_){}renderGrid();});
 try{state.nums=!!localStorage.getItem("termica-nums");$("nums").checked=state.nums;}catch(_){}
 $("model").addEventListener("change",e=>{state.model=e.target.value;if(state.loc)loadPoint(state.loc);loadGrid();});
@@ -433,7 +443,7 @@ async function placeName(loc){
 const lg=L.control({position:"bottomleft"});
 lg.onAdd=()=>{const d=L.DomUtil.create("div","maplegend");d.id="maplegend";return d;};lg.addTo(map);
 
-const GRID_PX=35;           // Abstand der Pfeile in Pixel
+const GRID_PX=52;           // Abstand der Pfeile in Pixel
 const gridCache=new Map();  // Punktdaten, bleiben beim Verschieben/Zoomen erhalten
 function gridPoints(){
   const b=map.getBounds().pad(0.05),z=map.getZoom(),sz=map.getSize();
@@ -441,7 +451,7 @@ function gridPoints(){
   for(let t=0;t<6;t++){
     stepLon=px*360/(256*Math.pow(2,z));stepLat=stepLon*Math.cos(b.getCenter().lat*Math.PI/180);
     const nx=Math.ceil((b.getEast()-b.getWest())/stepLon),ny=Math.ceil((b.getNorth()-b.getSouth())/stepLat);
-    if(nx*ny<=900)break;px*=1.25;
+    if(nx*ny<=250)break;px*=1.25;
   }
   // an festes Raster einrasten, damit Punkte beim Verschieben wiederverwendet werden
   pts=[];
@@ -449,25 +459,35 @@ function gridPoints(){
   for(let j=la0;j<=la1;j++)for(let k=lo0;k<=lo1;k++){const lat=+((j+.5)*stepLat).toFixed(4),lon=+((k+.5)*stepLon).toFixed(4);if(b.contains([lat,lon]))pts.push([lat,lon,j,k]);}
   pts.step=[stepLat,stepLon];return pts;
 }
-const GRID_VARS=["temperature_2m","wind_speed_10m","wind_direction_10m",...[850,700,600].flatMap(p=>[`wind_speed_${p}hPa`,`wind_direction_${p}hPa`]),...[850,800,700,600].flatMap(p=>[`temperature_${p}hPa`,`geopotential_height_${p}hPa`])];
+// Nur die Variablen der gewählten Kartenebene laden: so zählt jeder Punkt bei Open-Meteo als 1 Abfrage
+function layerVars(l){
+  if(l==="th")return["temperature_2m",...[850,800,700,600].flatMap(p=>[`temperature_${p}hPa`,`geopotential_height_${p}hPa`])];
+  if(l==="w10")return["wind_speed_10m","wind_direction_10m"];
+  const p=l.slice(1);return[`wind_speed_${p}hPa`,`wind_direction_${p}hPa`];
+}
+const gkey=(p,l)=>`${state.model}|${l}|${p[0]},${p[1]}`;
 let gridRun=0;
 async function loadGrid(){
   if(map.getZoom()<7){overlay.clearLayers();state.grid=null;$("mapStatus").textContent="Für Überlagerung näher zoomen";return;}
-  const run=++gridRun,pts=gridPoints(),ck=p=>`${state.model}|${p[0]},${p[1]}`;
+  const run=++gridRun,pts=gridPoints(),layer=state.layer;
   state.grid={pts};renderGrid();
-  const miss=pts.filter(p=>!gridCache.has(ck(p)));
+  if(layer==="none"){$("mapStatus").textContent="";return;}
+  while(state.pointBusy){await sleep(300);if(run!==gridRun)return;} // Ortsprognose hat Vorrang
+  const miss=pts.filter(p=>!gridCache.has(gkey(p,layer)));
   if(!miss.length){$("mapStatus").textContent="";return;}
-  $("mapStatus").textContent=`Lade Kartendaten (${miss.length} Punkte) …`;
   const chunks=[];for(let k=0;k<miss.length;k+=100)chunks.push(miss.slice(k,k+100));
   try{
     for(const c of chunks){
-      const u=`https://api.open-meteo.com/v1/forecast?latitude=${c.map(p=>p[0]).join(",")}&longitude=${c.map(p=>p[1]).join(",")}&hourly=${GRID_VARS.join(",")}&wind_speed_unit=kmh&timezone=Europe%2FZurich&forecast_days=4${modelParam()}`;
-      let j=await getJSON(u);if(!Array.isArray(j))j=[j];
-      j.forEach((d,n)=>gridCache.set(ck(c[n]),d));
+      if(run!==gridRun)return;
+      $("mapStatus").textContent=`Lade Kartendaten (${miss.length} Punkte) …`;
+      const u=`https://api.open-meteo.com/v1/forecast?latitude=${c.map(p=>p[0]).join(",")}&longitude=${c.map(p=>p[1]).join(",")}&hourly=${layerVars(layer).join(",")}&wind_speed_unit=kmh&timezone=Europe%2FZurich&forecast_days=4${modelParam()}`;
+      let j=await withRetry(()=>getJSON(u),s=>{if(run===gridRun)$("mapStatus").textContent=`Abfragelimit erreicht – Karte lädt in ${s} s weiter …`;});
+      if(!Array.isArray(j))j=[j];
+      j.forEach((d,n)=>gridCache.set(gkey(c[n],layer),d));
       if(run!==gridRun)return;renderGrid();
     }
     $("mapStatus").textContent="";
-  }catch(e){if(run===gridRun)$("mapStatus").innerHTML=`<span class="err">Kartendaten nicht vollständig geladen (${e.message}). Kurz warten und Karte leicht verschieben.</span>`;}
+  }catch(e){if(run===gridRun)$("mapStatus").innerHTML=`<span class="err">Kartendaten nicht vollständig geladen (${e.message}).</span>`;}
 }
 function gridThermal(d,i){
   const H=d.hourly,el=d.elevation,T2=H.temperature_2m[i];if(T2==null)return null;
@@ -479,7 +499,7 @@ function renderGrid(){
   if(!state.grid||state.layer==="none"){if(lgd)lgd.hidden=true;return;}
   const day=dayList()[state.day],pts=state.grid.pts;
   pts.forEach((pt,n)=>{
-    const d=gridCache.get(`${state.model}|${pt[0]},${pt[1]}`);if(!d)return;
+    const d=gridCache.get(gkey(pt,state.layer));if(!d)return;
     const i=idxFor(d.hourly.time,day,state.hour);if(i<0)return;
     if(state.layer==="th"){
       const t=gridThermal(d,i);if(!t)return;
@@ -490,14 +510,14 @@ function renderGrid(){
     }else{
       const lv=state.layer.slice(1),ws=lv==="10"?d.hourly.wind_speed_10m[i]:d.hourly[`wind_speed_${lv}hPa`]?.[i],wd=lv==="10"?d.hourly.wind_direction_10m[i]:d.hourly[`wind_direction_${lv}hPa`]?.[i];
       if(ws==null)return;
-      L.marker([pt[0],pt[1]],{interactive:false,icon:L.divIcon({className:"wa",html:arrowSVG(wd,windColor(ws),state.nums?22:27)+(state.nums?`<div>${Math.round(ws)}</div>`:""),iconSize:[27,27],iconAnchor:[13,13]})}).addTo(overlay);
+      L.marker([pt[0],pt[1]],{interactive:false,icon:L.divIcon({className:"wa",html:arrowSVG(wd,windColor(ws),state.nums?32:38)+(state.nums?`<div>${Math.round(ws)}</div>`:""),iconSize:[38,38],iconAnchor:[19,19]})}).addTo(overlay);
     }
   });
   if(lgd){lgd.hidden=false;lgd.innerHTML=state.layer==="th"
     ?`<b>Thermik-Obergrenze</b> (km ü.M.)<br>`+[[100,"schwach"],[400,"< 600 m Schicht"],[900,"600–1100 m"],[1400,"1100–1700 m"],[2000,"> 1700 m"]].map(([v,t])=>`<span class="sw" style="background:${thermColor(v)}"></span>${t}`).join("<br>")
     :`<b>Wind km/h</b> · ${dayName(day,state.day)} ${pad(state.hour)}:00<br>`+[[0,"<5"],[7,"5–10"],[12,"10–15"],[17,"15–20"],[22,"20–25"],[27,"25–30"],[35,"30–40"],[45,">40"]].map(([v,t])=>`<span class="sw" style="background:${windColor(v)}"></span>${t}`).join(" ");}
 }
-let mv;map.on("moveend",()=>{clearTimeout(mv);mv=setTimeout(loadGrid,500);});
+let mv;map.on("moveend",()=>{clearTimeout(mv);mv=setTimeout(loadGrid,800);});
 
 /* ---------- Suche ---------- */
 let qt;$("q").addEventListener("input",e=>{clearTimeout(qt);const q=e.target.value.trim();if(q.length<2){$("results").hidden=true;return;}qt=setTimeout(()=>search(q),300);});
@@ -517,7 +537,7 @@ document.addEventListener("click",e=>{if(!e.target.closest(".search"))$("results
   $("hour").value=state.hour;$("hourOut").textContent=pad(state.hour)+":00";
   renderDays();
   let loc=SITES[0];try{const s=JSON.parse(localStorage.getItem("termica-loc"));if(s&&s.lat)loc=s;}catch(e){}
-  loadPoint(loc);loadGrid();
+  loadPoint(loc).then(()=>loadGrid());
 })();
 </script>
 </body>
