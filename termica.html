@@ -431,13 +431,31 @@ async function osmPlace(lat,lon){
   const j=await getJSON(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&accept-language=de`);
   const a=j.address||{};return a.village||a.hamlet||a.town||a.city||a.municipality||a.suburb||null;
 }
+/* Offizielle Gemeinde (swissBOUNDARIES3D, inkl. Fusionen) und Ortschaft (amtl. Ortschaftenverzeichnis) */
+async function swissAdmin(lat,lon){
+  const d=0.01,ext=[lon-d,lat-d,lon+d,lat+d].join(",");
+  const u=`https://api3.geo.admin.ch/rest/services/api/MapServer/identify?geometryType=esriGeometryPoint&geometry=${lon},${lat}&sr=4326&geometryFormat=geojson&imageDisplay=100,100,96&mapExtent=${ext}&tolerance=0&returnGeometry=false&lang=de&layers=all:ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill,ch.swisstopo-vd.ortschaftenverzeichnis_plz`;
+  const j=await getJSON(u);let gem=null,ort=null;
+  for(const f of j.results||[]){const p=f.properties||f.attributes||{},id=f.layerBodId||"";
+    if(id.includes("gemeinde")&&!gem)gem=p.gemname||p.name||p.label||f.label||null;
+    if(id.includes("ortschaft")&&!ort)ort=(p.langtext||p.label||f.label||"").replace(/^\d{4}\s*/,"")||null;}
+  return gem||ort?{gem,ort}:null;
+}
 async function placeName(loc){
-  const [sw,os]=await Promise.allSettled([swissName(loc.lat,loc.lon),osmPlace(loc.lat,loc.lon)]);
+  const [sw,ad]=await Promise.allSettled([swissName(loc.lat,loc.lon),swissAdmin(loc.lat,loc.lon)]);
   if(state.loc!==loc)return;
-  const n=sw.status==="fulfilled"&&sw.value&&isFinite(sw.value.d)?sw.value:null,o=os.status==="fulfilled"?os.value:null;
+  const n=sw.status==="fulfilled"&&sw.value&&isFinite(sw.value.d)?sw.value:null;
+  let adm=ad.status==="fulfilled"?ad.value:null,osm=null;
+  if(!adm){try{osm=await osmPlace(loc.lat,loc.lon);}catch(_){}} // ausserhalb der Schweiz
+  if(state.loc!==loc)return;
+  const m=t=>` <span style="color:var(--muted);font-weight:400">${t}</span>`;
   let txt="";
-  if(n){txt=n.name+(n.d>150?` <span style="color:var(--muted);font-weight:400">(${n.d<1000?Math.round(n.d/10)*10+" m":(n.d/1000).toFixed(1)+" km"} entfernt)</span>`:"");}
-  if(o&&(!n||o!==n.name))txt+=(txt?` <span style="color:var(--muted);font-weight:400">· Gemeinde/Ort ${o}</span>`:o);
+  if(n)txt=n.name+(n.d>150?m(`(${n.d<1000?Math.round(n.d/10)*10+" m":(n.d/1000).toFixed(1)+" km"} entfernt)`):"");
+  if(adm){
+    const ort=adm.ort&&adm.ort!==adm.gem&&(!n||adm.ort!==n.name)?adm.ort+", ":"";
+    if(adm.gem)txt+=txt?m(`· ${ort}Gemeinde ${adm.gem}`):`${ort}Gemeinde ${adm.gem}`;
+    else if(adm.ort)txt+=txt?m(`· ${adm.ort}`):adm.ort;
+  }else if(osm&&(!n||osm!==n.name))txt+=txt?m(`· ${osm}`):osm;
   if(txt){$("locPlace").innerHTML=txt;$("locPlace").hidden=false;}
 }
 const lg=L.control({position:"bottomleft"});
