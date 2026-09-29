@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Untertitel RM → DE</title>
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --ink:#1d1d1f; --muted:#6b6b70; --line:#e2e0da;
+  --accent:#c8102e; --accent-ink:#fff; --ok:#1f7a4d; --warn:#b26a00; --err:#c8102e;
+  --ok-bg:#e6f4ec; --warn-bg:#fdf1dc; --err-bg:#fbe5e8; --code:#f0eee9;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#161618; --panel:#1f1f22; --ink:#ececee; --muted:#9a9aa1; --line:#333338;
+    --accent:#ff4d64; --accent-ink:#161618; --ok:#5fd29a; --warn:#f0b454; --err:#ff6b7d;
+    --ok-bg:#1c3328; --warn-bg:#3a2e17; --err-bg:#3d1d23; --code:#2a2a2e;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:20px 16px 8px;max-width:1100px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+header p{margin:0;color:var(--muted)}
+main{max-width:1100px;margin:0 auto;padding:8px 16px 60px}
+section.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+section.step h2{font-size:16px;margin:0 0 10px;display:flex;gap:8px;align-items:center}
+.num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:700}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+textarea,input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{width:100%;resize:vertical}
+input[type=number]{width:70px}
+#drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;cursor:pointer}
+#drop.over{border-color:var(--accent)}
+.chunks{display:grid;gap:8px;margin-top:10px}
+.chunk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:var(--code);border-radius:8px}
+.chunk.done{opacity:.6}
+.settings{display:flex;flex-wrap:wrap;gap:14px}
+.settings label{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:14px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.pill{font-size:13px;padding:3px 9px;border-radius:999px;background:var(--code)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.err{background:var(--err-bg);color:var(--err)}
+.seg{border:1px solid var(--line);border-radius:10px;margin:10px 0;overflow:hidden}
+.seg-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;background:var(--code)}
+.seg-head .src{white-space:pre-wrap}
+.seg-head textarea{min-height:52px}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:3px}
+.cue{display:grid;grid-template-columns:150px 1fr 1fr 170px;gap:10px;padding:8px 10px;border-top:1px solid var(--line);align-items:start}
+.cue .tc{font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--muted)}
+.cue .srcc{white-space:pre-wrap;color:var(--muted);font-size:14px}
+.cue textarea{font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;min-height:44px;padding:6px}
+.cue.bad textarea{border-color:var(--err)}
+.cue.meh textarea{border-color:var(--warn)}
+.badges{display:flex;flex-wrap:wrap;gap:4px}
+.badges .pill{font-size:12px;padding:2px 7px}
+.hide-ok .seg.allok{display:none}
+.notice{padding:8px 12px;border-radius:8px;margin:8px 0;font-size:14px}
+.notice.warn{background:var(--warn-bg);color:var(--warn)} .notice.ok{background:var(--ok-bg);color:var(--ok)} .notice.err{background:var(--err-bg);color:var(--err)}
+@media (max-width:760px){
+  .seg-head{grid-template-columns:1fr}
+  .cue{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Untertitel Rumantsch → Deutsch</h1>
+  <p>SRT laden, Sätze in ALAS übersetzen, zurück auf die Timecodes verteilen, Normen prüfen, SRT exportieren. Alles bleibt lokal im Browser.</p>
+</header>
+<main>
+
+<section class="step">
+  <h2><span class="num">1</span> SRT laden</h2>
+  <div id="drop">SRT-Datei hierher ziehen oder <u>klicken</u><input id="file" type="file" accept=".srt,text/plain" hidden></div>
+  <p id="loadInfo" class="muted"></p>
+</section>
+
+<section class="step" id="s2" hidden>
+  <h2><span class="num">2</span> Sätze in ALAS übersetzen</h2>
+  <p class="muted">Die Untertitel sind zu ganzen Sätzen zusammengefügt – eine Zeile pro Satz. Block kopieren, in <a href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS</a> einfügen (Idiom → Deutsch), Ergebnis kopieren und unten einfügen. Bei gemischten Idiomen einfach das häufigste wählen oder die Blöcke einzeln übersetzen.</p>
+  <div class="row">
+    <label class="muted">Max. Zeichen pro Block <input type="number" id="chunkMax" value="3000" step="500" min="500"></label>
+    <a class="btn" href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS öffnen ↗</a>
+  </div>
+  <div class="chunks" id="chunks"></div>
+</section>
+
+<section class="step" id="s3" hidden>
+  <h2><span class="num">3</span> Übersetzung einfügen</h2>
+  <p class="muted">Alle Blöcke nacheinander hier einfügen. Die Zeilenzahl muss mit der Anzahl Sätze übereinstimmen.</p>
+  <textarea id="paste" rows="8" placeholder="Deutsche Übersetzung aus ALAS…"></textarea>
+  <div class="row" style="margin-top:8px">
+    <button class="primary" id="apply">Übernehmen &amp; verteilen</button>
+    <span id="pasteCount" class="muted"></span>
+  </div>
+  <div id="pasteMsg"></div>
+</section>
+
+<section class="step" id="s4" hidden>
+  <h2><span class="num">4</span> Prüfen &amp; korrigieren</h2>
+  <div class="settings">
+    <label>Zeichen/Zeile <input type="number" id="maxLine" value="37" min="20" max="60"></label>
+    <label>Zeilen max. <input type="number" id="maxLines" value="2" min="1" max="3"></label>
+    <label>Zeichen/Sek. <input type="number" id="maxCps" value="15" min="8" max="30" step="0.5"></label>
+    <label>Min. Dauer (s) <input type="number" id="minDur" value="1" min="0.3" max="3" step="0.1"></label>
+    <label>Max. Dauer (s) <input type="number" id="maxDur" value="7" min="3" max="15" step="0.5"></label>
+    <label><input type="checkbox" id="onlyBad"> nur Sätze mit Problemen</label>
+  </div>
+  <div class="stats" id="stats"></div>
+  <p class="muted" style="font-size:14px">Satz-Übersetzung ändern → wird neu auf die Untertitel verteilt. Einzelne Untertitel direkt im Feld anpassen (Zeilenumbruch = neue Zeile). ↻ bricht einen Untertitel neu um.</p>
+  <div id="segs"></div>
+</section>
+
+<section class="step" id="s5" hidden>
+  <h2><span class="num">5</span> Export</h2>
+  <div class="row">
+    <label class="muted">Format
+      <select id="fmt" style="font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)">
+        <option value="srt">SRT (.srt)</option>
+        <option value="ttml">TTML (.ttml)</option>
+      </select>
+    </label>
+    <button class="primary" id="export">Herunterladen</button>
+    <span id="exportInfo" class="muted"></span>
+  </div>
+</section>
+
+</main>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+let fileName = 'untertitel';
+let cues = [];      // {idx,start,end,src,out}
+let segs = [];      // {cues:[i...], src, tr}
+
+/* ---------- Settings (per Browser gemerkt) ---------- */
+const SETTING_IDS = ['maxLine','maxLines','maxCps','minDur','maxDur','chunkMax'];
+try { const s = JSON.parse(localStorage.getItem('ut-settings')||'{}'); SETTING_IDS.forEach(k => { if (s[k]!=null) $(k).value = s[k]; }); } catch(e){}
+function saveSettings(){ try { const s={}; SETTING_IDS.forEach(k=>s[k]=$(k).value); localStorage.setItem('ut-settings',JSON.stringify(s)); } catch(e){} }
+const cfg = () => ({ maxLine:+$('maxLine').value||37, maxLines:+$('maxLines').value||2, maxCps:+$('maxCps').value||15, minDur:+$('minDur').value||1, maxDur:+$('maxDur').value||7 });
+
+/* ---------- SRT ---------- */
+function tcToMs(t){ const m=t.trim().match(/(\d+):(\d+):(\d+)[,.](\d+)/); if(!m) return NaN; return ((+m[1]*60+ +m[2])*60+ +m[3])*1000 + +m[4].padEnd(3,'0').slice(0,3); }
+function msToTc(ms){ ms=Math.max(0,Math.round(ms)); const h=Math.floor(ms/3600000), m=Math.floor(ms/60000)%60, s=Math.floor(ms/1000)%60, r=ms%1000; const p=(n,l=2)=>String(n).padStart(l,'0'); return `${p(h)}:${p(m)}:${p(s)},${p(r,3)}`; }
+function clean(t){ return t.replace(/<[^>]+>/g,'').replace(/\{\\[^}]*\}/g,'').replace(/\s+/g,' ').trim(); }
+function parseSrt(text){
+  text = text.replace(/^﻿/,'').replace(/\r\n?/g,'\n');
+  const out=[];
+  for (const block of text.split(/\n\s*\n/)){
+    const lines = block.split('\n').filter(l=>l.trim()!=='' );
+    const ti = lines.findIndex(l=>l.includes('-->'));
+    if (ti<0) continue;
+    const [a,b] = lines[ti].split('-->');
+    const start=tcToMs(a), end=tcToMs(b);
+    if (isNaN(start)||isNaN(end)) continue;
+    const raw = lines.slice(ti+1).join('\n');
+    out.push({start,end,raw,src:clean(raw),out:''});
+  }
+  return out;
+}
+
+/* ---------- Sätze bilden ---------- */
+const endsSentence = t => /[.!?…]["'»«”“)\]]*$/.test(t);
+const isDialogue = raw => /^\s*[-–]/.test(raw);
+function buildSegments(){
+  segs=[]; let cur=null;
+  cues.forEach((c,i)=>{
+    const dlg = isDialogue(c.raw);
+    if (cur && (dlg || cur.len > 400)) { segs.push(cur); cur=null; }
+    if (!cur) cur={cues:[],src:'',tr:'',len:0};
+    cur.cues.push(i); cur.src += (cur.src?' ':'') + c.src; cur.len=cur.src.length;
+    const multiSpeaker = (c.raw.match(/(^|\n)\s*[-–]/g)||[]).length>1;
+    if (endsSentence(c.src) || multiSpeaker || dlg && multiSpeaker) { segs.push(cur); cur=null; }
+  });
+  if (cur) segs.push(cur);
+}
+
+/* ---------- Blöcke für ALAS ---------- */
+function renderChunks(){
+  const max = +$('chunkMax').value || 3000;
+  const box=$('chunks'); box.innerHTML='';
+  let chunks=[], cur=[], len=0;
+  segs.forEach(s=>{ const l=s.src.length+1; if (cur.length && len+l>max){ chunks.push(cur); cur=[]; len=0; } cur.push(s.src); len+=l; });
+  if (cur.length) chunks.push(cur);
+  chunks.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='chunk';
+    const txt=c.join('\n');
+    d.innerHTML=`<strong>Block ${i+1}/${chunks.length}</strong><span class="muted">${c.length} Sätze · ${txt.length} Zeichen</span>`;
+    const b=document.createElement('button'); b.textContent='Kopieren';
+    b.onclick=async()=>{ try{ await navigator.clipboard.writeText(txt); }catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } b.textContent='✓ Kopiert'; d.classList.add('done'); };
+    d.appendChild(b); box.appendChild(d);
+  });
+}
+
+/* ---------- Verteilen & Umbrechen ---------- */
+const BAD_END = new Set(['der','die','das','den','dem','des','ein','eine','einen','einem','einer','eines','und','oder','aber','zu','zum','zur','im','in','am','an','auf','mit','von','vom','für','bei','nach','aus','über','unter','vor','wie','als','dass','weil','wenn','ob','sehr','nicht','kein','keine','mein','meine','sein','seine','ihr','ihre','unser','unsere','dieser','diese','dieses','ich','du','er','sie','es','wir','man']);
+const punctEnd = w => /[,;:–—.!?…]["'»«”“)]*$/.test(w);
+const badEnd = w => BAD_END.has(w.toLowerCase().replace(/[^a-zäöüß]/g,''));
+
+function distribute(seg){
+  const idxs=seg.cues, n=idxs.length;
+  const words=seg.tr.trim().split(/\s+/).filter(Boolean);
+  if (n===1 || !words.length){ idxs.forEach((ci,k)=>cues[ci].out = k===0 ? wrap(words.join(' ')) : ''); return; }
+  const srcLen=idxs.map(ci=>Math.max(1,cues[ci].src.length));
+  const sumSrc=srcLen.reduce((a,b)=>a+b,0);
+  const pos=[0]; words.forEach((w,j)=>pos.push(pos[j]+w.length+(j?1:0)));
+  const total=pos[words.length];
+  const cuts=[]; let prev=0, cum=0;
+  for (let k=1;k<n;k++){
+    cum+=srcLen[k-1];
+    const target=total*cum/sumSrc;
+    const lo=Math.min(prev+1, words.length), hi=Math.max(lo, words.length-(n-k));
+    let best=lo, bestCost=Infinity;
+    for (let j=lo;j<=hi;j++){
+      let cost=Math.abs(pos[j]-target)/Math.max(total,1);
+      if (punctEnd(words[j-1])) cost-=0.08;
+      if (badEnd(words[j-1])) cost+=0.05;
+      if (cost<bestCost){bestCost=cost;best=j;}
+    }
+    cuts.push(best); prev=best;
+  }
+  cuts.push(words.length);
+  let s=0;
+  idxs.forEach((ci,k)=>{ cues[ci].out = wrap(words.slice(s,cuts[k]).join(' ')); s=cuts[k]; });
+}
+
+function wrap(text){
+  const {maxLine}=cfg();
+  text=text.replace(/\s+/g,' ').trim();
+  const dlg=text.match(/^([-–]\s?.+?)\s([-–]\s?.+)$/);
+  if (dlg) return dlg[1]+'\n'+dlg[2];
+  if (text.length<=maxLine) return text;
+  const w=text.split(' ');
+  let best=null, bestCost=Infinity;
+  for (let j=1;j<w.length;j++){
+    const l1=w.slice(0,j).join(' ').length, l2=w.slice(j).join(' ').length;
+    let cost=Math.max(0,l1-maxLine)*10+Math.max(0,l2-maxLine)*10+Math.abs(l1-l2)*0.15;
+    if (punctEnd(w[j-1])) cost-=3;
+    if (badEnd(w[j-1])) cost+=3;
+    if (cost<bestCost){bestCost=cost;best=j;}
+  }
+  return w.slice(0,best).join(' ')+'\n'+w.slice(best).join(' ');
+}
+
+/* ---------- Prüfung ---------- */
+function check(c, nextStart){
+  const C=cfg(), issues=[];
+  const lines=c.out.split('\n').map(l=>l.trim()).filter(l=>l!=='');
+  const dur=(c.end-c.start)/1000;
+  const chars=lines.join(' ').length;
+  const cps= dur>0 ? chars/dur : Infinity;
+  if (!lines.length) issues.push(['err','leer']);
+  if (lines.length>C.maxLines) issues.push(['err',`${lines.length} Zeilen`]);
+  const longest=Math.max(0,...lines.map(l=>l.length));
+  if (longest>C.maxLine) issues.push(['err',`${longest} Z./Zeile`]);
+  if (cps>C.maxCps*1.2) issues.push(['err',`${cps.toFixed(1)} Z./s`]);
+  else if (cps>C.maxCps) issues.push(['warn',`${cps.toFixed(1)} Z./s`]);
+  if (dur<C.minDur) issues.push(['warn',`${dur.toFixed(2)} s kurz`]);
+  if (dur>C.maxDur) issues.push(['warn',`${dur.toFixed(1)} s lang`]);
+  if (nextStart!=null && nextStart<c.end) issues.push(['err','Überlappung']);
+  return {issues, cps, dur, longest, chars};
+}
+
+/* ---------- Anzeige ---------- */
+function esc(s){return s.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function renderSegs(){
+  const box=$('segs'); box.innerHTML='';
+  segs.forEach((s,si)=>{
+    const el=document.createElement('div'); el.className='seg'; el.dataset.si=si;
+    el.innerHTML=`<div class="seg-head"><div><div class="lbl">Satz ${si+1} · Rumantsch</div><div class="src">${esc(s.src)}</div></div>
+      <div><div class="lbl">Deutsch (ganzer Satz)</div><textarea class="tr" rows="2">${esc(s.tr)}</textarea></div></div>`;
+    s.cues.forEach(ci=>{
+      const c=cues[ci];
+      const r=document.createElement('div'); r.className='cue'; r.dataset.ci=ci;
+      r.innerHTML=`<div class="tc">#${ci+1}<br>${msToTc(c.start)}<br>${msToTc(c.end)}</div>
+        <div class="srcc">${esc(c.src)}</div>
+        <textarea class="out" rows="2" spellcheck="true" lang="de">${esc(c.out)}</textarea>
+        <div><div class="badges"></div><div class="row" style="margin-top:4px"><button class="rewrap" title="Neu umbrechen">↻</button><span class="meta muted" style="font-size:12px"></span></div></div>`;
+      el.appendChild(r);
+    });
+    box.appendChild(el);
+  });
+  refreshChecks();
+}
+
+function refreshChecks(){
+  let nErr=0,nWarn=0,nOk=0;
+  document.querySelectorAll('.seg').forEach(el=>{
+    let segBad=false;
+    el.querySelectorAll('.cue').forEach(r=>{
+      const ci=+r.dataset.ci, c=cues[ci];
+      const res=check(c, cues[ci+1]?.start);
+      const b=r.querySelector('.badges'); b.innerHTML='';
+      const hasErr=res.issues.some(i=>i[0]==='err'), hasWarn=res.issues.some(i=>i[0]==='warn');
+      if (!res.issues.length){ b.innerHTML='<span class="pill ok">OK</span>'; nOk++; }
+      else res.issues.forEach(([t,m])=>{ const p=document.createElement('span'); p.className='pill '+t; p.textContent=m; b.appendChild(p); });
+      if (hasErr) nErr++; else if (hasWarn) nWarn++;
+      if (hasErr||hasWarn) segBad=true;
+      r.classList.toggle('bad',hasErr); r.classList.toggle('meh',!hasErr&&hasWarn);
+      r.querySelector('.meta').textContent=`${res.dur.toFixed(1)} s · ${isFinite(res.cps)?res.cps.toFixed(1):'–'} Z./s`;
+    });
+    el.classList.toggle('allok',!segBad);
+  });
+  $('stats').innerHTML=`<span class="pill">${cues.length} Untertitel · ${segs.length} Sätze</span><span class="pill ok">${nOk} OK</span><span class="pill warn">${nWarn} Warnung</span><span class="pill err">${nErr} Fehler</span>`;
+}
+
+/* ---------- Events ---------- */
+function loadText(text,name){
+  cues=parseSrt(text);
+  if (!cues.length){ $('loadInfo').textContent='Keine Untertitel gefunden – ist das eine SRT-Datei?'; return; }
+  fileName=(name||'untertitel').replace(/\.srt$/i,'');
+  buildSegments();
+  $('loadInfo').textContent=`${name}: ${cues.length} Untertitel → ${segs.length} Sätze`;
+  ['s2','s3'].forEach(id=>$(id).hidden=false);
+  ['s4','s5'].forEach(id=>$(id).hidden=true);
+  $('paste').value=''; $('pasteMsg').innerHTML=''; updateCount();
+  renderChunks();
+}
+function readFile(f){ const r=new FileReader(); r.onload=()=>loadText(r.result,f.name); r.readAsText(f,'utf-8'); }
+const drop=$('drop');
+drop.onclick=()=>$('file').click();
+$('file').onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0]); };
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over'); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);};
+
+$('chunkMax').onchange=()=>{saveSettings(); if(segs.length) renderChunks();};
+const pasteLines=()=>$('paste').value.replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
+function updateCount(){ const n=pasteLines().length; $('pasteCount').textContent = segs.length ? `${n} / ${segs.length} Zeilen` : ''; $('pasteCount').style.color = n===segs.length ? 'var(--ok)' : ''; }
+$('paste').oninput=updateCount;
+
+$('apply').onclick=()=>{
+  const lines=pasteLines();
+  const msg=$('pasteMsg');
+  if (!lines.length){ msg.innerHTML='<div class="notice err">Noch nichts eingefügt.</div>'; return; }
+  if (lines.length!==segs.length){
+    msg.innerHTML=`<div class="notice warn">${lines.length} Zeilen für ${segs.length} Sätze – ALAS hat vermutlich Sätze zusammengelegt oder getrennt. Die Zeilen werden der Reihe nach zugeordnet; prüfe ab der ersten Abweichung die Satzfelder in Schritt 4.</div>`;
+  } else msg.innerHTML='<div class="notice ok">Alle Sätze zugeordnet.</div>';
+  segs.forEach((s,i)=>{ s.tr = lines[i]||''; distribute(s); });
+  if (lines.length>segs.length) segs[segs.length-1].tr += ' ' + lines.slice(segs.length).join(' '), distribute(segs[segs.length-1]);
+  $('s4').hidden=false; $('s5').hidden=false;
+  renderSegs();
+  $('s4').scrollIntoView({behavior:'smooth'});
+};
+
+$('segs').addEventListener('input',e=>{
+  const t=e.target;
+  if (t.classList.contains('out')){ cues[+t.closest('.cue').dataset.ci].out=t.value; refreshChecks(); }
+});
+$('segs').addEventListener('change',e=>{
+  const t=e.target;
+  if (t.classList.contains('tr')){
+    const el=t.closest('.seg'), s=segs[+el.dataset.si];
+    s.tr=t.value; distribute(s);
+    el.querySelectorAll('.cue').forEach(r=>{ r.querySelector('.out').value=cues[+r.dataset.ci].out; });
+    refreshChecks();
+  }
+});
+$('segs').addEventListener('click',e=>{
+  if (!e.target.classList.contains('rewrap')) return;
+  const r=e.target.closest('.cue'), c=cues[+r.dataset.ci];
+  c.out=wrap(c.out.replace(/\n/g,' ')); r.querySelector('.out').value=c.out; refreshChecks();
+});
+['maxLine','maxLines','maxCps','minDur','maxDur'].forEach(id=>$(id).addEventListener('change',()=>{saveSettings(); if(segs.length) refreshChecks();}));
+$('onlyBad').onchange=e=>$('segs').classList.toggle('hide-ok',e.target.checked);
+
+const msToTt = ms => msToTc(ms).replace(',','.');
+function buildSrt(list){
+  return '﻿'+list.map((c,i)=>`${i+1}\r\n${msToTc(c.start)} --> ${msToTc(c.end)}\r\n${c.lines.join('\r\n')}`).join('\r\n\r\n')+'\r\n';
+}
+function buildTtml(list){
+  const x=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // RTR-Vorlage (Subtitle Edit, Custom Text Format), Zeitformat hh:mm:ss.zzz
+  const NL='</span><br></br><span tts:color="#ffffff">';
+  const ps=list.map((c,i)=>`<p begin="${msToTt(c.start)}" xml:id="p${i+1}" end="${msToTt(c.end)}">
+    <span tts:color="#ffffff">${c.lines.map(x).join(NL)}</span>
+</p>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+    <head>
+        <styling></styling>
+        <layout></layout>
+    </head>
+    <body><div>
+${ps}
+        </div>
+  </body>
+</tt>
+`;
+}
+$('export').onclick=()=>{
+  let skipped=0; const list=[];
+  cues.forEach(c=>{
+    const lines=c.out.split('\n').map(l=>l.trim()).filter(Boolean);
+    if (!lines.length){ skipped++; return; }
+    list.push({start:c.start,end:c.end,lines});
+  });
+  const n=list.length, fmt=$('fmt').value;
+  const data = fmt==='ttml' ? buildTtml(list) : buildSrt(list);
+  const blob=new Blob([data],{type:(fmt==='ttml'?'application/ttml+xml':'text/plain')+';charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${fileName}_DE.${fmt}`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  $('exportInfo').textContent=`${n} Untertitel exportiert`+(skipped?` · ${skipped} leere übersprungen`:'');
+};
+
+// Test-Hook
+window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
+})();
+</script>
+</body>
+</html>
