@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datawrapper-Grafik speichern</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23c8102e'/%3E%3Crect x='22' y='52' width='12' height='26' fill='white'/%3E%3Crect x='44' y='36' width='12' height='42' fill='white'/%3E%3Crect x='66' y='22' width='12' height='56' fill='white'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f5f4f2; --card:#ffffff; --text:#1c1c1c; --muted:#6b6b6b;
+    --accent:#c8102e; --accent-dark:#9c0c23; --border:#e2e0dc;
+    --ok:#1f7a3d; --err:#b3261e; --mono:#f0efec;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17171a; --card:#212124; --text:#eeeeee; --muted:#9a9a9a;
+      --accent:#e0384f; --accent-dark:#c8102e; --border:#333336;
+      --ok:#4caf6f; --err:#e0574c; --mono:#2a2a2d;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:40px 16px; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+  }
+  .container{ width:100%; max-width:620px; position:relative; z-index:1; }
+  h1{ font-size:1.4rem; margin:0 0 4px; letter-spacing:-0.01em; }
+  .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
+  .tabs{ display:flex; gap:4px; background:var(--mono); border:1px solid var(--border); border-radius:10px; padding:4px; margin-bottom:16px; }
+  .tab-btn{ flex:1; background:transparent; color:var(--muted); border:none; border-radius:7px; padding:9px 12px; font-size:0.85rem; font-weight:600; cursor:pointer; }
+  .tab-btn:hover{ filter:none; color:var(--text); }
+  .tab-btn.active{ background:var(--card); color:var(--text); box-shadow:0 1px 2px rgba(0,0,0,0.06); }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:20px; }
+  label, .lbl{ display:block; font-size:0.8rem; font-weight:600; margin-bottom:6px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  input[type=text], textarea, select{
+    width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:84px; line-height:1.5; }
+  input[type=text]:focus, textarea:focus, select:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .field{ margin-bottom:16px; }
+  button{ font-family:inherit; font-size:0.9rem; font-weight:600; border-radius:8px; border:none; cursor:pointer; padding:11px 16px; transition:filter .15s ease; }
+  button:hover{ filter:brightness(1.06); }
+  button:active{ filter:brightness(0.94); }
+  button:disabled{ opacity:0.5; cursor:default; }
+  .btn-primary{ background:var(--accent); color:#fff; width:100%; padding:13px; font-size:0.95rem; }
+  .btn-secondary{ background:var(--mono); color:var(--text); border:1px solid var(--border); white-space:nowrap; }
+  .btn-block{ width:100%; margin-top:12px; }
+  [hidden]{ display:none !important; }
+
+  /* Export-Einstellungen */
+  .opts{ display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; }
+  .opts .full{ grid-column:1 / -1; }
+  .range-row{ display:flex; align-items:center; gap:10px; }
+  .range-row input{ flex:1; accent-color:var(--accent); }
+  .range-row span{ font-size:0.85rem; min-width:3em; text-align:right; color:var(--muted); }
+  @media (max-width:480px){ .opts{ grid-template-columns:1fr; } }
+
+  /* Vorschau mit Schachbrett für Transparenz */
+  .preview-wrap{
+    display:flex; align-items:center; justify-content:center; background:var(--mono);
+    border:1px solid var(--border); border-radius:10px; min-height:140px; overflow:hidden; margin-bottom:8px;
+  }
+  .checker{
+    background-color:#fff;
+    background-image:linear-gradient(45deg,#ddd 25%,transparent 25%),linear-gradient(-45deg,#ddd 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ddd 75%),linear-gradient(-45deg,transparent 75%,#ddd 75%);
+    background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0;
+  }
+  .preview-wrap img{ max-width:100%; max-height:320px; display:block; }
+  .preview-wrap .placeholder{ color:var(--muted); font-size:0.85rem; padding:24px; text-align:center; }
+  .meta-line{ display:flex; justify-content:space-between; gap:10px; font-size:0.78rem; color:var(--muted); margin:6px 2px 16px; min-height:1.1em; }
+  .chart-title{ font-size:0.85rem; font-weight:600; margin:0 2px 12px; }
+  #status{ margin-top:14px; font-size:0.85rem; line-height:1.5; }
+  .ok{ color:var(--ok); }
+  .err{ color:var(--err); }
+  .hint{ color:var(--muted); font-size:0.78rem; margin-top:10px; line-height:1.5; }
+  .hint.ok{ color:var(--ok); } .hint.err{ color:var(--err); }
+  .originals{ margin-top:16px; padding-top:14px; border-top:1px solid var(--border); font-size:0.82rem; line-height:1.7; }
+  .originals a{ color:var(--accent); font-weight:600; text-decoration:none; cursor:pointer; }
+  .originals a:hover{ text-decoration:underline; }
+  .spinner{ display:inline-block; width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* Batch-Ergebnisliste */
+  .result-list{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  .result-card{ display:flex; gap:10px; align-items:center; background:var(--mono); border:1px solid var(--border); border-radius:10px; padding:10px; }
+  .rc-thumb{ width:96px; height:54px; flex:none; border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .rc-thumb img{ max-width:100%; max-height:100%; }
+  .rc-info{ flex:1; min-width:0; }
+  .rc-filename{ width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--text); font-size:0.82rem; font-family:inherit; margin-bottom:4px; }
+  .rc-status{ font-size:0.72rem; color:var(--muted); min-height:1em; }
+  .rc-status.ok{ color:var(--ok); } .rc-status.err{ color:var(--err); }
+  .rc-download{ flex:none; font-size:0.8rem; padding:9px 12px; }
+
+  /* Unsichtbare Render-Bühne: liegt im sichtbaren Bereich (sonst pausiert der
+     Browser das Zeichnen), aber unsichtbar hinter der Seite. */
+  #stage{ position:fixed; left:0; top:0; width:0; height:0; overflow:visible; opacity:0.001; pointer-events:none; z-index:0; }
+  #stage iframe{ position:absolute; left:0; top:0; border:0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Datawrapper-Grafik speichern</h1>
+  <p class="subtitle">Datawrapper-Link einfügen &rarr; Grafik ohne Titel und Quelle als hochaufgelöstes 16:9-PNG. Funktioniert mit Karten, Balken-, Säulen- und Liniendiagrammen, Locator-Maps usw.</p>
+
+  <div class="card">
+    <div class="opts">
+      <div>
+        <label for="sizeSel">Format</label>
+        <select id="sizeSel">
+          <option value="3840x2160">16:9 · 3840 × 2160 (4K)</option>
+          <option value="1920x1080">16:9 · 1920 × 1080 (HD)</option>
+          <option value="crop">Nur Grafik, eng zugeschnitten</option>
+        </select>
+      </div>
+      <div>
+        <label for="bgSel">Hintergrund</label>
+        <select id="bgSel">
+          <option value="white">Weiss</option>
+          <option value="transparent">Transparent</option>
+          <option value="dark">Schwarz (Dark Mode)</option>
+        </select>
+      </div>
+      <div>
+        <label for="textSel">Schriftgrösse</label>
+        <select id="textSel">
+          <option value="1280">Normal</option>
+          <option value="1024">Gross</option>
+          <option value="854">Sehr gross (TV)</option>
+        </select>
+      </div>
+      <div>
+        <label for="legendSel">Legende</label>
+        <select id="legendSel">
+          <option value="auto">Automatisch (bei Karten aus)</option>
+          <option value="show">Anzeigen</option>
+          <option value="hide">Ausblenden</option>
+        </select>
+      </div>
+      <div class="full" id="padField">
+        <label for="padRange">Rand</label>
+        <div class="range-row"><input id="padRange" type="range" min="0" max="25" step="1" value="7"><span id="padVal">7 %</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" id="tabSingleBtn" role="tab" aria-selected="true">Einzelne Grafik</button>
+    <button class="tab-btn" id="tabBatchBtn" role="tab" aria-selected="false">Mehrere Grafiken</button>
+  </div>
+
+  <div class="card" id="singlePanel">
+    <div class="field">
+      <label for="urlInput">Datawrapper-Link oder ID</label>
+      <input id="urlInput" type="text" placeholder="z.B. https://www.datawrapper.de/_/gFX0U/" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div id="result" hidden>
+      <p class="chart-title" id="chartTitle"></p>
+      <div class="preview-wrap" id="previewWrap"><span class="placeholder">Grafik wird geladen…</span></div>
+      <div class="meta-line"><span id="versionTag"></span><span id="resolution"></span></div>
+
+      <div class="field">
+        <label for="filenameInput">Dateiname zum Speichern</label>
+        <input id="filenameInput" type="text" spellcheck="false">
+      </div>
+      <button class="btn-primary" id="downloadBtn" disabled>PNG herunterladen</button>
+      <div id="status"></div>
+
+      <div class="originals" id="originals"></div>
+    </div>
+  </div>
+
+  <div class="card" id="batchPanel" hidden>
+    <label for="batchInput">Datawrapper-Links, IDs oder Artikel-URL</label>
+    <div class="field">
+      <textarea id="batchInput" rows="5" placeholder="https://www.datawrapper.de/_/gFX0U/&#10;https://datawrapper.dwcdn.net/WEtBJ/3/&#10;&#10;oder eine Artikel-URL bzw. deren Seitenquelltext"></textarea>
+    </div>
+    <button class="btn-secondary btn-block" id="batchProcessBtn">Verarbeiten</button>
+    <p class="hint" id="batchStatus"></p>
+    <div class="result-list" id="batchResults"></div>
+    <button class="btn-primary btn-block" id="batchDownloadAllBtn" hidden>Alle herunterladen</button>
+    <p class="hint" id="batchHint" hidden>Der Browser fragt bei vielen gleichzeitigen Downloads evtl. einmalig um Erlaubnis.</p>
+  </div>
+</div>
+
+<div id="stage" aria-hidden="true"></div>
+
+<script>
+(function(){
+  const DW = 'https://datawrapper.dwcdn.net/';
+  const HTML_TO_IMAGE = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.13/html-to-image.js';
+  const RENDER_OUT_W = 3840;  // es wird immer in 4K gerechnet, HD wird davon verkleinert
+  const TIMEOUT_MS = 30000;
+
+  /* ---------- Einstellungen ---------- */
+  const sizeSel = document.getElementById('sizeSel');
+  const bgSel = document.getElementById('bgSel');
+  const textSel = document.getElementById('textSel');
+  const legendSel = document.getElementById('legendSel');
+  const padRange = document.getElementById('padRange');
+  const padVal = document.getElementById('padVal');
+  const padField = document.getElementById('padField');
+
+  function getOpts(){
+    return {
+      size: sizeSel.value,
+      bg: bgSel.value,
+      pad: Number(padRange.value) / 100,
+      baseW: Number(textSel.value),
+      legend: legendSel.value
+    };
+  }
+  // Nur diese Einstellungen erfordern ein neues Rechnen bei Datawrapper;
+  // Format, Rand und Weiss/Transparent werden aus dem fertigen Bild zusammengesetzt.
+  function renderKey(o){ return o.baseW + '|' + o.legend + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
+
+  function suffixFor(size){
+    return size === 'crop' ? '_grafik' : size === '1920x1080' ? '_16x9_hd' : '_16x9_4k';
+  }
+
+  /* ---------- Tabs ---------- */
+  const tabSingleBtn = document.getElementById('tabSingleBtn');
+  const tabBatchBtn = document.getElementById('tabBatchBtn');
+  const singlePanel = document.getElementById('singlePanel');
+  const batchPanel = document.getElementById('batchPanel');
+  function showTab(name){
+    const isSingle = name === 'single';
+    singlePanel.hidden = !isSingle;
+    batchPanel.hidden = isSingle;
+    tabSingleBtn.classList.toggle('active', isSingle);
+    tabBatchBtn.classList.toggle('active', !isSingle);
+    tabSingleBtn.setAttribute('aria-selected', String(isSingle));
+    tabBatchBtn.setAttribute('aria-selected', String(!isSingle));
+  }
+  tabSingleBtn.addEventListener('click', function(){ showTab('single'); });
+  tabBatchBtn.addEventListener('click', function(){ showTab('batch'); });
+
+  /* ---------- Link → Datawrapper-ID ---------- */
+  const ID_PATTERNS = [
+    /datawrapper\.dwcdn\.net\/([A-Za-z0-9]{5})(?=[\/?#"'\s]|$)/g,
+    /datawrapper\.de\/_\/([A-Za-z0-9]{5})(?=[\/?#"'\s]|$)/g,
+    /app\.datawrapper\.de\/(?:chart|map|table|edit)\/([A-Za-z0-9]{5})(?=[\/?#"'\s]|$)/g,
+    /datawrapper-(?:vis|chart)-([A-Za-z0-9]{5})\b/g,
+    /data-datawrapper-id=["']?([A-Za-z0-9]{5})/g
+  ];
+
+  function decodeEsc(text){
+    return text.replace(/\\u002[fF]/g, '/').replace(/\\\//g, '/').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  }
+
+  function extractIds(text){
+    const decoded = decodeEsc(text || '');
+    const found = [];
+    ID_PATTERNS.forEach(function(re){
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(decoded))) {
+        if (m[1] !== 'embed' && !found.includes(m[1])) found.push(m[1]);
+      }
+    });
+    decoded.split(/\n/).forEach(function(line){
+      const t = line.trim();
+      if (/^[A-Za-z0-9]{5}$/.test(t) && !found.includes(t)) found.push(t);
+    });
+    return found;
+  }
+
+  /* ---------- Titel & Version ---------- */
+  function decodeEntities(str){
+    const ta = document.createElement('textarea');
+    ta.innerHTML = str;
+    return ta.value;
+  }
+
+  async function fetchInfo(id){
+    const info = { title: '', version: '' };
+    try {
+      let resp = await fetch(DW + id + '/', { cache: 'no-store' });
+      let html = await resp.text();
+      const refresh = /url=[^"']*?\/([A-Za-z0-9]{5})\/(\d+)\//i.exec(html) || /\/([A-Za-z0-9]{5})\/(\d+)\//.exec(html);
+      if (refresh && html.length < 3000) {
+        info.version = refresh[2];
+        resp = await fetch(DW + id + '/' + info.version + '/', { cache: 'no-store' });
+        html = await resp.text();
+      }
+      const t = /<meta[^>]+property=["']og:title["'][^>]*content="([^"]*)"/i.exec(html) ||
+                /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+      if (t && t[1].trim()) info.title = decodeEntities(t[1].trim());
+    } catch(e){ /* Titel ist nur Komfort */ }
+    return info;
+  }
+
+  function slugify(s){
+    return (s || '')
+      .toLowerCase()
+      .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      .slice(0, 60);
+  }
+
+  /* ---------- Rendern ---------- */
+  // Datawrapper zeichnet die Grafik selbst (Web-Component, "plain" = ohne Titel
+  // und Quelle, "fitchart" = füllt die 16:9-Fläche) in einem unsichtbaren iFrame
+  // auf dieser Domain. Danach wird das Ergebnis abfotografiert:
+  //  – Canvas-Ebenen (Karten, Locator-Maps) direkt aus dem Canvas,
+  //  – alles andere (SVG/HTML: Achsen, Balken, Beschriftungen) via html-to-image.
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function withTimeout(p, ms, msg){
+    return Promise.race([p, new Promise(function(_, rej){ setTimeout(function(){ rej(new Error(msg)); }, ms); })]);
+  }
+
+  function renderChart(id, o){
+    const baseW = o.baseW, baseH = Math.round(baseW * 9 / 16);
+    const ratio = RENDER_OUT_W / baseW;
+    const dark = o.bg === 'dark';
+
+    return new Promise(function(resolve, reject){
+      const stage = document.getElementById('stage');
+      const iframe = document.createElement('iframe');
+      iframe.style.width = baseW + 'px';
+      iframe.style.height = baseH + 'px';
+      const targetId = 'datawrapper-vis-' + id;
+      iframe.srcdoc =
+        '<!doctype html><html><head><meta charset="utf-8">' +
+        '<script>' +
+          'Object.defineProperty(window,"devicePixelRatio",{get:function(){return ' + ratio + ';},configurable:true});' +
+          // WebGL-Karten (Locator-Maps) sonst nicht auslesbar
+          '(function(){var g=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(t,a){if(/webgl/i.test(t)){a=Object.assign({},a||{},{preserveDrawingBuffer:true});}return g.call(this,t,a);};})();' +
+        '<\/script>' +
+        '<script src="' + HTML_TO_IMAGE + '"><\/script>' +
+        '<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden;}</style></head><body>' +
+        '<div id="' + targetId + '" style="height:100%"></div>' +
+        '<script type="text/javascript" defer src="' + DW + id + '/embed.js?_=' + Date.now() + '" charset="utf-8" ' +
+        'data-target="#' + targetId + '" data-plain="true" data-fitchart="true" data-dark="' + (dark ? 'true' : 'false') + '"><\/script>' +
+        '</body></html>';
+      stage.appendChild(iframe);
+
+      const started = Date.now();
+      let foundAt = 0, lastSig = null, stable = 0, styled = false, busy = false;
+
+      function done(){ setTimeout(function(){ iframe.remove(); }, 50); }
+
+      async function poll(){
+        if (busy) return;
+        let w, doc, root, chart;
+        try {
+          w = iframe.contentWindow;
+          doc = iframe.contentDocument;
+          const host = doc && doc.querySelector('datawrapper-visualization');
+          root = host && host.shadowRoot;
+          chart = root && root.querySelector('.chart');
+        } catch(e){ /* noch nicht bereit */ }
+
+        if (chart && w.htmlToImage) {
+          if (!foundAt) foundAt = Date.now();
+          const type = (String(chart.className).match(/vis-[\w-]+/) || [''])[0];
+          if (!styled) {
+            const isMap = /vis-d3-maps/.test(type);
+            const hideLegend = o.legend === 'hide' || (o.legend === 'auto' && isMap);
+            const st = doc.createElement('style');
+            st.textContent =
+              '.web-component-body,.chart,.dw-chart,.outer-container,.container,.dw-chart-body,.dw-chart-body-content{background:transparent !important;}' +
+              (hideLegend ? '.legend-container,.dw-chart-legend{display:none !important;}' : '');
+            root.appendChild(st);
+            styled = true;
+            setTimeout(poll, 400);
+            return;
+          }
+          const sig = signature(chart);
+          if (sig === lastSig) stable++; else { stable = 0; lastSig = sig; }
+          if (stable >= 3 && Date.now() - foundAt > 1500) {
+            busy = true;
+            try {
+              const source = await snapshot(w, doc, root, chart, ratio);
+              done();
+              if (!source) { reject(new Error('Die Grafik ist leer.')); return; }
+              resolve({ source: source, type: type });
+            } catch(e){
+              done();
+              reject(new Error('Die Grafik konnte nicht abfotografiert werden (' + e.message + ').'));
+            }
+            return;
+          }
+        }
+
+        if (Date.now() - started > TIMEOUT_MS) {
+          done();
+          reject(new Error(chart
+            ? 'Die Grafik wurde nicht fertig gezeichnet. Bitte nochmals versuchen (Tab dabei im Vordergrund lassen).'
+            : 'Grafik konnte nicht geladen werden. Stimmt der Link bzw. ist die Grafik veröffentlicht?'));
+          return;
+        }
+        setTimeout(poll, 400);
+      }
+      setTimeout(poll, 800);
+    });
+  }
+
+  // Fingerabdruck, um zu erkennen, wann die Grafik fertig gezeichnet ist.
+  const sigCanvas = document.createElement('canvas');
+  sigCanvas.width = 32; sigCanvas.height = 18;
+  function signature(chart){
+    let s = chart.innerHTML.length + ':' + Math.round(chart.getBoundingClientRect().height);
+    chart.querySelectorAll('canvas').forEach(function(c){
+      if (!c.width || !c.height) return;
+      try {
+        const ctx = sigCanvas.getContext('2d');
+        ctx.clearRect(0, 0, 32, 18);
+        ctx.drawImage(c, 0, 0, 32, 18);
+        const d = ctx.getImageData(0, 0, 32, 18).data;
+        let sum = 0;
+        for (let i = 0; i < d.length; i += 4) sum += d[i] + d[i + 1] * 3 + d[i + 2] * 7 + d[i + 3] * 11;
+        s += ':' + c.width + 'x' + c.height + '=' + sum;
+      } catch(e){ s += ':x'; }
+    });
+    return s;
+  }
+
+  function loadImage(src){
+    return new Promise(function(res, rej){
+      const im = new Image();
+      im.onload = function(){ res(im); };
+      im.onerror = function(){ rej(new Error('Bild konnte nicht erzeugt werden')); };
+      im.src = src;
+    });
+  }
+
+  // SVG-Elemente (Achsen, Linien, Säulen) bekommen ihre Farben über CSS-Klassen
+  // aus dem Shadow-DOM. Diese gehen beim Abfotografieren verloren – darum werden
+  // die berechneten Werte direkt ans Element geschrieben.
+  const SVG_PROPS = ['fill','fill-opacity','fill-rule','stroke','stroke-width','stroke-opacity','stroke-dasharray',
+    'stroke-dashoffset','stroke-linecap','stroke-linejoin','stroke-miterlimit','opacity','visibility','display',
+    'font-family','font-size','font-weight','font-style','font-variation-settings','letter-spacing','text-anchor',
+    'dominant-baseline','paint-order','text-decoration','shape-rendering','mix-blend-mode','vector-effect'];
+  function inlineSvgStyles(chart, w){
+    chart.querySelectorAll('svg, svg *').forEach(function(el){
+      if (/^(defs|clipPath|mask|pattern|linearGradient|radialGradient|stop|title|desc|style|script)$/i.test(el.tagName)) return;
+      const cs = w.getComputedStyle(el);
+      SVG_PROPS.forEach(function(p){
+        const v = cs.getPropertyValue(p);
+        if (v) el.style.setProperty(p, v);
+      });
+    });
+  }
+
+  // Schriften (z.B. SRG SSR Type) als Daten einbetten, sonst fehlen sie im Bild.
+  const fontCache = {};
+  function blobToDataUrl(blob){
+    return new Promise(function(res, rej){
+      const fr = new FileReader();
+      fr.onload = function(){ res(fr.result); };
+      fr.onerror = rej;
+      fr.readAsDataURL(blob);
+    });
+  }
+  async function fetchText(url){
+    const r = await fetch(url, { cache: 'no-store' }); // no-store: sonst evtl. Cache-Kopie ohne CORS-Freigabe
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  }
+  async function collectFontCss(doc, root){
+    const faces = []; // { css, base }
+    const seenSheets = new Set();
+
+    function facesFromText(text, base){
+      text = text.replace(/\/\*[\s\S]*?\*\//g, '');
+      (text.match(/@font-face\s*\{[^}]*\}/g) || []).forEach(function(css){ faces.push({ css: css, base: base }); });
+    }
+    async function walkRules(rules, base){
+      for (const rule of Array.from(rules)) {
+        if (rule.type === 3) { // @import
+          const href = rule.href ? new URL(rule.href, base).href : null;
+          if (!href || seenSheets.has(href)) continue;
+          seenSheets.add(href);
+          let inner = null;
+          try { inner = rule.styleSheet && rule.styleSheet.cssRules; } catch(e){ inner = null; }
+          if (inner) await walkRules(inner, href);
+          else { try { facesFromText(await fetchText(href), href); } catch(e){} }
+        } else if (rule.type === 5) { // @font-face
+          faces.push({ css: rule.cssText, base: base });
+        } else if (rule.cssRules) { // @supports, @media
+          await walkRules(rule.cssRules, base);
+        }
+      }
+    }
+    const sheets = Array.from(doc.styleSheets).concat(root && root.styleSheets ? Array.from(root.styleSheets) : []);
+    for (const sheet of sheets) {
+      const base = sheet.href || doc.baseURI;
+      let rules = null;
+      try { rules = sheet.cssRules; } catch(e){ rules = null; }
+      if (rules) await walkRules(rules, base);
+      else if (sheet.href && !seenSheets.has(sheet.href)) {
+        seenSheets.add(sheet.href);
+        try { facesFromText(await fetchText(sheet.href), sheet.href); } catch(e){}
+      }
+    }
+
+    const used = new Set();
+    doc.fonts.forEach(function(f){ if (f.status === 'loaded') used.add(f.family.replace(/["']/g, '').trim().toLowerCase()); });
+
+    const out = [];
+    for (const f of faces) {
+      if (out.length >= 16) break;
+      const fam = (/font-family\s*:\s*([^;]+)/i.exec(f.css) || [])[1];
+      if (!fam || !used.has(fam.replace(/["']/g, '').trim().toLowerCase())) continue;
+      const srcMatch = /src\s*:\s*([^;}]+)/i.exec(f.css);
+      if (!srcMatch) continue;
+      const urls = [];
+      srcMatch[1].replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, function(_, q, u){ urls.push(u); });
+      const pick = urls.find(function(u){ return /\.woff2(\?|#|$)/i.test(u); }) || urls[0];
+      if (!pick) continue;
+      try {
+        const abs = new URL(pick, f.base).href;
+        if (!fontCache[abs]) {
+          fontCache[abs] = fetch(abs, { cache: 'no-store' }).then(function(r){ if (!r.ok) throw new Error(); return r.blob(); }).then(blobToDataUrl);
+        }
+        const dataUrl = await fontCache[abs];
+        out.push(f.css.replace(/src\s*:\s*[^;}]+/i, 'src: url("' + dataUrl + '")'));
+      } catch(e){ /* Schrift auslassen */ }
+    }
+    return out.join('\n');
+  }
+
+  async function snapshot(w, doc, root, chart, ratio){
+    if (doc.fonts && doc.fonts.ready) await withTimeout(doc.fonts.ready, 5000, 'Schriften').catch(function(){});
+    inlineSvgStyles(chart, w);
+    const fontCss = await withTimeout(collectFontCss(doc, root), 15000, 'Schriften').catch(function(){ return ''; });
+    const rect = chart.getBoundingClientRect();
+    const W = Math.max(1, Math.round(rect.width * ratio));
+    const H = Math.max(1, Math.round(rect.height * ratio));
+    const out = document.createElement('canvas');
+    out.width = W; out.height = H;
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // 1) Canvas-Ebenen (Kartenflächen, Kartenkacheln)
+    chart.querySelectorAll('canvas').forEach(function(c){
+      const r = c.getBoundingClientRect();
+      if (!c.width || !c.height || !r.width || !r.height) return;
+      ctx.drawImage(c, (r.left - rect.left) * ratio, (r.top - rect.top) * ratio, r.width * ratio, r.height * ratio);
+    });
+
+    // 2) SVG-/HTML-Ebene darüber, als Vektorgrafik in voller Auflösung gerastert
+    const hasContent = chart.querySelector('svg, div, span');
+    if (hasContent) {
+      let svgUrl = await withTimeout(w.htmlToImage.toSvg(chart, {
+        width: rect.width, height: rect.height,
+        fontEmbedCSS: fontCss || undefined,
+        skipFonts: !fontCss,
+        filter: function(n){ return !(n.tagName && n.tagName.toUpperCase() === 'CANVAS'); }
+      }), 25000, 'Zeitüberschreitung');
+      // SVG-Grösse hochsetzen, damit der Browser scharf (nicht hochskaliert) rastert
+      const comma = svgUrl.indexOf(',');
+      let svg = decodeURIComponent(svgUrl.slice(comma + 1));
+      svg = svg.replace(/^<svg([^>]*?)\swidth="[\d.]+"\s+height="[\d.]+"/, '<svg$1 width="' + W + '" height="' + H + '"');
+      if (!/viewBox=/.test(svg.slice(0, 300))) svg = svg.replace(/^<svg/, '<svg viewBox="0 0 ' + rect.width + ' ' + rect.height + '"');
+      svgUrl = svgUrl.slice(0, comma + 1) + encodeURIComponent(svg);
+      const im = await loadImage(svgUrl);
+      ctx.drawImage(im, 0, 0, W, H);
+    }
+
+    // 3) Leere Ränder wegschneiden
+    const bbox = findBBox(out);
+    if (!bbox) return null;
+    const crop = document.createElement('canvas');
+    crop.width = bbox[2] - bbox[0] + 1;
+    crop.height = bbox[3] - bbox[1] + 1;
+    crop.getContext('2d').drawImage(out, bbox[0], bbox[1], crop.width, crop.height, 0, 0, crop.width, crop.height);
+    return crop;
+  }
+
+  function findBBox(canvas){
+    const w = canvas.width, h = canvas.height;
+    const data = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let y = 0; y < h; y++) {
+      const row = y * w * 4;
+      for (let x = 0; x < w; x++) {
+        if (data[row + x * 4 + 3] > 8) {
+          if (x < x0) x0 = x;
+          if (x > x1) x1 = x;
+          if (y < y0) y0 = y;
+          if (y > y1) y1 = y;
+        }
+      }
+    }
+    return x1 < 0 ? null : [x0, y0, x1, y1];
+  }
+
+  /* ---------- Zusammensetzen im gewünschten Format ---------- */
+  function bgColor(bg){ return bg === 'transparent' ? null : bg === 'dark' ? '#000000' : '#ffffff'; }
+
+  function compose(source, opts){
+    const out = document.createElement('canvas');
+    let W, H;
+    if (opts.size === 'crop') {
+      W = source.width; H = source.height;
+    } else {
+      const p = opts.size.split('x').map(Number);
+      W = p[0]; H = p[1];
+    }
+    out.width = W; out.height = H;
+    const ctx = out.getContext('2d');
+    const bg = bgColor(opts.bg);
+    if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    if (opts.size === 'crop') {
+      ctx.drawImage(source, 0, 0);
+    } else {
+      const availW = W * (1 - 2 * opts.pad), availH = H * (1 - 2 * opts.pad);
+      const s = Math.min(availW / source.width, availH / source.height);
+      const dw = source.width * s, dh = source.height * s;
+      ctx.drawImage(source, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    }
+    return out;
+  }
+
+  function canvasToBlob(canvas){
+    return new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
+  }
+
+  function saveBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 15000);
+  }
+
+  async function downloadUrl(url, filename){
+    try {
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      saveBlob(await resp.blob(), filename);
+      return true;
+    } catch(e){
+      window.open(url, '_blank', 'noopener');
+      return false;
+    }
+  }
+
+  function ensurePng(name){
+    name = (name || '').trim() || 'grafik';
+    return /\.png$/i.test(name) ? name : name + '.png';
+  }
+
+  // Rendern nacheinander (nicht parallel), damit der Browser nicht überlastet wird.
+  let queue = Promise.resolve();
+  function enqueueRender(id, o){
+    const p = queue.then(function(){ return renderChart(id, o); });
+    queue = p.catch(function(){});
+    return p;
+  }
+
+  // Ein "Eintrag" = eine Grafik mit ihren gerechneten Varianten (je Schriftgrösse/Legende/Dark).
+  function makeEntry(id){
+    return { id: id, stem: id, cache: {}, current: null };
+  }
+  async function ensureRendered(entry){
+    const o = getOpts();
+    const key = renderKey(o);
+    if (!entry.cache[key]) entry.cache[key] = enqueueRender(entry.id, o);
+    return entry.cache[key];
+  }
+
+  /* ---------- Einzelne Grafik ---------- */
+  const urlInput = document.getElementById('urlInput');
+  const result = document.getElementById('result');
+  const chartTitleEl = document.getElementById('chartTitle');
+  const previewWrap = document.getElementById('previewWrap');
+  const versionTag = document.getElementById('versionTag');
+  const resolutionEl = document.getElementById('resolution');
+  const filenameInput = document.getElementById('filenameInput');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const statusEl = document.getElementById('status');
+  const originalsEl = document.getElementById('originals');
+
+  let single = null;
+  let singleToken = 0;
+  let debounce = null;
+  let filenameTouched = false;
+
+  filenameInput.addEventListener('input', function(){ filenameTouched = true; });
+
+  function renderOriginals(id, stem){
+    originalsEl.innerHTML = '';
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl';
+    lbl.textContent = 'Originale von Datawrapper';
+    originalsEl.appendChild(lbl);
+    [['plain.png', 'Ohne Titel/Quelle'], ['full.png', 'Komplett mit Titel und Quelle']].forEach(function(o){
+      const a = document.createElement('a');
+      a.textContent = o[1];
+      a.href = DW + id + '/' + o[0];
+      a.addEventListener('click', async function(ev){
+        ev.preventDefault();
+        await downloadUrl(a.href, (stem || id) + '_' + o[0]);
+      });
+      originalsEl.appendChild(a);
+      originalsEl.appendChild(document.createElement('br'));
+    });
+  }
+
+  function showLoading(text){
+    previewWrap.classList.remove('checker');
+    previewWrap.innerHTML = '<span class="placeholder"><span class="spinner"></span>' + text + '</span>';
+    resolutionEl.textContent = '';
+    downloadBtn.disabled = true;
+  }
+
+  async function refreshSingle(){
+    if (!single) return;
+    const myToken = singleToken;
+    const entry = single;
+    const opts = getOpts();
+    if (!entry.cache[renderKey(opts)]) showLoading('Grafik wird von Datawrapper gerechnet…');
+    try {
+      const r = await ensureRendered(entry);
+      if (myToken !== singleToken || entry !== single) return;
+      const cur = getOpts();
+      if (renderKey(cur) !== renderKey(opts)) return; // inzwischen umgestellt
+      entry.current = r;
+      const out = compose(r.source, cur);
+      previewWrap.innerHTML = '';
+      previewWrap.classList.toggle('checker', cur.bg === 'transparent');
+      const img = document.createElement('img');
+      img.alt = 'Vorschau';
+      img.src = out.toDataURL('image/png');
+      previewWrap.appendChild(img);
+      resolutionEl.textContent = out.width + ' × ' + out.height + ' px';
+      if (!filenameTouched) filenameInput.value = entry.stem + suffixFor(cur.size) + '.png';
+      downloadBtn.disabled = false;
+      statusEl.textContent = '';
+      statusEl.className = '';
+    } catch(e){
+      if (myToken !== singleToken) return;
+      delete entry.cache[renderKey(opts)];
+      previewWrap.innerHTML = '<span class="placeholder">Keine Grafik</span>';
+      statusEl.textContent = e.message + ' Unten gibt es die Original-PNGs von Datawrapper.';
+      statusEl.className = 'err';
+    }
+  }
+
+  function loadSingle(id){
+    const myToken = ++singleToken;
+    single = makeEntry(id);
+    filenameTouched = false;
+    result.hidden = false;
+    chartTitleEl.textContent = '';
+    versionTag.textContent = 'ID ' + id;
+    statusEl.textContent = '';
+    statusEl.className = '';
+    filenameInput.value = id + suffixFor(getOpts().size) + '.png';
+    renderOriginals(id, id);
+
+    fetchInfo(id).then(function(info){
+      if (myToken !== singleToken) return;
+      if (info.title) {
+        chartTitleEl.textContent = info.title;
+        single.stem = slugify(info.title) || id;
+        renderOriginals(id, single.stem);
+        if (!filenameTouched) filenameInput.value = single.stem + suffixFor(getOpts().size) + '.png';
+      }
+      if (info.version) versionTag.textContent = 'ID ' + id + ' · aktuelle Version ' + info.version;
+    });
+    refreshSingle();
+  }
+
+  async function handleInput(){
+    const val = urlInput.value.trim();
+    if (debounce) { clearTimeout(debounce); debounce = null; }
+    if (!val) { singleToken++; result.hidden = true; single = null; return; }
+    const ids = extractIds(val);
+    if (ids.length) {
+      if (single && single.id === ids[0]) return;
+      debounce = setTimeout(function(){ loadSingle(ids[0]); }, 300);
+      return;
+    }
+    if (/^https?:\/\//i.test(val)) {
+      const myToken = ++singleToken;
+      single = null;
+      debounce = setTimeout(async function(){
+        result.hidden = false;
+        chartTitleEl.textContent = '';
+        originalsEl.innerHTML = '';
+        showLoading('Suche Datawrapper-Grafik im Artikel…');
+        try {
+          const resp = await fetch(val, { cache: 'no-store' });
+          const html = await resp.text();
+          if (myToken !== singleToken) return;
+          const found = extractIds(html);
+          if (!found.length) throw new Error('none');
+          loadSingle(found[0]);
+          if (found.length > 1) {
+            statusEl.textContent = found.length + ' Grafiken im Artikel gefunden – die erste wird angezeigt. Für alle: Tab „Mehrere Grafiken".';
+            statusEl.className = '';
+          }
+        } catch(e){
+          if (myToken !== singleToken) return;
+          previewWrap.innerHTML = '<span class="placeholder">Keine Grafik gefunden</span>';
+          statusEl.textContent = 'Kein Datawrapper-Link erkannt bzw. Artikel nicht direkt abrufbar. Alternativ den Seitenquelltext in den Tab „Mehrere Grafiken" einfügen.';
+          statusEl.className = 'err';
+        }
+      }, 600);
+      return;
+    }
+    singleToken++;
+    single = null;
+    result.hidden = false;
+    chartTitleEl.textContent = '';
+    originalsEl.innerHTML = '';
+    previewWrap.classList.remove('checker');
+    previewWrap.innerHTML = '<span class="placeholder">Kein Datawrapper-Link</span>';
+    downloadBtn.disabled = true;
+    statusEl.textContent = 'Bitte einen Datawrapper-Link (z.B. datawrapper.de/_/… oder datawrapper.dwcdn.net/…) oder eine 5-stellige ID einfügen.';
+    statusEl.className = 'err';
+  }
+  urlInput.addEventListener('input', handleInput);
+
+  downloadBtn.addEventListener('click', async function(){
+    if (!single || !single.current) return;
+    const filename = ensurePng(filenameInput.value);
+    saveBlob(await canvasToBlob(compose(single.current.source, getOpts())), filename);
+    statusEl.textContent = 'Heruntergeladen als „' + filename + '".';
+    statusEl.className = 'ok';
+  });
+
+  /* ---------- Mehrere Grafiken ---------- */
+  const batchInput = document.getElementById('batchInput');
+  const batchProcessBtn = document.getElementById('batchProcessBtn');
+  const batchResultsEl = document.getElementById('batchResults');
+  const batchDownloadAllBtn = document.getElementById('batchDownloadAllBtn');
+  const batchHintEl = document.getElementById('batchHint');
+  const batchStatusEl = document.getElementById('batchStatus');
+  let batchItems = [];
+  let batchToken = 0;
+
+  function buildBatchCard(id){
+    const item = makeEntry(id);
+    item.touched = false;
+    item.title = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'result-card';
+    const thumb = document.createElement('div');
+    thumb.className = 'rc-thumb';
+    const info = document.createElement('div');
+    info.className = 'rc-info';
+    const fn = document.createElement('input');
+    fn.type = 'text'; fn.className = 'rc-filename'; fn.spellcheck = false;
+    fn.value = id + suffixFor(getOpts().size) + '.png';
+    fn.addEventListener('input', function(){ item.touched = true; });
+    const st = document.createElement('div');
+    st.className = 'rc-status';
+    info.appendChild(fn); info.appendChild(st);
+    const btn = document.createElement('button');
+    btn.className = 'btn-secondary rc-download';
+    btn.textContent = 'Herunterladen';
+    btn.disabled = true;
+    wrap.appendChild(thumb); wrap.appendChild(info); wrap.appendChild(btn);
+    Object.assign(item, { el: wrap, thumb: thumb, fn: fn, st: st, btn: btn });
+
+    item.setStatus = function(text, cls){
+      st.textContent = (item.title ? item.title + ' – ' : '') + text;
+      st.className = 'rc-status' + (cls ? ' ' + cls : '');
+    };
+    item.refresh = async function(){
+      const opts = getOpts();
+      if (!item.cache[renderKey(opts)]) {
+        btn.disabled = true;
+        thumb.classList.remove('checker');
+        thumb.innerHTML = '<span class="spinner"></span>';
+        item.setStatus('wird gerechnet…');
+      }
+      try {
+        const r = await ensureRendered(item);
+        const cur = getOpts();
+        if (renderKey(cur) !== renderKey(opts)) return;
+        item.current = r;
+        const out = compose(r.source, cur);
+        thumb.innerHTML = '';
+        thumb.classList.toggle('checker', cur.bg === 'transparent');
+        const small = document.createElement('canvas');
+        small.width = 192; small.height = Math.max(1, Math.round(192 * out.height / out.width));
+        small.getContext('2d').drawImage(out, 0, 0, small.width, small.height);
+        const img = document.createElement('img');
+        img.src = small.toDataURL('image/png');
+        thumb.appendChild(img);
+        if (!item.touched) fn.value = item.stem + suffixFor(cur.size) + '.png';
+        btn.disabled = false;
+        item.setStatus('bereit');
+        return true;
+      } catch(e){
+        delete item.cache[renderKey(opts)];
+        thumb.innerHTML = '–';
+        item.setStatus(e.message, 'err');
+        return false;
+      }
+    };
+    btn.addEventListener('click', async function(){
+      if (!item.current) return;
+      const filename = ensurePng(fn.value);
+      saveBlob(await canvasToBlob(compose(item.current.source, getOpts())), filename);
+      item.setStatus('heruntergeladen ✓', 'ok');
+    });
+    return item;
+  }
+
+  async function runBatch(ids){
+    const myToken = ++batchToken;
+    batchResultsEl.innerHTML = '';
+    batchItems = ids.map(buildBatchCard);
+    batchItems.forEach(function(it){ batchResultsEl.appendChild(it.el); });
+    batchDownloadAllBtn.hidden = true;
+    batchHintEl.hidden = true;
+    batchStatusEl.textContent = ids.length + ' Grafik(en) gefunden – werden nacheinander gerechnet…';
+    batchStatusEl.className = 'hint';
+
+    batchItems.forEach(function(it){
+      fetchInfo(it.id).then(function(info){
+        if (!info.title) return;
+        it.title = info.title;
+        it.stem = slugify(info.title) || it.id;
+        if (!it.touched) it.fn.value = it.stem + suffixFor(getOpts().size) + '.png';
+        it.setStatus(it.current ? 'bereit' : 'wird gerechnet…');
+      });
+    });
+    const results = await Promise.all(batchItems.map(function(it){ return it.refresh(); }));
+    if (myToken !== batchToken) return;
+    const ok = results.filter(Boolean).length;
+    batchStatusEl.textContent = ok + ' von ' + ids.length + ' Grafik(en) bereit.';
+    batchStatusEl.className = ok ? 'hint ok' : 'hint err';
+    batchDownloadAllBtn.hidden = ok === 0;
+    batchHintEl.hidden = ok < 2;
+  }
+
+  batchProcessBtn.addEventListener('click', async function(){
+    const raw = batchInput.value.trim();
+    if (!raw) return;
+    const ids = extractIds(raw);
+    if (ids.length) { runBatch(ids); return; }
+
+    if (!raw.includes('\n') && /^https?:\/\//i.test(raw)) {
+      batchStatusEl.textContent = 'Lade Artikel-Seite…';
+      batchStatusEl.className = 'hint';
+      try {
+        const resp = await fetch(raw, { cache: 'no-store' });
+        const found = extractIds(await resp.text());
+        if (!found.length) {
+          batchStatusEl.textContent = 'Seite geladen, aber keine Datawrapper-Grafiken gefunden.';
+          batchStatusEl.className = 'hint err';
+          return;
+        }
+        runBatch(found);
+      } catch(e){
+        batchStatusEl.textContent = 'Automatischer Abruf dieser Seite nicht möglich. Stattdessen: Seitenquelltext holen (Rechtsklick → „Seitenquelltext anzeigen" bzw. Strg/Cmd+U → alles kopieren), hier einfügen und nochmals auf „Verarbeiten" klicken.';
+        batchStatusEl.className = 'hint err';
+      }
+      return;
+    }
+    batchStatusEl.textContent = 'Keine Datawrapper-Links gefunden.';
+    batchStatusEl.className = 'hint err';
+  });
+
+  batchDownloadAllBtn.addEventListener('click', async function(){
+    for (const it of batchItems) {
+      if (!it.current) continue;
+      it.btn.click();
+      await sleep(500);
+    }
+  });
+
+  /* ---------- Einstellungen live anwenden ---------- */
+  function onOptsChange(){
+    padVal.textContent = padRange.value + ' %';
+    padField.style.opacity = sizeSel.value === 'crop' ? '0.4' : '1';
+    padRange.disabled = sizeSel.value === 'crop';
+    refreshSingle();
+    batchItems.forEach(function(it){ it.refresh(); });
+  }
+  [sizeSel, bgSel, textSel, legendSel].forEach(function(el){ el.addEventListener('change', onOptsChange); });
+  let padTimer = null;
+  padRange.addEventListener('input', function(){
+    padVal.textContent = padRange.value + ' %';
+    clearTimeout(padTimer);
+    padTimer = setTimeout(onOptsChange, 150);
+  });
+
+  // Link direkt per URL-Parameter übergeben: …/dwrap.html?url=…
+  const qs = new URLSearchParams(location.search);
+  const preset = qs.get('url') || qs.get('id');
+  if (preset) { urlInput.value = preset; handleInput(); }
+
+  // Für Tests
+  window.__dw = { renderChart: renderChart, compose: compose, getOpts: getOpts };
+})();
+</script>
+</body>
+</html>
