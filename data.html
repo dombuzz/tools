@@ -990,7 +990,7 @@
     padTimer = setTimeout(onOptsChange, 150);
   });
 
-  // Link direkt per URL-Parameter übergeben: …/dwrap.html?url=…
+  // Link direkt per URL-Parameter übergeben: …/data.html?url=…
   const qs = new URLSearchParams(location.search);
   const preset = qs.get('url') || qs.get('id');
   if (preset) { urlInput.value = preset; handleInput(); }
