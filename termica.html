@@ -83,6 +83,10 @@ td.plain{padding:0 4px}
 .legend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
 .sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:3px}
 #ema{width:100%;height:420px;display:block;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.sources{padding-left:18px;display:grid;gap:4px}
+.note a{color:var(--link)}
+#cmp td,#cmp th{padding:4px 8px;height:auto;cursor:default}
+#cmp th.rowh{min-width:150px}
 .note{font-size:12px;color:var(--muted);margin-top:14px;max-width:65ch}
 .status{font-size:13px;color:var(--muted)}
 .err{color:var(--temp)}
@@ -151,8 +155,20 @@ td.plain{padding:0 4px}
       <span><span class="sw" style="background:var(--dew)"></span>Taupunkt</span>
       <span><span class="sw" style="background:var(--thermal)"></span>Thermikteilchen (trockenadiabatisch)</span>
       <span>gestrichelt grau: Trockenadiabaten</span>
+      <span>Höhen links in m ü. M.</span>
     </div>
-    <p class="note">Daten: Open-Meteo (Modellrechnungen, frei verfügbar). Thermik-Obergrenze und Wolkenbasis sind aus dem Temperaturprofil geschätzt (Teilchenmethode, Basis ≈ 125 m × Spread). Startplatz-Koordinaten sind ungefähr. Keine Gewähr – ersetzt weder Flugwetterbericht noch eigene Beurteilung vor Ort.</p>
+    <h3>Modellvergleich <span id="cmpLabel" style="text-transform:none;letter-spacing:0"></span></h3>
+    <p class="note" style="margin-top:0">Stimmen mehrere Modelle überein, ist die Prognose verlässlicher. Lädt erst auf Knopfdruck, um das Abfragelimit zu schonen.</p>
+    <button id="cmpBtn" class="chip" type="button">Modelle vergleichen</button>
+    <div class="tablewrap" id="cmpWrap" hidden style="margin-top:8px"><table id="cmp"></table></div>
+    <h3>Datenquellen</h3>
+    <ul class="note sources">
+      <li><b>Wetterdaten:</b> via <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> – Modelle von MeteoSchweiz (ICON-CH1/CH2), DWD (ICON-D2, ICON), ECMWF (IFS) und NOAA (GFS). «Automatisch» wählt je Ort und Zeitraum das feinste verfügbare Modell.</li>
+      <li><b>Karte &amp; Namen:</b> swisstopo (Landeskarte, swissNAMES3D, Gemeindegrenzen, Ortschaftenverzeichnis), ausserhalb der Schweiz OpenStreetMap.</li>
+      <li><b>Luftraum:</b> Segelflugkarte des Bundesamts für Zivilluftfahrt (BAZL), einblendbar über das Ebenen-Symbol auf der Karte. Nur zur Orientierung, nicht für die Flugvorbereitung.</li>
+      <li><b>Berechnet in Termica:</b> Thermik-Obergrenze und Wolkenbasis aus dem Temperaturprofil (Teilchenmethode, Basis ≈ 125 m × Spread) sowie die Ampel-Einschätzung.</li>
+    </ul>
+    <p class="note">Startplatz-Koordinaten sind ungefähr. Keine Gewähr – ersetzt weder Flugwetterbericht noch eigene Beurteilung vor Ort.</p>
   </section>
 </main>
 
@@ -304,6 +320,7 @@ function renderPanel(onlySel){
   renderSummary(d,i,a);
   if(!onlySel)renderTable(d,day);else markSel();
   drawEmagram(a,d,i);
+  renderCompare();
 }
 function renderSummary(d,i,a){
   if(!a){$("summary").innerHTML="";return;}
@@ -392,7 +409,7 @@ function drawEmagram(a,d,i){
   // Achsen / Beschriftung
   c.strokeStyle=mut;c.lineWidth=1;c.strokeRect(L,Tp,R-L,B-Tp);
   c.font="11px 'JetBrains Mono',monospace";c.fillStyle=mut;c.textAlign="right";
-  for(const q of pr){if(q.sfc)continue;const Y=y(q.p);if(Y<Tp+6||Y>B-4)continue;c.fillText(Math.round(q.z/100)/10+"k",L-4,Y+4);}
+  for(const q of pr){if(q.sfc)continue;const Y=y(q.p);if(Y<Tp+6||Y>B-4)continue;c.fillText(String(Math.round(q.z/100)*100),L-4,Y+4);}
   c.textAlign="center";
   for(let T=-30;T<=30;T+=10){const X=x(T,pBot);if(X>L+8&&X<R-8)c.fillText(T+"°",X,B+15);}
   // Wind rechts
@@ -405,13 +422,46 @@ function drawEmagram(a,d,i){
 }
 window.addEventListener("resize",()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>renderPanel(true),150);});
 
+/* ---------- Modellvergleich ---------- */
+const CMP_MODELS=[["meteoswiss_icon_ch1","MeteoSchweiz ICON-CH1"],["meteoswiss_icon_ch2","MeteoSchweiz ICON-CH2"],["icon_d2","DWD ICON-D2"],["ecmwf_ifs025","ECMWF IFS"],["gfs_seamless","NOAA GFS"]];
+const cmpData={};let cmpKey=null;
+$("cmpBtn").addEventListener("click",async()=>{
+  const loc=state.loc;if(!loc)return;cmpKey=`${loc.lat},${loc.lon}`;
+  $("cmpBtn").disabled=true;$("cmpBtn").textContent="Lade Modelle …";$("cmpWrap").hidden=false;
+  const saved=state.model;
+  for(const [m] of CMP_MODELS){
+    if(cmpData[cmpKey+m])continue;
+    state.model=m;const u=pointUrl(loc);state.model=saved;
+    try{cmpData[cmpKey+m]=await withRetry(()=>getJSON(u),s=>{$("cmpBtn").textContent=`Abfragelimit – weiter in ${s} s …`;});}
+    catch(e){cmpData[cmpKey+m]={err:e.message};}
+    renderCompare();
+  }
+  $("cmpBtn").disabled=false;$("cmpBtn").textContent="Modelle vergleichen";renderCompare();
+});
+function renderCompare(){
+  if(!state.loc||cmpKey!==`${state.loc.lat},${state.loc.lon}`){$("cmpWrap").hidden=true;$("cmpLabel").textContent="";return;}
+  const day=dayList()[state.day],lab={good:"fliegbar",warn:"Vorsicht",bad:"nicht fliegbar",weak:"ruhig"};
+  $("cmpLabel").textContent=`· ${dayName(day,state.day)}, ${pad(state.hour)}:00`;
+  let h=`<thead><tr><th class="rowh">Modell</th><th>Thermik bis</th><th>Basis</th><th>Boden</th><th>Schicht</th><th>Regen Tag</th><th>Einschätzung</th></tr></thead><tbody>`;
+  for(const [m,name] of CMP_MODELS){
+    const d=cmpData[cmpKey+m];
+    if(!d){h+=`<tr><th class="rowh">${name}</th><td colspan="6" class="plain">lädt …</td></tr>`;continue;}
+    const i=d.hourly?idxFor(d.hourly.time,day,state.hour):-1,a=i>=0&&d.hourly.temperature_2m[i]!=null?analyse(d,i):null;
+    if(!a){h+=`<tr><th class="rowh">${name}</th><td colspan="6" class="plain" style="color:var(--muted)">${d.err?"nicht verfügbar":"keine Daten für diesen Tag (Reichweite des Modells)"}</td></tr>`;continue;}
+    const rain=d.hourly.time.reduce((s,t,k)=>t.startsWith(day)?s+(d.hourly.precipitation?.[k]||0):s,0);
+    h+=`<tr><th class="rowh">${name}</th><td>${a.depth>=200?r0(a.ceiling)+" m":"–"}</td><td>${a.cumulus&&a.depth>=200?r0(a.lcl)+" m":"blau"}</td><td>${r0(d.hourly.wind_speed_10m[i])} km/h</td><td>${r0(a.wLayer)} km/h</td><td>${rain.toFixed(1)} mm</td><td><span class="verdict v-${a.verdict}">${lab[a.verdict]}</span></td></tr>`;
+  }
+  $("cmp").innerHTML=h+"</tbody>";$("cmpWrap").hidden=false;
+}
+
 /* ---------- Karte ---------- */
 const map=L.map("map",{zoomControl:true}).setView([46.72,9.65],9);
 const swiss=L.tileLayer("https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg",{maxZoom:18,attribution:'© swisstopo'});
 const otm=L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:'© OpenStreetMap, SRTM · OpenTopoMap'});
 const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'© OpenStreetMap'});
 swiss.addTo(map);
-L.control.layers({"swisstopo":swiss,"OpenTopoMap":otm,"OpenStreetMap":osm},null,{position:"topright"}).addTo(map);
+const airspace=L.tileLayer("https://wmts.geo.admin.ch/1.0.0/ch.bazl.segelflugkarte/default/current/3857/{z}/{x}/{y}.png",{maxNativeZoom:11,maxZoom:18,opacity:.75,attribution:'Luftraum © BAZL'});
+L.control.layers({"swisstopo":swiss,"OpenTopoMap":otm,"OpenStreetMap":osm},{"Luftraum (Segelflugkarte BAZL)":airspace},{position:"topright"}).addTo(map);
 let marker=null;const overlay=L.layerGroup().addTo(map);map.on("click",e=>loadPoint({name:`Punkt ${e.latlng.lat.toFixed(3)}, ${e.latlng.lng.toFixed(3)}`,lat:e.latlng.lat,lon:e.latlng.lng,alt:null,point:true}));
 
 /* ---------- Nächster Flurname / Ort ---------- */
