@@ -70,6 +70,14 @@
     'bau.html':         'Bau'
   };
 
+  // Gruppen im Dropdown. Die Tools erscheinen in der hier aufgeführten Reihenfolge.
+  // Nicht aufgeführte Dateien landen alphabetisch in DEFAULT_GROUP.
+  const GROUPS = {
+    'RTR': ['rtr-picture.html', 'votgr.html']
+  };
+  const DEFAULT_GROUP = 'Dom';
+  const GROUP_ORDER = ['Dom', 'RTR'];
+
   const sel = document.getElementById('tools');
   const msg = document.getElementById('msg');
 
@@ -93,13 +101,24 @@
         .filter(f => f.type === 'blob' && /\.html?$/i.test(f.path) && !HIDE.includes(f.path));
       const tools = await Promise.all(files.map(async f => {
         const url = toUrl(f.path);
-        return { url, title: NAMES[f.path] || await titleOf(url, f.path.split('/').at(-1).replace(/\.html?$/i, '')) };
+        const group = Object.keys(GROUPS).find(g => GROUPS[g].includes(f.path)) || DEFAULT_GROUP;
+        const pos = GROUPS[group] ? GROUPS[group].indexOf(f.path) : -1;
+        return { url, group, pos, title: NAMES[f.path] || await titleOf(url, f.path.split('/').at(-1).replace(/\.html?$/i, '')) };
       }));
       tools.sort((a, b) => a.title.localeCompare(b.title, 'de'));
 
       sel.innerHTML = '';
       sel.append(new Option(tools.length ? 'Tool wählen …' : 'Keine Tools gefunden', ''));
-      for (const t of tools) sel.append(new Option(t.title, '/' + t.url));
+      const order = [...GROUP_ORDER, ...new Set(tools.map(t => t.group))].filter((g, i, a) => a.indexOf(g) === i);
+      for (const g of order) {
+        const items = tools.filter(t => t.group === g)
+          .sort((a, b) => (a.pos < 0 ? 1e9 : a.pos) - (b.pos < 0 ? 1e9 : b.pos) || a.title.localeCompare(b.title, 'de'));
+        if (!items.length) continue;
+        const og = document.createElement('optgroup');
+        og.label = g;
+        for (const t of items) og.append(new Option(t.title, '/' + t.url));
+        sel.append(og);
+      }
       sel.disabled = !tools.length;
     } catch (e) {
       sel.innerHTML = '<option value="">Liste nicht verfügbar</option>';
