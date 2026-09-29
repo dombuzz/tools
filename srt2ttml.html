@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SRT → TTML</title>
+<style>
+:root{--bg:#f6f5f2;--panel:#fff;--ink:#1d1d1f;--muted:#6b6b70;--line:#e2e0da;--accent:#c8102e;--accent-ink:#fff;--ok:#1f7a4d;--ok-bg:#e6f4ec;--err:#c8102e;--err-bg:#fbe5e8;--code:#f0eee9}
+@media (prefers-color-scheme: dark){:root{--bg:#161618;--panel:#1f1f22;--ink:#ececee;--muted:#9a9aa1;--line:#333338;--accent:#ff4d64;--accent-ink:#161618;--ok:#5fd29a;--ok-bg:#1c3328;--err:#ff6b7d;--err-bg:#3d1d23;--code:#2a2a2e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}
+p.sub{margin:0 0 16px;color:var(--muted)}
+#drop{background:var(--panel);border:2px dashed var(--line);border-radius:12px;padding:40px 16px;text-align:center;cursor:pointer}
+#drop.over{border-color:var(--accent)}
+#list{margin-top:14px;display:grid;gap:8px}
+.item{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.item .name{font-weight:600;word-break:break-all}
+.item .info{color:var(--muted);font-size:13px}
+.item.err{border-color:var(--err);background:var(--err-bg)}
+a.btn,button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer;text-decoration:none}
+.primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important;font-weight:600}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+details{margin-top:18px;color:var(--muted);font-size:14px}
+pre{background:var(--code);padding:10px;border-radius:8px;overflow:auto;font-size:12px;color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <h1>SRT → TTML</h1>
+  <p class="sub">Wandelt SRT-Dateien in TTML nach RTR-Vorlage um. Mehrere Dateien gleichzeitig möglich, alles bleibt lokal im Browser.</p>
+  <div id="drop">SRT-Dateien hierher ziehen oder <u>klicken</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
+  <div class="row" id="allRow" hidden><button class="primary" id="all">Alle herunterladen</button><button id="clear">Liste leeren</button></div>
+  <div id="list"></div>
+  <details>
+    <summary>RTR-Vorlage (Subtitle Edit Custom Format)</summary>
+    <pre>Zeitformat: hh:mm:ss.zzz
+&lt;p begin="{start}" xml:id="p{number}" end="{end}"&gt;
+    &lt;span tts:color="#ffffff"&gt;{text}&lt;/span&gt;
+&lt;/p&gt;
+Neue Zeile: &lt;/span&gt;&lt;br&gt;&lt;/br&gt;&lt;span tts:color="#ffffff"&gt;</pre>
+  </details>
+</main>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const results = [];
+
+function tcToMs(t){ const m=t.trim().match(/(\d+):(\d+):(\d+)[,.](\d+)/); if(!m) return NaN; return ((+m[1]*60+ +m[2])*60+ +m[3])*1000 + +m[4].padEnd(3,'0').slice(0,3); }
+function msToTt(ms){ ms=Math.max(0,Math.round(ms)); const p=(n,l=2)=>String(n).padStart(l,'0'); return `${p(Math.floor(ms/3600000))}:${p(Math.floor(ms/60000)%60)}:${p(Math.floor(ms/1000)%60)}.${p(ms%1000,3)}`; }
+const cleanLine = l => l.replace(/<[^>]+>/g,'').replace(/\{\\[^}]*\}/g,'').replace(/\s+/g,' ').trim();
+const x = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function parseSrt(text){
+  text=text.replace(/^﻿/,'').replace(/\r\n?/g,'\n');
+  const out=[];
+  for (const block of text.split(/\n\s*\n/)){
+    const lines=block.split('\n');
+    const ti=lines.findIndex(l=>l.includes('-->'));
+    if (ti<0) continue;
+    const [a,b]=lines[ti].split('-->');
+    const start=tcToMs(a), end=tcToMs(b);
+    if (isNaN(start)||isNaN(end)) continue;
+    const txt=lines.slice(ti+1).map(cleanLine).filter(Boolean);
+    if (txt.length) out.push({start,end,lines:txt});
+  }
+  return out;
+}
+
+function buildTtml(list){
+  const NL='</span><br></br><span tts:color="#ffffff">';
+  const ps=list.map((c,i)=>`<p begin="${msToTt(c.start)}" xml:id="p${i+1}" end="${msToTt(c.end)}">
+    <span tts:color="#ffffff">${c.lines.map(x).join(NL)}</span>
+</p>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+    <head>
+        <styling></styling>
+        <layout></layout>
+    </head>
+    <body><div>
+${ps}
+        </div>
+  </body>
+</tt>
+`;
+}
+
+function download(r){
+  const a=document.createElement('a'); a.href=r.url; a.download=r.name; document.body.appendChild(a); a.click(); a.remove();
+}
+
+function addResult(fileName, text){
+  const el=document.createElement('div'); el.className='item';
+  const cues=parseSrt(text);
+  const name=fileName.replace(/\.srt$/i,'')+'.ttml';
+  if (!cues.length){
+    el.classList.add('err');
+    el.innerHTML=`<div><div class="name"></div><div class="info">Keine Untertitel gefunden – ist das eine SRT-Datei?</div></div>`;
+    el.querySelector('.name').textContent=fileName;
+  } else {
+    const url=URL.createObjectURL(new Blob([buildTtml(cues)],{type:'application/ttml+xml;charset=utf-8'}));
+    const r={name,url}; results.push(r);
+    const dur=msToTt(cues[cues.length-1].end).slice(0,8);
+    el.innerHTML=`<div><div class="name"></div><div class="info">${cues.length} Untertitel · Ende ${dur}</div></div>`;
+    el.querySelector('.name').textContent=name;
+    const b=document.createElement('a'); b.className='btn primary'; b.textContent='Herunterladen'; b.href=url; b.download=name;
+    el.appendChild(b);
+  }
+  $('list').prepend(el);
+  $('allRow').hidden = results.length<2;
+}
+
+function handle(fileList){
+  const files=[...fileList];
+  files.forEach(f=>{ const r=new FileReader(); r.onload=()=>{ addResult(f.name, r.result); if (files.length===1 && results.length) download(results[results.length-1]); }; r.readAsText(f,'utf-8'); });
+}
+
+const drop=$('drop');
+drop.onclick=()=>$('file').click();
+$('file').onchange=e=>{ handle(e.target.files); e.target.value=''; };
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');handle(e.dataTransfer.files);};
+$('all').onclick=()=>results.forEach((r,i)=>setTimeout(()=>download(r),i*300));
+$('clear').onclick=()=>{ results.forEach(r=>URL.revokeObjectURL(r.url)); results.length=0; $('list').innerHTML=''; $('allRow').hidden=true; };
+
+window.__s2t={parseSrt,buildTtml};
+})();
+</script>
+</body>
+</html>
