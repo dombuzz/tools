@@ -19,7 +19,9 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{padding:20px 16px 8px;max-width:1100px;margin:0 auto}
+header{padding:20px 16px 8px;max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px 16px}
+.head-text{flex:1 1 320px;min-width:0}
+.head-link{flex:none;white-space:nowrap}
 h1{font-size:22px;margin:0 0 4px}
 header p{margin:0;color:var(--muted)}
 main{max-width:1100px;margin:0 auto;padding:8px 16px 60px}
@@ -68,8 +70,11 @@ input[type=number]{width:70px}
 </head>
 <body>
 <header>
-  <h1>Untertitel Rumantsch → Deutsch</h1>
-  <p>SRT laden, Sätze in ALAS übersetzen, zurück auf die Timecodes verteilen, Normen prüfen, SRT oder TTML exportieren. Alles bleibt lokal im Browser.</p>
+  <div class="head-text">
+    <h1>Untertitel Rumantsch → Deutsch</h1>
+    <p>SRT laden, Sätze in ALAS übersetzen, zurück auf die Timecodes verteilen, Normen prüfen, SRT oder TTML exportieren. Alles bleibt lokal im Browser.</p>
+  </div>
+  <a class="btn head-link" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet</a>
 </header>
 <main>
 
