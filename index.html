@@ -58,7 +58,7 @@
   // Einstellungen
   const REPO = 'dombuzz/tools';
   const BRANCH = 'main';
-  const HIDE = ['index.html', '404.html']; // erscheinen nicht in der Liste
+  const HIDE = ['index.html', '404.html', 'bau.html', 'eli.html']; // erscheinen nicht in der Liste
 
   // Anzeigenamen im Dropdown (Dateiname -> Name). Nicht aufgeführte Dateien zeigen ihren <title>.
   const NAMES = {
@@ -67,8 +67,6 @@
     'data.html':       'Datawrapper-Grafik speichern',
     'sunhome.html':     'Sonnenkalender@Home',
     'votgr.html':       'Karten Abstimmungen GR',
-    'eli.html':         'Eli',
-    'bau.html':         'Bau',
     'termica.html':     'Flugwetter',
     'subs.html':        'Untertitel RM → DE',
     'srt2ttml.html':    'SRT → TTML'
@@ -77,7 +75,7 @@
   // Gruppen im Dropdown. Die Tools erscheinen in der hier aufgeführten Reihenfolge.
   // Nicht aufgeführte Dateien landen alphabetisch in DEFAULT_GROUP.
   const GROUPS = {
-    'Dom': ['bau.html', 'eli.html', 'suncal.html', 'sunhome.html', 'termica.html'],
+    'Dom': ['suncal.html', 'sunhome.html', 'termica.html'],
     'RTR': ['rtr-picture.html', 'votgr.html', 'data.html', 'subs.html', 'srt2ttml.html']
   };
   const DEFAULT_GROUP = 'Dom';
