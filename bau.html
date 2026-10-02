@@ -5,19 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNlMjQ4M2YiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMiwzMikiPgogICAgPGcgZmlsbD0iI2ZmZmZmZiI+CiAgICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iLTE1IiByeD0iNS41IiByeT0iMTMiIHRyYW5zZm9ybT0icm90YXRlKDApIi8+CiAgICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iLTE1IiByeD0iNS41IiByeT0iMTMiIHRyYW5zZm9ybT0icm90YXRlKDEyMCkiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTUiIHJ4PSI1LjUiIHJ5PSIxMyIgdHJhbnNmb3JtPSJyb3RhdGUoMjQwKSIvPgogICAgPC9nPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjAiIHI9IjUiIGZpbGw9IiNlMjQ4M2YiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIyLjUiLz4KICA8L2c+Cjwvc3ZnPgo=">
 <title>Baufortschritt — Wärmepumpe &amp; Umbau</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0b0c0e;
-    --ink: #ededec;
-    --ink-soft: #85898e;
-    --line: #26292d;
-    --confirmed: #e2483f;
-    --confirmed-soft: rgba(226,72,63,0.16);
-    --pending: #e2483f;
-    --pending-soft: rgba(226,72,63,0.10);
-    --card-bg: #151719;
+    --bg: #121214;
+    --ink: #ececef;
+    --ink-soft: #9a9aa2;
+    --line: #2f2f34;
+    --confirmed: #ff4d64;
+    --confirmed-soft: rgba(255,77,100,0.16);
+    --pending: #ff4d64;
+    --pending-soft: rgba(255,77,100,0.10);
+    --card-bg: #1c1c1f;
     --card-shadow: 0 16px 40px rgba(0,0,0,0.6);
   }
 
@@ -27,7 +25,7 @@
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font-family: 'Inter', sans-serif;
+    font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     -webkit-font-smoothing: antialiased;
     padding: 56px 24px 80px;
   }
@@ -44,7 +42,7 @@
   }
 
   h1{
-    font-family: 'Inter', sans-serif;
+    font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     font-weight: 700;
     font-size: clamp(26px, 4vw, 36px);
     line-height: 1.2;
@@ -116,8 +114,8 @@
   .node.pending .dot{ border-color: var(--pending); border-style: dashed; }
   .node.future .dot{ border-color: var(--ink-soft); background: var(--bg); }
 
-  .node:hover .dot{ box-shadow: 0 0 0 6px rgba(226,72,63,0.18); }
-  .node.pending:hover .dot{ box-shadow: 0 0 0 6px rgba(226,72,63,0.18); }
+  .node:hover .dot{ box-shadow: 0 0 0 6px rgba(255,77,100,0.18); }
+  .node.pending:hover .dot{ box-shadow: 0 0 0 6px rgba(255,77,100,0.18); }
   .node.future:hover .dot{ box-shadow: 0 0 0 6px rgba(133,137,142,0.18); }
 
   .label{
@@ -192,7 +190,7 @@
   .node:last-child .tooltip::after{ left: auto; right: 20px; transform: none; }
 
   .tooltip-title{
-    font-family: 'Inter', sans-serif;
+    font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     font-size: 15px;
     font-weight: 700;
     margin: 0 0 8px;
