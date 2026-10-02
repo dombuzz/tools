@@ -151,7 +151,7 @@
   /* ---- Tooltip ---- */
   .tooltip{
     position: absolute;
-    bottom: calc(100% + 22px);
+    top: calc(100% + 22px);
     left: 50%;
     transform: translateX(-50%);
     width: 270px;
@@ -169,16 +169,17 @@
   .node:first-child .tooltip{ left: 0; transform: none; }
   .node:last-child .tooltip{ left: auto; right: 0; transform: none; }
 
-  .node:hover .tooltip{ opacity: 1; pointer-events: auto; }
+  .dot, .label{ cursor: pointer; }
+  .node.tooltip-open .tooltip{ opacity: 1; pointer-events: auto; }
 
   .tooltip::after{
     content: "";
     position: absolute;
-    top: 100%;
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     border: 7px solid transparent;
-    border-top-color: var(--card-bg);
+    border-bottom-color: var(--card-bg);
   }
   .node:first-child .tooltip::after{ left: 20px; transform: none; }
   .node:last-child .tooltip::after{ left: auto; right: 20px; transform: none; }
@@ -459,8 +460,8 @@
 
 </div>
 <script>
-  // Begriffserklärungen: Klick/Tap zum Ein-/Ausblenden (zusätzlich zu Hover am Desktop)
   document.addEventListener('click', function (e) {
+    // Begriffserklärungen (Glossar): Klick zum Ein-/Ausblenden
     var term = e.target.closest('.term');
     var openDefs = document.querySelectorAll('.term-def.open');
     openDefs.forEach(function (def) {
@@ -469,9 +470,25 @@
       }
     });
     if (term) {
-      e.stopPropagation();
       var def = term.querySelector('.term-def');
       if (def) def.classList.toggle('open');
+    }
+
+    // Infoboxen (Tooltips): Klick auf Punkt/Label zum Ein-/Ausblenden
+    var insideTooltip = e.target.closest('.tooltip');
+    var clickedTrigger = e.target.closest('.dot, .label');
+    var clickedNode = e.target.closest('.node');
+
+    if (clickedTrigger && !insideTooltip) {
+      var wasOpen = clickedNode.classList.contains('tooltip-open');
+      document.querySelectorAll('.node.tooltip-open').forEach(function (n) {
+        n.classList.remove('tooltip-open');
+      });
+      if (!wasOpen) clickedNode.classList.add('tooltip-open');
+    } else if (!insideTooltip) {
+      document.querySelectorAll('.node.tooltip-open').forEach(function (n) {
+        n.classList.remove('tooltip-open');
+      });
     }
   });
 </script>
