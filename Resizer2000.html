@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resizer 2000</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23c8102e'/%3E%3Cpath d='M24 76V40h12M76 24v36H64M24 76l52-52' stroke='white' stroke-width='9' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f5f4f2; --card:#ffffff; --text:#1c1c1c; --muted:#6b6b6b;
+    --accent:#c8102e; --accent-dark:#9c0c23; --border:#e2e0dc;
+    --ok:#1f7a3d; --err:#b3261e; --mono:#f0efec;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17171a; --card:#212124; --text:#eeeeee; --muted:#9a9a9a;
+      --accent:#e0384f; --accent-dark:#c8102e; --border:#333336;
+      --ok:#4caf6f; --err:#e0574c; --mono:#2a2a2d;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:40px 16px; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+  }
+  .container{ width:100%; max-width:620px; }
+  h1{ font-size:1.4rem; margin:0 0 4px; letter-spacing:-0.01em; }
+  .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:20px; }
+  .lbl{ display:block; font-size:0.8rem; font-weight:600; margin-bottom:6px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  .drop{
+    border:2px dashed var(--border); border-radius:12px; padding:36px 16px; text-align:center;
+    background:var(--mono); cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.over{ border-color:var(--accent); }
+  .drop strong{ display:block; font-size:1rem; margin-bottom:4px; }
+  .drop span{ color:var(--muted); font-size:0.85rem; }
+  .row{ display:flex; gap:16px; flex-wrap:wrap; margin-top:18px; }
+  .row > div{ flex:1 1 160px; }
+  select, input[type=number]{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
+  }
+  input[type=range]{ width:100%; accent-color:var(--accent); }
+  .check{ display:flex; align-items:center; gap:8px; font-size:0.9rem; margin-top:14px; color:var(--text); }
+  .check input{ accent-color:var(--accent); width:16px; height:16px; }
+  button{
+    background:var(--accent); color:#fff; border:none; border-radius:8px; padding:10px 16px;
+    font-size:0.9rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  button:hover{ background:var(--accent-dark); }
+  button.ghost{ background:transparent; color:var(--muted); border:1px solid var(--border); }
+  button.ghost:hover{ color:var(--text); }
+  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-bottom:12px; }
+  .list{ display:flex; flex-direction:column; gap:10px; }
+  .item{ display:flex; gap:14px; align-items:center; border:1px solid var(--border); border-radius:10px; padding:10px; }
+  .item img{ width:72px; height:72px; object-fit:cover; border-radius:6px; background:var(--mono); flex:none; }
+  .info{ flex:1; min-width:0; font-size:0.85rem; line-height:1.45; }
+  .name{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta{ color:var(--muted); }
+  .meta b{ color:var(--ok); font-weight:600; }
+  .err{ color:var(--err); }
+  .item button{ flex:none; padding:8px 12px; }
+  @media (max-width:480px){ .item{ flex-wrap:wrap; } .item button{ width:100%; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Resizer 2000</h1>
+  <p class="subtitle">Bilder auf 2000&nbsp;px an der langen Seite verkleinern. Alles läuft lokal im Browser – nichts wird hochgeladen.</p>
+
+  <div class="card">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Bilder auswählen">
+      <strong>Bilder hierher ziehen</strong>
+      <span>oder klicken zum Auswählen · Einfügen mit Ctrl/Cmd+V geht auch</span>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+
+    <div class="row">
+      <div>
+        <label class="lbl" for="size">Lange Seite (px)</label>
+        <input type="number" id="size" value="2000" min="100" max="10000" step="10">
+      </div>
+      <div>
+        <label class="lbl" for="format">Format</label>
+        <select id="format">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WebP</option>
+          <option value="keep">Wie Original</option>
+        </select>
+      </div>
+      <div id="qWrap">
+        <label class="lbl" for="quality">Qualität: <span id="qVal">90</span>%</label>
+        <input type="range" id="quality" min="50" max="100" value="90">
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="noUp" checked> Kleinere Bilder nicht vergrössern</label>
+  </div>
+
+  <div class="card" id="results" hidden>
+    <div class="actions">
+      <button class="ghost" id="clear">Leeren</button>
+      <button id="all">Alle herunterladen</button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const drop = $('drop'), fileIn = $('file'), list = $('list');
+const results = [];
+
+$('quality').oninput = e => $('qVal').textContent = e.target.value;
+$('format').onchange = updateQ; updateQ();
+function updateQ(){ $('qWrap').style.opacity = $('format').value === 'image/png' ? .4 : 1; }
+
+drop.onclick = () => fileIn.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); } };
+fileIn.onchange = () => { handle(fileIn.files); fileIn.value = ''; };
+['dragenter','dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => handle(e.dataTransfer.files));
+document.addEventListener('paste', e => {
+  const files = [...e.clipboardData.items].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile());
+  if (files.length) handle(files);
+});
+$('clear').onclick = () => { results.forEach(r => URL.revokeObjectURL(r.url)); results.length = 0; list.innerHTML = ''; $('results').hidden = true; };
+$('all').onclick = async () => { for (const r of results) { download(r); await new Promise(res => setTimeout(res, 250)); } };
+
+async function handle(files){
+  const imgs = [...files].filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) return;
+  $('results').hidden = false;
+  for (const f of imgs) await processFile(f);
+}
+
+async function processFile(file){
+  const el = document.createElement('div');
+  el.className = 'item';
+  el.innerHTML = `<img alt=""><div class="info"><div class="name"></div><div class="meta">Wird verarbeitet …</div></div>`;
+  el.querySelector('.name').textContent = file.name;
+  list.prepend(el);
+  const meta = el.querySelector('.meta');
+
+  try {
+    const bmp = await loadBitmap(file);
+    const w = bmp.width, h = bmp.height;
+    const target = Math.max(1, parseInt($('size').value, 10) || 2000);
+    let scale = target / Math.max(w, h);
+    if (scale > 1 && $('noUp').checked) scale = 1;
+    const nw = Math.round(w * scale), nh = Math.round(h * scale);
+
+    const canvas = resize(bmp, nw, nh);
+    let type = $('format').value;
+    if (type === 'keep') type = ['image/png','image/webp','image/jpeg'].includes(file.type) ? file.type : 'image/jpeg';
+    if (type === 'image/jpeg') flattenWhite(canvas);
+    const q = $('quality').value / 100;
+    const blob = await new Promise(res => canvas.toBlob(res, type, q));
+    if (!blob) throw new Error('Export fehlgeschlagen');
+
+    const ext = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp' }[blob.type] || 'jpg';
+    const base = file.name.replace(/\.[^.]+$/, '') || 'bild';
+    const r = { url: URL.createObjectURL(blob), name: `${base}_${Math.max(nw, nh)}.${ext}` };
+    results.push(r);
+
+    el.querySelector('img').src = r.url;
+    meta.innerHTML = `${w} × ${h} → <b>${nw} × ${nh}</b> · ${fmt(file.size)} → ${fmt(blob.size)}`
+      + (scale === 1 && Math.max(w, h) < target ? ' · <span class="err">nicht vergrössert</span>' : '');
+    const btn = document.createElement('button');
+    btn.textContent = 'Herunterladen';
+    btn.onclick = () => download(r);
+    el.append(btn);
+  } catch (err) {
+    meta.innerHTML = `<span class="err">Fehler: ${err.message || 'Bild konnte nicht gelesen werden'}</span>`;
+  }
+}
+
+async function loadBitmap(file){
+  try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    URL.revokeObjectURL(url);
+    return img; // <img> hat width/height und ist zeichenbar
+  }
+}
+
+// Schrittweise halbieren für saubere Verkleinerung, dann auf Zielgrösse
+function resize(src, nw, nh){
+  let cur = src, cw = src.width, ch = src.height;
+  while (cw / 2 >= nw && ch / 2 >= nh) {
+    const c = makeCanvas(Math.round(cw / 2), Math.round(ch / 2));
+    c.getContext('2d').drawImage(cur, 0, 0, c.width, c.height);
+    cur = c; cw = c.width; ch = c.height;
+  }
+  const out = makeCanvas(nw, nh);
+  out.getContext('2d').drawImage(cur, 0, 0, nw, nh);
+  return out;
+}
+function makeCanvas(w, h){
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  return c;
+}
+function flattenWhite(c){
+  const ctx = c.getContext('2d');
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.globalCompositeOperation = 'source-over';
+}
+function download(r){
+  const a = document.createElement('a');
+  a.href = r.url; a.download = r.name;
+  document.body.append(a); a.click(); a.remove();
+}
+function fmt(b){ return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB'; }
+</script>
+</body>
+</html>
