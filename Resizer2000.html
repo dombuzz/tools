@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="rm">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -61,18 +61,18 @@
 <body>
 <div class="container">
   <h1>Resizer 2000</h1>
-  <p class="subtitle">Bilder auf 2000&nbsp;px an der langen Seite verkleinern. Alles läuft lokal im Browser – nichts wird hochgeladen.</p>
+  <p class="subtitle">Reducir maletgs sin 2000&nbsp;px a la vart lunga.</p>
 
   <div class="card">
-    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Bilder auswählen">
-      <strong>Bilder hierher ziehen</strong>
-      <span>oder klicken zum Auswählen · Einfügen mit Ctrl/Cmd+V geht auch</span>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner maletgs">
+      <strong>Trair qua ils maletgs</strong>
+      <span>u cliccar per tscherner · integrar cun Ctrl/Cmd+V funcziuna era</span>
     </div>
     <input type="file" id="file" accept="image/*" multiple hidden>
 
     <div class="row">
       <div>
-        <label class="lbl" for="size">Lange Seite (px)</label>
+        <label class="lbl" for="size">Vart lunga (px)</label>
         <input type="number" id="size" value="2000" min="100" max="10000" step="10">
       </div>
       <div>
@@ -81,21 +81,21 @@
           <option value="image/jpeg">JPG</option>
           <option value="image/png">PNG</option>
           <option value="image/webp">WebP</option>
-          <option value="keep">Wie Original</option>
+          <option value="keep">Sco l'original</option>
         </select>
       </div>
       <div id="qWrap">
-        <label class="lbl" for="quality">Qualität: <span id="qVal">90</span>%</label>
+        <label class="lbl" for="quality">Qualitad: <span id="qVal">90</span>%</label>
         <input type="range" id="quality" min="50" max="100" value="90">
       </div>
     </div>
-    <label class="check"><input type="checkbox" id="noUp" checked> Kleinere Bilder nicht vergrössern</label>
+    <label class="check"><input type="checkbox" id="noUp" checked> Betg engrondir maletgs pli pitschens</label>
   </div>
 
   <div class="card" id="results" hidden>
     <div class="actions">
-      <button class="ghost" id="clear">Leeren</button>
-      <button id="all">Alle herunterladen</button>
+      <button class="ghost" id="clear">Svidar</button>
+      <button id="all">Telechargiar tuts</button>
     </div>
     <div class="list" id="list"></div>
   </div>
@@ -134,7 +134,7 @@ async function handle(files){
 async function processFile(file){
   const el = document.createElement('div');
   el.className = 'item';
-  el.innerHTML = `<img alt=""><div class="info"><div class="name"></div><div class="meta">Wird verarbeitet …</div></div>`;
+  el.innerHTML = `<img alt=""><div class="info"><div class="name"></div><div class="meta">Vegn elavurà …</div></div>`;
   el.querySelector('.name').textContent = file.name;
   list.prepend(el);
   const meta = el.querySelector('.meta');
@@ -153,22 +153,22 @@ async function processFile(file){
     if (type === 'image/jpeg') flattenWhite(canvas);
     const q = $('quality').value / 100;
     const blob = await new Promise(res => canvas.toBlob(res, type, q));
-    if (!blob) throw new Error('Export fehlgeschlagen');
+    if (!blob) throw new Error('Export fallì');
 
     const ext = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp' }[blob.type] || 'jpg';
-    const base = file.name.replace(/\.[^.]+$/, '') || 'bild';
+    const base = file.name.replace(/\.[^.]+$/, '') || 'maletg';
     const r = { url: URL.createObjectURL(blob), name: `${base}_${Math.max(nw, nh)}.${ext}` };
     results.push(r);
 
     el.querySelector('img').src = r.url;
     meta.innerHTML = `${w} × ${h} → <b>${nw} × ${nh}</b> · ${fmt(file.size)} → ${fmt(blob.size)}`
-      + (scale === 1 && Math.max(w, h) < target ? ' · <span class="err">nicht vergrössert</span>' : '');
+      + (scale === 1 && Math.max(w, h) < target ? ' · <span class="err">betg engrondì</span>' : '');
     const btn = document.createElement('button');
-    btn.textContent = 'Herunterladen';
+    btn.textContent = 'Telechargiar';
     btn.onclick = () => download(r);
     el.append(btn);
   } catch (err) {
-    meta.innerHTML = `<span class="err">Fehler: ${err.message || 'Bild konnte nicht gelesen werden'}</span>`;
+    meta.innerHTML = `<span class="err">Sbagl: ${err.message || 'Il maletg n\'ha betg pudì vegnir legì'}</span>`;
   }
 }
 
