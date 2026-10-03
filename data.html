@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="rm">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Datawrapper-Grafik speichern</title>
+<title>Memorisar grafica Datawrapper</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Crect x='22' y='52' width='12' height='26' fill='white'/%3E%3Crect x='44' y='36' width='12' height='42' fill='white'/%3E%3Crect x='66' y='22' width='12' height='56' fill='white'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -94,8 +94,8 @@
 </head>
 <body>
 <div class="container">
-  <h1>Datawrapper-Grafik speichern</h1>
-  <p class="subtitle">Datawrapper-Link einfügen &rarr; Grafik ohne Titel und Quelle als hochaufgelöstes 16:9-PNG. Funktioniert mit Karten, Balken-, Säulen- und Liniendiagrammen, Locator-Maps usw.</p>
+  <h1>Memorisar grafica Datawrapper</h1>
+  <p class="subtitle">Integrar il link da Datawrapper &rarr; grafica senza titel e funtauna sco PNG 16:9 en auta resoluziun. Funcziuna cun chartas, diagrams da travs, da colonnas e da lingias, locator maps etc.</p>
 
   <div class="card">
     <div class="opts">
@@ -104,61 +104,61 @@
         <select id="sizeSel">
           <option value="3840x2160">16:9 · 3840 × 2160 (4K)</option>
           <option value="1920x1080">16:9 · 1920 × 1080 (HD)</option>
-          <option value="crop">Nur Grafik, eng zugeschnitten</option>
+          <option value="crop">Mo la grafica, taglià stretg</option>
         </select>
       </div>
       <div>
-        <label for="bgSel">Hintergrund</label>
+        <label for="bgSel">Fund</label>
         <select id="bgSel">
-          <option value="white">Weiss</option>
+          <option value="white">Alv</option>
           <option value="transparent">Transparent</option>
-          <option value="dark">Schwarz (Dark Mode)</option>
+          <option value="dark">Nair (dark mode)</option>
         </select>
       </div>
       <div>
-        <label for="textSel">Schriftgrösse</label>
+        <label for="textSel">Grondezza da la scrittira</label>
         <select id="textSel">
           <option value="1280">Normal</option>
-          <option value="1024">Gross</option>
-          <option value="854">Sehr gross (TV)</option>
+          <option value="1024">Grond</option>
+          <option value="854">Fitg grond (TV)</option>
         </select>
       </div>
       <div>
-        <label for="legendSel">Legende</label>
+        <label for="legendSel">Legenda</label>
         <select id="legendSel">
-          <option value="auto">Automatisch (bei Karten aus)</option>
-          <option value="show">Anzeigen</option>
-          <option value="hide">Ausblenden</option>
+          <option value="auto">Automatic (tar chartas deactivà)</option>
+          <option value="show">Mussar</option>
+          <option value="hide">Zuppentar</option>
         </select>
       </div>
       <div class="full" id="padField">
-        <label for="padRange">Rand</label>
+        <label for="padRange">Ur</label>
         <div class="range-row"><input id="padRange" type="range" min="0" max="25" step="1" value="7"><span id="padVal">7 %</span></div>
       </div>
     </div>
   </div>
 
   <div class="tabs" role="tablist">
-    <button class="tab-btn active" id="tabSingleBtn" role="tab" aria-selected="true">Einzelne Grafik</button>
-    <button class="tab-btn" id="tabBatchBtn" role="tab" aria-selected="false">Mehrere Grafiken</button>
+    <button class="tab-btn active" id="tabSingleBtn" role="tab" aria-selected="true">Ina grafica</button>
+    <button class="tab-btn" id="tabBatchBtn" role="tab" aria-selected="false">Pliras graficas</button>
   </div>
 
   <div class="card" id="singlePanel">
     <div class="field">
-      <label for="urlInput">Datawrapper-Link oder ID</label>
-      <input id="urlInput" type="text" placeholder="z.B. https://www.datawrapper.de/_/gFX0U/" autocomplete="off" spellcheck="false">
+      <label for="urlInput">Link da Datawrapper u ID</label>
+      <input id="urlInput" type="text" placeholder="p.ex. https://www.datawrapper.de/_/gFX0U/" autocomplete="off" spellcheck="false">
     </div>
 
     <div id="result" hidden>
       <p class="chart-title" id="chartTitle"></p>
-      <div class="preview-wrap" id="previewWrap"><span class="placeholder">Grafik wird geladen…</span></div>
+      <div class="preview-wrap" id="previewWrap"><span class="placeholder">La grafica vegn chargiada…</span></div>
       <div class="meta-line"><span id="versionTag"></span><span id="resolution"></span></div>
 
       <div class="field">
-        <label for="filenameInput">Dateiname zum Speichern</label>
+        <label for="filenameInput">Num dal file per memorisar</label>
         <input id="filenameInput" type="text" spellcheck="false">
       </div>
-      <button class="btn-primary" id="downloadBtn" disabled>PNG herunterladen</button>
+      <button class="btn-primary" id="downloadBtn" disabled>Telechargiar il PNG</button>
       <div id="status"></div>
 
       <div class="originals" id="originals"></div>
@@ -166,15 +166,15 @@
   </div>
 
   <div class="card" id="batchPanel" hidden>
-    <label for="batchInput">Datawrapper-Links, IDs oder Artikel-URL</label>
+    <label for="batchInput">Links da Datawrapper, IDs u URL d'in artitgel</label>
     <div class="field">
-      <textarea id="batchInput" rows="5" placeholder="https://www.datawrapper.de/_/gFX0U/&#10;https://datawrapper.dwcdn.net/WEtBJ/3/&#10;&#10;oder eine Artikel-URL bzw. deren Seitenquelltext"></textarea>
+      <textarea id="batchInput" rows="5" placeholder="https://www.datawrapper.de/_/gFX0U/&#10;https://datawrapper.dwcdn.net/WEtBJ/3/&#10;&#10;u l'URL d'in artitgel resp. ses code da funtauna"></textarea>
     </div>
-    <button class="btn-secondary btn-block" id="batchProcessBtn">Verarbeiten</button>
+    <button class="btn-secondary btn-block" id="batchProcessBtn">Elavurar</button>
     <p class="hint" id="batchStatus"></p>
     <div class="result-list" id="batchResults"></div>
-    <button class="btn-primary btn-block" id="batchDownloadAllBtn" hidden>Alle herunterladen</button>
-    <p class="hint" id="batchHint" hidden>Der Browser fragt bei vielen gleichzeitigen Downloads evtl. einmalig um Erlaubnis.</p>
+    <button class="btn-primary btn-block" id="batchDownloadAllBtn" hidden>Telechargiar tuttas</button>
+    <p class="hint" id="batchHint" hidden>Tar blers downloads a medem temp dumonda il browser eventualmain ina giada il permiss.</p>
   </div>
 </div>
 
@@ -210,7 +210,7 @@
   function renderKey(o){ return o.baseW + '|' + o.legend + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
 
   function suffixFor(size){
-    return size === 'crop' ? '_grafik' : size === '1920x1080' ? '_16x9_hd' : '_16x9_4k';
+    return size === 'crop' ? '_grafica' : size === '1920x1080' ? '_16x9_hd' : '_16x9_4k';
   }
 
   /* ---------- Tabs ---------- */
@@ -369,11 +369,11 @@
             try {
               const source = await snapshot(w, doc, root, chart, ratio);
               done();
-              if (!source) { reject(new Error('Die Grafik ist leer.')); return; }
+              if (!source) { reject(new Error('La grafica è vida.')); return; }
               resolve({ source: source, type: type });
             } catch(e){
               done();
-              reject(new Error('Die Grafik konnte nicht abfotografiert werden (' + e.message + ').'));
+              reject(new Error('La grafica n\'ha betg pudì vegnir fotografada (' + e.message + ').'));
             }
             return;
           }
@@ -382,8 +382,8 @@
         if (Date.now() - started > TIMEOUT_MS) {
           done();
           reject(new Error(chart
-            ? 'Die Grafik wurde nicht fertig gezeichnet. Bitte nochmals versuchen (Tab dabei im Vordergrund lassen).'
-            : 'Grafik konnte nicht geladen werden. Stimmt der Link bzw. ist die Grafik veröffentlicht?'));
+            ? 'La grafica n\'è betg vegnida dissegnada cumplettamain. Per plaschair empruvar anc ina giada (laschar il tab en il fund davant).'
+            : 'La grafica n\'ha betg pudì vegnir chargiada. È il link correct resp. è la grafica publitgada?'));
           return;
         }
         setTimeout(poll, 400);
@@ -416,7 +416,7 @@
     return new Promise(function(res, rej){
       const im = new Image();
       im.onload = function(){ res(im); };
-      im.onerror = function(){ rej(new Error('Bild konnte nicht erzeugt werden')); };
+      im.onerror = function(){ rej(new Error('Il maletg n\'ha betg pudì vegnir generà')); };
       im.src = src;
     });
   }
@@ -518,9 +518,9 @@
   }
 
   async function snapshot(w, doc, root, chart, ratio){
-    if (doc.fonts && doc.fonts.ready) await withTimeout(doc.fonts.ready, 5000, 'Schriften').catch(function(){});
+    if (doc.fonts && doc.fonts.ready) await withTimeout(doc.fonts.ready, 5000, 'Scrittiras').catch(function(){});
     inlineSvgStyles(chart, w);
-    const fontCss = await withTimeout(collectFontCss(doc, root), 15000, 'Schriften').catch(function(){ return ''; });
+    const fontCss = await withTimeout(collectFontCss(doc, root), 15000, 'Scrittiras').catch(function(){ return ''; });
     const rect = chart.getBoundingClientRect();
     const W = Math.max(1, Math.round(rect.width * ratio));
     const H = Math.max(1, Math.round(rect.height * ratio));
@@ -545,7 +545,7 @@
         fontEmbedCSS: fontCss || undefined,
         skipFonts: !fontCss,
         filter: function(n){ return !(n.tagName && n.tagName.toUpperCase() === 'CANVAS'); }
-      }), 25000, 'Zeitüberschreitung');
+      }), 25000, 'Surpassà il temp');
       // SVG-Grösse hochsetzen, damit der Browser scharf (nicht hochskaliert) rastert
       const comma = svgUrl.indexOf(',');
       let svg = decodeURIComponent(svgUrl.slice(comma + 1));
@@ -638,7 +638,7 @@
   }
 
   function ensurePng(name){
-    name = (name || '').trim() || 'grafik';
+    name = (name || '').trim() || 'grafica';
     return /\.png$/i.test(name) ? name : name + '.png';
   }
 
@@ -684,9 +684,9 @@
     originalsEl.innerHTML = '';
     const lbl = document.createElement('span');
     lbl.className = 'lbl';
-    lbl.textContent = 'Originale von Datawrapper';
+    lbl.textContent = 'Originals da Datawrapper';
     originalsEl.appendChild(lbl);
-    [['plain.png', 'Ohne Titel/Quelle'], ['full.png', 'Komplett mit Titel und Quelle']].forEach(function(o){
+    [['plain.png', 'Senza titel/funtauna'], ['full.png', 'Cumplet cun titel e funtauna']].forEach(function(o){
       const a = document.createElement('a');
       a.textContent = o[1];
       a.href = DW + id + '/' + o[0];
@@ -711,7 +711,7 @@
     const myToken = singleToken;
     const entry = single;
     const opts = getOpts();
-    if (!entry.cache[renderKey(opts)]) showLoading('Grafik wird von Datawrapper gerechnet…');
+    if (!entry.cache[renderKey(opts)]) showLoading('La grafica vegn calculada da Datawrapper…');
     try {
       const r = await ensureRendered(entry);
       if (myToken !== singleToken || entry !== single) return;
@@ -733,8 +733,8 @@
     } catch(e){
       if (myToken !== singleToken) return;
       delete entry.cache[renderKey(opts)];
-      previewWrap.innerHTML = '<span class="placeholder">Keine Grafik</span>';
-      statusEl.textContent = e.message + ' Unten gibt es die Original-PNGs von Datawrapper.';
+      previewWrap.innerHTML = '<span class="placeholder">Nagina grafica</span>';
+      statusEl.textContent = e.message + ' Sutvart datti ils PNGs originals da Datawrapper.';
       statusEl.className = 'err';
     }
   }
@@ -759,7 +759,7 @@
         renderOriginals(id, single.stem);
         if (!filenameTouched) filenameInput.value = single.stem + suffixFor(getOpts().size) + '.png';
       }
-      if (info.version) versionTag.textContent = 'ID ' + id + ' · aktuelle Version ' + info.version;
+      if (info.version) versionTag.textContent = 'ID ' + id + ' · versiun actuala ' + info.version;
     });
     refreshSingle();
   }
@@ -781,7 +781,7 @@
         result.hidden = false;
         chartTitleEl.textContent = '';
         originalsEl.innerHTML = '';
-        showLoading('Suche Datawrapper-Grafik im Artikel…');
+        showLoading('Tschertg la grafica Datawrapper en l\'artitgel…');
         try {
           const resp = await fetch(val, { cache: 'no-store' });
           const html = await resp.text();
@@ -790,13 +790,13 @@
           if (!found.length) throw new Error('none');
           loadSingle(found[0]);
           if (found.length > 1) {
-            statusEl.textContent = found.length + ' Grafiken im Artikel gefunden – die erste wird angezeigt. Für alle: Tab „Mehrere Grafiken".';
+            statusEl.textContent = found.length + ' graficas chattadas en l\'artitgel – l\'emprima vegn mussada. Per tuttas: tab «Pliras graficas».';
             statusEl.className = '';
           }
         } catch(e){
           if (myToken !== singleToken) return;
-          previewWrap.innerHTML = '<span class="placeholder">Keine Grafik gefunden</span>';
-          statusEl.textContent = 'Kein Datawrapper-Link erkannt bzw. Artikel nicht direkt abrufbar. Alternativ den Seitenquelltext in den Tab „Mehrere Grafiken" einfügen.';
+          previewWrap.innerHTML = '<span class="placeholder">Nagina grafica chattada</span>';
+          statusEl.textContent = 'Nagin link da Datawrapper identifitgà resp. l\'artitgel n\'è betg accessibel directamain. Alternativamain integrar il code da funtauna da la pagina en il tab «Pliras graficas».';
           statusEl.className = 'err';
         }
       }, 600);
@@ -808,9 +808,9 @@
     chartTitleEl.textContent = '';
     originalsEl.innerHTML = '';
     previewWrap.classList.remove('checker');
-    previewWrap.innerHTML = '<span class="placeholder">Kein Datawrapper-Link</span>';
+    previewWrap.innerHTML = '<span class="placeholder">Nagin link da Datawrapper</span>';
     downloadBtn.disabled = true;
-    statusEl.textContent = 'Bitte einen Datawrapper-Link (z.B. datawrapper.de/_/… oder datawrapper.dwcdn.net/…) oder eine 5-stellige ID einfügen.';
+    statusEl.textContent = 'Per plaschair integrar in link da Datawrapper (p.ex. datawrapper.de/_/… u datawrapper.dwcdn.net/…) u ina ID da 5 caracters.';
     statusEl.className = 'err';
   }
   urlInput.addEventListener('input', handleInput);
@@ -819,7 +819,7 @@
     if (!single || !single.current) return;
     const filename = ensurePng(filenameInput.value);
     saveBlob(await canvasToBlob(compose(single.current.source, getOpts())), filename);
-    statusEl.textContent = 'Heruntergeladen als „' + filename + '".';
+    statusEl.textContent = 'Telechargià sco «' + filename + '».';
     statusEl.className = 'ok';
   });
 
@@ -852,7 +852,7 @@
     info.appendChild(fn); info.appendChild(st);
     const btn = document.createElement('button');
     btn.className = 'btn-secondary rc-download';
-    btn.textContent = 'Herunterladen';
+    btn.textContent = 'Telechargiar';
     btn.disabled = true;
     wrap.appendChild(thumb); wrap.appendChild(info); wrap.appendChild(btn);
     Object.assign(item, { el: wrap, thumb: thumb, fn: fn, st: st, btn: btn });
@@ -867,7 +867,7 @@
         btn.disabled = true;
         thumb.classList.remove('checker');
         thumb.innerHTML = '<span class="spinner"></span>';
-        item.setStatus('wird gerechnet…');
+        item.setStatus('vegn calculada…');
       }
       try {
         const r = await ensureRendered(item);
@@ -885,7 +885,7 @@
         thumb.appendChild(img);
         if (!item.touched) fn.value = item.stem + suffixFor(cur.size) + '.png';
         btn.disabled = false;
-        item.setStatus('bereit');
+        item.setStatus('pronta');
         return true;
       } catch(e){
         delete item.cache[renderKey(opts)];
@@ -898,7 +898,7 @@
       if (!item.current) return;
       const filename = ensurePng(fn.value);
       saveBlob(await canvasToBlob(compose(item.current.source, getOpts())), filename);
-      item.setStatus('heruntergeladen ✓', 'ok');
+      item.setStatus('telechargiada ✓', 'ok');
     });
     return item;
   }
@@ -910,7 +910,7 @@
     batchItems.forEach(function(it){ batchResultsEl.appendChild(it.el); });
     batchDownloadAllBtn.hidden = true;
     batchHintEl.hidden = true;
-    batchStatusEl.textContent = ids.length + ' Grafik(en) gefunden – werden nacheinander gerechnet…';
+    batchStatusEl.textContent = ids.length + ' grafica(s) chattada(s) – vegnan calculadas ina suenter l\'autra…';
     batchStatusEl.className = 'hint';
 
     batchItems.forEach(function(it){
@@ -919,13 +919,13 @@
         it.title = info.title;
         it.stem = slugify(info.title) || it.id;
         if (!it.touched) it.fn.value = it.stem + suffixFor(getOpts().size) + '.png';
-        it.setStatus(it.current ? 'bereit' : 'wird gerechnet…');
+        it.setStatus(it.current ? 'pronta' : 'vegn calculada…');
       });
     });
     const results = await Promise.all(batchItems.map(function(it){ return it.refresh(); }));
     if (myToken !== batchToken) return;
     const ok = results.filter(Boolean).length;
-    batchStatusEl.textContent = ok + ' von ' + ids.length + ' Grafik(en) bereit.';
+    batchStatusEl.textContent = ok + ' da ' + ids.length + ' grafica(s) pronta(s).';
     batchStatusEl.className = ok ? 'hint ok' : 'hint err';
     batchDownloadAllBtn.hidden = ok === 0;
     batchHintEl.hidden = ok < 2;
@@ -938,24 +938,24 @@
     if (ids.length) { runBatch(ids); return; }
 
     if (!raw.includes('\n') && /^https?:\/\//i.test(raw)) {
-      batchStatusEl.textContent = 'Lade Artikel-Seite…';
+      batchStatusEl.textContent = 'Chargel la pagina da l\'artitgel…';
       batchStatusEl.className = 'hint';
       try {
         const resp = await fetch(raw, { cache: 'no-store' });
         const found = extractIds(await resp.text());
         if (!found.length) {
-          batchStatusEl.textContent = 'Seite geladen, aber keine Datawrapper-Grafiken gefunden.';
+          batchStatusEl.textContent = 'Pagina chargiada, ma naginas graficas Datawrapper chattadas.';
           batchStatusEl.className = 'hint err';
           return;
         }
         runBatch(found);
       } catch(e){
-        batchStatusEl.textContent = 'Automatischer Abruf dieser Seite nicht möglich. Stattdessen: Seitenquelltext holen (Rechtsklick → „Seitenquelltext anzeigen" bzw. Strg/Cmd+U → alles kopieren), hier einfügen und nochmals auf „Verarbeiten" klicken.';
+        batchStatusEl.textContent = 'Clamar giu automaticamain questa pagina n\'è betg pussaivel. Empè: prender il code da funtauna (clic dretg → «Mussar il code da funtauna» resp. Ctrl/Cmd+U → copiar tut), l\'integrar qua e cliccar anc ina giada sin «Elavurar».';
         batchStatusEl.className = 'hint err';
       }
       return;
     }
-    batchStatusEl.textContent = 'Keine Datawrapper-Links gefunden.';
+    batchStatusEl.textContent = 'Nagins links da Datawrapper chattads.';
     batchStatusEl.className = 'hint err';
   });
 
