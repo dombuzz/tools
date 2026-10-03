@@ -57,30 +57,22 @@
   // Einstellungen
   const REPO = 'dombuzz/tools';
   const BRANCH = 'main';
-  const HIDE = ['index.html', '404.html', 'bau.html', 'eli.html']; // erscheinen nicht in der Liste
+  const HIDE = ['index.html', '404.html', 'bau.html', 'eli.html',
+                'suncal.html', 'sunhome.html', 'termica.html']; // erscheinen nicht in der Liste
 
   // Anzeigenamen im Dropdown (Dateiname -> Name). Nicht aufgeführte Dateien zeigen ihren <title>.
   const NAMES = {
-    'suncal.html':      'Sonnenkalender',
     'rtr-picture.html': 'RTR Bilddownloader',
     'data.html':       'Datawrapper-Grafik speichern',
-    'sunhome.html':     'Sonnenkalender@Home',
     'votgr.html':       'Karten Abstimmungen GR',
-    'termica.html':     'Flugwetter',
     'subs.html':        'Untertitel RM → DE',
     'srt2ttml.html':    'SRT → TTML',
     'Resizer2000.html': 'Resizer 2000',
-    'visual.html':      'Magazin / IL DI'
+    'visual.html':      'Magazin / Il di'
   };
 
-  // Gruppen im Dropdown. Die Tools erscheinen in der hier aufgeführten Reihenfolge.
-  // Nicht aufgeführte Dateien landen alphabetisch in DEFAULT_GROUP.
-  const GROUPS = {
-    'Dom': ['suncal.html', 'sunhome.html', 'termica.html'],
-    'RTR': ['rtr-picture.html', 'votgr.html', 'data.html', 'subs.html', 'srt2ttml.html', 'Resizer2000.html', 'visual.html']
-  };
-  const DEFAULT_GROUP = 'Dom';
-  const GROUP_ORDER = ['Dom', 'RTR'];
+  // Reihenfolge im Dropdown. Nicht aufgeführte Dateien folgen alphabetisch.
+  const ORDER = ['rtr-picture.html', 'Resizer2000.html', 'visual.html', 'srt2ttml.html', 'subs.html', 'data.html', 'votgr.html'];
 
   const sel = document.getElementById('tools');
   const msg = document.getElementById('msg');
@@ -105,24 +97,14 @@
         .filter(f => f.type === 'blob' && /\.html?$/i.test(f.path) && !HIDE.includes(f.path));
       const tools = await Promise.all(files.map(async f => {
         const url = toUrl(f.path);
-        const group = Object.keys(GROUPS).find(g => GROUPS[g].includes(f.path)) || DEFAULT_GROUP;
-        const pos = GROUPS[group] ? GROUPS[group].indexOf(f.path) : -1;
-        return { url, group, pos, title: NAMES[f.path] || await titleOf(url, f.path.split('/').at(-1).replace(/\.html?$/i, '')) };
+        const pos = ORDER.indexOf(f.path);
+        return { url, pos, title: NAMES[f.path] || await titleOf(url, f.path.split('/').at(-1).replace(/\.html?$/i, '')) };
       }));
-      tools.sort((a, b) => a.title.localeCompare(b.title, 'de'));
+      tools.sort((a, b) => (a.pos < 0 ? 1e9 : a.pos) - (b.pos < 0 ? 1e9 : b.pos) || a.title.localeCompare(b.title, 'de'));
 
       sel.innerHTML = '';
       sel.append(new Option(tools.length ? 'Tool wählen …' : 'Keine Tools gefunden', ''));
-      const order = [...GROUP_ORDER, ...new Set(tools.map(t => t.group))].filter((g, i, a) => a.indexOf(g) === i);
-      for (const g of order) {
-        const items = tools.filter(t => t.group === g)
-          .sort((a, b) => (a.pos < 0 ? 1e9 : a.pos) - (b.pos < 0 ? 1e9 : b.pos) || a.title.localeCompare(b.title, 'de'));
-        if (!items.length) continue;
-        const og = document.createElement('optgroup');
-        og.label = g;
-        for (const t of items) og.append(new Option(t.title, '/' + t.url));
-        sel.append(og);
-      }
+      for (const t of tools) sel.append(new Option(t.title, '/' + t.url));
       sel.disabled = !tools.length;
     } catch (e) {
       sel.innerHTML = '<option value="">Liste nicht verfügbar</option>';

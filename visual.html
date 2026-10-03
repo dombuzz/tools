@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Magazin / IL DI</title>
+<title>Magazin / Il di</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Crect x='20' y='30' width='60' height='40' rx='4' stroke='white' stroke-width='8' fill='none'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -75,23 +75,35 @@
     .empty strong{ font-size:.9rem; }
     .empty span{ font-size:.75rem; padding:0 8px; }
   }
+  .urlrow{ display:flex; gap:8px; margin-bottom:16px; }
+  .urlrow input{
+    flex:1; min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
+  }
+  .urlrow input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .msg.err{ color:#ff6b7d; }
   .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>Magazin / IL DI</h1>
+  <h1>Magazin / Il di</h1>
   <p class="subtitle">Foto reinziehen, Sendung wählen, Ausschnitt festlegen. Export als PNG in 1920 × 1080.</p>
 
   <div class="card">
     <div class="toolbar">
       <div class="seg" role="group" aria-label="Sendung">
         <button type="button" data-fmt="magazin" aria-pressed="true">Magazin</button>
-        <button type="button" data-fmt="ildi" aria-pressed="false">IL DI</button>
+        <button type="button" data-fmt="ildi" aria-pressed="false">Il di</button>
       </div>
       <label class="check"><input type="checkbox" id="showOverlay" checked> Overlay zeigen</label>
       <div class="spacer"></div>
       <button type="button" class="ghost" id="pickBtn">Foto wählen</button>
+    </div>
+
+    <div class="urlrow">
+      <input type="url" id="urlInput" placeholder="RTR-Bildlink oder Artikel-URL einfügen" spellcheck="false" autocomplete="off">
+      <button type="button" class="ghost" id="urlBtn">Laden</button>
     </div>
 
     <div class="stage" id="stage" tabindex="0" aria-label="Arbeitsfläche">
@@ -107,7 +119,7 @@
         </div>
         <div class="empty" id="empty">
           <strong>Foto hierher ziehen</strong>
-          <span>oder antippen zum Auswählen, oder mit Ctrl/Cmd+V einfügen</span>
+          <span>oder antippen zum Auswählen, mit Ctrl/Cmd+V einfügen oder oben einen RTR-Link angeben</span>
         </div>
       </div>
     </div>
@@ -187,8 +199,9 @@ function render(){
 window.addEventListener('resize', render);
 
 /* ---------- Laden ---------- */
-function load(file){
-  if (!file || !file.type.startsWith('image/')) { msg.textContent = 'Das ist keine Bilddatei.'; return; }
+function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
+function load(file, label){
+  if (!file || !file.type.startsWith('image/')) { setMsg('Das ist keine Bilddatei.', true); return; }
   const url = URL.createObjectURL(file);
   const im = new Image();
   im.onload = () => {
@@ -196,10 +209,10 @@ function load(file){
     photo.src = ghost.src = url;
     empty.hidden = true; box.hidden = false;
     $('dlBtn').disabled = $('fitBtn').disabled = false;
-    msg.textContent = `${iw} × ${ih} px` + (minS() > 1 ? ', wird hochskaliert' : '');
+    setMsg((label ? label + ', ' : '') + `${iw} × ${ih} px` + (minS() > 1 ? ', wird hochskaliert' : ''));
     fit();
   };
-  im.onerror = () => msg.textContent = 'Bild konnte nicht gelesen werden.';
+  im.onerror = () => setMsg('Bild konnte nicht gelesen werden.', true);
   im.src = url;
 }
 $('pickBtn').onclick = () => $('file').click();
@@ -209,10 +222,98 @@ stage.addEventListener('dragover', e => { e.preventDefault(); stage.classList.ad
 stage.addEventListener('dragleave', () => stage.classList.remove('over'));
 stage.addEventListener('drop', e => { e.preventDefault(); stage.classList.remove('over'); load(e.dataTransfer.files[0]); });
 document.addEventListener('paste', e => {
+  if (e.target === urlInput) return;          // Einfügen ins Linkfeld normal behandeln
   const it = [...e.clipboardData.items].find(i => i.type.startsWith('image/'));
-  if (it) load(it.getAsFile());
+  if (it) { load(it.getAsFile()); return; }
+  const txt = (e.clipboardData.getData('text') || '').trim();
+  if (/^https?:\/\//i.test(txt) || /^\/.*\/cms\/images\//i.test(txt)){ urlInput.value = txt; loadFromUrl(txt); }
 });
 $('fitBtn').onclick = fit;
+
+/* ---------- RTR-Bildlink (Logik wie RTR Bilddownloader) ---------- */
+const urlInput = $('urlInput');
+const DEFAULT_BASE = 'https://www.rtr.ch/static/cms/images/dynamic/noop/';
+
+// Wandelt einen RTR-/SRF-Bildlink in die grösstmögliche Variante um
+function convertOne(raw){
+  const v = (raw || '').trim();
+  if (!v) return { error:'Leer.' };
+  if (!/^[a-z]+:\/\//i.test(v) && /^[\w-]+\.\w+$/i.test(v)) return { url: DEFAULT_BASE + v, filename: v };
+  let toParse = /^\/.*\/cms\/images\//i.test(v) ? 'https://www.rtr.ch' + v : v;
+  let u;
+  try { u = new URL(toParse); } catch(e){ return { error:'Keine gültige URL.' }; }
+  // SRG-Bildproxy (il.srf.ch/images/?imageUrl=...&width=...)
+  if (u.searchParams.has('imageUrl')){
+    u.searchParams.set('width', '1920');
+    return { url: u.toString(), filename:'bild' };
+  }
+  const marker = '/cms/images/', idx = u.pathname.indexOf(marker);
+  if (idx === -1) return { error:'Kein bekanntes Bildformat erkannt.' };
+  const filename = u.pathname.slice(u.pathname.lastIndexOf('/') + 1);
+  if (!filename) return { error:'Kein Dateiname im Link.' };
+  return { url: u.origin + u.pathname.slice(0, idx + marker.length) + 'dynamic/noop/' + filename, filename };
+}
+
+function decodeHtml(s){
+  return s.replace(/&quot;/g,'"').replace(/&#0?39;|&apos;/g,"'").replace(/&amp;/g,'&')
+          .replace(/\\u002[fF]/g,'/').replace(/\\\//g,'/');
+}
+// Erstes Bild einer Artikelseite finden
+function firstCandidate(html){
+  const d = decodeHtml(html);
+  const pats = [
+    /data-image-id="([a-z0-9]+)"/i,
+    /https?:\/\/[^\s"'<>\\]+\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif)/i,
+    /(?:^|["'\s,])(\/[a-z0-9/_-]*\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif))/i,
+    /https?:\/\/il\.[a-z0-9-]+\.ch\/images\/\?[^\s"'<>\\]+/i
+  ];
+  const og = /<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i.exec(d);
+  for (let i = 0; i < pats.length; i++){
+    const m = pats[i].exec(d);
+    if (!m) continue;
+    if (i === 0) return DEFAULT_BASE + m[1] + '.webp';
+    return (m[1] || m[0]).replace(/[)\].,;:'"]+$/, '');
+  }
+  return og ? og[1] : null;
+}
+
+async function fetchBlob(url){
+  const r = await fetch(url, { mode:'cors', cache:'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r;
+}
+let urlToken = 0;
+async function loadFromUrl(raw){
+  const my = ++urlToken;
+  const v = (raw || '').trim();
+  if (!v) return;
+  let res = convertOne(v);
+  setMsg('Lade Bild…');
+  try {
+    if (res.error){
+      if (!/^https?:\/\//i.test(v)) { setMsg(res.error, true); return; }
+      // Vermutlich eine Artikelseite: Seite laden und erstes Bild nehmen
+      setMsg('Suche Bild im Artikel…');
+      const html = await (await fetchBlob(v)).text();
+      if (my !== urlToken) return;
+      const c = firstCandidate(html);
+      if (!c) { setMsg('Kein Bild auf dieser Seite gefunden.', true); return; }
+      res = convertOne(c);
+      if (res.error) { setMsg(res.error, true); return; }
+    }
+    const r = await fetchBlob(res.url);
+    let blob = await r.blob();
+    if (my !== urlToken) return;
+    if (!blob.type.startsWith('image/')) blob = new Blob([blob], { type:'image/webp' });
+    load(blob, 'RTR-Bild');
+  } catch(e){
+    if (my !== urlToken) return;
+    setMsg('Bild konnte nicht direkt geladen werden. Im RTR Bilddownloader herunterladen und hier reinziehen.', true);
+  }
+}
+$('urlBtn').onclick = () => loadFromUrl(urlInput.value);
+urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadFromUrl(urlInput.value); });
+urlInput.addEventListener('paste', () => setTimeout(() => loadFromUrl(urlInput.value), 0));
 
 /* ---------- Zoom um einen Punkt (Export-Koordinaten) ---------- */
 function zoomAt(factor, px, py){
@@ -320,7 +421,7 @@ $('dlBtn').onclick = () => {
       a.href = URL.createObjectURL(b); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      msg.textContent = 'Gespeichert: ' + name;
+      setMsg('Gespeichert: ' + name);
     }, 'image/png');
   };
   ov.src = OVERLAYS[fmt];
