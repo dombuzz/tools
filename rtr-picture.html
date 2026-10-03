@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="rm">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RTR Bild-Downloader</title>
+<title>RTR Telechargiar maletgs</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Crect x='20' y='28' width='60' height='44' rx='6' fill='none' stroke='white' stroke-width='6'/%3E%3Ccircle cx='34' cy='42' r='6' fill='white'/%3E%3Cpath d='M24,66 L40,50 L50,60 L62,44 L76,66 Z' fill='white'/%3E%3C/svg%3E">
 <style>
   :root{
@@ -102,43 +102,43 @@
 </head>
 <body>
 <div class="container">
-  <h1>RTR Bild-Downloader</h1>
-  <p class="subtitle">Bild-Link von rtr.ch einfügen &rarr; beste verfügbare Auflösung.</p>
+  <h1>RTR Telechargiar maletgs</h1>
+  <p class="subtitle">Integrar il link d'in maletg da rtr.ch per chargiar giu il maletg en meglra resoluziun disponibla.</p>
 
   <div class="tabs" role="tablist">
-    <button class="tab-btn active" id="tabSingleBtn" role="tab" aria-selected="true">Einzelnes Bild</button>
-    <button class="tab-btn" id="tabBatchBtn" role="tab" aria-selected="false">Mehrere Bilder</button>
+    <button class="tab-btn active" id="tabSingleBtn" role="tab" aria-selected="true">In maletg</button>
+    <button class="tab-btn" id="tabBatchBtn" role="tab" aria-selected="false">Plirs maletgs</button>
   </div>
 
   <div class="card" id="singlePanel">
     <div class="field">
-      <label for="urlInput">BILD-URL oder DATEINAME</label>
-      <input id="urlInput" type="text" placeholder="URL oder z.B. f1a20b.webp" autocomplete="off" spellcheck="false">
+      <label for="urlInput">URL DAL MALETG U NUM DAL FILE</label>
+      <input id="urlInput" type="text" placeholder="URL u p.ex. f1a20b.webp" autocomplete="off" spellcheck="false">
     </div>
 
     <div id="result" hidden>
       <div class="preview-wrap" id="previewWrap">
-        <span class="placeholder">Vorschau wird geladen…</span>
+        <span class="placeholder">La prevista vegn chargiada…</span>
       </div>
       <div class="resolution">
         <span id="sourceTag"></span>
         <span id="resolution"></span>
       </div>
-      <div class="badge-row"><span class="badge-low" id="lowResBadge" hidden>Nicht optimal</span></div>
-      <p class="note" id="teaserNote" hidden>Das Bild ist scheinbar nur in 1280 × 720 px abgelegt (typisch für Artikelteaser).<br><span class="note-sub">Dies sollte jedoch wie bisher für die meisten Anwendungen ausreichen.</span></p>
+      <div class="badge-row"><span class="badge-low" id="lowResBadge" hidden>Betg optimal</span></div>
+      <p class="note" id="teaserNote" hidden>Il maletg è apparentamain mo arcunà en 1280 × 720 px (tipic per teasers d'artitgels).<br><span class="note-sub">Quai duess dentant tanscher sco fin uss per la gronda part da las applicaziuns.</span></p>
       <p class="rc-caption" id="singleCaption" hidden></p>
 
       <div class="field">
-        <label for="filenameInput">Dateiname zum Speichern</label>
+        <label for="filenameInput">Num dal file per memorisar</label>
         <input id="filenameInput" type="text" spellcheck="false">
       </div>
 
-      <label>Hochauflösende URL</label>
+      <label>URL en auta resoluziun</label>
       <div class="url-display" id="urlDisplay"></div>
 
       <div class="row">
-        <button class="btn-primary" id="downloadBtn">Bild herunterladen</button>
-        <button class="btn-secondary" id="copyUrlBtn" title="URL kopieren">URL kopieren</button>
+        <button class="btn-primary" id="downloadBtn">Telechargiar il maletg</button>
+        <button class="btn-secondary" id="copyUrlBtn" title="Copiar la URL">Copiar la URL</button>
       </div>
 
       <div id="status"></div>
@@ -147,16 +147,16 @@
   </div>
 
   <div class="card" id="batchPanel" hidden>
-    <label for="batchInput">ARTIKEL-URL, BILD-URLS ODER DATEINAMEN</label>
+    <label for="batchInput">URL DA L'ARTITGEL, URLS DA MALETGS U NUMS DA FILES</label>
     <div class="field">
-      <textarea id="batchInput" rows="5" placeholder="https://www.rtr.ch/... (Artikel-Link)&#10;&#10;oder mehrere Bild-Links/Dateinamen, einen pro Zeile:&#10;https://www.rtr.ch/static/cms/images/...&#10;f1a20b.webp"></textarea>
+      <textarea id="batchInput" rows="5" placeholder="https://www.rtr.ch/... (link da l'artitgel)&#10;&#10;u plirs links da maletgs/nums da files, in per lingia:&#10;https://www.rtr.ch/static/cms/images/...&#10;f1a20b.webp"></textarea>
     </div>
-    <button class="btn-secondary btn-block" id="batchProcessBtn">Verarbeiten</button>
+    <button class="btn-secondary btn-block" id="batchProcessBtn">Elavurar</button>
     <p class="hint" id="batchStatus"></p>
 
     <div class="result-list" id="batchResults"></div>
-    <button class="btn-primary btn-block" id="batchDownloadAllBtn" hidden>Alle herunterladen</button>
-    <p class="hint" id="batchHint" hidden>Der Browser fragt bei vielen gleichzeitigen Downloads evtl. einmalig um Erlaubnis.</p>
+    <button class="btn-primary btn-block" id="batchDownloadAllBtn" hidden>Telechargiar tuts</button>
+    <p class="hint" id="batchHint" hidden>Tar blers downloads a medem temp dumonda il browser eventualmain ina giada il permiss.</p>
   </div>
 </div>
 
@@ -186,7 +186,7 @@
 
   function convertOne(rawInput){
     const trimmed = (rawInput || '').trim();
-    if (!trimmed) return { error: 'Leer.' };
+    if (!trimmed) return { error: 'Vid.' };
 
     // Nur ein Dateiname eingegeben (z.B. "f1a20b.webp"), keine URL
     if (!/^[a-z]+:\/\//i.test(trimmed) && /^[\w-]+\.\w+$/i.test(trimmed)) {
@@ -204,13 +204,13 @@
     try {
       u = new URL(toParse);
     } catch(e){
-      return { error: 'Keine gültige URL oder Dateiname.' };
+      return { error: 'Nagina URL u nagin num da file valid.' };
     }
 
     // SRF-Bildproxy (il.srf.ch/images/?imageUrl=...&width=...)
     if (u.searchParams.has('imageUrl')) {
       u.searchParams.set('width', '1920');
-      let stem = 'bild';
+      let stem = 'maletg';
       let ext = u.searchParams.get('format') || 'webp';
       try {
         const inner = new URL(u.searchParams.get('imageUrl'));
@@ -225,13 +225,13 @@
     const marker = '/cms/images/';
     const idx = u.pathname.indexOf(marker);
     if (idx === -1) {
-      return { error: 'Kein bekanntes Bildformat erkannt.' };
+      return { error: 'Nagin format da maletg enconuschent identifitgà.' };
     }
     const prefix = u.pathname.slice(0, idx + marker.length);
     const lastSlash = u.pathname.lastIndexOf('/');
     const filename = u.pathname.slice(lastSlash + 1);
     if (!filename) {
-      return { error: 'Konnte keinen Dateinamen aus dem Link lesen.' };
+      return { error: 'I n\'è betg reussì da leger in num da file dal link.' };
     }
     const newPath = prefix + 'dynamic/noop/' + filename;
     const newUrl = u.origin + newPath;
@@ -307,13 +307,13 @@
     resolutionEl.textContent = '';
     resolutionEl.classList.remove('low-res');
     lowResBadgeEl.hidden = true;
-    sourceTagEl.textContent = res.source === 'srf-thumbnail' ? 'Thumbnail von Audio/Video' : '';
+    sourceTagEl.textContent = res.source === 'srf-thumbnail' ? 'Thumbnail d\'audio/video' : '';
     if (meta && (meta.caption || meta.credit)) {
       singleCaptionEl.textContent = meta.caption && meta.credit
-        ? meta.caption + ' — Quelle: ' + meta.credit
+        ? meta.caption + ' — Funtauna: ' + meta.credit
         : meta.caption
           ? meta.caption
-          : 'Quelle: ' + meta.credit;
+          : 'Funtauna: ' + meta.credit;
       singleCaptionEl.hidden = false;
     } else {
       singleCaptionEl.textContent = '';
@@ -322,7 +322,7 @@
     previewWrap.innerHTML = '';
     const img = document.createElement('img');
     img.src = res.url;
-    img.alt = 'Vorschau';
+    img.alt = 'Prevista';
     img.onload = function(){
       const isLow = img.naturalWidth < 1280 || img.naturalHeight < 720;
       resolutionEl.textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px';
@@ -331,7 +331,7 @@
       teaserNoteEl.hidden = !(img.naturalWidth === 1280 && img.naturalHeight === 720);
     };
     img.onerror = function(){
-      previewWrap.innerHTML = '<span class="placeholder">Vorschau nicht verfügbar (Bild konnte nicht geladen werden)</span>';
+      previewWrap.innerHTML = '<span class="placeholder">Prevista betg disponibla (il maletg n\'ha betg pudì vegnir chargià)</span>';
       resolutionEl.textContent = '';
       resolutionEl.classList.remove('low-res');
       lowResBadgeEl.hidden = true;
@@ -353,9 +353,9 @@
       if (myToken !== singleRequestToken) return;
       const candidates = extractCandidates(html);
       if (!candidates.length) {
-        statusEl.textContent = 'Kein Bild auf dieser Seite gefunden. Alternativ den Quellcode der Seite in den Tab „Mehrere Bilder" einfügen.';
+        statusEl.textContent = 'Nagin maletg chattà sin questa pagina. Alternativamain integrar il code da funtauna da la pagina en il tab «Plirs maletgs».';
         statusEl.className = 'err';
-        previewWrap.innerHTML = '<span class="placeholder">Kein Bild gefunden</span>';
+        previewWrap.innerHTML = '<span class="placeholder">Nagin maletg chattà</span>';
         downloadBtn.disabled = true;
         return;
       }
@@ -370,9 +370,9 @@
       showSingleResult(first, metaMap[stem]);
     } catch(e){
       if (myToken !== singleRequestToken) return;
-      statusEl.textContent = 'Direkter Zugriff auf diese Seite nicht möglich. Alternativ den Quellcode der Seite in den Tab „Mehrere Bilder" einfügen.';
+      statusEl.textContent = 'Access direct a questa pagina betg pussaivel. Alternativamain integrar il code da funtauna da la pagina en il tab «Plirs maletgs».';
       statusEl.className = 'err';
-      previewWrap.innerHTML = '<span class="placeholder">Kein Zugriff möglich</span>';
+      previewWrap.innerHTML = '<span class="placeholder">Nagin access pussaivel</span>';
       downloadBtn.disabled = true;
     }
   }
@@ -393,10 +393,10 @@
     // Artikelseite: nach kurzer Tippschreibpause automatisch laden.
     if (/^https?:\/\//i.test(val)) {
       reset();
-      statusEl.textContent = 'Prüfe Link…';
+      statusEl.textContent = 'Controllel il link…';
       statusEl.className = '';
       result.hidden = false;
-      previewWrap.innerHTML = '<span class="placeholder">Prüfe Link…</span>';
+      previewWrap.innerHTML = '<span class="placeholder">Controllel il link…</span>';
       downloadBtn.disabled = true;
       const myToken = singleRequestToken;
       singleDebounceTimer = setTimeout(function(){
@@ -409,7 +409,7 @@
     statusEl.textContent = res.error;
     statusEl.className = 'err';
     result.hidden = false;
-    previewWrap.innerHTML = '<span class="placeholder">Kein gültiger RTR-Bildlink</span>';
+    previewWrap.innerHTML = '<span class="placeholder">Nagin link valid d\'in maletg RTR</span>';
     downloadBtn.disabled = true;
   }
 
@@ -419,32 +419,32 @@
     if (!currentUrl) return;
     try {
       await navigator.clipboard.writeText(currentUrl);
-      copyUrlBtn.textContent = 'Kopiert ✓';
-      setTimeout(()=>{ copyUrlBtn.textContent = 'URL kopieren'; }, 1500);
+      copyUrlBtn.textContent = 'Copià ✓';
+      setTimeout(()=>{ copyUrlBtn.textContent = 'Copiar la URL'; }, 1500);
     } catch(e){
-      statusEl.textContent = 'Kopieren nicht möglich — URL manuell markieren.';
+      statusEl.textContent = 'Copiar betg pussaivel — marcar la URL manualmain.';
       statusEl.className = 'err';
     }
   });
 
   downloadBtn.addEventListener('click', async function(){
     if (!currentUrl) return;
-    const filename = (filenameInput.value || 'bild.webp').trim();
-    statusEl.textContent = 'Lade Bild…';
+    const filename = (filenameInput.value || 'maletg.webp').trim();
+    statusEl.textContent = 'Chargel il maletg…';
     statusEl.className = '';
     fallbackEl.hidden = true;
 
     const ok = await downloadImage(currentUrl, filename);
     if (ok) {
-      statusEl.textContent = 'Heruntergeladen als „' + filename + '".';
+      statusEl.textContent = 'Telechargià sco «' + filename + '».';
       statusEl.className = 'ok';
     } else {
-      statusEl.textContent = 'Automatischer Download nicht möglich (Browser blockiert den Zugriff).';
+      statusEl.textContent = 'Download automatic betg pussaivel (il browser blochescha l\'access).';
       statusEl.className = 'err';
       fallbackEl.hidden = false;
       fallbackEl.innerHTML =
-        'Manuell speichern: <a href="' + currentUrl + '" target="_blank" rel="noopener">Bild in neuem Tab öffnen</a>, ' +
-        'dann Rechtsklick &rarr; „Bild speichern unter…" &rarr; Dateiname <strong>' + filename + '</strong>.';
+        'Memorisar manualmain: <a href="' + currentUrl + '" target="_blank" rel="noopener">avrir il maletg en in nov tab</a>, ' +
+        'lura clic dretg &rarr; «Memorisar il maletg sco…» &rarr; num dal file <strong>' + filename + '</strong>.';
     }
   });
 
@@ -463,7 +463,7 @@
     const thumbWrap = document.createElement('div');
     thumbWrap.className = 'rc-thumb';
     const img = document.createElement('img');
-    img.alt = 'Vorschau';
+    img.alt = 'Prevista';
     thumbWrap.appendChild(img);
 
     const info = document.createElement('div');
@@ -479,10 +479,10 @@
     meta.className = 'rc-meta';
     const resSpan = document.createElement('span');
     resSpan.className = 'rc-res';
-    resSpan.textContent = 'lädt…';
+    resSpan.textContent = 'chargia…';
     const badge = document.createElement('span');
     badge.className = 'rc-badge';
-    badge.textContent = 'Nicht optimal';
+    badge.textContent = 'Betg optimal';
     badge.hidden = true;
     meta.appendChild(resSpan);
     meta.appendChild(badge);
@@ -496,10 +496,10 @@
       const captionLine = document.createElement('div');
       captionLine.className = 'rc-caption';
       captionLine.textContent = item.caption && item.credit
-        ? item.caption + ' — Quelle: ' + item.credit
+        ? item.caption + ' — Funtauna: ' + item.credit
         : item.caption
           ? item.caption
-          : 'Quelle: ' + item.credit;
+          : 'Funtauna: ' + item.credit;
       info.appendChild(captionLine);
     }
 
@@ -508,7 +508,7 @@
 
     const dlBtn = document.createElement('button');
     dlBtn.className = 'btn-secondary rc-download';
-    dlBtn.textContent = 'Herunterladen';
+    dlBtn.textContent = 'Telechargiar';
 
     wrap.appendChild(thumbWrap);
     wrap.appendChild(info);
@@ -522,21 +522,21 @@
       badge.hidden = !isLow;
     };
     img.onerror = function(){
-      resSpan.textContent = 'Vorschau fehlgeschlagen';
+      resSpan.textContent = 'Prevista fallida';
     };
 
     const card = { el: wrap, valid: true, downloadBtn: dlBtn, url: item.url };
 
     dlBtn.addEventListener('click', async function(){
       const filename = filenameField.value.trim() || item.filename;
-      statusLine.textContent = 'Lade…';
+      statusLine.textContent = 'Chargel…';
       statusLine.className = 'rc-status';
       const ok = await downloadImage(item.url, filename);
       if (ok) {
-        statusLine.textContent = 'Heruntergeladen ✓';
+        statusLine.textContent = 'Telechargià ✓';
         statusLine.className = 'rc-status ok';
       } else {
-        statusLine.textContent = 'Fehlgeschlagen — Vorschau: Rechtsklick → Bild speichern unter…';
+        statusLine.textContent = 'Fallì — prevista: clic dretg → Memorisar il maletg sco…';
         statusLine.className = 'rc-status err';
       }
     });
@@ -706,7 +706,7 @@
     if (candidates.length) {
       const metaMap = extractGalleryMeta(raw);
       const count = showBatchResults(processCandidates(candidates, metaMap));
-      batchStatusEl.textContent = count + ' Bild(er) gefunden.';
+      batchStatusEl.textContent = count + ' maletg(s) chattà(s).';
       batchStatusEl.className = 'hint ok';
       return;
     }
@@ -718,12 +718,12 @@
     if (!looksLikeSingleUrl) {
       batchResultsEl.innerHTML = '';
       batchDownloadAllBtn.hidden = true;
-      batchStatusEl.textContent = 'Keine passenden Bild-Links gefunden.';
+      batchStatusEl.textContent = 'Nagins links da maletgs adattads chattads.';
       batchStatusEl.className = 'hint err';
       return;
     }
 
-    batchStatusEl.textContent = 'Lade Artikel-Seite…';
+    batchStatusEl.textContent = 'Chargel la pagina da l\'artitgel…';
     batchStatusEl.className = 'hint';
     batchResultsEl.innerHTML = '';
     batchDownloadAllBtn.hidden = true;
@@ -733,16 +733,16 @@
       const html = await resp.text();
       const found = extractCandidates(html);
       if (!found.length) {
-        batchStatusEl.textContent = 'Seite geladen, aber keine passenden Bild-Links gefunden.';
+        batchStatusEl.textContent = 'Pagina chargiada, ma nagins links da maletgs adattads chattads.';
         batchStatusEl.className = 'hint err';
         return;
       }
       const metaMap = extractGalleryMeta(html);
       const count = showBatchResults(processCandidates(found, metaMap));
-      batchStatusEl.textContent = count + ' Bild(er) gefunden.';
+      batchStatusEl.textContent = count + ' maletg(s) chattà(s).';
       batchStatusEl.className = 'hint ok';
     } catch(e){
-      batchStatusEl.textContent = 'Automatischer Abruf dieser Seite nicht möglich. Stattdessen: Seitenquelltext holen (auf der Artikelseite Rechtsklick → „Seitenquelltext anzeigen" bzw. Strg/Cmd+U → alles kopieren), hier ins Feld einfügen und nochmals auf „Verarbeiten" klicken.';
+      batchStatusEl.textContent = 'Clamar giu automaticamain questa pagina n\'è betg pussaivel. Empè: prender il code da funtauna (sin la pagina da l\'artitgel clic dretg → «Mussar il code da funtauna» resp. Ctrl/Cmd+U → copiar tut), integrar qua en il champ e cliccar anc ina giada sin «Elavurar».';
       batchStatusEl.className = 'hint err';
     }
   });

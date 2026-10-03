@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de-CH">
+<html lang="rm">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,17 +33,17 @@ pre{background:var(--code);padding:10px;border-radius:8px;overflow:auto;font-siz
 <body>
 <main>
   <h1>SRT → TTML</h1>
-  <p class="sub">Wandelt SRT-Dateien in TTML nach RTR-Vorlage um.<br>Mehrere Dateien gleichzeitig möglich, alles bleibt lokal im Browser.</p>
-  <div id="drop">SRT-Dateien hierher ziehen oder <u>klicken</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
-  <div class="row" id="allRow" hidden><button class="primary" id="all">Alle herunterladen</button><button id="clear">Liste leeren</button></div>
+  <p class="sub">Converta files SRT en TTML tenor il model da RTR.<br>Plirs files a medem temp èn pussaivels.</p>
+  <div id="drop">Trair qua ils files SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
+  <div class="row" id="allRow" hidden><button class="primary" id="all">Telechargiar tuts</button><button id="clear">Svidar la glista</button></div>
   <div id="list"></div>
   <details>
-    <summary>RTR-Vorlage (Subtitle Edit Custom Format)</summary>
-    <pre>Zeitformat: hh:mm:ss.zzz
+    <summary>Model RTR (Subtitle Edit Custom Format)</summary>
+    <pre>Format dal temp: hh:mm:ss.zzz
 &lt;p begin="{start}" xml:id="p{number}" end="{end}"&gt;
     &lt;span tts:color="#ffffff"&gt;{text}&lt;/span&gt;
 &lt;/p&gt;
-Neue Zeile: &lt;/span&gt;&lt;br&gt;&lt;/br&gt;&lt;span tts:color="#ffffff"&gt;</pre>
+Nova lingia: &lt;/span&gt;&lt;br&gt;&lt;/br&gt;&lt;span tts:color="#ffffff"&gt;</pre>
   </details>
 </main>
 <script>
@@ -102,15 +102,15 @@ function addResult(fileName, text){
   const name=fileName.replace(/\.srt$/i,'')+'.ttml';
   if (!cues.length){
     el.classList.add('err');
-    el.innerHTML=`<div><div class="name"></div><div class="info">Keine Untertitel gefunden – ist das eine SRT-Datei?</div></div>`;
+    el.innerHTML=`<div><div class="name"></div><div class="info">Nagins suttitels chattads – è quai in file SRT?</div></div>`;
     el.querySelector('.name').textContent=fileName;
   } else {
     const url=URL.createObjectURL(new Blob([buildTtml(cues)],{type:'application/ttml+xml;charset=utf-8'}));
     const r={name,url}; results.push(r);
     const dur=msToTt(cues[cues.length-1].end).slice(0,8);
-    el.innerHTML=`<div><div class="name"></div><div class="info">${cues.length} Untertitel · Ende ${dur}</div></div>`;
+    el.innerHTML=`<div><div class="name"></div><div class="info">${cues.length} suttitels · fin ${dur}</div></div>`;
     el.querySelector('.name').textContent=name;
-    const b=document.createElement('a'); b.className='btn primary'; b.textContent='Herunterladen'; b.href=url; b.download=name;
+    const b=document.createElement('a'); b.className='btn primary'; b.textContent='Telechargiar'; b.href=url; b.download=name;
     el.appendChild(b);
   }
   $('list').prepend(el);

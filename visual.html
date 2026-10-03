@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="rm">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -88,25 +88,25 @@
 <body>
 <div class="container">
   <h1>Magazin / Il di</h1>
-  <p class="subtitle">Foto reinziehen, Sendung wählen, Ausschnitt festlegen. Export als PNG in 1920 × 1080.</p>
+  <p class="subtitle">Trair qua la foto, tscherner l'emissiun, fixar il retagl. Export sco PNG en 1920 × 1080.</p>
 
   <div class="card">
     <div class="toolbar">
-      <div class="seg" role="group" aria-label="Sendung">
+      <div class="seg" role="group" aria-label="Emissiun">
         <button type="button" data-fmt="magazin" aria-pressed="true">Magazin</button>
         <button type="button" data-fmt="ildi" aria-pressed="false">Il di</button>
       </div>
-      <label class="check"><input type="checkbox" id="showOverlay" checked> Overlay zeigen</label>
+      <label class="check"><input type="checkbox" id="showOverlay" checked> Mussar l'overlay</label>
       <div class="spacer"></div>
-      <button type="button" class="ghost" id="pickBtn">Foto wählen</button>
+      <button type="button" class="ghost" id="pickBtn">Tscherner ina foto</button>
     </div>
 
     <div class="urlrow">
-      <input type="url" id="urlInput" placeholder="RTR-Bildlink oder Artikel-URL einfügen" spellcheck="false" autocomplete="off">
-      <button type="button" class="ghost" id="urlBtn">Laden</button>
+      <input type="url" id="urlInput" placeholder="Integrar il link d'in maletg RTR u l'URL d'in artitgel" spellcheck="false" autocomplete="off">
+      <button type="button" class="ghost" id="urlBtn">Chargiar</button>
     </div>
 
-    <div class="stage" id="stage" tabindex="0" aria-label="Arbeitsfläche">
+    <div class="stage" id="stage" tabindex="0" aria-label="Surfatscha da lavur">
       <div class="frame" id="frame">
         <div class="frame-bg"></div>
         <img class="ghost-img" id="ghost" alt="">
@@ -118,16 +118,16 @@
           <div class="handle" data-c="sw"></div><div class="handle" data-c="se"></div>
         </div>
         <div class="empty" id="empty">
-          <strong>Foto hierher ziehen</strong>
-          <span>oder antippen zum Auswählen, mit Ctrl/Cmd+V einfügen oder oben einen RTR-Link angeben</span>
+          <strong>Trair qua la foto</strong>
+          <span>u tutgar per tscherner, integrar cun Ctrl/Cmd+V u inditgar survart in link RTR</span>
         </div>
       </div>
     </div>
-    <p class="hint">Foto ziehen zum Verschieben, an den Ecken ziehen zum Skalieren. Mausrad oder zwei Finger zoomen ebenfalls. Das Foto füllt immer die ganze Fläche, Überstand wird beim Export abgeschnitten.</p>
+    <p class="hint">Trair la foto per la spustar, trair vi dals chantuns per la scalar. Era cun la rodella dal mieur u cun dus dets pon ins zoomar. La foto emplenescha adina l'entira surfatscha, quai che surpassa vegn taglià giu tar l'export.</p>
 
     <div class="actions">
-      <button type="button" id="dlBtn" disabled>PNG herunterladen</button>
-      <button type="button" class="ghost" id="fitBtn" disabled>Einpassen</button>
+      <button type="button" id="dlBtn" disabled>Telechargiar il PNG</button>
+      <button type="button" class="ghost" id="fitBtn" disabled>Adattar</button>
       <span class="msg" id="msg"></span>
     </div>
   </div>
@@ -201,7 +201,7 @@ window.addEventListener('resize', render);
 /* ---------- Laden ---------- */
 function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
 function load(file, label){
-  if (!file || !file.type.startsWith('image/')) { setMsg('Das ist keine Bilddatei.', true); return; }
+  if (!file || !file.type.startsWith('image/')) { setMsg('Quai n\'è nagin file da maletg.', true); return; }
   const url = URL.createObjectURL(file);
   const im = new Image();
   im.onload = () => {
@@ -209,10 +209,10 @@ function load(file, label){
     photo.src = ghost.src = url;
     empty.hidden = true; box.hidden = false;
     $('dlBtn').disabled = $('fitBtn').disabled = false;
-    setMsg((label ? label + ', ' : '') + `${iw} × ${ih} px` + (minS() > 1 ? ', wird hochskaliert' : ''));
+    setMsg((label ? label + ', ' : '') + `${iw} × ${ih} px` + (minS() > 1 ? ', vegn engrondì' : ''));
     fit();
   };
-  im.onerror = () => setMsg('Bild konnte nicht gelesen werden.', true);
+  im.onerror = () => setMsg('Il maletg n\'ha betg pudì vegnir legì.', true);
   im.src = url;
 }
 $('pickBtn').onclick = () => $('file').click();
@@ -237,20 +237,20 @@ const DEFAULT_BASE = 'https://www.rtr.ch/static/cms/images/dynamic/noop/';
 // Wandelt einen RTR-/SRF-Bildlink in die grösstmögliche Variante um
 function convertOne(raw){
   const v = (raw || '').trim();
-  if (!v) return { error:'Leer.' };
+  if (!v) return { error:'Vid.' };
   if (!/^[a-z]+:\/\//i.test(v) && /^[\w-]+\.\w+$/i.test(v)) return { url: DEFAULT_BASE + v, filename: v };
   let toParse = /^\/.*\/cms\/images\//i.test(v) ? 'https://www.rtr.ch' + v : v;
   let u;
-  try { u = new URL(toParse); } catch(e){ return { error:'Keine gültige URL.' }; }
+  try { u = new URL(toParse); } catch(e){ return { error:'Nagina URL valida.' }; }
   // SRG-Bildproxy (il.srf.ch/images/?imageUrl=...&width=...)
   if (u.searchParams.has('imageUrl')){
     u.searchParams.set('width', '1920');
     return { url: u.toString(), filename:'bild' };
   }
   const marker = '/cms/images/', idx = u.pathname.indexOf(marker);
-  if (idx === -1) return { error:'Kein bekanntes Bildformat erkannt.' };
+  if (idx === -1) return { error:'Nagin format da maletg enconuschent identifitgà.' };
   const filename = u.pathname.slice(u.pathname.lastIndexOf('/') + 1);
-  if (!filename) return { error:'Kein Dateiname im Link.' };
+  if (!filename) return { error:'Nagin num da file en il link.' };
   return { url: u.origin + u.pathname.slice(0, idx + marker.length) + 'dynamic/noop/' + filename, filename };
 }
 
@@ -288,16 +288,16 @@ async function loadFromUrl(raw){
   const v = (raw || '').trim();
   if (!v) return;
   let res = convertOne(v);
-  setMsg('Lade Bild…');
+  setMsg('Chargel il maletg…');
   try {
     if (res.error){
       if (!/^https?:\/\//i.test(v)) { setMsg(res.error, true); return; }
       // Vermutlich eine Artikelseite: Seite laden und erstes Bild nehmen
-      setMsg('Suche Bild im Artikel…');
+      setMsg('Tschertg il maletg en l\'artitgel…');
       const html = await (await fetchBlob(v)).text();
       if (my !== urlToken) return;
       const c = firstCandidate(html);
-      if (!c) { setMsg('Kein Bild auf dieser Seite gefunden.', true); return; }
+      if (!c) { setMsg('Nagin maletg chattà sin questa pagina.', true); return; }
       res = convertOne(c);
       if (res.error) { setMsg(res.error, true); return; }
     }
@@ -305,10 +305,10 @@ async function loadFromUrl(raw){
     let blob = await r.blob();
     if (my !== urlToken) return;
     if (!blob.type.startsWith('image/')) blob = new Blob([blob], { type:'image/webp' });
-    load(blob, 'RTR-Bild');
+    load(blob, 'Maletg RTR');
   } catch(e){
     if (my !== urlToken) return;
-    setMsg('Bild konnte nicht direkt geladen werden. Im RTR Bilddownloader herunterladen und hier reinziehen.', true);
+    setMsg('Il maletg n\'ha betg pudì vegnir chargià directamain. Al telechargiar cun «RTR Telechargiar maletgs» e trair qua.', true);
   }
 }
 $('urlBtn').onclick = () => loadFromUrl(urlInput.value);
@@ -421,7 +421,7 @@ $('dlBtn').onclick = () => {
       a.href = URL.createObjectURL(b); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      setMsg('Gespeichert: ' + name);
+      setMsg('Memorisà: ' + name);
     }, 'image/png');
   };
   ov.src = OVERLAYS[fmt];

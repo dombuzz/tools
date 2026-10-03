@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="rm">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -44,10 +44,10 @@
 <body>
 <main>
   <h1>dombuzz <span>Tools</span></h1>
-  <p class="sub">Tool auswählen, es öffnet sich direkt.</p>
+  <p class="sub">Tscherner in tool, el s'avra directamain.</p>
   <div class="select">
-    <select id="tools" aria-label="Tool auswählen" disabled>
-      <option value="">Lade Tools …</option>
+    <select id="tools" aria-label="Tscherner in tool" disabled>
+      <option value="">Chargel ils tools …</option>
     </select>
   </div>
   <p class="msg" id="msg" hidden></p>
@@ -62,10 +62,10 @@
 
   // Anzeigenamen im Dropdown (Dateiname -> Name). Nicht aufgeführte Dateien zeigen ihren <title>.
   const NAMES = {
-    'rtr-picture.html': 'RTR Bilddownloader',
-    'data.html':       'Datawrapper-Grafik speichern',
-    'votgr.html':       'Karten Abstimmungen GR',
-    'subs.html':        'Untertitel RM → DE',
+    'rtr-picture.html': 'RTR Telechargiar maletgs',
+    'data.html':        'Memorisar grafica Datawrapper',
+    'votgr.html':       'Chartas votaziuns GR',
+    'subs.html':        'Suttitels RM → DE',
     'srt2ttml.html':    'SRT → TTML',
     'Resizer2000.html': 'Resizer 2000',
     'visual.html':      'Magazin / Il di'
@@ -103,14 +103,14 @@
       tools.sort((a, b) => (a.pos < 0 ? 1e9 : a.pos) - (b.pos < 0 ? 1e9 : b.pos) || a.title.localeCompare(b.title, 'de'));
 
       sel.innerHTML = '';
-      sel.append(new Option(tools.length ? 'Tool wählen …' : 'Keine Tools gefunden', ''));
+      sel.append(new Option(tools.length ? 'Tscherner in tool …' : 'Nagins tools chattads', ''));
       for (const t of tools) sel.append(new Option(t.title, '/' + t.url));
       sel.disabled = !tools.length;
     } catch (e) {
-      sel.innerHTML = '<option value="">Liste nicht verfügbar</option>';
+      sel.innerHTML = '<option value="">Glista betg disponibla</option>';
       msg.hidden = false;
-      msg.innerHTML = 'Die Liste konnte gerade nicht geladen werden (' + e.message +
-        '). Bitte später neu laden oder direkt im <a href="https://github.com/' + REPO + '">Repository</a> nachsehen.';
+      msg.innerHTML = 'La glista n\'ha betg pudì vegnir chargiada (' + e.message +
+        '). Per plaschair chargiar pli tard da nov u guardar directamain en il <a href="https://github.com/' + REPO + '">repository</a>.';
     }
   }
 
