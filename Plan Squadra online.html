@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Plan Squadra online</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Cg fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='56' rx='7'/%3E%3Cpath d='M18 40h64M36 16v14M64 16v14'/%3E%3C/g%3E%3Cg fill='white'%3E%3Crect x='28' y='50' width='10' height='9' rx='2'/%3E%3Crect x='45' y='50' width='10' height='9' rx='2'/%3E%3Crect x='62' y='50' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='28' y='64' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='45' y='64' width='10' height='9' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* Layout: wie die übrigen Tools auf tools.dombuzz.ch – dunkle Karten, Systemschrift, Akzent Koralle; nummerierte Schritte, dann eine Tabelle pro Woche */
+:root{
+  --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+  --accent:#ff4d64; --accent-dark:#d93a50; --border:#2f2f34;
+  --ok:#4caf6f; --err:#ff6b7d; --mono:#26262a;
+  --hi:#ff4d64; --hi-fg:#121214; --gap:#3a1a20; --we:#18181b; --today:#2a1d21;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 16px;padding-block:40px 48px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
+h1 .acc{color:var(--accent)}
+.lead{color:var(--muted);margin:0;font-size:.9rem;line-height:1.5;max-width:65ch}
+.step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.step h2{margin:0;font-size:.95rem;display:flex;gap:10px;align-items:center}
+.num{font-size:.8rem;font-weight:700;background:var(--accent);color:#121214;border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.drop{border:2px dashed var(--border);border-radius:12px;padding:30px 16px;text-align:center;background:var(--mono);cursor:pointer;transition:border-color .15s;color:var(--muted);font-size:.85rem}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop b{display:block;font-size:1rem;margin-bottom:4px;color:var(--text)}
+.drop:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{font-size:.85rem;color:var(--muted);min-height:1.2em}
+.status.ok b{color:var(--ok);font-weight:600}
+.status.err{color:var(--err)}
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:end}
+.field{display:flex;flex-direction:column;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+input[type=date],select{font:inherit;font-size:.95rem;font-weight:400;text-transform:none;letter-spacing:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--mono);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:.88rem;font-weight:600;text-transform:none;letter-spacing:0;background:transparent;color:var(--muted);border:none;padding:8px 14px;border-radius:7px;cursor:pointer}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#121214}
+.link{font:inherit;font-size:.88rem;font-weight:600;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer}
+.link:hover{color:var(--text)}
+section h3{font-size:1rem;margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.kw{color:var(--accent);font-weight:700}
+.rng{font-weight:400;color:var(--muted);font-size:.88rem}
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.85rem}
+th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:7px 8px;text-align:left;vertical-align:top}
+tr:last-child td,tr:last-child th{border-bottom:0}
+th:last-child,td:last-child{border-right:0}
+thead th{font-weight:600;font-size:.78rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+thead th small{display:block;color:var(--muted);font-weight:400}
+tbody th{font-size:.8rem;white-space:nowrap;width:48px;color:var(--muted)}
+.we{background:var(--we)}
+.today{background:var(--today)}
+thead th.today{box-shadow:inset 0 3px 0 var(--accent)}
+.past{opacity:.4}
+.p{display:block;line-height:1.4}
+.p.hi{background:var(--hi);color:var(--hi-fg);border-radius:4px;padding:0 4px;margin:0 -4px;font-weight:700}
+td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
+.none,.out{color:var(--muted);opacity:.5}
+.note{font-size:.85rem;color:var(--muted);line-height:1.5;max-width:65ch;margin:0}
+.empty{color:var(--muted);font-size:.9rem;padding:8px 0}
+.top{display:flex;flex-wrap:wrap;gap:12px 20px;justify-content:space-between;align-items:flex-start}
+.hd{flex:1 1 300px;min-width:0}
+.btn-sm{flex:none;font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:7px 12px;background:var(--card);white-space:nowrap}
+.btn-sm:hover{color:var(--text);border-color:var(--accent)}
+.btn-sm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="hd">
+    <h1>Plan <span class="acc">Squadra online</span></h1>
+    <p class="lead">Mussa a maun dal plan da lavur tgi ch'ha tge servetsch.</p>
+    </div>
+    <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf?d=w5571474005224f84be64292d66631c8c&amp;csf=1&amp;web=1&amp;e=9z2lKX" target="_blank" rel="noopener">Plan da lavur actual - radio/online</a>
+  </header>
+
+  <div class="step">
+    <h2><span class="num">1</span>Chargiar il plan da lavur</h2>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner il PDF u al trair qua"><b>Tscherner il PDF</b> u al trair qua</div>
+    <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">2</span>Tscherner la perioda</h2>
+    <div class="controls">
+      <label class="field" for="from">A partir da
+        <input type="date" id="from">
+      </label>
+      <div class="field">Durada
+        <div class="seg" id="len" role="group" aria-label="Durada">
+          <button type="button" data-w="1">Quest'emna</button>
+          <button type="button" data-w="2">+ 1 emna</button>
+          <button type="button" data-w="3">+ 2 emnas</button>
+          <button type="button" data-w="4">+ 3 emnas</button>
+          <button type="button" data-w="0">Plan entir</button>
+        </div>
+      </div>
+      <label class="field" for="who">Marcar ina persuna
+        <select id="who"><option value="">nagina</option></select>
+      </label>
+      <button type="button" class="link" id="reset">Enavos ad oz</button>
+    </div>
+  </div>
+
+  <div id="out" class="wrap" style="gap:24px;max-width:none"></div>
+  <p class="note">Cotschen vul dir: il servetsch manca en il plan (dals dis da lavur O1 fin O4 e pOn, la fin d'emna O1 ed O4). Dus nums en ina cella vul probanel dir ch'i dat in'introducziun en il servetsch. Ils dis avant la data tschernida èn pli clers.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+// pages: [{width, items:[{str,x,y,w}]}]  (y grows upward, PDF coords)
+function parsePlan(pages, SVC){
+  const MONTHS={januar:1,februar:2,"märz":3,maerz:3,april:4,mai:5,juni:6,juli:7,august:8,september:9,oktober:10,november:11,dezember:12};
+  const entries=[]; const people=new Set();
+  for(const pg of pages){
+    // split multi-token items into tokens with estimated positions
+    const toks=[];
+    for(const it of pg.items){
+      const s=it.str; if(!s.trim()) continue;
+      const re=/\S+/g; let m;
+      while((m=re.exec(s))){
+        const f0=m.index/s.length, f1=(m.index+m[0].length)/s.length;
+        toks.push({t:m[0],x:it.x+it.w*f0,cx:it.x+it.w*(f0+f1)/2,y:it.y,raw:it});
+      }
+    }
+    // month headers
+    const heads=[];
+    for(const tk of toks){
+      const mo=MONTHS[tk.t.toLowerCase()]; if(!mo) continue;
+      const yr=toks.find(o=>/^20\d\d$/.test(o.t)&&Math.abs(o.y-tk.y)<3&&o.x<tk.x&&tk.x-o.x<80);
+      if(!yr) continue;
+      const nums=toks.filter(o=>/^\d{1,2}$/.test(o.t)&&Math.abs(o.y-tk.y)<4&&o.x>tk.x);
+      const cols={}; for(const n of nums){const d=+n.t; if(d>=1&&d<=31&&!(d in cols)) cols[d]=n.cx;}
+      if(Object.keys(cols).length<20) continue;
+      const xs=Object.values(cols).sort((a,b)=>a-b);
+      heads.push({y:tk.y,year:+yr.t,month:mo,cols,firstX:xs[0],step:(xs[xs.length-1]-xs[0])/(xs.length-1)});
+    }
+    if(!heads.length) continue;
+    heads.sort((a,b)=>b.y-a.y);
+    const blockOf=y=>{let b=null;for(const h of heads){if(h.y>y+1){b=h}}return b;}; // lowest header above y
+    for(const h of heads){
+      const inB=toks.filter(o=>blockOf(o.y)===h);
+      // name lines: raw items left of the grid
+      const lines=[]; const seen=new Set();
+      for(const o of inB){
+        const it=o.raw; if(seen.has(it)) continue; seen.add(it);
+        if(it.x<pg.width*0.02||it.x+it.w>h.firstX-h.step*0.35) continue;
+        const s=it.str.trim();
+        if(!/[A-Za-zÄÖÜäöüé]/.test(s)||/^\+|\d{3}/.test(s)) continue;
+        if(/RTR plan|^20\d\d|^(Pages|Printed|By|Team|Shift)\b/i.test(s)) continue;
+        if(/^[a-zäöüè]{2,3}$/.test(s)&&it.x<pg.width*0.03) continue; // Kürzel
+        lines.push(it);
+      }
+      lines.sort((a,b)=>b.y-a.y);
+      const rows=[];
+      for(const it of lines){
+        const prev=rows[rows.length-1];
+        if(prev&&prev.y-it.y<h.step*0.6&&prev.lastY-it.y<h.step*0.6){prev.parts.push(it.str.trim());prev.lastY=it.y}
+        else rows.push({y:it.y,lastY:it.y,parts:[it.str.trim()]});
+      }
+      if(!rows.length) continue;
+      for(const r of rows) r.name=r.parts.join(" ").replace(/\s*,\s*/g,", ").replace(/-\s+/g,"-").replace(/\s+/g," ").replace(/,\s*$/,"");
+      const rowOf=y=>{let best=null,bd=1e9;for(const r of rows){const d=Math.abs(r.y-y);if(d<bd){bd=d;best=r}}return bd<h.step*1.2?best:null;};
+      for(const o of inB){
+        if(!SVC.includes(o.t)) continue;
+        if(o.x<h.firstX-h.step*0.6) continue;
+        let day=null,bd=1e9; for(const [d,x] of Object.entries(h.cols)){const dd=Math.abs(x-o.cx);if(dd<bd){bd=dd;day=+d}}
+        if(bd>h.step*0.6) continue;
+        const r=rowOf(o.y); if(!r) continue; const name=r.name;
+        people.add(name);
+        entries.push({date:`${h.year}-${String(h.month).padStart(2,"0")}-${String(day).padStart(2,"0")}`,svc:o.t,name});
+      }
+    }
+  }
+  return {entries,people:[...people]};
+}
+
+
+const SVC=["O1","O1So","O1Du","O2","O3","O4","pOn"];
+const ROWS=["O1","O2","O3","O4","pOn"];
+const SAMPLE={label:"1_radio_online_3.pdf · stampà ils 12-10-2026",entries:[["2026-10-01","O4","Flepp, Gion Gieri"],["2026-10-01","pOn","Caduff, Livia"],["2026-10-01","O1","Chistell, Selina"],["2026-10-01","O3","Monn, Florian"],["2026-10-01","O2","Wichert, Patrick Andreas"],["2026-10-02","O3","Bundi, Fadrina"],["2026-10-02","pOn","Caduff, Livia"],["2026-10-02","O1","Chistell, Selina"],["2026-10-02","O4","Christen-Hitz, Olivia"],["2026-10-02","O2","Hardegger, Dominik"],["2026-10-03","O1So","Monn, Corsin"],["2026-10-03","O4","Monn, Florian"],["2026-10-04","O1Du","Monn, Corsin"],["2026-10-04","O4","Monn, Florian"],["2026-10-05","O2","Bassin, Milena"],["2026-10-05","O1","Bundi, Fadrina"],["2026-10-05","pOn","Caduff, Livia"],["2026-10-05","O4","Hardegger, Dominik"],["2026-10-05","O3","Monn, Corsin"],["2026-10-06","O2","Flepp, Gion Gieri"],["2026-10-06","O1","Bundi, Fadrina"],["2026-10-06","pOn","Caduff, Livia"],["2026-10-06","O4","Hardegger, Dominik"],["2026-10-06","O3","Wichert, Patrick Andreas"],["2026-10-07","O2","Flepp, Gion Gieri"],["2026-10-07","pOn","Caduff, Livia"],["2026-10-07","O3","Chistell, Selina"],["2026-10-07","O4","Hardegger, Dominik"],["2026-10-07","O1","Wichert, Patrick Andreas"],["2026-10-08","O2","Chistell, Selina"],["2026-10-08","O3","Clalüna, Flurin"],["2026-10-08","pOn","Hardegger, Dominik"],["2026-10-08","O4","Monn, Corsin"],["2026-10-08","O1","Wichert, Patrick Andreas"],["2026-10-09","O1","Bassin, Milena"],["2026-10-09","O2","Chistell, Selina"],["2026-10-09","O3","Clalüna, Flurin"],["2026-10-09","pOn","Hardegger, Dominik"],["2026-10-09","O4","Monn, Corsin"],["2026-10-10","O1So","Caduff, Livia"],["2026-10-10","O4","Chistell, Selina"],["2026-10-11","O1Du","Caduff, Livia"],["2026-10-11","O4","Chistell, Selina"],["2026-10-12","O3","Baselgia, Alexi"],["2026-10-12","O4","Caduff, Erwin"],["2026-10-12","O2","Caduff, Livia"],["2026-10-12","pOn","Hardegger, Dominik"],["2026-10-12","O1","Monn, Corsin"],["2026-10-13","O4","Caduff, Erwin"],["2026-10-13","O2","Caduff, Livia"],["2026-10-13","O1","Chistell, Selina"],["2026-10-13","pOn","Hardegger, Dominik"],["2026-10-13","O3","Monn, Corsin"],["2026-10-14","O1","Cabalzar, Tanja"],["2026-10-14","O2","Cadisch, Ursin"],["2026-10-14","O4","Caduff, Livia"],["2026-10-14","O3","Chistell, Selina"],["2026-10-14","pOn","Hardegger, Dominik"],["2026-10-15","O1","Cabalzar, Tanja"],["2026-10-15","O2","Cadisch, Ursin"],["2026-10-15","O3","Caduff, Livia"],["2026-10-15","pOn","Hardegger, Dominik"],["2026-10-15","O4","Monn, Corsin"],["2026-10-16","O1","Baselgia, Alexi"],["2026-10-16","O2","Cadisch, Ursin"],["2026-10-16","O3","Clalüna, Flurin"],["2026-10-16","pOn","Hardegger, Dominik"],["2026-10-16","O4","Monn, Corsin"],["2026-10-17","O1So","Baselgia, Alexi"],["2026-10-17","O4","Caduff, Erwin"],["2026-10-18","O1Du","Baselgia, Alexi"],["2026-10-18","O4","Caduff, Erwin"],["2026-10-19","O1","Baselgia, Alexi"],["2026-10-19","O3","Beer, Laura"],["2026-10-19","O4","Caduff, Erwin"],["2026-10-19","pOn","Caduff, Livia"],["2026-10-19","O2","Wichert, Patrick Andreas"],["2026-10-20","O3","Beer, Laura"],["2026-10-20","pOn","Caduff, Livia"],["2026-10-20","O4","Chistell, Selina"],["2026-10-20","O1","Monn, Corsin"],["2026-10-20","O2","Wichert, Patrick Andreas"],["2026-10-21","O1","Cabalzar, Tanja"],["2026-10-21","pOn","Caduff, Livia"],["2026-10-21","O4","Chistell, Selina"],["2026-10-21","O3","Monn, Corsin"],["2026-10-21","O2","Wichert, Patrick Andreas"],["2026-10-22","pOn","Flepp, Gion Gieri"],["2026-10-22","O4","Baselgia, Alexi"],["2026-10-22","O1","Cabalzar, Tanja"],["2026-10-22","O2","Caduff, Livia"],["2026-10-22","O3","Monn, Corsin"],["2026-10-23","pOn","Flepp, Gion Gieri"],["2026-10-23","O4","Baselgia, Alexi"],["2026-10-23","O1","Cabalzar, Tanja"],["2026-10-23","O2","Caduff, Livia"],["2026-10-23","O3","Monn, Corsin"],["2026-10-24","O1So","Bundi, Fadrina"],["2026-10-24","O4","Clalüna, Flurin"],["2026-10-25","O1Du","Bundi, Fadrina"],["2026-10-25","O4","Clalüna, Flurin"],["2026-10-26","pOn","Flepp, Gion Gieri"],["2026-10-26","O3","Beer, Laura"],["2026-10-26","O4","Cadisch, Ursin"],["2026-10-26","O1","Chistell, Selina"],["2026-10-26","O2","Monn, Florian"],["2026-10-27","pOn","Flepp, Gion Gieri"],["2026-10-27","O4","Cadisch, Ursin"],["2026-10-27","O1","Chistell, Selina"],["2026-10-27","O2","Monn, Florian"],["2026-10-27","O3","Wichert, Patrick Andreas"],["2026-10-28","pOn","Flepp, Gion Gieri"],["2026-10-28","O1","Cabalzar, Tanja"],["2026-10-28","O4","Cadisch, Ursin"],["2026-10-28","O2","Monn, Florian"],["2026-10-28","O3","Wichert, Patrick Andreas"],["2026-10-29","O1","Cabalzar, Tanja"],["2026-10-29","O3","Chistell, Selina"],["2026-10-29","O2","Clalüna, Flurin"],["2026-10-29","pOn","Hardegger, Dominik"],["2026-10-29","O4","Monn, Corsin"],["2026-10-30","O1","Cabalzar, Tanja"],["2026-10-30","O3","Chistell, Selina"],["2026-10-30","O2","Clalüna, Flurin"],["2026-10-30","pOn","Hardegger, Dominik"],["2026-10-30","O4","Monn, Corsin"],["2026-10-31","O4","Caduff, Erwin"],["2026-10-31","O1So","Wichert, Patrick Andreas"],["2026-11-01","O4","Caduff, Erwin"],["2026-11-01","O1So","Wichert, Patrick Andreas"],["2026-11-02","O1","Flepp, Gion Gieri"],["2026-11-02","O4","Baselgia, Alexi"],["2026-11-02","O3","Cadisch, Ursin"],["2026-11-02","pOn","Hardegger, Dominik"],["2026-11-02","O2","Sauder, Ylva Mona"],["2026-11-03","O4","Baselgia, Alexi"],["2026-11-03","O3","Cadisch, Ursin"],["2026-11-03","pOn","Hardegger, Dominik"],["2026-11-03","O1","Monn, Florian"],["2026-11-03","O2","Sauder, Ylva Mona"],["2026-11-04","O3","Cabalzar, Tanja"],["2026-11-04","O4","Caduff, Erwin"],["2026-11-04","O2","Chistell, Selina"],["2026-11-04","pOn","Hardegger, Dominik"],["2026-11-04","O1","Monn, Florian"],["2026-11-04","O3","Wichert, Patrick Andreas"],["2026-11-05","O3","Cabalzar, Tanja"],["2026-11-05","O4","Caduff, Erwin"],["2026-11-05","O2","Chistell, Selina"],["2026-11-05","O1","Clalüna, Flurin"],["2026-11-05","pOn","Monn, Florian"],["2026-11-05","O3","Wichert, Patrick Andreas"],["2026-11-06","O3","Bassin, Milena"],["2026-11-06","O4","Caduff, Erwin"],["2026-11-06","O2","Chistell, Selina"],["2026-11-06","O1","Clalüna, Flurin"],["2026-11-06","pOn","Monn, Florian"],["2026-11-07","O1So","Bundi, Fadrina"],["2026-11-07","O4","Cadisch, Ursin"],["2026-11-08","O1Du","Bundi, Fadrina"],["2026-11-08","O4","Cadisch, Ursin"],["2026-11-09","O3","Beer, Laura"],["2026-11-09","O4","Cadisch, Ursin"],["2026-11-09","O1","Caduff, Livia"],["2026-11-09","O2","Monn, Corsin"],["2026-11-09","pOn","Monn, Florian"],["2026-11-10","O3","Beer, Laura"],["2026-11-10","O1","Caduff, Livia"],["2026-11-10","O2","Monn, Corsin"],["2026-11-10","pOn","Monn, Florian"],["2026-11-10","O4","Wichert, Patrick Andreas"],["2026-11-11","O1","Baselgia, Alexi"],["2026-11-11","O3","Bundi, Fadrina"],["2026-11-11","O2","Cadisch, Ursin"],["2026-11-11","pOn","Monn, Florian"],["2026-11-11","O4","Wichert, Patrick Andreas"],["2026-11-12","O1","Baselgia, Alexi"],["2026-11-12","O3","Cadisch, Ursin"],["2026-11-12","O4","Caduff, Erwin"],["2026-11-12","pOn","Hardegger, Dominik"],["2026-11-12","O2","Wichert, Patrick Andreas"],["2026-11-13","O2","Bassin, Milena"],["2026-11-13","O3","Cadisch, Ursin"],["2026-11-13","O4","Caduff, Erwin"],["2026-11-13","O1","Caduff, Livia"],["2026-11-13","pOn","Hardegger, Dominik"],["2026-11-14","O4","Beer, Laura"],["2026-11-14","O1So","Sauder, Ylva Mona"],["2026-11-15","O4","Beer, Laura"],["2026-11-15","O1Du","Sauder, Ylva Mona"],["2026-11-16","O1","Bundi, Fadrina"],["2026-11-16","O2","Cadisch, Ursin"],["2026-11-16","O4","Caduff, Livia"],["2026-11-16","pOn","Hardegger, Dominik"],["2026-11-16","O3","Monn, Florian"],["2026-11-16","O4","Sauder, Ylva Mona"],["2026-11-17","O1","Bundi, Fadrina"],["2026-11-17","O2","Cadisch, Ursin"],["2026-11-17","O4","Caduff, Livia"],["2026-11-17","pOn","Hardegger, Dominik"],["2026-11-17","O4","Sauder, Ylva Mona"],["2026-11-17","O3","Wichert, Patrick Andreas"],["2026-11-18","O2","Beer, Laura"],["2026-11-18","O4","Cadisch, Ursin"],["2026-11-18","O3","Caduff, Livia"],["2026-11-18","pOn","Hardegger, Dominik"],["2026-11-18","O1","Wichert, Patrick Andreas"],["2026-11-19","O2","Beer, Laura"],["2026-11-19","O3","Cabalzar, Tanja"],["2026-11-19","pOn","Caduff, Livia"],["2026-11-19","O4","Christen-Hitz, Olivia"],["2026-11-19","O1","Wichert, Patrick Andreas"],["2026-11-20","O2","Baselgia, Alexi"],["2026-11-20","O3","Bundi, Fadrina"],["2026-11-20","pOn","Caduff, Livia"],["2026-11-20","O4","Christen-Hitz, Olivia"],["2026-11-20","O1","Monn, Florian"],["2026-11-21","O4","Baselgia, Alexi"],["2026-11-21","O1So","Monn, Florian"],["2026-11-22","O4","Baselgia, Alexi"],["2026-11-22","O1Du","Monn, Florian"],["2026-11-23","O2","Flepp, Gion Gieri"],["2026-11-23","O2","Cabalzar, Tanja"],["2026-11-23","O3","Cadisch, Ursin"],["2026-11-23","pOn","Caduff, Livia"],["2026-11-23","O1","Monn, Corsin"],["2026-11-23","O4","Sauder, Ylva Mona"],["2026-11-24","O3","Beer, Laura"],["2026-11-24","O2","Cabalzar, Tanja"],["2026-11-24","pOn","Caduff, Livia"],["2026-11-24","O1","Monn, Corsin"],["2026-11-24","O4","Sauder, Ylva Mona"],["2026-11-24","O2","Wichert, Patrick Andreas"],["2026-11-25","pOn","Caduff, Livia"],["2026-11-25","O4","Chistell, Selina"],["2026-11-25","O1","Monn, Corsin"],["2026-11-25","O3","Monn, Florian"],["2026-11-25","O2","Wichert, Patrick Andreas"],["2026-11-26","O3","Beer, Laura"],["2026-11-26","O1","Cabalzar, Tanja"],["2026-11-26","O4","Chistell, Selina"],["2026-11-26","pOn","Monn, Florian"],["2026-11-26","O2","Wichert, Patrick Andreas"],["2026-11-27","O2","Beer, Laura"],["2026-11-27","O1","Cabalzar, Tanja"],["2026-11-27","O4","Caduff, Erwin"],["2026-11-27","pOn","Monn, Florian"],["2026-11-27","O3","Sauder, Ylva Mona"],["2026-11-28","O4","Caduff, Erwin"],["2026-11-28","O1So","Monn, Corsin"],["2026-11-29","O4","Beer, Laura"],["2026-11-29","O1Du","Monn, Corsin"],["2026-11-29","pOn","Monn, Florian"],["2026-11-30","O4","Beer, Laura"],["2026-11-30","O1","Chistell, Selina"],["2026-11-30","O2","Hardegger, Dominik"],["2026-11-30","O3","Monn, Corsin"],["2026-11-30","pOn","Monn, Florian"]]};
+const DAYS=["Gli","Ma","Me","Gie","Ve","So","Du"];
+const MONTHS=["schaner","favrer","mars","avrigl","matg","zercladur","fanadur","avust","settember","october","november","december"];
+document.documentElement.lang="rm";
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseIso=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const monday=d=>addDays(d,-((d.getDay()+6)%7));
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/864e5+1)/7)}
+const fmt=d=>d.getDate()+"."+(d.getMonth()+1)+".";
+
+let plan=null, weeks=1;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+function shortNames(names){
+  const sur=n=>(n.includes(",")?n.split(",")[0]:n.split(" ")[0]).trim();
+  const first=n=>(n.includes(",")?n.split(",").slice(1).join(","):n.split(" ").slice(1).join(" ")).trim()||sur(n);
+  const ALIAS={"Wichert, Patrick Andreas":"Patrick","Flepp, Gion Gieri":"GiGi"};
+  const first0=first; const firstA=n=>ALIAS[n]||first0(n);
+  const cnt={}; names.forEach(n=>cnt[firstA(n)]=(cnt[firstA(n)]||0)+1);
+  const out={}; names.forEach(n=>{const f=firstA(n);out[n]=cnt[f]>1?`${f} ${sur(n)[0]}.`:f}); return out;
+}
+function setPlan(p,save){
+  const map={}, months=new Set(), names=new Set();
+  for(const [date,svc,name] of p.entries){
+    const row=svc.startsWith("O1")?"O1":svc;
+    ((map[date]??={})[row]??=[]); if(!map[date][row].includes(name)) map[date][row].push(name);
+    months.add(date.slice(0,7)); names.add(name);
+  }
+  const dates=Object.keys(map).sort();
+  plan={...p,map,months,names:[...names].sort((a,b)=>a.localeCompare(b,"de")),short:shortNames([...names]),first:dates[0],last:dates[dates.length-1]};
+  if(save) store.set("plan",JSON.stringify(p));
+  const sel=$("who"), keep=sel.value||store.get("who")||"";
+  sel.innerHTML='<option value="">nagina</option>'+plan.names.map(n=>`<option>${n.replace(/</g,"&lt;")}</option>`).join("");
+  if(plan.names.includes(keep)) sel.value=keep;
+  const mlist=[...months].sort().map(m=>{const [y,mo]=m.split("-");return MONTHS[mo-1]+" "+y});
+  $("status").className="status ok";
+  $("status").innerHTML=`<b>${plan.names.length} persunas, ${p.entries.length} servetschs</b> · ${mlist.join(", ")} · ${p.label.replace(/</g,"&lt;")}`;
+  render();
+}
+
+async function readPdf(file){
+  $("status").className="status"; $("status").textContent="Il PDF vegn legì …";
+  try{
+    if(!window.pdfjsLib) throw new Error("La biblioteca da PDF n'ha betg pudì vegnir chargiada. Chargia danovamain la pagina ed emprova anc ina giada.");
+    pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+    const pages=[];
+    for(let i=1;i<=doc.numPages;i++){
+      const pg=await doc.getPage(i); const vp=pg.getViewport({scale:1}); const tc=await pg.getTextContent();
+      pages.push({width:vp.width,items:tc.items.map(it=>({str:it.str,x:it.transform[4],y:it.transform[5],w:it.width}))});
+    }
+    const r=parsePlan(pages,SVC);
+    if(!r.entries.length) throw new Error("En quest PDF na sa chattan nagins servetschs online. È quai l'export da VimBiz «Team Published Shifts by Month»?");
+    r.entries.sort((a,b)=>a.date.localeCompare(b.date));
+    setPlan({label:`${file.name} · chargià ils ${iso(new Date()).split("-").reverse().join("-")}`,entries:r.entries.map(e=>[e.date,e.svc,e.name])},true);
+  }catch(e){$("status").className="status err";$("status").textContent=e.message||"Il PDF n'ha betg pudì vegnir legì."}
+}
+
+function render(){
+  const out=$("out"); out.innerHTML=""; if(!plan) return;
+  const who=$("who").value;
+  const from=$("from").value?parseIso($("from").value):new Date();
+  let start, end;
+  if(weeks===0){start=monday(parseIso(plan.first)); end=parseIso(plan.last)}
+  else {start=monday(from); end=addDays(start,weeks*7-1)}
+  const todayIso=iso(new Date()), fromIso=weeks===0?"":iso(from);
+  let shown=0;
+  for(let s=start; s<=end; s=addDays(s,7)){
+    const days=[...Array(7)].map((_,i)=>addDays(s,i));
+    let mine=0;
+    let h='<table><thead><tr><th>Servetsch</th>'+days.map((d,i)=>{const c=[i>4?'we':'',iso(d)===todayIso?'today':'',fromIso&&iso(d)<fromIso?'past':''].join(' ');return `<th class="${c}">${DAYS[i]}<small>${fmt(d)}</small></th>`}).join('')+'</tr></thead><tbody>';
+    for(const sv of ROWS){
+      h+=`<tr><th>${sv}</th>`;
+      days.forEach((d,i)=>{
+        const k=iso(d), we=i>4;
+        const c=[we?'we':'',k===todayIso?'today':'',fromIso&&k<fromIso?'past':''].join(' ');
+        if(!plan.months.has(k.slice(0,7))){h+=`<td class="${c} out">·</td>`;return}
+        const ps=(plan.map[k]||{})[sv]||[];
+        const expected=we?(sv==="O1"||sv==="O4"):true;
+        if(!ps.length){h+=expected?`<td class="gapc ${c}">manca</td>`:`<td class="${c} none">–</td>`;return}
+        h+=`<td class="${c}">`+ps.map(p=>{if(p===who)mine++;return `<span class="p${p===who?' hi':''}" title="${p.replace(/"/g,'&quot;')}">${plan.short[p]}</span>`}).join('')+'</td>';
+      });
+      h+='</tr>';
+    }
+    h+='</tbody></table>';
+    const sec=document.createElement('section');
+    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="tw">${h}</div>`;
+    out.appendChild(sec); shown++;
+  }
+  const anyInPlan=iso(end)>=plan.first&&iso(start)<=plan.last;
+  if(!anyInPlan){const p=document.createElement('p');p.className='empty';p.textContent=`Il plan chargià na cuntegna betg questa perioda (dals ${fmt(parseIso(plan.first))} fin ils ${fmt(parseIso(plan.last))}${plan.last.slice(0,4)}). Chargia in plan pli nov.`;out.prepend(p)}
+}
+
+// events
+const drop=$("drop"), file=$("file");
+drop.addEventListener("click",()=>file.click());
+drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();file.click()}});
+file.addEventListener("change",()=>{if(file.files[0])readPdf(file.files[0]);file.value=""});
+["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)readPdf(f)});
+function setWeeks(w){weeks=w;document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===w)));store.set("weeks",String(w));render()}
+document.querySelectorAll("#len button").forEach(b=>b.addEventListener("click",()=>setWeeks(+b.dataset.w)));
+$("from").addEventListener("change",render);
+$("who").addEventListener("change",()=>{store.set("who",$("who").value);render()});
+$("reset").addEventListener("click",()=>{$("from").value=iso(new Date());render()});
+
+// init
+$("from").value=iso(new Date());
+const sw=parseInt(store.get("weeks"),10); weeks=[0,1,2,3,4].includes(sw)?sw:1;
+document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===weeks)));
+let saved=null; try{saved=JSON.parse(store.get("plan")||"null")}catch(e){}
+setPlan(saved&&saved.entries&&saved.entries.length?saved:SAMPLE,false);
+</script>
+
+</body>
+</html>
