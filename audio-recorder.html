@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="de">
+<html lang="rm">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Audio-Recorder</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23333333%22/%3E%3Cg%20fill%3D%22%23f2506a%22%3E%3Crect%20x%3D%2210%22%20y%3D%2226%22%20width%3D%226%22%20height%3D%2212%22%20rx%3D%223%22/%3E%3Crect%20x%3D%2220%22%20y%3D%2216%22%20width%3D%226%22%20height%3D%2232%22%20rx%3D%223%22/%3E%3Crect%20x%3D%2230%22%20y%3D%2210%22%20width%3D%226%22%20height%3D%2244%22%20rx%3D%223%22/%3E%3Crect%20x%3D%2240%22%20y%3D%2220%22%20width%3D%226%22%20height%3D%2224%22%20rx%3D%223%22/%3E%3C/g%3E%3Ccircle%20cx%3D%2252%22%20cy%3D%2232%22%20r%3D%225%22%20fill%3D%22%23f2506a%22/%3E%3C/svg%3E">
 <style>
 /* Layout: eine Spalte, nummerierte Schritte wie die übrigen tools.dombuzz.ch-Werkzeuge */
 :root{
@@ -62,55 +63,55 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
 <div class="wrap">
   <header>
     <h1>Audio <em>Recorder</em></h1>
-    <p>Nimmt Ton aus einem Browser-Tab, vom ganzen System oder von einem Audiogerät auf und speichert ihn als WAV (48 kHz, 16 Bit).</p>
+    <p>Registrescha tun d'in tab dal browser, dal sistem u d'in apparat audio e l'arcunescha sco WAV (48 kHz, 16 bit).</p>
   </header>
 
   <section class="step">
-    <h2><span class="num">1</span>Quelle</h2>
-    <div class="seg" role="group" aria-label="Quelle">
-      <button id="src-tab" data-src="tab" aria-pressed="true">Browser-Tab</button>
-      <button id="src-system" data-src="system" aria-pressed="false">Systemton</button>
-      <button id="src-input" data-src="input" aria-pressed="false">Audiogerät</button>
+    <h2><span class="num">1</span>Funtauna</h2>
+    <div class="seg" role="group" aria-label="Funtauna">
+      <button id="src-tab" data-src="tab" aria-pressed="true">Tab dal browser</button>
+      <button id="src-system" data-src="system" aria-pressed="false">Tun dal sistem</button>
+      <button id="src-input" data-src="input" aria-pressed="false">Apparat audio</button>
     </div>
     <p class="hint" id="hint"></p>
     <div class="row" id="device-row" hidden>
-      <select id="device" aria-label="Audiogerät"><option value="">Zuerst Geräte laden</option></select>
-      <button class="btn" id="load-devices">Geräte laden</button>
+      <select id="device" aria-label="Apparat audio"><option value="">L'emprim chargiar apparats</option></select>
+      <button class="btn" id="load-devices">Chargiar apparats</button>
     </div>
     <div class="row">
-      <button class="btn primary" id="connect">Quelle verbinden</button>
-      <button class="btn" id="disconnect" disabled>Trennen</button>
-      <span class="status" id="status">Nicht verbunden</span>
+      <button class="btn primary" id="connect">Colliar la funtauna</button>
+      <button class="btn" id="disconnect" disabled>Separar</button>
+      <span class="status" id="status">Betg collià</span>
     </div>
   </section>
 
   <section class="step">
     <h2><span class="num">2</span>Format</h2>
-    <div class="seg" role="group" aria-label="Kanäle">
+    <div class="seg" role="group" aria-label="Chanals">
       <button id="ch-mono" data-ch="1" aria-pressed="true">Mono</button>
       <button id="ch-stereo" data-ch="2" aria-pressed="false">Stereo</button>
     </div>
-    <p class="hint">Mono: ca. 340 MB pro Stunde · Stereo: ca. 690 MB pro Stunde.</p>
+    <p class="hint">Mono: ca. 340 MB per ura · Stereo: ca. 690 MB per ura.</p>
   </section>
 
   <section class="step">
-    <h2><span class="num">3</span>Aufnahme</h2>
+    <h2><span class="num">3</span>Registraziun</h2>
     <div class="rec">
-      <button class="recbtn" id="rec" disabled aria-label="Aufnahme starten"><span></span></button>
-      <button class="btn" id="pause" disabled>Pause</button>
+      <button class="recbtn" id="rec" disabled aria-label="Cumenzar la registraziun"><span></span></button>
+      <button class="btn" id="pause" disabled>Pausa</button>
       <div class="timer" id="timer">00:00:00</div>
     </div>
-    <div class="meters" aria-label="Pegel">
+    <div class="meters" aria-label="Nivel">
       <div class="meter"><span>L</span><div class="bar"><i id="mL"></i><b id="pL"></b></div><span id="dL">–∞ dB</span></div>
       <div class="meter"><span>R</span><div class="bar"><i id="mR"></i><b id="pR"></b></div><span id="dR">–∞ dB</span></div>
     </div>
-    <p class="clip" id="clip" hidden>Übersteuert: Lautstärke in der Quelle etwas senken.</p>
+    <p class="clip" id="clip" hidden>Surmodulà: reducir in pau il volumen en la funtauna.</p>
   </section>
 
   <section class="step">
-    <h2><span class="num">4</span>Aufnahmen</h2>
+    <h2><span class="num">4</span>Registraziuns</h2>
     <ul class="takes" id="takes"></ul>
-    <div class="empty" id="empty">Noch keine Aufnahme. Fertige Aufnahmen erscheinen hier mit Player und Download.</div>
+    <div class="empty" id="empty">Anc nagina registraziun. Las registraziuns finidas cumparan qua per tadlar e telechargiar.</div>
   </section>
 </div>
 
@@ -119,9 +120,9 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
   const RATE = 48000;
   const $ = id => document.getElementById(id);
   const hints = {
-    tab: 'Chrome oder Edge: Im Dialog den Reiter <b>Tab</b> wählen, den Tab anklicken und <b>«Tab-Audio teilen»</b> eingeschaltet lassen. Den Tab danach nicht schliessen.',
-    system: 'Windows: <b>Gesamter Bildschirm</b> wählen und <b>«Systemaudio teilen»</b> einschalten. Mac: geht nur mit neuerem macOS und Chrome; sonst «Audiogerät» mit BlackHole nehmen.',
-    input: 'Für Mac mit <b>BlackHole</b> (oder ein Mikrofon/Interface). Erst «Geräte laden», dann das Gerät wählen. Echo- und Rauschunterdrückung sind ausgeschaltet.'
+    tab: 'Chrome u Edge: En il dialog tscherner il register <b>Tab</b>, cliccar sin il tab e laschar activà <b>«Tab-Audio teilen»</b>. Na serrar betg il tab durant la registraziun.',
+    system: 'Windows: tscherner <b>«Gesamter Bildschirm»</b> ed activar <b>«Systemaudio teilen»</b>. Mac: funcziuna mo cun in macOS e Chrome pli nov, uschiglio prender «Apparat audio» cun BlackHole.',
+    input: 'Per il Mac cun <b>BlackHole</b> (u in microfon/interface). L\'emprim «Chargiar apparats», lura tscherner l\'apparat. La suppressiun d\'eco e da canera è deactivada.'
   };
   let source = 'tab', channels = 1;
   let ctx = null, stream = null, node = null;
@@ -151,12 +152,12 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
       const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
       const sel = $('device'); sel.innerHTML = '';
       devs.forEach(d => {
-        const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || 'Gerät';
+        const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || 'Apparat';
         if (/blackhole|loopback|soundflower|vb-?cable|stereo ?mix/i.test(d.label)) o.selected = true;
         sel.appendChild(o);
       });
-      setStatus(devs.length + ' Geräte gefunden');
-    } catch (e) { setStatus('Zugriff aufs Audiogerät verweigert', 'bad'); }
+      setStatus(devs.length + ' apparats chattads');
+    } catch (e) { setStatus('Access a l\'apparat audio refusà', 'bad'); }
   });
 
   const noProc = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
@@ -178,15 +179,15 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
 
   $('connect').addEventListener('click', async () => {
     try {
-      setStatus('Warte auf Freigabe …');
+      setStatus('Spetg sin la permissiun …');
       stream = await getStream();
       const audio = stream.getAudioTracks();
       if (!audio.length) {
         stream.getTracks().forEach(t => t.stop()); stream = null;
-        setStatus(source === 'tab' ? 'Kein Ton freigegeben: «Tab-Audio teilen» einschalten und neu verbinden' : 'Kein Ton freigegeben: «Systemaudio teilen» einschalten oder «Audiogerät» nehmen', 'bad');
+        setStatus(source === 'tab' ? 'Nagin tun deliberà: activar «Tab-Audio teilen» e colliar danovamain' : 'Nagin tun deliberà: activar «Systemaudio teilen» u prender «Apparat audio»', 'bad');
         return;
       }
-      audio[0].addEventListener('ended', () => { if (recording) stopRec(); disconnect('Quelle wurde beendet'); });
+      audio[0].addEventListener('ended', () => { if (recording) stopRec(); disconnect('La funtauna è vegnida terminada'); });
       ctx = new AudioContext({ sampleRate: RATE });
       const url = URL.createObjectURL(new Blob([workletSrc], { type: 'text/javascript' }));
       await ctx.audioWorklet.addModule(url); URL.revokeObjectURL(url);
@@ -195,10 +196,10 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
       node.port.onmessage = onAudio;
       const mute = ctx.createGain(); mute.gain.value = 0;
       src.connect(node).connect(mute).connect(ctx.destination);
-      setStatus('Verbunden: ' + (audio[0].label || 'Audio') + ' · ' + ctx.sampleRate / 1000 + ' kHz', 'ok');
+      setStatus('Collià: ' + (audio[0].label || 'Audio') + ' · ' + ctx.sampleRate / 1000 + ' kHz', 'ok');
       $('connect').disabled = true; $('disconnect').disabled = false; $('rec').disabled = false;
     } catch (e) {
-      setStatus(e.name === 'NotAllowedError' ? 'Freigabe abgebrochen' : 'Fehler: ' + e.message, 'bad');
+      setStatus(e.name === 'NotAllowedError' ? 'Permissiun interrutta' : 'Errur: ' + e.message, 'bad');
     }
   });
 
@@ -207,7 +208,7 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
     if (ctx) ctx.close();
     stream = ctx = node = null;
     $('connect').disabled = false; $('disconnect').disabled = true; $('rec').disabled = true; $('pause').disabled = true;
-    setStatus(msg || 'Nicht verbunden');
+    setStatus(msg || 'Betg collià');
   }
   $('disconnect').addEventListener('click', () => { if (recording) stopRec(); disconnect(); });
 
@@ -245,22 +246,22 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
 
   $('rec').addEventListener('click', () => recording ? stopRec() : startRec());
   $('pause').addEventListener('click', () => {
-    paused = !paused; $('pause').textContent = paused ? 'Weiter' : 'Pause';
+    paused = !paused; $('pause').textContent = paused ? 'Cuntinuar' : 'Pausa';
     $('timer').classList.toggle('live', !paused);
   });
 
   async function startRec() {
     if (ctx && ctx.state === 'suspended') await ctx.resume();
     chunks = []; frames = 0; recording = true; paused = false;
-    $('rec').classList.add('on'); $('rec').setAttribute('aria-label', 'Aufnahme beenden');
-    $('pause').disabled = false; $('pause').textContent = 'Pause'; $('timer').classList.add('live');
+    $('rec').classList.add('on'); $('rec').setAttribute('aria-label', 'Terminar la registraziun');
+    $('pause').disabled = false; $('pause').textContent = 'Pausa'; $('timer').classList.add('live');
     document.querySelectorAll('[data-src],[data-ch]').forEach(b => b.disabled = true);
     try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (e) {}
   }
 
   function stopRec() {
     recording = false; paused = false;
-    $('rec').classList.remove('on'); $('rec').setAttribute('aria-label', 'Aufnahme starten');
+    $('rec').classList.remove('on'); $('rec').setAttribute('aria-label', 'Cumenzar la registraziun');
     $('pause').disabled = true; $('timer').classList.remove('live');
     document.querySelectorAll('[data-src],[data-ch]').forEach(b => b.disabled = false);
     try { wakeLock?.release(); } catch (e) {} wakeLock = null;
@@ -282,12 +283,12 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
 
   function addTake(blob, secs) {
     const d = new Date(), p = n => String(n).padStart(2, '0');
-    const name = `aufnahme_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+    const name = `registraziun_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
     const url = URL.createObjectURL(blob);
     const li = document.createElement('li'); li.className = 'take';
-    li.innerHTML = `<div class="meta"><input aria-label="Dateiname" value="${name}"><small>${fmt(secs)} · ${(blob.size / 1048576).toFixed(1)} MB · ${channels === 1 ? 'Mono' : 'Stereo'}</small></div>
+    li.innerHTML = `<div class="meta"><input aria-label="Num da la datoteca" value="${name}"><small>${fmt(secs)} · ${(blob.size / 1048576).toFixed(1)} MB · ${channels === 1 ? 'Mono' : 'Stereo'}</small></div>
       <audio controls preload="metadata" src="${url}"></audio>
-      <div class="row"><a class="btn primary" href="${url}" download="${name}.wav">WAV speichern</a><button class="btn del">Löschen</button></div>`;
+      <div class="row"><a class="btn primary" href="${url}" download="${name}.wav">Arcunar WAV</a><button class="btn del">Stizzar</button></div>`;
     const input = li.querySelector('input'), a = li.querySelector('a');
     input.addEventListener('input', () => { a.download = (input.value.trim() || name).replace(/[\\/:*?"<>|]/g, '-') + '.wav'; });
     const take = { saved: false };
@@ -303,7 +304,7 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
     if (recording || takes.some(t => !t.saved)) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  if (!navigator.mediaDevices?.getDisplayMedia) setStatus('Dieser Browser kann keinen Ton freigeben. Chrome oder Edge verwenden.', 'bad');
+  if (!navigator.mediaDevices?.getDisplayMedia) setStatus('Quest browser na po betg deliberar tun. Duvrar Chrome u Edge.', 'bad');
   showHint();
 })();
 </script>
