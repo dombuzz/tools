@@ -28,11 +28,13 @@ a.btn,button{font:inherit;border:1px solid var(--line);background:var(--panel);c
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
 details{margin-top:18px;color:var(--muted);font-size:14px}
 pre{background:var(--code);padding:10px;border-radius:8px;overflow:auto;font-size:12px;color:var(--ink)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
 </style>
 </head>
 <body>
 <main>
-  <h1>SRT → TTML</h1>
+  <h1>SRT <span class="acc">→</span> TTML</h1>
   <p class="sub">Converta files SRT en TTML tenor il model da RTR.<br>Plirs files a medem temp èn pussaivels.</p>
   <div id="drop">Trair qua ils files SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
   <div class="row" id="allRow" hidden><button class="primary" id="all">Telechargiar tuts</button><button id="clear">Svidar la glista</button></div>
