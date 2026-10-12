@@ -47,21 +47,14 @@
   <h1>dombuzz <span>Tools</span></h1>
   <p class="sub">Tscherner in tool, el s'avra directamain.</p>
   <div class="select">
-    <select id="tools" aria-label="Tscherner in tool" disabled>
-      <option value="">Chargel ils tools …</option>
+    <select id="tools" aria-label="Tscherner in tool">
+      <option value="">Tscherner in tool …</option>
     </select>
   </div>
-  <p class="msg" id="msg" hidden></p>
 </main>
 
 <script>
-  // Einstellungen
-  const REPO = 'dombuzz/tools';
-  const BRANCH = 'main';
-  const HIDE = ['index.html', '404.html', 'bau.html', 'eli.html',
-                'suncal.html', 'sunhome.html', 'termica.html']; // erscheinen nicht in der Liste
-
-  // Anzeigenamen im Dropdown (Dateiname -> Name). Nicht aufgeführte Dateien zeigen ihren <title>.
+  // Anzeigenamen im Dropdown (Dateiname -> Name).
   const NAMES = {
     'rtr-picture.html':    'RTR Picture-downloader',
     'visual.html':         'Magazin / Il di',
@@ -74,7 +67,7 @@
     'votgr.html':          'Chartas votaziuns GR'
   };
 
-  // Gruppen und Reihenfolge im Dropdown. Dateien ohne Gruppe folgen am Schluss alphabetisch.
+  // Gruppen und Reihenfolge im Dropdown.
   const GROUPS = [
     ['Maletgs',           ['rtr-picture.html', 'visual.html', 'Resizer2000.html']],
     ['Organisaziun',      ['PlanOnline.html']],
@@ -83,59 +76,18 @@
   ];
 
   const sel = document.getElementById('tools');
-  const msg = document.getElementById('msg');
-
-  // Pfad -> Adresse ohne .html ("votgr.html" -> "votgr")
-  const toUrl = p => p.replace(/(^|\/)index\.html?$/i, '$1').replace(/\.html?$/i, '');
-
-  async function titleOf(url, fallback) {
-    try {
-      const res = await fetch('/' + url);
-      if (!res.ok) return fallback;
-      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-      return (doc.title || '').trim() || fallback;
-    } catch { return fallback; }
-  }
-
-  async function load() {
-    try {
-      const res = await fetch(`https://api.github.com/repos/${REPO}/git/trees/${BRANCH}?recursive=1`);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const files = (await res.json()).tree
-        .filter(f => f.type === 'blob' && /\.html?$/i.test(f.path) && !HIDE.includes(f.path));
-      const tools = await Promise.all(files.map(async f => {
-        const url = toUrl(f.path);
-        return { path: f.path, url, title: NAMES[f.path] || await titleOf(url, f.path.split('/').at(-1).replace(/\.html?$/i, '')) };
-      }));
-      const byPath = Object.fromEntries(tools.map(t => [t.path, t]));
-      const grouped = new Set(GROUPS.flatMap(g => g[1]));
-
-      sel.innerHTML = '';
-      sel.append(new Option(tools.length ? 'Tscherner in tool …' : 'Nagins tools chattads', ''));
-      for (const [label, paths] of GROUPS) {
-        const items = paths.map(p => byPath[p]).filter(Boolean);
-        if (!items.length) continue;
-        const og = document.createElement('optgroup');
-        og.label = label;
-        for (const t of items) og.append(new Option(t.title, '/' + t.url));
-        sel.append(og);
-      }
-      tools.filter(t => !grouped.has(t.path))
-        .sort((a, b) => a.title.localeCompare(b.title, 'de'))
-        .forEach(t => sel.append(new Option(t.title, '/' + t.url)));
-      sel.disabled = !tools.length;
-    } catch (e) {
-      sel.innerHTML = '<option value="">Glista betg disponibla</option>';
-      msg.hidden = false;
-      msg.innerHTML = 'La glista n\'ha betg pudì vegnir chargiada (' + e.message +
-        '). Per plaschair chargiar pli tard da nov u guardar directamain en il <a href="https://github.com/' + REPO + '">repository</a>.';
-    }
+  // Liste direkt aus GROUPS aufbauen (kein Laden über GitHub nötig).
+  // Neues Tool: Dateiname in NAMES und in einer Gruppe eintragen.
+  for (const [label, paths] of GROUPS) {
+    const og = document.createElement('optgroup');
+    og.label = label;
+    for (const p of paths) og.append(new Option(NAMES[p] || p, '/' + p.replace(/\.html?$/i, '')));
+    sel.append(og);
   }
 
   sel.addEventListener('change', () => { if (sel.value) location.href = sel.value; });
   // Beim Zurückkehren mit dem Zurück-Button wieder auf "Tool wählen" stellen
   window.addEventListener('pageshow', () => { sel.selectedIndex = 0; });
-  load();
 </script>
 </body>
 </html>
