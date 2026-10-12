@@ -186,7 +186,6 @@ function parsePlan(pages, SVC){
 
 const SVC=["O1","O1So","O1Du","O2","O3","O4","pOn"];
 const ROWS=["O1","O2","O3","O4","pOn"];
-const SAMPLE={label:"1_radio_online_3.pdf · stampà ils 12-10-2026",entries:[]};
 const DAYS=["Gli","Ma","Me","Gie","Ve","So","Du"];
 const MONTHS=["schaner","favrer","mars","avrigl","matg","zercladur","fanadur","avust","settember","october","november","december"];
 document.documentElement.lang="rm";
@@ -219,7 +218,6 @@ function setPlan(p,save){
   }
   const dates=Object.keys(map).sort();
   plan={...p,map,months,names:[...names].sort((a,b)=>a.localeCompare(b,"de")),short:shortNames([...names]),first:dates[0],last:dates[dates.length-1]};
-  if(save) store.set("plan",JSON.stringify(p));
   const sel=$("who"), keep=sel.value||store.get("who")||"";
   sel.innerHTML='<option value="">nagina</option>'+plan.names.map(n=>`<option>${n.replace(/</g,"&lt;")}</option>`).join("");
   if(plan.names.includes(keep)) sel.value=keep;
@@ -248,7 +246,8 @@ async function readPdf(file){
 }
 
 function render(){
-  const out=$("out"); out.innerHTML=""; if(!plan) return;
+  const out=$("out"); out.innerHTML="";
+  if(!plan){out.innerHTML='<p class="empty">Chargia l\'actual plan da lavur (PDF) per vesair ils servetschs.</p>';return}
   const who=$("who").value;
   const from=$("from").value?parseIso($("from").value):new Date();
   let start, end;
@@ -300,8 +299,9 @@ $("reset").addEventListener("click",()=>{$("from").value=iso(new Date());render(
 $("from").value=iso(new Date());
 const sw=parseInt(store.get("weeks"),10); weeks=[0,1,2,3,4].includes(sw)?sw:1;
 document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===weeks)));
-let saved=null; try{saved=JSON.parse(store.get("plan")||"null")}catch(e){}
-setPlan(saved&&saved.entries&&saved.entries.length?saved:SAMPLE,false);
+try{localStorage.removeItem("plan")}catch(e){}
+$("status").textContent="Anc nagin plan chargià.";
+render();
 </script>
 
 </body>
