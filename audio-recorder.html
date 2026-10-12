@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Audio-Recorder</title>
+<style>
+/* Layout: eine Spalte, nummerierte Schritte wie die übrigen tools.dombuzz.ch-Werkzeuge */
+:root{
+  --bg:#121214; --panel:#1b1b1e; --field:#232327; --line:#2c2c31; --fg:#f2f2f4; --muted:#9b9ba3;
+  --accent:#f2506a; --accent-ink:#1a0a0e; --ok:#4fc58b; --warn:#f2b84b; --bad:#f2506a;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:32px 16px 64px;display:flex;flex-direction:column;gap:18px}
+header h1{margin:0;font-size:1.75rem;font-weight:700;letter-spacing:-.01em}
+header h1 em{font-style:normal;color:var(--accent)}
+header p{margin:4px 0 0;color:var(--muted)}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.step h2{margin:0;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:10px}
+.num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.75rem;font-weight:700;letter-spacing:0}
+.seg{display:flex;flex-wrap:wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px;width:fit-content;max-width:100%}
+.seg button{border:0;background:transparent;color:var(--muted);padding:8px 16px;border-radius:7px;font:inherit;font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.hint{color:var(--muted);font-size:.9rem;margin:0}
+.hint b{color:var(--fg);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:9px 16px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn:focus-visible,.seg button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{background:var(--field);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;max-width:100%}
+.status{font-size:.9rem;color:var(--muted)}
+.status.ok{color:var(--ok)} .status.bad{color:var(--bad)}
+.rec{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.recbtn{width:64px;height:64px;border-radius:50%;border:2px solid var(--line);background:var(--field);cursor:pointer;display:grid;place-items:center}
+.recbtn span{width:26px;height:26px;border-radius:50%;background:var(--bad);transition:border-radius .15s}
+.recbtn.on span{border-radius:4px;width:22px;height:22px}
+.recbtn:disabled{opacity:.35;cursor:not-allowed}
+.timer{font-family:var(--mono);font-size:2rem;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.timer.live{color:var(--bad)}
+.meters{display:flex;flex-direction:column;gap:6px}
+.meter{display:grid;grid-template-columns:18px 1fr 72px;align-items:center;gap:8px;font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.bar{height:10px;background:var(--field);border:1px solid var(--line);border-radius:5px;overflow:hidden;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--ok) 0 70%,var(--warn) 70% 90%,var(--bad) 90%)}
+.bar b{position:absolute;top:0;bottom:0;width:2px;background:var(--fg);left:0}
+.clip{font-size:.85rem;color:var(--bad)}
+.takes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.take{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--field)}
+.take .meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.take input{flex:1 1 220px;min-width:0;background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--fg);font:inherit;font-weight:600;padding:2px 0}
+.take small{color:var(--muted);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.take audio{width:100%;height:36px}
+.empty{border:1.5px dashed #3a3a40;border-radius:12px;padding:24px;background:var(--field);text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.recbtn span{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Audio <em>Recorder</em></h1>
+    <p>Nimmt Ton aus einem Browser-Tab, vom ganzen System oder von einem Audiogerät auf und speichert ihn als WAV (48 kHz, 16 Bit).</p>
+  </header>
+
+  <section class="step">
+    <h2><span class="num">1</span>Quelle</h2>
+    <div class="seg" role="group" aria-label="Quelle">
+      <button id="src-tab" data-src="tab" aria-pressed="true">Browser-Tab</button>
+      <button id="src-system" data-src="system" aria-pressed="false">Systemton</button>
+      <button id="src-input" data-src="input" aria-pressed="false">Audiogerät</button>
+    </div>
+    <p class="hint" id="hint"></p>
+    <div class="row" id="device-row" hidden>
+      <select id="device" aria-label="Audiogerät"><option value="">Zuerst Geräte laden</option></select>
+      <button class="btn" id="load-devices">Geräte laden</button>
+    </div>
+    <div class="row">
+      <button class="btn primary" id="connect">Quelle verbinden</button>
+      <button class="btn" id="disconnect" disabled>Trennen</button>
+      <span class="status" id="status">Nicht verbunden</span>
+    </div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span>Format</h2>
+    <div class="seg" role="group" aria-label="Kanäle">
+      <button id="ch-mono" data-ch="1" aria-pressed="true">Mono</button>
+      <button id="ch-stereo" data-ch="2" aria-pressed="false">Stereo</button>
+    </div>
+    <p class="hint">Mono: ca. 340 MB pro Stunde · Stereo: ca. 690 MB pro Stunde.</p>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">3</span>Aufnahme</h2>
+    <div class="rec">
+      <button class="recbtn" id="rec" disabled aria-label="Aufnahme starten"><span></span></button>
+      <button class="btn" id="pause" disabled>Pause</button>
+      <div class="timer" id="timer">00:00:00</div>
+    </div>
+    <div class="meters" aria-label="Pegel">
+      <div class="meter"><span>L</span><div class="bar"><i id="mL"></i><b id="pL"></b></div><span id="dL">–∞ dB</span></div>
+      <div class="meter"><span>R</span><div class="bar"><i id="mR"></i><b id="pR"></b></div><span id="dR">–∞ dB</span></div>
+    </div>
+    <p class="clip" id="clip" hidden>Übersteuert: Lautstärke in der Quelle etwas senken.</p>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">4</span>Aufnahmen</h2>
+    <ul class="takes" id="takes"></ul>
+    <div class="empty" id="empty">Noch keine Aufnahme. Fertige Aufnahmen erscheinen hier mit Player und Download.</div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const RATE = 48000;
+  const $ = id => document.getElementById(id);
+  const hints = {
+    tab: 'Chrome oder Edge: Im Dialog den Reiter <b>Tab</b> wählen, den Tab anklicken und <b>«Tab-Audio teilen»</b> eingeschaltet lassen. Den Tab danach nicht schliessen.',
+    system: 'Windows: <b>Gesamter Bildschirm</b> wählen und <b>«Systemaudio teilen»</b> einschalten. Mac: geht nur mit neuerem macOS und Chrome; sonst «Audiogerät» mit BlackHole nehmen.',
+    input: 'Für Mac mit <b>BlackHole</b> (oder ein Mikrofon/Interface). Erst «Geräte laden», dann das Gerät wählen. Echo- und Rauschunterdrückung sind ausgeschaltet.'
+  };
+  let source = 'tab', channels = 1;
+  let ctx = null, stream = null, node = null;
+  let recording = false, paused = false, chunks = [], frames = 0;
+  let peak = [0, 0], hold = [0, 0], clipUntil = 0, wakeLock = null;
+  const takes = [];
+
+  function setSeg(attr, val) {
+    document.querySelectorAll(`[data-${attr}]`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === String(val))));
+  }
+  function setStatus(t, cls = '') { const s = $('status'); s.textContent = t; s.className = 'status ' + cls; }
+  function showHint() { $('hint').innerHTML = hints[source]; $('device-row').hidden = source !== 'input'; }
+
+  document.querySelectorAll('[data-src]').forEach(b => b.addEventListener('click', () => {
+    if (recording) return;
+    source = b.dataset.src; setSeg('src', source); showHint();
+  }));
+  document.querySelectorAll('[data-ch]').forEach(b => b.addEventListener('click', () => {
+    if (recording) return;
+    channels = Number(b.dataset.ch); setSeg('ch', channels);
+  }));
+
+  $('load-devices').addEventListener('click', async () => {
+    try {
+      const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
+      tmp.getTracks().forEach(t => t.stop());
+      const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+      const sel = $('device'); sel.innerHTML = '';
+      devs.forEach(d => {
+        const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || 'Gerät';
+        if (/blackhole|loopback|soundflower|vb-?cable|stereo ?mix/i.test(d.label)) o.selected = true;
+        sel.appendChild(o);
+      });
+      setStatus(devs.length + ' Geräte gefunden');
+    } catch (e) { setStatus('Zugriff aufs Audiogerät verweigert', 'bad'); }
+  });
+
+  const noProc = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+
+  async function getStream() {
+    if (source === 'input') {
+      const id = $('device').value;
+      return navigator.mediaDevices.getUserMedia({ audio: { ...noProc, channelCount: 2, ...(id ? { deviceId: { exact: id } } : {}) } });
+    }
+    return navigator.mediaDevices.getDisplayMedia({
+      video: { displaySurface: source === 'tab' ? 'browser' : 'monitor' },
+      audio: { ...noProc, suppressLocalAudioPlayback: false },
+      systemAudio: 'include', selfBrowserSurface: 'exclude', surfaceSwitching: 'include',
+      monitorTypeSurfaces: source === 'system' ? 'include' : 'exclude'
+    });
+  }
+
+  const workletSrc = `class Tap extends AudioWorkletProcessor{process(i){const c=i[0];if(c&&c.length)this.port.postMessage(c.map(x=>x.slice(0)));return true}}registerProcessor('tap',Tap);`;
+
+  $('connect').addEventListener('click', async () => {
+    try {
+      setStatus('Warte auf Freigabe …');
+      stream = await getStream();
+      const audio = stream.getAudioTracks();
+      if (!audio.length) {
+        stream.getTracks().forEach(t => t.stop()); stream = null;
+        setStatus(source === 'tab' ? 'Kein Ton freigegeben: «Tab-Audio teilen» einschalten und neu verbinden' : 'Kein Ton freigegeben: «Systemaudio teilen» einschalten oder «Audiogerät» nehmen', 'bad');
+        return;
+      }
+      audio[0].addEventListener('ended', () => { if (recording) stopRec(); disconnect('Quelle wurde beendet'); });
+      ctx = new AudioContext({ sampleRate: RATE });
+      const url = URL.createObjectURL(new Blob([workletSrc], { type: 'text/javascript' }));
+      await ctx.audioWorklet.addModule(url); URL.revokeObjectURL(url);
+      const src = ctx.createMediaStreamSource(new MediaStream(audio));
+      node = new AudioWorkletNode(ctx, 'tap', { channelCount: 2, channelCountMode: 'explicit' });
+      node.port.onmessage = onAudio;
+      const mute = ctx.createGain(); mute.gain.value = 0;
+      src.connect(node).connect(mute).connect(ctx.destination);
+      setStatus('Verbunden: ' + (audio[0].label || 'Audio') + ' · ' + ctx.sampleRate / 1000 + ' kHz', 'ok');
+      $('connect').disabled = true; $('disconnect').disabled = false; $('rec').disabled = false;
+    } catch (e) {
+      setStatus(e.name === 'NotAllowedError' ? 'Freigabe abgebrochen' : 'Fehler: ' + e.message, 'bad');
+    }
+  });
+
+  function disconnect(msg) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    if (ctx) ctx.close();
+    stream = ctx = node = null;
+    $('connect').disabled = false; $('disconnect').disabled = true; $('rec').disabled = true; $('pause').disabled = true;
+    setStatus(msg || 'Nicht verbunden');
+  }
+  $('disconnect').addEventListener('click', () => { if (recording) stopRec(); disconnect(); });
+
+  function onAudio(e) {
+    const ch = e.data, l = ch[0], r = ch[1] || ch[0], n = l.length;
+    let pl = 0, pr = 0;
+    for (let i = 0; i < n; i++) { const a = Math.abs(l[i]), b = Math.abs(r[i]); if (a > pl) pl = a; if (b > pr) pr = b; }
+    peak[0] = Math.max(peak[0], pl); peak[1] = Math.max(peak[1], pr);
+    if (pl >= 0.999 || pr >= 0.999) clipUntil = performance.now() + 2500;
+    if (!recording || paused) return;
+    const out = new Int16Array(n * channels);
+    const s16 = v => { v = v < -1 ? -1 : v > 1 ? 1 : v; return v < 0 ? v * 0x8000 : v * 0x7fff; };
+    if (channels === 1) for (let i = 0; i < n; i++) out[i] = s16((l[i] + r[i]) / 2);
+    else for (let i = 0; i < n; i++) { out[2 * i] = s16(l[i]); out[2 * i + 1] = s16(r[i]); }
+    chunks.push(out); frames += n;
+  }
+
+  const db = v => v < 1e-5 ? '–∞ dB' : (20 * Math.log10(v)).toFixed(1) + ' dB';
+  const pct = v => v < 1e-5 ? 0 : Math.max(0, Math.min(100, (20 * Math.log10(v) + 60) / 60 * 100));
+  function draw() {
+    ['L', 'R'].forEach((k, i) => {
+      const p = peak[i]; hold[i] = Math.max(hold[i] * 0.985, p);
+      $('m' + k).style.width = pct(p) + '%';
+      $('p' + k).style.left = 'calc(' + pct(hold[i]) + '% - 2px)';
+      $('d' + k).textContent = db(hold[i]);
+      peak[i] = p * 0.6;
+    });
+    $('clip').hidden = performance.now() > clipUntil;
+    $('timer').textContent = fmt(frames / RATE);
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  function fmt(s) { s = Math.floor(s); return [s / 3600, s % 3600 / 60, s % 60].map(x => String(Math.floor(x)).padStart(2, '0')).join(':'); }
+
+  $('rec').addEventListener('click', () => recording ? stopRec() : startRec());
+  $('pause').addEventListener('click', () => {
+    paused = !paused; $('pause').textContent = paused ? 'Weiter' : 'Pause';
+    $('timer').classList.toggle('live', !paused);
+  });
+
+  async function startRec() {
+    if (ctx && ctx.state === 'suspended') await ctx.resume();
+    chunks = []; frames = 0; recording = true; paused = false;
+    $('rec').classList.add('on'); $('rec').setAttribute('aria-label', 'Aufnahme beenden');
+    $('pause').disabled = false; $('pause').textContent = 'Pause'; $('timer').classList.add('live');
+    document.querySelectorAll('[data-src],[data-ch]').forEach(b => b.disabled = true);
+    try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (e) {}
+  }
+
+  function stopRec() {
+    recording = false; paused = false;
+    $('rec').classList.remove('on'); $('rec').setAttribute('aria-label', 'Aufnahme starten');
+    $('pause').disabled = true; $('timer').classList.remove('live');
+    document.querySelectorAll('[data-src],[data-ch]').forEach(b => b.disabled = false);
+    try { wakeLock?.release(); } catch (e) {} wakeLock = null;
+    if (!frames) return;
+    addTake(wav(chunks, channels), frames / RATE);
+    chunks = []; frames = 0;
+  }
+
+  function wav(parts, ch) {
+    const bytes = parts.reduce((a, p) => a + p.byteLength, 0);
+    const h = new DataView(new ArrayBuffer(44));
+    const str = (o, s) => [...s].forEach((c, i) => h.setUint8(o + i, c.charCodeAt(0)));
+    str(0, 'RIFF'); h.setUint32(4, 36 + bytes, true); str(8, 'WAVE'); str(12, 'fmt ');
+    h.setUint32(16, 16, true); h.setUint16(20, 1, true); h.setUint16(22, ch, true);
+    h.setUint32(24, RATE, true); h.setUint32(28, RATE * ch * 2, true); h.setUint16(32, ch * 2, true);
+    h.setUint16(34, 16, true); str(36, 'data'); h.setUint32(40, bytes, true);
+    return new Blob([h, ...parts], { type: 'audio/wav' });
+  }
+
+  function addTake(blob, secs) {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    const name = `aufnahme_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+    const url = URL.createObjectURL(blob);
+    const li = document.createElement('li'); li.className = 'take';
+    li.innerHTML = `<div class="meta"><input aria-label="Dateiname" value="${name}"><small>${fmt(secs)} · ${(blob.size / 1048576).toFixed(1)} MB · ${channels === 1 ? 'Mono' : 'Stereo'}</small></div>
+      <audio controls preload="metadata" src="${url}"></audio>
+      <div class="row"><a class="btn primary" href="${url}" download="${name}.wav">WAV speichern</a><button class="btn del">Löschen</button></div>`;
+    const input = li.querySelector('input'), a = li.querySelector('a');
+    input.addEventListener('input', () => { a.download = (input.value.trim() || name).replace(/[\\/:*?"<>|]/g, '-') + '.wav'; });
+    const take = { saved: false };
+    a.addEventListener('click', () => take.saved = true);
+    li.querySelector('.del').addEventListener('click', () => {
+      URL.revokeObjectURL(url); li.remove(); takes.splice(takes.indexOf(take), 1);
+      $('empty').hidden = takes.length > 0;
+    });
+    takes.unshift(take); $('takes').prepend(li); $('empty').hidden = true;
+  }
+
+  window.addEventListener('beforeunload', e => {
+    if (recording || takes.some(t => !t.saved)) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  if (!navigator.mediaDevices?.getDisplayMedia) setStatus('Dieser Browser kann keinen Ton freigeben. Chrome oder Edge verwenden.', 'bad');
+  showHint();
+})();
+</script>
+</body>
+</html>
