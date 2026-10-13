@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Höhenprofil</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Cpath d='M14 76 38 40l12 14 14-26 22 48z' fill='white' fill-opacity='.35' stroke='white' stroke-width='7' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+/* Layout: wie die übrigen Tools auf tools.dombuzz.ch – dunkle Karten, Systemschrift, Akzent Koralle; nummerierte Schritte */
+:root{
+  --bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;
+  --line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;--ok:#4caf6f;--warn:#ffb86b;color-scheme:dark
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:#ff4d64}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
+h1 .acc{color:var(--accent)}
+.labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:1px}
+.lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h2{margin:0 0 14px;font-size:.95rem;display:flex;gap:10px;align-items:center}
+.num{font-size:.8rem;font-weight:700;background:var(--accent);color:#121214;border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;background:var(--field);cursor:pointer;color:var(--muted);font-size:.85rem;transition:border-color .15s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop b{display:block;font-size:1rem;margin-bottom:4px;color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px 14px}
+.grid .wide{grid-column:span 2}
+.lbl{display:block;font-size:.82rem;color:var(--muted);margin-bottom:6px}
+.lbl span{color:var(--text);font-variant-numeric:tabular-nums}
+select,input[type=text]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text);font:inherit;font-size:.9rem}
+input[type=color]{width:100%;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--field);padding:3px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+button{background:var(--accent);color:#121214;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer}
+button:hover{background:var(--accent-dark)}
+button:disabled{opacity:.5;cursor:default}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.ghost:hover{color:var(--text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.checks{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.86rem;margin-top:14px}
+.checks label{display:flex;gap:6px;align-items:center}
+.checks input{accent-color:var(--accent);width:16px;height:16px}
+.preview{border-radius:12px;overflow:hidden;border:1px solid var(--line);cursor:crosshair;
+  background-color:#18181b;background-image:linear-gradient(45deg,#ffffff0d 25%,transparent 25%,transparent 75%,#ffffff0d 75%),linear-gradient(45deg,#ffffff0d 25%,transparent 25%,transparent 75%,#ffffff0d 75%);
+  background-size:20px 20px;background-position:0 0,10px 10px}
+.preview canvas{width:100%;height:auto;display:block}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.actions.sep{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
+.meta{color:var(--muted);font-size:.85rem;line-height:1.45}
+.meta b{color:var(--text)}
+.ok{color:var(--ok)} .err{color:var(--accent)}
+.warnbox{border:1px solid rgba(255,184,107,.35);background:rgba(255,184,107,.08);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:.85rem;margin-top:12px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.stats div{background:#18181b;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.78rem;color:var(--muted)}
+.stats b{display:block;font-size:1rem;color:var(--text);font-variant-numeric:tabular-nums}
+.labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:#18181b;border-radius:999px;padding:3px 4px 3px 12px;font-size:.82rem}
+.chip button{padding:1px 8px;background:transparent;color:var(--muted);font-size:1rem;line-height:1}
+.chip button:hover{color:var(--accent);background:transparent}
+@media (max-width:640px){.grid .wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="homelink" href="/lab/">← Lab</a>
+    <h1>Höhen<span class="acc">profil</span><span class="labbadge">Labor</span></h1>
+    <p class="lead">GPX-Datei laden (Strava, Garmin, SchweizMobil, swisstopo-App …) und ein sauberes Höhenprofil als PNG oder als animiertes Video für den Schnitt exportieren. Die Datei bleibt im Browser – nur für die optionale Höhenkorrektur gehen die Koordinaten an swisstopo.</p>
+  </header>
+
+  <section class="card">
+    <h2><span class="num">1</span>GPX laden</h2>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="GPX-Datei auswählen">
+      <b>GPX-Datei hierher ziehen</b>oder klicken zum Auswählen
+    </div>
+    <input type="file" id="file" accept=".gpx,application/gpx+xml" hidden>
+    <div class="actions">
+      <button class="ghost" id="demo">Beispiel</button>
+      <span class="meta" id="info"></span>
+    </div>
+    <div id="warn"></div>
+  </section>
+
+  <div id="app" hidden style="display:contents">
+    <section class="card">
+      <h2><span class="num">2</span>Daten prüfen</h2>
+      <div class="grid">
+        <div class="wide"><label class="lbl" for="title">Titel</label><input type="text" id="title"></div>
+        <div class="wide"><label class="lbl" for="subtitle">Untertitel</label><input type="text" id="subtitle" placeholder="z. B. Skitour ab Arosa"></div>
+        <div><label class="lbl" for="smooth">Glättung <span id="smoothVal">40</span> m</label><input type="range" id="smooth" min="0" max="300" step="10" value="40"></div>
+        <div><label class="lbl" for="thresh">Höhenmeter-Schwelle <span id="threshVal">5</span> m</label><input type="range" id="thresh" min="0" max="20" value="5"></div>
+      </div>
+      <div class="actions">
+        <button class="ghost" id="dem">Höhen mit swisstopo korrigieren</button>
+        <button class="ghost" id="demOff" hidden>GPS-Höhen verwenden</button>
+        <span class="meta" id="demInfo">Uhren und Handys messen die Höhe oft ungenau. Die Korrektur nutzt das Höhenmodell swissALTI3D – nur in der Schweiz.</span>
+      </div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">3</span>Gestaltung</h2>
+      <div class="grid">
+        <div><label class="lbl" for="format">Format</label>
+          <select id="format"><option value="full">16:9 mit Titel</option><option value="strip">Nur Profil (Streifen)</option><option value="square">1:1 Social</option><option value="story">9:16 Story</option></select></div>
+        <div><label class="lbl" for="res">Auflösung</label><select id="res"><option value="2">4K</option><option value="1" selected>Full HD</option></select></div>
+        <div><label class="lbl" for="style">Stil</label>
+          <select id="style"><option value="area">Fläche</option><option value="line">Linie</option><option value="slope">Steigung farbig</option></select></div>
+        <div><label class="lbl" for="bg">Hintergrund</label>
+          <select id="bg"><option value="dark">Dunkel</option><option value="light">Hell</option><option value="transparent">Transparent</option></select></div>
+        <div><label class="lbl" for="accent">Akzentfarbe</label><input type="color" id="accent" value="#ff4d64"></div>
+        <div><label class="lbl" for="exag">Überhöhung <span id="exagVal">auto</span></label><input type="range" id="exag" min="0" max="100" value="0"></div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="sDist" checked> Distanz</label>
+        <label><input type="checkbox" id="sUp" checked> Aufstieg</label>
+        <label><input type="checkbox" id="sDown"> Abstieg</label>
+        <label><input type="checkbox" id="sMax" checked> Höchster Punkt</label>
+        <label><input type="checkbox" id="sTime"> Dauer</label>
+        <label><input type="checkbox" id="sAxis" checked> Achsen</label>
+        <label><input type="checkbox" id="sMaxMark" checked> Gipfel markieren</label>
+      </div>
+      <p class="meta" style="margin:14px 0 0">Beschriftungen: <b>Klick ins Profil</b> setzt eine neue Marke. Wegpunkte aus der GPX-Datei werden übernommen.</p>
+      <div class="labels" id="labels"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">4</span>Exportieren</h2>
+      <div class="preview"><canvas id="cv"></canvas></div>
+      <div class="actions">
+        <span class="meta" id="sizeInfo"></span><span style="flex:1"></span>
+        <button id="savePng">PNG herunterladen</button>
+      </div>
+      <div class="actions sep">
+        <div style="flex:1 1 220px"><label class="lbl" for="dur">Animation <span id="durVal">8</span> Sekunden</label><input type="range" id="dur" min="3" max="30" value="8"></div>
+        <button class="ghost" id="play">Vorschau abspielen</button>
+        <button id="rec">Video aufnehmen (WebM)</button>
+      </div>
+      <p class="meta" id="recInfo" style="margin:8px 0 0">Ein Punkt fährt das Profil ab, die Linie füllt sich. Mit transparentem Hintergrund entsteht ein WebM mit Alphakanal (Chrome/Edge) zum Überlagern im Schnitt.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+let pts = [];          // {lat, lon, ele, gpsEle, demEle, t, d}
+let labels = [];       // {d, name}
+let useDem = false, fileBase = 'hoehenprofil', anim = null;
+
+// ---------- Einlesen ----------
+const drop = $('#drop');
+drop.onclick = () => $('#file').click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#file').click(); } };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); e.dataTransfer.files[0] && readFile(e.dataTransfer.files[0]); };
+$('#file').onchange = () => $('#file').files[0] && readFile($('#file').files[0]);
+
+async function readFile(f){ fileBase = f.name.replace(/\.[^.]+$/, ''); parseGpx(await f.text(), f.name); }
+
+function parseGpx(xml, label){
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  if (doc.querySelector('parsererror')) return fail('Die Datei ist kein gültiges GPX.');
+  let nodes = [...doc.getElementsByTagName('trkpt')];
+  if (!nodes.length) nodes = [...doc.getElementsByTagName('rtept')];
+  if (nodes.length < 2) return fail('In der Datei wurde keine Route gefunden (keine trkpt- oder rtept-Punkte).');
+  const txt = (n, tag) => n.getElementsByTagName(tag)[0]?.textContent;
+  pts = nodes.map(n => ({lat: +n.getAttribute('lat'), lon: +n.getAttribute('lon'), gpsEle: parseFloat(txt(n, 'ele')), t: txt(n, 'time') ? Date.parse(txt(n, 'time')) : null}))
+    .filter(p => isFinite(p.lat) && isFinite(p.lon));
+  const noEle = pts.every(p => !isFinite(p.gpsEle));
+  let d = 0; pts.forEach((p, i) => { if (i) d += hav(pts[i-1], p); p.d = d; });
+  labels = [...doc.getElementsByTagName('wpt')].map(w => {
+    const p = {lat: +w.getAttribute('lat'), lon: +w.getAttribute('lon')};
+    let best = Infinity, bd = 0; pts.forEach(q => { const x = hav(p, q); if (x < best) { best = x; bd = q.d; } });
+    return best < 300 ? {d: bd, name: txt(w, 'name') || 'Wegpunkt'} : null;
+  }).filter(Boolean);
+  $('#title').value = txt(doc, 'name') || fileBase;
+  useDem = false; pts.forEach(p => p.demEle = null);
+  $('#info').innerHTML = `<b>${esc(label)}</b> · ${pts.length.toLocaleString('de-CH')} Punkte · ${labels.length} Wegpunkte`;
+  $('#warn').innerHTML = noEle ? '<div class="warnbox">Die Datei enthält keine Höhenangaben. Mit «Höhen mit swisstopo korrigieren» lassen sie sich ergänzen.</div>' : '';
+  $('#app').hidden = false;
+  $('#demOff').hidden = true; $('#dem').hidden = false;
+  if (noEle) pts.forEach(p => p.gpsEle = 0);
+  recompute(); renderLabels();
+  if (noEle) loadDem();
+}
+function fail(msg){ $('#info').innerHTML = `<span class="err">${msg}</span>`; }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function hav(a, b){
+  const R = 6371000, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*r) * Math.cos(b.lat*r) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+// ---------- Berechnung ----------
+let S = {};
+function recompute(){
+  const win = +$('#smooth').value, th = +$('#thresh').value;
+  $('#smoothVal').textContent = win; $('#threshVal').textContent = th;
+  const raw = pts.map(p => useDem && p.demEle != null ? p.demEle : p.gpsEle);
+  // Glättung über Distanzfenster
+  let lo = 0, hi = 0, sum = 0;
+  pts.forEach((p, i) => {
+    if (!win) { p.ele = raw[i]; return; }
+    while (hi < pts.length && pts[hi].d <= p.d + win/2) { sum += raw[hi]; hi++; }
+    while (pts[lo].d < p.d - win/2) { sum -= raw[lo]; lo++; }
+    p.ele = sum / (hi - lo);
+  });
+  // Auf-/Abstieg mit Hysterese
+  let up = 0, down = 0, ref = pts[0].ele;
+  pts.forEach(p => { const dd = p.ele - ref; if (dd >= th || (!th && dd > 0)) { up += dd; ref = p.ele; } else if (-dd >= th || (!th && dd < 0)) { down -= dd; ref = p.ele; } });
+  const eles = pts.map(p => p.ele), maxE = Math.max(...eles), minE = Math.min(...eles);
+  const ts = pts.map(p => p.t).filter(Boolean);
+  S = {dist: pts.at(-1).d, up, down, maxE, minE, maxD: pts[eles.indexOf(maxE)].d, dur: ts.length > 1 ? ts.at(-1) - ts[0] : null};
+  const tile = (l, v) => `<div>${l}<b>${v}</b></div>`;
+  $('#stats').innerHTML = tile('Distanz', km(S.dist)) + tile('Aufstieg', hm(S.up)) + tile('Abstieg', hm(S.down)) + tile('Höchster Punkt', hm(S.maxE)) + tile('Tiefster Punkt', hm(S.minE)) + (S.dur ? tile('Dauer', dur(S.dur)) : '') + tile('Höhen', useDem ? 'swisstopo' : 'GPS');
+  draw();
+}
+const km = m => (m / 1000).toLocaleString('de-CH', {maximumFractionDigits: m < 10000 ? 1 : 0}) + ' km';
+const hm = m => Math.round(m).toLocaleString('de-CH') + ' m';
+const dur = ms => { const m = Math.round(ms / 60000); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')} h`; };
+['#smooth','#thresh'].forEach(s => $(s).addEventListener('input', recompute));
+['#title','#subtitle','#format','#res','#style','#bg','#accent','#exag','#sDist','#sUp','#sDown','#sMax','#sTime','#sAxis','#sMaxMark']
+  .forEach(s => $(s).addEventListener('input', () => draw()));
+
+// ---------- swisstopo Höhenkorrektur ----------
+function wgsToLv95(lat, lon){
+  const p = (lat * 3600 - 169028.66) / 10000, l = (lon * 3600 - 26782.5) / 10000;
+  return [2600072.37 + 211455.93*l - 10938.51*l*p - 0.36*l*p*p - 44.54*l**3,
+          1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p**3];
+}
+$('#dem').onclick = loadDem;
+$('#demOff').onclick = () => { useDem = false; $('#demOff').hidden = true; $('#dem').hidden = false; $('#demInfo').textContent = 'GPS-Höhen aus der Datei werden verwendet.'; recompute(); };
+async function loadDem(){
+  if (pts.some(p => p.lat < 45.7 || p.lat > 47.9 || p.lon < 5.8 || p.lon > 10.6)) {
+    $('#demInfo').innerHTML = '<span class="err">Die Route liegt (teilweise) ausserhalb der Schweiz – die swisstopo-Korrektur ist dafür nicht möglich.</span>'; return;
+  }
+  $('#dem').disabled = true; $('#demInfo').textContent = 'Frage swisstopo-Höhenmodell ab …';
+  try {
+    // Geometrie auf max. ~900 Stützpunkte ausdünnen
+    const step = Math.max(1, Math.ceil(pts.length / 900));
+    const sub = pts.filter((_, i) => i % step === 0 || i === pts.length - 1);
+    const coords = sub.map(p => wgsToLv95(p.lat, p.lon).map(v => Math.round(v * 10) / 10));
+    const body = new URLSearchParams({geom: JSON.stringify({type:'LineString', coordinates: coords}), sr:'2056', nb_points: String(Math.min(2000, Math.max(200, sub.length * 2))), distinct_points:'true'});
+    const res = await fetch('https://api3.geo.admin.ch/rest/services/profile.json', {method:'POST', body});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const prof = await res.json();
+    const pr = prof.map(q => [q.dist, q.alts.COMB ?? q.alts.DTM2 ?? q.alts.DTM25]).filter(q => q[1] != null);
+    if (pr.length < 2) throw new Error('leere Antwort');
+    const scale = pr.at(-1)[0] / S.dist; let j = 0;
+    pts.forEach(p => {
+      const dd = p.d * scale; while (j < pr.length - 2 && pr[j+1][0] < dd) j++;
+      const [d0, e0] = pr[j], [d1, e1] = pr[j+1]; p.demEle = e0 + (e1 - e0) * Math.min(1, Math.max(0, (dd - d0) / ((d1 - d0) || 1)));
+    });
+    useDem = true; $('#dem').hidden = true; $('#demOff').hidden = false;
+    $('#demInfo').innerHTML = `<span class="ok">Höhen aus swissALTI3D übernommen (${pr.length} Stützpunkte).</span> Die Glättung kann jetzt meist tiefer eingestellt werden.`;
+    recompute();
+  } catch (e) {
+    $('#demInfo').innerHTML = `<span class="err">Die Abfrage bei swisstopo hat nicht geklappt (${esc(e.message)}). Prüfe die Internetverbindung; ohne Korrektur werden die GPS-Höhen verwendet.</span>`;
+  } finally { $('#dem').disabled = false; }
+}
+
+// ---------- Beschriftungen ----------
+function renderLabels(){
+  $('#labels').innerHTML = labels.sort((a, b) => a.d - b.d).map((l, i) =>
+    `<span class="chip">${esc(l.name)} · ${km(l.d)}<button data-i="${i}" aria-label="${esc(l.name)} entfernen">×</button></span>`).join('');
+  document.querySelectorAll('#labels button').forEach(b => b.onclick = () => { labels.splice(+b.dataset.i, 1); renderLabels(); draw(); });
+}
+$('#cv').addEventListener('click', e => {
+  if (!G.plot) return;
+  const r = $('#cv').getBoundingClientRect(), x = (e.clientX - r.left) / r.width * G.W;
+  const {x0, w} = G.plot; if (x < x0 || x > x0 + w) return;
+  const d = (x - x0) / w * S.dist;
+  const name = prompt(`Beschriftung bei ${km(d)} (z. B. Hütte, Gipfel, Start):`);
+  if (name && name.trim()) { labels.push({d, name: name.trim()}); renderLabels(); draw(); }
+});
+
+// ---------- Zeichnen ----------
+const cv = $('#cv'); let G = {};
+const FORMATS = {full:[1920,1080], strip:[1920,560], square:[1080,1080], story:[1080,1920]};
+function theme(){
+  const bg = $('#bg').value;
+  return {bg, fill: bg === 'light' ? '#f4f2ee' : bg === 'dark' ? '#121214' : null,
+    text: bg === 'light' ? '#121214' : '#ececef', sub: bg === 'light' ? '#5d6068' : 'rgba(255,255,255,0.7)',
+    grid: bg === 'light' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.14)', acc: $('#accent').value,
+    shadow: bg === 'transparent'};
+}
+function font(ctx, w, px){ ctx.font = `${w} ${px}px ${FONT}`; }
+function eleAt(d){
+  let lo = 0, hi = pts.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; pts[m].d < d ? lo = m : hi = m; }
+  const a = pts[lo], b = pts[hi]; return a.ele + (b.ele - a.ele) * ((d - a.d) / ((b.d - a.d) || 1));
+}
+function niceStep(range, target){ const raw = range / target, p = 10 ** Math.floor(Math.log10(raw)); return [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw); }
+function slopeColor(g){ const a = Math.abs(g); return a < 0.08 ? '#3fae6a' : a < 0.16 ? '#e5c33b' : a < 0.25 ? '#ec8a2f' : '#e0384f'; }
+
+function draw(progress = 1, target = cv, scaleOverride){
+  if (!pts.length) return;
+  const fmt = $('#format').value, s = scaleOverride ?? +$('#res').value;
+  const [W, H] = FORMATS[fmt];
+  if (target.width !== W * s || target.height !== H * s) { target.width = W * s; target.height = H * s; }
+  const ctx = target.getContext('2d'); ctx.setTransform(s, 0, 0, s, 0, 0); ctx.clearRect(0, 0, W, H);
+  $('#sizeInfo').textContent = `${W * s} × ${H * s} px`;
+  const t = theme(), U = W >= 1920 ? 1 : 0.75;
+  if (t.fill) { ctx.fillStyle = t.fill; ctx.fillRect(0, 0, W, H); }
+  if (t.shadow) { ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 8; }
+
+  // Kopf
+  let top = fmt === 'strip' ? 40 : fmt === 'story' ? 220 : 90;
+  const m = fmt === 'story' || fmt === 'square' ? 80 : 110;
+  if (fmt !== 'strip') {
+    ctx.fillStyle = t.acc; ctx.fillRect(m, top, 90, 10);
+    const ttl = $('#title').value.trim();
+    let px = (fmt === 'full' ? 96 : 84); font(ctx, '800', px);
+    while (ctx.measureText(ttl).width > W - 2*m && px > 30) { px -= 2; font(ctx, '800', px); }
+    ctx.fillStyle = t.text; ctx.fillText(ttl, m, top + 24 + px * 0.82); top += 24 + px * 0.82;
+    const sub = $('#subtitle').value.trim();
+    if (sub) { font(ctx, '400', 38 * U); ctx.fillStyle = t.sub; top += 54 * U; ctx.fillText(sub, m, top); }
+    // Kennzahlen
+    const st = [];
+    if ($('#sDist').checked) st.push(['Distanz', km(S.dist)]);
+    if ($('#sUp').checked) st.push(['Aufstieg', hm(S.up)]);
+    if ($('#sDown').checked) st.push(['Abstieg', hm(S.down)]);
+    if ($('#sMax').checked) st.push(['Höchster Punkt', hm(S.maxE)]);
+    if ($('#sTime').checked && S.dur) st.push(['Dauer', dur(S.dur)]);
+    if (st.length) {
+      top += 90 * U;
+      const perRow = fmt === 'full' ? 5 : 2, cw = (W - 2*m) / perRow;
+      st.forEach(([l, v], i) => {
+        const x = m + (i % perRow) * cw, y = top + Math.floor(i / perRow) * 130 * U;
+        font(ctx, '600', 28 * U); ctx.fillStyle = t.sub; ctx.fillText(l, x, y);
+        font(ctx, '800', 64 * U); ctx.fillStyle = t.text; ctx.fillText(v, x, y + 70 * U);
+      });
+      top += (Math.ceil(st.length / perRow) - 1) * 130 * U + 70 * U;
+    }
+    top += 60;
+  }
+
+  // Plotbereich
+  const axis = $('#sAxis').checked;
+  const x0 = m + (axis ? 90 * U : 0), x1 = W - m;
+  const bottom = H - (fmt === 'strip' ? 40 : fmt === 'story' ? 220 : 80) - (axis ? 50 * U : 0);
+  const labelRoom = labels.length || $('#sMaxMark').checked ? 90 * U : 30;
+  const pTop = top + labelRoom, pw = x1 - x0, ph = bottom - pTop;
+  G = {W, plot: {x0, w: pw}};
+  // Y-Bereich (Überhöhung)
+  const range = Math.max(50, S.maxE - S.minE);
+  const ex = +$('#exag').value; $('#exagVal').textContent = ex ? (1 + ex / 25).toFixed(1) + '×' : 'auto';
+  const span = ex ? range * (5 / (1 + ex / 25)) : range * 1.25;
+  let yMin = Math.max(0, S.minE - (span - range) * (ex ? 0.15 : 0.35));
+  const yMax = yMin + span;
+  if (ex) yMin = Math.max(0, S.minE - span * 0.08);
+  const X = d => x0 + d / S.dist * pw, Y = e => bottom - (e - yMin) / (yMax - yMin) * ph;
+
+  ctx.shadowBlur = 0;
+  if (axis) {
+    font(ctx, '500', 24 * U); ctx.lineWidth = 1.5;
+    const ys = niceStep(yMax - yMin, 4);
+    for (let e = Math.ceil(yMin / ys) * ys; e <= yMax; e += ys) {
+      const y = Y(e); if (y < pTop - 10) continue;
+      ctx.strokeStyle = t.grid; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+      ctx.fillStyle = t.sub; ctx.textAlign = 'right'; ctx.fillText(Math.round(e).toLocaleString('de-CH'), x0 - 14, y + 8);
+    }
+    const xs = niceStep(S.dist / 1000, fmt === 'full' || fmt === 'strip' ? 8 : 5) * 1000;
+    ctx.textAlign = 'center';
+    for (let d = 0; d <= S.dist + 1; d += xs) ctx.fillText(km(d).replace(' km', '') + (d === 0 ? '' : ''), X(d), bottom + 40 * U);
+    ctx.textAlign = 'right'; ctx.fillText('km', x1, bottom + 40 * U);
+    ctx.textAlign = 'left';
+  }
+  if (t.shadow) { ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10; }
+
+  // Profil
+  const style = $('#style').value, endD = S.dist * progress;
+  const sampled = []; const N = Math.min(pts.length, Math.round(pw));
+  for (let i = 0; i <= N; i++) { const d = S.dist * i / N; if (d > endD) break; sampled.push([d, eleAt(d)]); }
+  if (progress < 1) sampled.push([endD, eleAt(endD)]);
+  if (sampled.length > 1) {
+    const path = () => { ctx.beginPath(); sampled.forEach(([d, e], i) => i ? ctx.lineTo(X(d), Y(e)) : ctx.moveTo(X(d), Y(e))); };
+    if (style === 'area' || style === 'slope') {
+      path(); ctx.lineTo(X(sampled.at(-1)[0]), bottom); ctx.lineTo(X(0), bottom); ctx.closePath();
+      const g = ctx.createLinearGradient(0, pTop, 0, bottom);
+      g.addColorStop(0, hexA(t.acc, style === 'slope' ? 0.25 : 0.55)); g.addColorStop(1, hexA(t.acc, 0.05));
+      ctx.fillStyle = g; ctx.fill();
+    }
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = (style === 'line' ? 7 : 5) * U;
+    if (style === 'slope') {
+      for (let i = 1; i < sampled.length; i++) {
+        const [d0, e0] = sampled[i-1], [d1, e1] = sampled[i];
+        const sw = Math.max(60, S.dist / 50), dm = (d0 + d1) / 2;
+        const a = Math.max(0, dm - sw / 2), b = Math.min(S.dist, dm + sw / 2);
+        ctx.strokeStyle = slopeColor((eleAt(b) - eleAt(a)) / ((b - a) || 1));
+        ctx.beginPath(); ctx.moveTo(X(d0), Y(e0)); ctx.lineTo(X(d1), Y(e1)); ctx.stroke();
+      }
+    } else { ctx.strokeStyle = style === 'line' ? t.acc : t.text; path(); ctx.stroke(); }
+  }
+  ctx.shadowBlur = 0;
+
+  // Marken
+  const marks = [...labels];
+  if ($('#sMaxMark').checked && !labels.some(l => Math.abs(l.d - S.maxD) < S.dist * 0.03)) marks.push({d: S.maxD, name: hm(S.maxE), auto: true});
+  marks.sort((a, b) => a.d - b.d);
+  let lastRight = -Infinity, row = 0;
+  marks.forEach(l => {
+    if (l.d > endD + 1) return;
+    const x = X(l.d), y = Y(eleAt(l.d));
+    font(ctx, '700', 30 * U);
+    const txt = l.name, tw = ctx.measureText(txt).width;
+    row = x - tw / 2 < lastRight + 20 ? (row + 1) % 2 : 0;
+    const ly = pTop - labelRoom + 40 * U + row * 38 * U;
+    ctx.strokeStyle = t.sub; ctx.lineWidth = 2; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.moveTo(x, ly + 14); ctx.lineTo(x, y - 12); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = t.acc; ctx.beginPath(); ctx.arc(x, y, 10 * U, 0, 7); ctx.fill();
+    ctx.fillStyle = t.text; ctx.textAlign = x + tw / 2 > W - 20 ? 'right' : x - tw / 2 < 20 ? 'left' : 'center';
+    if (t.shadow) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 8; }
+    ctx.fillText(txt, x, ly); ctx.shadowBlur = 0; ctx.textAlign = 'left';
+    lastRight = x + tw / 2;
+  });
+
+  // Fahrender Punkt
+  if (progress < 1) {
+    const x = X(endD), e = eleAt(endD), y = Y(e);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 16 * U, 0, 7); ctx.fill();
+    ctx.fillStyle = t.acc; ctx.beginPath(); ctx.arc(x, y, 10 * U, 0, 7); ctx.fill();
+    font(ctx, '700', 30 * U); ctx.textAlign = x > W - 200 ? 'right' : 'left';
+    const tag = `${hm(e)} · ${km(endD)}`; ctx.fillStyle = t.text;
+    if (t.shadow) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 8; }
+    ctx.fillText(tag, x + (ctx.textAlign === 'left' ? 26 : -26) * U, y - 26 * U); ctx.shadowBlur = 0; ctx.textAlign = 'left';
+  }
+}
+function hexA(hex, a){ const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+
+// ---------- Export ----------
+$('#savePng').onclick = () => { draw(1); cv.toBlob(b => dl(b, `${fileBase}_profil_${$('#format').value}.png`), 'image/png'); };
+function dl(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+$('#dur').oninput = () => $('#durVal').textContent = $('#dur').value;
+const ease = x => x < .5 ? 2*x*x : 1 - (-2*x + 2)**2 / 2;
+function runAnim(onDone){
+  cancelAnimationFrame(anim); const T = +$('#dur').value * 1000, start = performance.now(), hold = 1000;
+  const step = now => {
+    const p = Math.min(1, (now - start - 300) / T);
+    draw(p <= 0 ? 0.0001 : ease(p));
+    if (now - start < T + 300 + hold) anim = requestAnimationFrame(step); else { draw(1); onDone && onDone(); }
+  };
+  anim = requestAnimationFrame(step);
+}
+$('#play').onclick = () => runAnim();
+$('#rec').onclick = () => {
+  if (!window.MediaRecorder || !cv.captureStream) { $('#recInfo').innerHTML = '<span class="err">Dieser Browser kann keine Videos aufnehmen. Bitte Chrome oder Edge verwenden.</span>'; return; }
+  const types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  const mime = types.find(m => MediaRecorder.isTypeSupported(m));
+  const stream = cv.captureStream(30), chunks = [];
+  const rec = new MediaRecorder(stream, {mimeType: mime, videoBitsPerSecond: +$('#res').value === 2 ? 40e6 : 16e6});
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  rec.onstop = () => { dl(new Blob(chunks, {type:'video/webm'}), `${fileBase}_profil_animation.webm`); $('#rec').disabled = false; $('#recInfo').innerHTML = '<span class="ok">Video gespeichert.</span> Tipp: Premiere und DaVinci Resolve lesen WebM direkt; falls nicht, mit HandBrake oder Shutter Encoder umwandeln.'; };
+  $('#rec').disabled = true; $('#recInfo').textContent = 'Nehme auf … Tab bitte im Vordergrund lassen.';
+  rec.start(); runAnim(() => setTimeout(() => rec.stop(), 200));
+};
+
+// ---------- Beispielroute (synthetisch) ----------
+$('#demo').onclick = () => {
+  let s = 3; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280 - 0.5;
+  const n = 420, pts_ = [];
+  for (let i = 0; i < n; i++) {
+    const f = i / (n - 1);
+    const lat = 46.78 + f * 0.035 + Math.sin(f * 9) * 0.004, lon = 9.67 + f * 0.05 + Math.cos(f * 7) * 0.003;
+    let ele = 1880 + 1050 * Math.sin(Math.min(1, f / 0.62) * Math.PI / 2) - (f > 0.62 ? (f - 0.62) * 900 : 0) + (f > 0.3 && f < 0.36 ? -40 : 0);
+    ele += r() * 18;
+    const t = new Date(Date.UTC(2026, 1, 14, 7, 30) + f * 4.6 * 3600e3).toISOString();
+    pts_.push(`<trkpt lat="${lat.toFixed(6)}" lon="${lon.toFixed(6)}"><ele>${ele.toFixed(1)}</ele><time>${t}</time></trkpt>`);
+  }
+  const gpx = `<?xml version="1.0"?><gpx version="1.1"><metadata><name>Beispiel-Skitour</name></metadata>
+    <wpt lat="46.780000" lon="9.670000"><name>Start</name></wpt>
+    <wpt lat="${(46.78 + 0.33*0.035 + Math.sin(0.33*9)*0.004).toFixed(6)}" lon="${(9.67 + 0.33*0.05 + Math.cos(0.33*7)*0.003).toFixed(6)}"><name>Hütte</name></wpt>
+    <trk><name>Beispiel-Skitour</name><trkseg>${pts_.join('')}</trkseg></trk></gpx>`;
+  fileBase = 'beispiel';
+  parseGpx(gpx, 'Beispielroute (synthetisch)');
+  $('#subtitle').value = 'Fiktive Route zum Ausprobieren';
+  draw();
+};
+</script>
+</body>
+</html>
