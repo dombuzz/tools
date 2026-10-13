@@ -84,6 +84,8 @@
     for (const p of paths) og.append(new Option(NAMES[p] || p, '/' + p.replace(/\.html?$/i, '')));
     sel.append(og);
   }
+  // ganz unten: Link ins Lab (Experimente)
+  sel.append(new Option('🚧', '/lab/'));
 
   sel.addEventListener('change', () => { if (sel.value) location.href = sel.value; });
   // Beim Zurückkehren mit dem Zurück-Button wieder auf "Tool wählen" stellen
