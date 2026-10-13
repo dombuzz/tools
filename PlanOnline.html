@@ -70,7 +70,10 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
 .btn-sm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
 .homelink:hover,.homelink:focus-visible{color:#ff4d64}
-.bm summary{cursor:pointer;font-weight:600;font-size:.95rem;list-style:none;display:flex;gap:10px;align-items:center}
+.bm{border-top:1px solid var(--border);padding-top:14px}
+.bm[open] summary{margin-bottom:14px}
+.bm .note{margin-top:14px}
+.bm summary{cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted);list-style:none;display:flex;gap:10px;align-items:center}
 .bm summary::-webkit-details-marker{display:none}
 .bm summary::after{content:"▸";margin-left:auto;color:var(--muted)}
 .bm[open] summary::after{content:"▾"}
@@ -96,18 +99,18 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
     <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner il PDF u al trair qua"><b>Tscherner il PDF</b> u al trair qua</div>
     <input type="file" id="file" accept="application/pdf,.pdf" hidden>
     <div class="status" id="status"></div>
+    <details class="bm" id="bmcard">
+      <summary>Chargiar directamain da SharePoint</summary>
+      <ol class="bmsteps">
+        <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="javascript:(()=&gt;{const T=&#x27;https://tools.dombuzz.ch&#x27;,P=&#x27;/PlanOnline.html&#x27;,U=&#x27;https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf&#x27;;const w=window.open(T+P+&#x27;#sharepoint&#x27;,&#x27;planonline&#x27;);if(!w){alert(&#x27;PlanOnline: il browser ha bloccà la nova fanestra. Permetta fanestras pop-up per SharePoint.&#x27;);return}let buf=null,ready=false,sent=false;const go=()=&gt;{if(sent||!ready||!buf)return;sent=true;w.postMessage({type:&#x27;planonline-pdf&#x27;,name:&#x27;1_radio_online.pdf&#x27;,buf},T,[buf]);removeEventListener(&#x27;message&#x27;,h)};const h=e=&gt;{if(e.origin===T&amp;&amp;e.data===&#x27;planonline-ready&#x27;){ready=true;go()}};addEventListener(&#x27;message&#x27;,h);fetch(U,{credentials:&#x27;include&#x27;,cache:&#x27;no-store&#x27;}).then(r=&gt;{if(!r.ok)throw new Error(&#x27;HTTP &#x27;+r.status);return r.arrayBuffer()}).then(b=&gt;{buf=b;go()}).catch(e=&gt;{try{w.postMessage({type:&#x27;planonline-error&#x27;,msg:String(e.message||e)},T)}catch(_){}alert(&#x27;PlanOnline: il PDF n\&#x27;ha betg pudì vegnir chargià (&#x27;+(e.message||e)+&#x27;).&#x27;)})})()" onclick="return false">⇣ PlanOnline</a></li>
+        <li>Avrir il <a href="https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf" target="_blank" rel="noopener">plan da lavur sin SharePoint</a> (s'annunziar sche necessari).</li>
+        <li>Cliccar sin il segnapagina «PlanOnline». Questa pagina s'avra e chargia il plan actual.</li>
+      </ol>
+      <p class="note">Sin il telefonin: copiar il code e crear manualmain in segnapagina cun quest code sco adressa. <button type="button" class="link" id="bmcopy">Copiar il code</button></p>
+    </details>
   </div>
 
 
-  <details class="step bm" id="bmcard">
-    <summary>Chargiar directamain da SharePoint</summary>
-    <ol class="bmsteps">
-      <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="javascript:(()=&gt;{const T=&#x27;https://tools.dombuzz.ch&#x27;,P=&#x27;/PlanOnline.html&#x27;,U=&#x27;https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf&#x27;;const w=window.open(T+P+&#x27;#sharepoint&#x27;,&#x27;planonline&#x27;);if(!w){alert(&#x27;PlanOnline: il browser ha bloccà la nova fanestra. Permetta fanestras pop-up per SharePoint.&#x27;);return}let buf=null,ready=false,sent=false;const go=()=&gt;{if(sent||!ready||!buf)return;sent=true;w.postMessage({type:&#x27;planonline-pdf&#x27;,name:&#x27;1_radio_online.pdf&#x27;,buf},T,[buf]);removeEventListener(&#x27;message&#x27;,h)};const h=e=&gt;{if(e.origin===T&amp;&amp;e.data===&#x27;planonline-ready&#x27;){ready=true;go()}};addEventListener(&#x27;message&#x27;,h);fetch(U,{credentials:&#x27;include&#x27;,cache:&#x27;no-store&#x27;}).then(r=&gt;{if(!r.ok)throw new Error(&#x27;HTTP &#x27;+r.status);return r.arrayBuffer()}).then(b=&gt;{buf=b;go()}).catch(e=&gt;{try{w.postMessage({type:&#x27;planonline-error&#x27;,msg:String(e.message||e)},T)}catch(_){}alert(&#x27;PlanOnline: il PDF n\&#x27;ha betg pudì vegnir chargià (&#x27;+(e.message||e)+&#x27;).&#x27;)})})()" onclick="return false">⇣ PlanOnline</a></li>
-      <li>Avrir il <a href="https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf" target="_blank" rel="noopener">plan da lavur sin SharePoint</a> (s'annunziar sche necessari).</li>
-      <li>Cliccar sin il segnapagina «PlanOnline». Questa pagina s'avra e chargia il plan actual.</li>
-    </ol>
-    <p class="note">Sin il telefonin: copiar il code e crear manualmain in segnapagina cun quest code sco adressa. <button type="button" class="link" id="bmcopy">Copiar il code</button></p>
-  </details>
   <div class="step">
     <h2><span class="num">2</span>Tscherner la perioda</h2>
     <div class="controls">
