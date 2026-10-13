@@ -36,6 +36,7 @@
     transform: translateY(-70%) rotate(45deg); pointer-events: none;
   }
   option { background: var(--card); color: var(--text); font-weight: 400; }
+  option.lab { color: #ff9a3c; font-weight: 700; } /* gleiche Farbe wie im Lab */
   optgroup { background: var(--card); color: var(--accent); font-weight: 700; font-style: normal; }
   .msg { color: var(--muted); margin-top: 16px; }
   .msg a, footer a { color: var(--link); }
@@ -85,7 +86,9 @@
     sel.append(og);
   }
   // ganz unten: Link ins Lab (Experimente)
-  sel.append(new Option('🚧', '/lab/'));
+  const lab = new Option('Lab 🧪', '/lab/');
+  lab.className = 'lab';
+  sel.append(lab);
 
   sel.addEventListener('change', () => { if (sel.value) location.href = sel.value; });
   // Beim Zurückkehren mit dem Zurück-Button wieder auf "Tool wählen" stellen
