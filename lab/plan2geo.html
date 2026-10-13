@@ -36,22 +36,25 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
 .work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;padding-block:0 20px}
 
 /* Arbeitsfläche */
-.stage{position:relative;min-height:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--canvas)}
-.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.stage{min-height:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);display:flex;flex-direction:column}
+.stagebar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px;border-bottom:1px solid var(--line)}
+.stagebar .hint{flex:1 1 260px}
+.stagebar .badge{margin-left:auto}
+.viewport{position:relative;flex:1;min-height:0;background:var(--canvas)}
+.viewport canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 .stage canvas.draw{cursor:crosshair}
-.ov-top{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none}
-.ov-top>*{pointer-events:auto}
 .toolbar{display:inline-flex;flex-wrap:wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
 .tool{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:var(--muted);font:600 .86rem var(--sans);padding:7px 12px;border-radius:7px;cursor:pointer}
 .tool kbd{font:600 .68rem var(--mono);color:inherit;opacity:.7;border:1px solid currentColor;border-radius:4px;padding:0 4px}
 .tool:hover{color:var(--ink)}
 .tool[aria-pressed="true"]{background:var(--accent);color:#121214}
 .tool svg{width:16px;height:16px;flex:none}
-.hint{font-size:.8rem;background:rgba(28,28,31,.92);border:1px solid var(--line);border-radius:8px;padding:5px 10px;max-width:min(560px,100%);color:var(--muted)}
-.wandopts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:.8rem;color:var(--muted);background:rgba(28,28,31,.92);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.hint{font-size:.8rem;line-height:1.45;color:var(--muted);min-width:0}
+.wandopts{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:.8rem;color:var(--muted);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
 .wandopts input[type=range]{accent-color:var(--accent);width:120px}
 .wandopts output{font:.75rem var(--mono);color:var(--ink);min-width:2ch}
 .wandopts .chk{font-size:.8rem}
+.tolw{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .wseg{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
 .wseg button{font:600 .78rem var(--sans);background:transparent;color:var(--muted);border:0;padding:4px 10px;border-radius:6px;cursor:pointer}
 .wseg button[aria-pressed="true"]{background:var(--accent);color:#121214}
@@ -135,9 +138,12 @@ details[open] summary{margin-bottom:8px}
   html,body{height:auto}
   .app{height:auto}
   .work{grid-template-columns:minmax(0,1fr)}
-  .stage{height:66vh;min-height:380px}
+  .stage{height:auto}
+  .viewport{flex:none;height:62vh;min-height:320px}
   .side{overflow:visible;padding-right:0}
-  .tool .lbl{display:none}
+  .tool .lbl,.tool kbd{display:none}
+  .tool{padding:8px 13px}
+  .wandopts input[type=range]{width:100px}
 }
 </style>
 </head>
@@ -152,14 +158,13 @@ details[open] summary{margin-bottom:8px}
     </div>
     <div class="acts">
       <button class="btn" id="undoBtn" type="button" title="Ctrl/Cmd+Z">Rückgängig</button>
-      <button class="btn danger" id="clearBtn" type="button">Alles leeren</button>
+      <button class="btn danger" id="clearBtn" type="button" title="Löscht alle Linien, Flächen und Punkte. Plan und Passpunkte bleiben.">Alles leeren</button>
     </div>
   </header>
 
   <main class="work">
     <section class="stage" id="stage" aria-label="Arbeitsfläche">
-      <canvas id="cv"></canvas>
-      <div class="ov-top">
+      <div class="stagebar">
         <div class="toolbar" role="toolbar" aria-label="Werkzeuge">
           <button class="tool" data-mode="pan" type="button" title="Verschieben und auswählen (V)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg><span class="lbl">Verschieben</span><kbd>V</kbd></button>
           <button class="tool" data-mode="cp" type="button" title="Passpunkt setzen (P)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="4.5"/><path d="M8 0.8v4M8 11.2v4M0.8 8h4M11.2 8h4"/></svg><span class="lbl">Passpunkt</span><kbd>P</kbd></button>
@@ -174,14 +179,16 @@ details[open] summary{margin-bottom:8px}
             <button type="button" data-wk="area" aria-pressed="true">Fläche</button>
             <button type="button" data-wk="line" aria-pressed="false">Linie</button>
           </div>
-          <label for="wandTol">Toleranz</label>
+          <span class="tolw"><label for="wandTol">Toleranz</label>
           <input type="range" id="wandTol" min="5" max="120" value="40">
-          <output id="wandTolOut">40</output>
+          <output id="wandTolOut">40</output></span>
           <label class="chk"><input type="checkbox" id="wandEdge" checked> Randlinie einschliessen</label>
           <label class="chk"><input type="checkbox" id="wandMerge"> Mit letzter Fläche vereinen</label>
         </div>
         <span class="badge" id="status"></span>
       </div>
+      <div class="viewport" id="viewport">
+      <canvas id="cv"></canvas>
       <div class="draftbar" id="draftbar" hidden>
         <span id="draftInfo"></span>
         <button class="btn" id="draftBack" type="button" title="Letzten Punkt entfernen (⌫)">↶</button>
@@ -196,17 +203,17 @@ details[open] summary{margin-bottom:8px}
       <div class="readout" id="readout">–</div>
       <div class="empty-stage" id="emptyStage"><div class="box" id="emptyBox" role="button" tabindex="0"><b>Plan laden</b>oder Bild hierher ziehen, Screenshot mit Ctrl/Cmd+V einfügen.<br>Ohne Plan zeichnest du direkt in Landeskoordinaten.</div></div>
       <div class="drop" id="drop" hidden>Datei loslassen</div>
+      </div>
     </section>
 
     <aside class="side">
       <section class="card">
         <h2><span class="step">1</span>Plan</h2>
-        <p class="muted small">Bild laden, auf die Fläche ziehen oder als Screenshot mit Ctrl/Cmd+V einfügen. Ohne Plan zeichnest du direkt in Landeskoordinaten.</p>
-        <div class="row">
-          <label class="btn file">Plan laden<input class="vh" type="file" id="planFile" accept="image/*"></label>
+        <p class="small muted" id="planInfo"></p>
+        <div class="row" id="planActs">
+          <label class="btn file">Anderen Plan laden<input class="vh" type="file" id="planFile" accept="image/*"></label>
           <button class="btn" id="planRemove" type="button">Plan entfernen</button>
         </div>
-        <p class="small muted" id="planInfo"></p>
       </section>
 
       <section class="card" id="cpCard">
@@ -490,7 +497,7 @@ function undo(){
 }
 
 /* ---------- Zeichnen ---------- */
-const cv = $('#cv'), ctx = cv.getContext('2d'), stage = $('#stage');
+const cv = $('#cv'), ctx = cv.getContext('2d'), stage = $('#stage'), viewport = $('#viewport');
 let C = {};
 function readColors(){
   const cs = getComputedStyle(document.documentElement), g = v => cs.getPropertyValue(v).trim();
@@ -498,8 +505,10 @@ function readColors(){
 }
 function hexA(hex, a){ const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(x => x+x).join('') : h, 16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
 function resize(){
-  const r = stage.getBoundingClientRect();
-  dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
+  const r = viewport.getBoundingClientRect();
+  dpr = window.devicePixelRatio || 1;
+  if (W && H){ V.tx += (r.width - W)/2; V.ty += (r.height - H)/2; } // Bildmitte halten, wenn sich die Fläche ändert
+  W = r.width; H = r.height;
   cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
   draw();
 }
@@ -553,7 +562,7 @@ function gridOnPlan(){
   for (let E = Math.ceil(E0/step)*step; E <= E1; E += step){ const a = toS(T.inv([E, N0])), b = toS(T.inv([E, N1])); ctx.moveTo(...a); ctx.lineTo(...b); vis.push(['E', E, a, b]); }
   for (let N = Math.ceil(N0/step)*step; N <= N1; N += step){ const a = toS(T.inv([E0, N])), b = toS(T.inv([E1, N])); ctx.moveTo(...a); ctx.lineTo(...b); vis.push(['N', N, a, b]); }
   ctx.stroke(); ctx.setLineDash([]);
-  const top = Math.max(py0, 0) + 70, left = Math.max(px0, 0) + 8, bottom = Math.min(py1, H) - 46;
+  const top = Math.max(py0, 0) + 12, left = Math.max(px0, 0) + 8, bottom = Math.min(py1, H) - 46;
   for (const [k, v, a, b] of vis){
     if (k === 'E'){ const y = bottom; if (Math.abs(b[1]-a[1]) < 1e-6) continue; const x = a[0] + (b[0]-a[0]) * (y - a[1]) / (b[1]-a[1]); if (x > 0 && x < W) gridLabel(fmt0(v), x, y, 'center'); }
     else { const x = left; if (Math.abs(b[0]-a[0]) < 1e-6) continue; const y = a[1] + (b[1]-a[1]) * (x - a[0]) / (b[0]-a[0]); if (y > top && y < H) gridLabel(fmt0(v), x + 4, y, 'left'); }
@@ -615,8 +624,8 @@ function fit(){
     b = [cx - half, cy - half, cx + half, cy + half];
   }
   const bw = b[2]-b[0], bh = b[3]-b[1], pad = 40;
-  V.s = Math.min((W - pad*2)/bw, (H - pad*2 - 50)/bh);
-  V.tx = (W - bw*V.s)/2 - b[0]*V.s; V.ty = (H - bh*V.s)/2 + 22 - b[1]*V.s;
+  V.s = Math.min((W - pad*2)/bw, (H - pad*2)/bh);
+  V.tx = (W - bw*V.s)/2 - b[0]*V.s; V.ty = (H - bh*V.s)/2 - b[1]*V.s;
   draw();
 }
 function zoomAt(x, y, k){
@@ -1436,20 +1445,19 @@ function refreshAll(){
 }
 function updateStatus(){
   const b = $('#status');
-  $('#planInfo').textContent = S.plan ? `${S.plan.name} · ${S.plan.w} × ${S.plan.h} px` : 'Kein Plan geladen.';
-  $('#planRemove').disabled = !S.plan;
+  $('#planInfo').textContent = S.plan ? `${S.plan.name} · ${S.plan.w} × ${S.plan.h} px` : 'Noch kein Plan. Lade ihn direkt auf der Arbeitsfläche, ziehe ein Bild hinein oder füge einen Screenshot mit Ctrl/Cmd+V ein.';
+  $('#planActs').hidden = !S.plan;
   $('#emptyStage').hidden = !!(S.plan || S.feats.length);
   if (!S.plan){ b.className = 'badge info'; b.textContent = 'Kartenmodus · LV95'; }
   else if (!S.T){ b.className = 'badge warn'; b.textContent = 'Plan noch nicht georeferenziert'; }
   else { b.className = 'badge ok'; b.textContent = `Georeferenziert · ${S.T.n} Passpunkte`; }
 }
-let clearArm = 0;
 $('#clearBtn').onclick = () => {
-  const b = $('#clearBtn');
-  if (!clearArm){ b.textContent = 'Wirklich leeren?'; clearArm = setTimeout(() => { clearArm = 0; b.textContent = 'Alles leeren'; }, 3000); return; }
-  clearTimeout(clearArm); clearArm = 0; b.textContent = 'Alles leeren';
-  S.feats = []; S.cps = []; S.draft = []; setPlan(null); undoStack = [];
-  toast('Alles geleert.');
+  const n = S.feats.length;
+  if (!n && !S.draft.length){ toast('Es gibt noch keine Linien oder Flächen.'); return; }
+  snapshot();
+  S.feats = []; S.draft = []; S.lastWand = null; refreshDraft(); refreshAll();
+  toast(`${n} ${n === 1 ? 'Objekt' : 'Objekte'} gelöscht · Plan und Passpunkte bleiben · «Rückgängig» holt sie zurück`);
 };
 let toastT = 0;
 function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3600); }
@@ -1459,7 +1467,7 @@ readColors();
 const mq = matchMedia('(prefers-color-scheme: dark)');
 mq.addEventListener && mq.addEventListener('change', () => { readColors(); draw(); });
 new MutationObserver(() => { readColors(); draw(); }).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
-new ResizeObserver(resize).observe(stage);
+new ResizeObserver(resize).observe(viewport);
 resize();
 setMode('pan');
 refreshAll();
