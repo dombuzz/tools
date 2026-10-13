@@ -48,6 +48,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
 .tool[aria-pressed="true"]{background:var(--accent);color:#121214}
 .tool svg{width:16px;height:16px;flex:none}
 .hint{font-size:.8rem;background:rgba(28,28,31,.92);border:1px solid var(--line);border-radius:8px;padding:5px 10px;max-width:min(560px,100%);color:var(--muted)}
+.wandopts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:.8rem;color:var(--muted);background:rgba(28,28,31,.92);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.wandopts input[type=range]{accent-color:var(--accent);width:120px}
+.wandopts output{font:.75rem var(--mono);color:var(--ink);min-width:2ch}
+.wandopts .chk{font-size:.8rem}
 .badge{font:600 .75rem var(--sans);border-radius:999px;padding:3px 10px;border:1px solid transparent}
 .badge.warn{background:var(--warn-soft);color:var(--warn);border-color:rgba(255,179,92,.35)}
 .badge.ok{background:var(--ok-soft);color:var(--ok);border-color:rgba(76,175,111,.4)}
@@ -158,9 +162,16 @@ details[open] summary{margin-bottom:8px}
           <button class="tool" data-mode="cp" type="button" title="Passpunkt setzen (P)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="4.5"/><path d="M8 0.8v4M8 11.2v4M0.8 8h4M11.2 8h4"/></svg><span class="lbl">Passpunkt</span><kbd>P</kbd></button>
           <button class="tool" data-mode="line" type="button" title="Linie zeichnen (L)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 13 6 6l4 4 4-7"/></svg><span class="lbl">Linie</span><kbd>L</kbd></button>
           <button class="tool" data-mode="polygon" type="button" title="Fläche zeichnen (F)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 11 5 3l8 2 1 7-7 2z" fill="currentColor" fill-opacity=".2"/></svg><span class="lbl">Fläche</span><kbd>F</kbd></button>
+          <button class="tool" data-mode="wand" type="button" title="Fläche automatisch erkennen (W)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 14 9.5 6.5"/><path d="M11.5 1.5v3M10 3h3M14 6.5v2M13 7.5h2M6 2v2M5 3h2" stroke-width="1.3"/><path d="m9.5 6.5 1.5 1.5"/></svg><span class="lbl">Erkennen</span><kbd>W</kbd></button>
           <button class="tool" data-mode="point" type="button" title="Punkt setzen (O)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3.5"/></svg><span class="lbl">Punkt</span><kbd>O</kbd></button>
         </div>
         <div class="hint" id="hint"></div>
+        <div class="wandopts" id="wandOpts" hidden>
+          <label for="wandTol">Toleranz</label>
+          <input type="range" id="wandTol" min="5" max="120" value="40">
+          <output id="wandTolOut">40</output>
+          <label class="chk"><input type="checkbox" id="wandEdge" checked> Randlinie einschliessen</label>
+        </div>
         <span class="badge" id="status"></span>
       </div>
       <div class="draftbar" id="draftbar" hidden>
@@ -608,7 +619,8 @@ function zoomAt(x, y, k){
 /* ---------- Interaktion ---------- */
 const HINTS = {
   pan: 'Ziehen verschiebt · Mausrad oder zwei Finger zoomen · Klick auf ein Objekt wählt es aus',
-  cp: 'Klick auf eine Stelle mit bekannten Koordinaten, z.&nbsp;B. ein Gitterkreuz. Koordinaten dann rechts eintragen.',
+  cp: 'Klick auf eine Stelle mit bekannten Koordinaten, z.&nbsp;B. ein Gitterkreuz. Die Koordinaten trägst du dann in Schritt 2 ein.',
+  wand: 'Tippe mitten in eine farbige Fläche: Das Tool fährt ihren Rand nach. Läuft die Erkennung aus, Toleranz kleiner stellen; bleibt sie zu klein, grösser.',
   line: 'Klicken setzt Punkte · Doppelklick, Enter oder «Fertig» beendet · Esc bricht ab · Punkte rasten an bestehenden Ecken ein',
   polygon: 'Klicken setzt Ecken · Klick auf die erste Ecke oder Enter schliesst die Fläche · Esc bricht ab',
   point: 'Klick setzt einen Punkt'
@@ -619,8 +631,115 @@ function setMode(m){
   document.querySelectorAll('.tool').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
   cv.classList.toggle('draw', m !== 'pan');
   $('#hint').innerHTML = HINTS[m];
+  $('#wandOpts').hidden = m !== 'wand';
   refreshDraft(); draw();
 }
+
+/* ---------- Fläche erkennen (Zauberstab) ---------- */
+function planPixels(){
+  if (!S.plan) return null;
+  if (!S.plan.data){
+    const c = document.createElement('canvas'); c.width = S.plan.w; c.height = S.plan.h;
+    const g = c.getContext('2d', {willReadFrequently: true}); g.drawImage(S.plan.img, 0, 0);
+    try { S.plan.data = g.getImageData(0, 0, c.width, c.height); } catch (e){ return null; }
+  }
+  return S.plan.data;
+}
+function wandMask(img, sx, sy, tol){
+  const {width: w, height: h, data: d} = img, mask = new Uint8Array(w*h);
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){
+    const x = sx + dx, y = sy + dy; if (x < 0 || y < 0 || x >= w || y >= h) continue;
+    const k = (y*w + x)*4; r += d[k]; g += d[k+1]; b += d[k+2]; n++;
+  }
+  r /= n; g /= n; b /= n;
+  const t2 = tol*tol*3, stack = new Int32Array(w*h);
+  let sp = 0, count = 1;
+  stack[sp++] = sy*w + sx; mask[sy*w + sx] = 1;
+  const near = j => { const k = j*4, dr = d[k]-r, dg = d[k+1]-g, db = d[k+2]-b; return dr*dr + dg*dg + db*db <= t2; };
+  while (sp){
+    const i = stack[--sp], x = i % w;
+    if (x > 0 && !mask[i-1] && near(i-1)){ mask[i-1] = 1; stack[sp++] = i-1; count++; }
+    if (x < w-1 && !mask[i+1] && near(i+1)){ mask[i+1] = 1; stack[sp++] = i+1; count++; }
+    if (i >= w && !mask[i-w] && near(i-w)){ mask[i-w] = 1; stack[sp++] = i-w; count++; }
+    if (i < w*(h-1) && !mask[i+w] && near(i+w)){ mask[i+w] = 1; stack[sp++] = i+w; count++; }
+  }
+  return {mask, count, color: [r, g, b]};
+}
+function dilate(mask, w, h, rad){
+  const tmp = new Uint8Array(w*h), out = new Uint8Array(w*h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    if (!mask[y*w + x]) continue;
+    for (let k = Math.max(0, x-rad); k <= Math.min(w-1, x+rad); k++) tmp[y*w + k] = 1;
+  }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    if (!tmp[y*w + x]) continue;
+    for (let k = Math.max(0, y-rad); k <= Math.min(h-1, y+rad); k++) out[k*w + x] = 1;
+  }
+  return out;
+}
+// Moore-Nachbarschaft: äusserer Rand der Fläche, im Uhrzeigersinn
+const DIRS = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+const dirOf = (dx, dy) => DIRS.findIndex(q => q[0] === dx && q[1] === dy);
+function traceOutline(mask, w, h){
+  let s = mask.indexOf(1); if (s < 0) return [];
+  const sx = s % w, sy = (s / w) | 0;
+  const inside = (x, y) => x >= 0 && y >= 0 && x < w && y < h && mask[y*w + x] === 1;
+  const pts = [[sx, sy]];
+  let cx = sx, cy = sy, b = 4, guard = 0;
+  const max = 4*(w + h)*20 + w*h;
+  while (guard++ < max){
+    let moved = false;
+    for (let i = 1; i <= 8; i++){
+      const k = (b + i) % 8, nx = cx + DIRS[k][0], ny = cy + DIRS[k][1];
+      if (inside(nx, ny)){
+        const pk = (b + i + 7) % 8, bx = cx + DIRS[pk][0], by = cy + DIRS[pk][1];
+        cx = nx; cy = ny; b = dirOf(bx - cx, by - cy); if (b < 0) b = 4;
+        moved = true; break;
+      }
+    }
+    if (!moved || (cx === sx && cy === sy)) break;
+    pts.push([cx, cy]);
+  }
+  return pts;
+}
+function dpSimplify(pts, eps){
+  if (pts.length < 3) return pts;
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length-1] = 1;
+  const st = [[0, pts.length-1]];
+  while (st.length){
+    const [a, b] = st.pop(); let md = -1, mi = -1;
+    for (let i = a + 1; i < b; i++){ const d = segDist(pts[i], pts[a], pts[b]); if (d > md){ md = d; mi = i; } }
+    if (md > eps){ keep[mi] = 1; st.push([a, mi], [mi, b]); }
+  }
+  return pts.filter((_, i) => keep[i]);
+}
+function simplifyRing(r, eps){
+  if (r.length < 4) return r;
+  let fi = 0, fd = -1; r.forEach((p, i) => { const d = dist(p, r[0]); if (d > fd){ fd = d; fi = i; } });
+  const a = dpSimplify(r.slice(0, fi + 1), eps), b = dpSimplify(r.slice(fi).concat([r[0]]), eps);
+  return a.concat(b.slice(1, -1));
+}
+function wandAt(w){
+  if (space() !== 'plan'){ toast('Die Erkennung braucht einen Plan.'); return; }
+  const img = planPixels();
+  if (!img){ toast('Dieses Bild lässt sich nicht auslesen.'); return; }
+  const x = Math.floor(w[0]), y = Math.floor(w[1]);
+  if (x < 0 || y < 0 || x >= img.width || y >= img.height){ toast('Tippe innerhalb des Plans.'); return; }
+  const {mask, count, color} = wandMask(img, x, y, +$('#wandTol').value);
+  if (count < 40){ toast('Hier ist keine Fläche zu erkennen. Mitten in die Fläche tippen oder Toleranz erhöhen.'); return; }
+  if (count > 0.5 * img.width * img.height){ toast('Die Erkennung läuft über den halben Plan aus. Toleranz kleiner stellen.'); return; }
+  const m = $('#wandEdge').checked ? dilate(mask, img.width, img.height, 2) : mask;
+  const eps = Math.max(1, Math.min(img.width, img.height) / 700);
+  const ring = simplifyRing(traceOutline(m, img.width, img.height), eps).map(p => [p[0] + .5, p[1] + .5]);
+  if (ring.length < 3){ toast('Der Rand liess sich nicht nachfahren.'); return; }
+  snapshot();
+  const hex = '#' + color.map(v => Math.round(Math.max(0, v*0.7)).toString(16).padStart(2, '0')).join('');
+  const f = makeFeature('polygon', ring, 'px', null, hex);
+  S.feats.push(f); refreshAll();
+  toast(`${f.name} erkannt · ${ring.length} Ecken` + (f.lv ? ' · ' + fmtArea(areaOf(f.lv)) : ' · für Koordinaten noch Passpunkte setzen'));
+}
+$('#wandTol').addEventListener('input', () => { $('#wandTolOut').textContent = $('#wandTol').value; });
 function computeSnap(sp){
   let best = null;
   const consider = (w, flags) => { const d = dist(toS(w), sp); if (d < 10 && (!best || d < best.d)) best = {w, d, ...flags}; };
@@ -657,6 +776,7 @@ function handleClick(sp){
     if (f) f.sel = !f.sel; else S.feats.forEach(x => x.sel = false);
     refreshFeats(); draw(); return;
   }
+  if (m === 'wand'){ wandAt(toW(sp)); return; }
   if (m === 'cp'){
     if (space() !== 'plan'){ toast('Passpunkte braucht es nur mit einem Plan.'); return; }
     snapshot();
@@ -691,6 +811,7 @@ const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.l
 cv.addEventListener('pointerdown', e => {
   cv.setPointerCapture(e.pointerId);
   const p = pos(e); ptrs.set(e.pointerId, p);
+  S.hoverS = p; S.hoverW = toW(p); updateReadout();
   if (ptrs.size === 1){ drag = {p0: p, tx: V.tx, ty: V.ty, moved: false, btn: e.button}; gesture = false; }
   else if (ptrs.size === 2){
     const [a, b] = [...ptrs.values()];
@@ -732,7 +853,7 @@ cv.addEventListener('contextmenu', e => { if (S.draft.length){ e.preventDefault(
 
 function updateReadout(){
   const r = $('#readout');
-  if (!S.hoverW){ r.textContent = space() === 'plan' ? (S.T ? 'Maus über den Plan: Koordinaten' : 'Plan · noch ohne Koordinaten') : 'Kartenmodus · LV95'; return; }
+  if (!S.hoverW){ r.textContent = space() === 'plan' ? (S.T ? 'Zeigen oder tippen: Koordinaten' : 'Plan · noch ohne Koordinaten') : 'Kartenmodus · LV95'; return; }
   const lv = worldToLv(S.hoverW);
   if (!lv){ r.textContent = `Plan x ${fmt0(S.hoverW[0])} · y ${fmt0(S.hoverW[1])}`; return; }
   const [lon, lat] = lvToWgs(lv[0], lv[1]);
@@ -753,6 +874,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'l' || k === 'L') setMode('line');
   else if (k === 'f' || k === 'F') setMode('polygon');
   else if (k === 'o' || k === 'O') setMode('point');
+  else if (k === 'w' || k === 'W') setMode('wand');
   else if (k === '0') fit();
   else if (k === '+' || k === '=') zoomAt(W/2, H/2, 1.4);
   else if (k === '-') zoomAt(W/2, H/2, 1/1.4);
@@ -812,7 +934,13 @@ function renderCps(){
       cp.txt = inp.value.trim();
       const q = parseCoord(cp.txt);
       if (q){ cp.E = q.E; cp.N = q.N; } else { cp.E = cp.N = null; if (cp.txt) toast('Koordinaten nicht erkannt. Beispiel: 2715000, 1174500'); }
+      const had = !!S.T;
       updateTransform(); refreshAll();
+      if (!had && S.T){
+        setMode('wand');
+        toast('Plan eingepasst. Jetzt in die Fläche tippen, die du übernehmen willst, oder mit «Fläche» selbst Ecken setzen.');
+        $('#stage').scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
     };
     inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
     del.onclick = () => { snapshot(); S.cps = S.cps.filter(x => x !== cp); updateTransform(); refreshAll(); };
