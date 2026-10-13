@@ -46,7 +46,7 @@ section h3{font-size:1rem;margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10p
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
 .tw{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
-table{border-collapse:collapse;width:100%;min-width:620px;font-size:.85rem}
+table{table-layout:fixed;border-collapse:collapse;width:100%;min-width:620px;font-size:.85rem}
 th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:7px 8px;text-align:left;vertical-align:top}
 tr:last-child td,tr:last-child th{border-bottom:0}
 th:last-child,td:last-child{border-right:0}
@@ -54,6 +54,9 @@ thead th{font-weight:600;font-size:.78rem;white-space:nowrap;font-variant-numeri
 thead th small{display:block;color:var(--muted);font-weight:400}
 tbody th{font-size:.8rem;white-space:nowrap;width:48px;color:var(--muted)}
 .we{background:var(--we)}
+tr>:first-child{width:76px}
+.tw.graf{margin-top:8px}
+.tw.graf tbody th{color:var(--text)}
 .today{background:var(--today)}
 thead th.today{box-shadow:inset 0 3px 0 var(--accent)}
 .past{opacity:.4}
@@ -65,6 +68,8 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
 .empty{color:var(--muted);font-size:.9rem;padding:8px 0}
 .top{display:flex;flex-wrap:wrap;gap:12px 20px;justify-content:space-between;align-items:flex-start}
 .hd{flex:1 1 300px;min-width:0}
+.btns{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+@media (max-width:640px){.btns{align-items:flex-start}}
 .btn-sm{flex:none;font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:7px 12px;background:var(--card);white-space:nowrap}
 .btn-sm:hover{color:var(--text);border-color:var(--accent)}
 .btn-sm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -91,20 +96,23 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
     <h1>Plan <span class="acc">Squadra online</span></h1>
     <p class="lead">Mussa a maun dal plan da lavur tgi ch'ha tge servetsch.</p>
     </div>
-    <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf?d=w5571474005224f84be64292d66631c8c&amp;csf=1&amp;web=1&amp;e=9z2lKX" target="_blank" rel="noopener">Plan da lavur actual - radio/online</a>
+    <div class="btns">
+      <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf?d=w5571474005224f84be64292d66631c8c&amp;csf=1&amp;web=1&amp;e=9z2lKX" target="_blank" rel="noopener">Plan da lavur actual - radio/online</a>
+      <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/2_televisiun_ondemand.pdf?d=wad4cfb28bf9343db86fe8ab039ef7b17&amp;csf=1&amp;web=1&amp;e=aQtI74" target="_blank" rel="noopener">Plan da lavur actual - televisiun/ondemand</a>
+    </div>
   </header>
 
   <div class="step">
     <h2><span class="num">1</span>Chargiar il plan da lavur</h2>
-    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner il PDF u al trair qua"><b>Tscherner il PDF</b> u al trair qua</div>
-    <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner ils PDFs u als trair qua"><b>Tscherner ils PDFs</b> radio/online e/u televisiun/ondemand – u als trair qua</div>
+    <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
     <div class="status" id="status"></div>
     <details class="bm" id="bmcard">
       <summary>Chargiar directamain da SharePoint</summary>
       <ol class="bmsteps">
-        <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="javascript:(()=&gt;{if(location.hostname!==&#x27;srgssr.sharepoint.com&#x27;){location.href=&#x27;https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/Forms/AllItems.aspx?id=%252Fsites%252Fintranet%252Drtr%252Dcontent%252Ddocs%252FDL003%252F1%255Fradio%255Fonline%252Epdf&amp;parent=%252Fsites%252Fintranet%252Drtr%252Dcontent%252Ddocs%252FDL003&#x27;;return}const T=&#x27;https://tools.dombuzz.ch&#x27;,P=&#x27;/PlanOnline.html&#x27;,U=&#x27;https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf&#x27;;const w=window.open(T+P+&#x27;#sharepoint&#x27;,&#x27;planonline&#x27;);if(!w){alert(&#x27;PlanOnline: il browser ha bloccà la nova fanestra. Permetta fanestras pop-up per SharePoint.&#x27;);return}let buf=null,ready=false,sent=false;const go=()=&gt;{if(sent||!ready||!buf)return;sent=true;w.postMessage({type:&#x27;planonline-pdf&#x27;,name:&#x27;1_radio_online.pdf&#x27;,buf},T,[buf]);removeEventListener(&#x27;message&#x27;,h)};const h=e=&gt;{if(e.origin===T&amp;&amp;e.data===&#x27;planonline-ready&#x27;){ready=true;go()}};addEventListener(&#x27;message&#x27;,h);fetch(U,{credentials:&#x27;include&#x27;,cache:&#x27;no-store&#x27;}).then(r=&gt;{if(!r.ok)throw new Error(&#x27;HTTP &#x27;+r.status);return r.arrayBuffer()}).then(b=&gt;{buf=b;go()}).catch(e=&gt;{try{w.postMessage({type:&#x27;planonline-error&#x27;,msg:String(e.message||e)},T)}catch(_){}alert(&#x27;PlanOnline: il PDF n\&#x27;ha betg pudì vegnir chargià (&#x27;+(e.message||e)+&#x27;).&#x27;)})})()" onclick="return false">⇣ PlanOnline</a></li>
+        <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="javascript:(()=&gt;{if(location.hostname!==&#x27;srgssr.sharepoint.com&#x27;){location.href=&#x27;https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/Forms/AllItems.aspx?id=%252Fsites%252Fintranet%252Drtr%252Dcontent%252Ddocs%252FDL003%252F1%255Fradio%255Fonline%252Epdf&amp;parent=%252Fsites%252Fintranet%252Drtr%252Dcontent%252Ddocs%252FDL003&#x27;;return}const T=&#x27;https://tools.dombuzz.ch&#x27;,P=&#x27;/PlanOnline.html&#x27;,B=&#x27;https://srgssr.sharepoint.com/sites/intranet-rtr-content-docs/DL003/&#x27;,F=[&#x27;1_radio_online.pdf&#x27;,&#x27;2_televisiun_ondemand.pdf&#x27;];const w=window.open(T+P+&#x27;#sharepoint&#x27;,&#x27;planonline&#x27;);if(!w){alert(&#x27;PlanOnline: il browser ha bloccà la nova fanestra. Permetta fanestras pop-up per SharePoint.&#x27;);return}let res=null,ready=false,sent=false;const go=()=&gt;{if(sent||!ready||!res)return;sent=true;const files=res.filter(x=&gt;x.buf),errs=res.filter(x=&gt;x.err).map(x=&gt;x.name+&#x27;: &#x27;+x.err);w.postMessage({type:&#x27;planonline-pdfs&#x27;,files,errs},T,files.map(x=&gt;x.buf));removeEventListener(&#x27;message&#x27;,h)};const h=e=&gt;{if(e.origin===T&amp;&amp;e.data===&#x27;planonline-ready&#x27;){ready=true;go()}};addEventListener(&#x27;message&#x27;,h);Promise.all(F.map(n=&gt;fetch(B+n,{credentials:&#x27;include&#x27;,cache:&#x27;no-store&#x27;}).then(r=&gt;{if(!r.ok)throw new Error(&#x27;HTTP &#x27;+r.status);return r.arrayBuffer()}).then(buf=&gt;({name:n,buf}),e=&gt;({name:n,err:String(e.message||e)})))).then(r=&gt;{res=r;go()})})()" onclick="return false">⇣ PlanOnline</a></li>
         <li>Cliccar sin il segnapagina «PlanOnline». Sche ti n'es betg sin SharePoint, s'avra l'emprim il plan da lavur sin SharePoint (s'annunziar sche necessari).</li>
-        <li>Cliccar anc ina giada sin il segnapagina. Questa pagina s'avra e chargia il plan actual.</li>
+        <li>Cliccar anc ina giada sin il segnapagina. Questa pagina s'avra e chargia omadus plans actuals (radio/online e televisiun/ondemand).</li>
       </ol>
       <p class="note">Sin il telefonin: copiar il code e crear manualmain in segnapagina cun quest code sco adressa. <button type="button" class="link" id="bmcopy">Copiar il code</button></p>
     </details>
@@ -208,7 +216,7 @@ function parsePlan(pages, SVC){
 }
 
 
-const SVC=["O1","O1So","O1Du","O2","O3","O4","pOn"];
+const SVC=["O1","O1So","O1Du","O2","O3","O4","pOn","graf","Graf","GRAF"];
 const ROWS=["O1","O2","O3","O4","pOn"];
 const DAYS=["Gli","Ma","Me","Gie","Ve","So","Du"];
 const MONTHS=["schaner","favrer","mars","avrigl","matg","zercladur","fanadur","avust","settember","october","november","december"];
@@ -222,7 +230,7 @@ const monday=d=>addDays(d,-((d.getDay()+6)%7));
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/864e5+1)/7)}
 const fmt=d=>d.getDate()+"."+(d.getMonth()+1)+".";
 
-let plan=null, weeks=1;
+let plan=null, weeks=1; const sources={};
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
 function shortNames(names){
@@ -236,12 +244,13 @@ function shortNames(names){
 function setPlan(p,save){
   const map={}, months=new Set(), names=new Set();
   for(const [date,svc,name] of p.entries){
-    const row=svc.startsWith("O1")?"O1":svc;
+    const row=svc.startsWith("O1")?"O1":svc.toLowerCase()==="graf"?"graf":svc;
     ((map[date]??={})[row]??=[]); if(!map[date][row].includes(name)) map[date][row].push(name);
     months.add(date.slice(0,7)); names.add(name);
   }
   const dates=Object.keys(map).sort();
-  plan={...p,map,months,names:[...names].sort((a,b)=>a.localeCompare(b,"de")),short:shortNames([...names]),first:dates[0],last:dates[dates.length-1]};
+  const hasGraf=p.entries.some(e=>e[1].toLowerCase()==="graf");
+  plan={...p,map,months,names:[...names].sort((a,b)=>a.localeCompare(b,"de")),short:shortNames([...names]),hasGraf,first:dates[0],last:dates[dates.length-1]};
   const sel=$("who"), keep=sel.value||store.get("who")||"";
   sel.innerHTML='<option value="">nagina</option>'+plan.names.map(n=>`<option>${n.replace(/</g,"&lt;")}</option>`).join("");
   if(plan.names.includes(keep)) sel.value=keep;
@@ -251,24 +260,40 @@ function setPlan(p,save){
   render();
 }
 
-async function readPdf(file){
-  $("status").className="status"; $("status").textContent="Il PDF vegn legì …";
-  try{
-    if(!window.pdfjsLib) throw new Error("La biblioteca da PDF n'ha betg pudì vegnir chargiada. Chargia danovamain la pagina ed emprova anc ina giada.");
-    pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-    const doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
-    const pages=[];
-    for(let i=1;i<=doc.numPages;i++){
-      const pg=await doc.getPage(i); const vp=pg.getViewport({scale:1}); const tc=await pg.getTextContent();
-      pages.push({width:vp.width,items:tc.items.map(it=>({str:it.str,x:it.transform[4],y:it.transform[5],w:it.width}))});
-    }
-    const r=parsePlan(pages,SVC);
-    if(!r.entries.length) throw new Error("En quest PDF na sa chattan nagins servetschs online. È quai l'export da VimBiz «Team Published Shifts by Month»?");
-    r.entries.sort((a,b)=>a.date.localeCompare(b.date));
-    setPlan({label:`${file.name} · chargià ils ${iso(new Date()).split("-").reverse().join("-")}`,entries:r.entries.map(e=>[e.date,e.svc,e.name])},true);
-  }catch(e){$("status").className="status err";$("status").textContent=e.message||"Il PDF n'ha betg pudì vegnir legì."}
+async function pdfEntries(file){
+  if(!window.pdfjsLib) throw new Error("La biblioteca da PDF n'ha betg pudì vegnir chargiada. Chargia danovamain la pagina ed emprova anc ina giada.");
+  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+  const pages=[];
+  for(let i=1;i<=doc.numPages;i++){
+    const pg=await doc.getPage(i); const vp=pg.getViewport({scale:1}); const tc=await pg.getTextContent();
+    pages.push({width:vp.width,items:tc.items.map(it=>({str:it.str,x:it.transform[4],y:it.transform[5],w:it.width}))});
+  }
+  return parsePlan(pages,SVC).entries;
 }
-
+async function readPdfs(files,extraErrs){
+  files=[...files].filter(Boolean); const errs=[...(extraErrs||[])];
+  if(!files.length&&!errs.length) return;
+  $("status").className="status"; $("status").textContent=files.length>1?"Ils PDFs vegnan legids …":"Il PDF vegn legì …";
+  for(const f of files){
+    try{
+      const en=await pdfEntries(f);
+      if(!en.length) errs.push(`En «${f.name}» na sa chattan nagins servetschs. È quai l'export da VimBiz «Team Published Shifts by Month»?`);
+      else sources[f.name]=en.map(e=>[e.date,e.svc,e.name]);
+    }catch(e){errs.push(`«${f.name}»: `+(e.message||"Il PDF n'ha betg pudì vegnir legì."))}
+  }
+  const names=Object.keys(sources);
+  if(names.length){
+    const entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
+    setPlan({label:`${names.join(", ")} · chargià ils ${iso(new Date()).split("-").reverse().join("-")}`,entries},true);
+  }
+  if(errs.length){
+    const p=document.createElement("div"); p.className="status err"; p.textContent=errs.join(" · ");
+    if(names.length) $("status").appendChild(Object.assign(document.createElement("br"))),$("status").appendChild(p);
+    else {$("status").className="status err"; $("status").textContent=errs.join(" · ")}
+  }
+}
+const readPdf=f=>readPdfs([f]);
 function render(){
   const out=$("out"); out.innerHTML="";
   if(!plan){out.innerHTML='<p class="empty">Chargia l\'actual plan da lavur (PDF) per vesair ils servetschs.</p>';return}
@@ -297,8 +322,21 @@ function render(){
       h+='</tr>';
     }
     h+='</tbody></table>';
+    let g='';
+    if(plan.hasGraf){
+      g='<table><tbody><tr><th>Grafica</th>';
+      days.forEach((d,i)=>{
+        const k=iso(d), we=i>4;
+        const c=[we?'we':'',k===todayIso?'today':'',fromIso&&k<fromIso?'past':''].join(' ');
+        if(!plan.months.has(k.slice(0,7))){g+=`<td class="${c} out">·</td>`;return}
+        const ps=(plan.map[k]||{}).graf||[];
+        if(!ps.length){g+=`<td class="${c} none">–</td>`;return}
+        g+=`<td class="${c}">`+ps.map(p=>{if(p===who)mine++;return `<span class="p${p===who?' hi':''}" title="${p.replace(/"/g,'&quot;')}">${plan.short[p]}</span>`}).join('')+'</td>';
+      });
+      g+='</tr></tbody></table>';
+    }
     const sec=document.createElement('section');
-    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="tw">${h}</div>`;
+    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="tw">${h}</div>${g?`<div class="tw graf">${g}</div>`:''}`;
     out.appendChild(sec); shown++;
   }
   const anyInPlan=iso(end)>=plan.first&&iso(start)<=plan.last;
@@ -309,10 +347,10 @@ function render(){
 const drop=$("drop"), file=$("file");
 drop.addEventListener("click",()=>file.click());
 drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();file.click()}});
-file.addEventListener("change",()=>{if(file.files[0])readPdf(file.files[0]);file.value=""});
+file.addEventListener("change",()=>{readPdfs(file.files);file.value=""});
 ["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over")}));
 ["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
-drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)readPdf(f)});
+drop.addEventListener("drop",e=>{readPdfs(e.dataTransfer.files)});
 function setWeeks(w){weeks=w;document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===w)));store.set("weeks",String(w));render()}
 document.querySelectorAll("#len button").forEach(b=>b.addEventListener("click",()=>setWeeks(+b.dataset.w)));
 $("from").addEventListener("change",render);
@@ -333,6 +371,11 @@ window.addEventListener("message",e=>{
   if(e.origin!==SP_ORIGIN||!e.data||typeof e.data!=="object") return;
   if(e.data.type==="planonline-pdf"&&e.data.buf instanceof ArrayBuffer){
     readPdf(new File([e.data.buf],e.data.name||"1_radio_online.pdf",{type:"application/pdf"}));
+    if(location.hash) history.replaceState(null,"",location.pathname);
+  } else if(e.data.type==="planonline-pdfs"&&Array.isArray(e.data.files)){
+    const fs=e.data.files.filter(x=>x&&x.buf instanceof ArrayBuffer).map(x=>new File([x.buf],x.name||"plan.pdf",{type:"application/pdf"}));
+    const errs=(e.data.errs||[]).map(m=>"SharePoint: "+m+" – es ti annunzià?");
+    readPdfs(fs,errs);
     if(location.hash) history.replaceState(null,"",location.pathname);
   } else if(e.data.type==="planonline-error"){
     $("status").className="status err"; $("status").textContent="SharePoint: il PDF n'ha betg pudì vegnir chargià ("+e.data.msg+"). Es ti annunzià?";
