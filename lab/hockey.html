@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hockey regiunal</title>
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4d64'/%3E%3Cpath d='M43 11 L32.5 44 Q31 49.5 25.5 49.5 L17 49.5' fill='none' stroke='white' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#121214; --panel:#1c1c1f; --field:#26262a; --line:#2f2f34; --ink:#ececef; --muted:#9a9aa2;
+  --accent:#ff4d64; --accent-dark:#d93a50; --accent-ink:#121214; --ok:#4caf6f; --warn:#ffb35c;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink);margin:0}
+body{font-family:var(--sans);font-size:15px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:900px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:14px}
+h1{font-size:2rem;font-weight:700;margin:0;letter-spacing:-.01em;line-height:1.15}
+h1 .acc{color:var(--accent)}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+.labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:4px}
+.btn.primary:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+.lead{color:var(--muted);margin:4px 0 0;font-size:.93rem;max-width:60ch}
+.quick{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.quick .row{gap:6px;justify-content:flex-end}
+@media (max-width:640px){.quick{align-items:flex-start}.quick .row{justify-content:flex-start}}
+.tabs{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;align-self:flex-start}
+.tabs button{font:inherit;font-weight:600;font-size:.9rem;padding:7px 16px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.ph{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem}
+.num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:inline-grid;place-items:center;font-size:.8rem;font-weight:700;flex:none}
+.cap{font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.hint{color:var(--muted);font-size:.86rem;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+input[type=text],input[type=number],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+input.score{font-family:var(--mono);font-size:1rem;text-align:center}
+textarea{resize:vertical;font-size:.88rem}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+button:focus-visible,a:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-weight:600;font-size:.9rem;border-radius:9px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--field);color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:#44444c}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:5px 10px;font-size:.82rem;border-radius:8px}
+.seg{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.86rem;color:var(--muted)}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.chk{display:flex;gap:8px;align-items:center;font-size:.9rem;cursor:pointer}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.scores{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.scores{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.warn{color:var(--warn);font-size:.86rem;margin:0}
+.out{background:#19191c;border:1px solid var(--line);border-radius:11px;padding:16px 18px}
+.out h3{margin:0 0 10px;font-size:1.12rem;font-weight:700;text-wrap:balance}
+.out p{margin:0 0 10px}
+.out p:last-child{margin-bottom:0}
+.seg-t{cursor:pointer;border-radius:4px;transition:background .12s}
+.seg-t:hover{background:#2b2b31;box-shadow:inset 0 -1px 0 var(--accent)}
+.notes{margin:0;padding-left:18px;color:var(--muted);font-size:.86rem;display:flex;flex-direction:column;gap:3px}
+.status{font-size:.86rem;color:var(--ok);margin:0;min-height:1.2em}
+.bank{display:flex;flex-direction:column;gap:18px}
+.grp{display:flex;flex-direction:column;gap:12px}
+.grp h3{margin:0;font-size:.95rem}
+.ph-item{display:flex;flex-direction:column;gap:5px}
+.ph-item label{font-size:.86rem;font-weight:600}
+.ph-item label small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:.74rem;margin-left:6px}
+.manual{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.manual>summary{cursor:pointer;padding:16px 20px;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px}
+.manual>summary::-webkit-details-marker{display:none}
+.manual>summary::before{content:"▸";color:var(--accent);transition:transform .15s}
+.manual[open]>summary::before{transform:rotate(90deg)}
+.manual>summary .hint{font-weight:400}
+.manual-body{display:flex;flex-direction:column;gap:14px;padding:0 14px 14px}
+.manual-body .panel{background:#19191c}
+.found{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--field);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:.82rem}
+.chip b{color:var(--accent);font-weight:600;margin-right:4px}
+.legend{font-size:.82rem;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:3px 12px}
+.legend code{font-family:var(--mono);color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <a class="homelink" href="/lab/">← Lab</a>
+    <h1>Hockey <span class="acc">regiunal</span><span class="labbadge">Labor</span></h1>
+    <p class="lead">Resultat endatar, la novitad sa cumpona ord formulaziuns cumprovadas. Senza AI, tut en il browser.</p>
+  </div>
+  <nav class="quick" aria-label="Ligas sin sihf.ch">
+    <span class="cap">Ligas SIHF</span>
+    <div class="row">
+      <a class="btn sm" href="https://www.sihf.ch/de/ligen/sky-swiss-league/" target="_blank" rel="noopener">Swiss League ↗</a>
+      <a class="btn sm" href="https://www.sihf.ch/de/ligen/amateurligen/#1-liga" target="_blank" rel="noopener">1. liga ↗</a>
+      <a class="btn sm" href="https://www.sihf.ch/de/ligen/amateurligen/#2-liga" target="_blank" rel="noopener">2. liga ↗</a>
+    </div>
+  </nav>
+</header>
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="tab-gen" aria-selected="true" aria-controls="view-gen">Novitad</button>
+  <button role="tab" id="tab-bank" aria-selected="false" aria-controls="view-bank">Formulaziuns</button>
+</div>
+
+<!-- ============ VIEW: GENERATOR ============ -->
+<div id="view-gen" role="tabpanel" aria-labelledby="tab-gen" style="display:flex;flex-direction:column;gap:20px">
+
+<section class="panel" aria-labelledby="pasteH">
+  <div class="ph" id="pasteH"><span class="num">1</span>Text da SIHF</div>
+  <p class="hint">Avrir il rapport dal gieu en il Game Center sin sihf.ch (Übersicht), marcar tut (Ctrl/Cmd + A), copiar ed integrar qua. Las datas vegnan recunuschidas automaticamain.</p>
+  <textarea id="sihf" rows="5" placeholder="EC Wil vs HC Prättigau-Herrschaft&#10;10.10.2026 - Ende&#10;1L Regular Season&#10;…"></textarea>
+  <div class="found" id="found" hidden></div>
+  <p class="warn" id="parseWarn" role="status"></p>
+</section>
+
+<details class="manual" id="manual">
+  <summary>Endatar a maun <span class="hint">· controllar u midar las datas</span></summary>
+  <div class="manual-body">
+<section class="panel">
+  <div class="ph">Gieu</div>
+  <div class="grid">
+    <div class="f"><label class="cap" for="teamSel">Equipa grischuna</label><select id="teamSel"></select></div>
+    <div class="f"><label class="cap" for="liga">Liga</label>
+      <select id="liga"><option value="nl">National League</option><option value="sl">Swiss League</option><option value="l1">1. liga</option><option value="l2">2. liga</option></select></div>
+    <div class="f"><span class="cap" id="lieuLbl">Lieu</span>
+      <div class="seg" role="radiogroup" aria-labelledby="lieuLbl">
+        <input type="radio" name="lieu" id="l-home" value="home" checked><label for="l-home">A chasa</label>
+        <input type="radio" name="lieu" id="l-away" value="away"><label for="l-away">Ordaifer</label>
+      </div></div>
+  </div>
+  <div class="grid">
+    <div class="f"><label class="cap" for="team">Num cumplet</label><input type="text" id="team"></div>
+    <div class="f"><label class="cap" for="curt">Num curt</label><input type="text" id="curt"></div>
+    <div class="f"><label class="cap" for="nus">Nus en plural</label><input type="text" id="nus" value="ils Grischuns"></div>
+  </div>
+  <div class="grid">
+    <div class="f"><label class="cap" for="adv">Adversari (cun artitgel)</label><input type="text" id="adv" placeholder="l'EHC Basilea" list="advList"></div>
+    <div class="f"><label class="cap" for="advcurt">Adversari curt</label><input type="text" id="advcurt" placeholder="Basilea"></div>
+    <div class="f"><label class="cap" for="advpl">Adversari en plural</label><input type="text" id="advpl" placeholder="ils Basileais" list="advplList"></div>
+  </div>
+  <datalist id="advList">
+    <option value="ils GCK Lions"><option value="il HC La Chaux-de-Fonds"><option value="ils Bellinzona Snakes"><option value="il HC Sierre">
+    <option value="l'EHC Basilea"><option value="l'EHC Visp"><option value="l'EHC Olten"><option value="il HC Turgovia">
+    <option value="ils Rapperswil-Jona Lakers"><option value="ils Dürnten Vikings"><option value="Küssnacht am Rigi"><option value="l'EHC Wallisellen">
+  </datalist>
+  <datalist id="advplList">
+    <option value="ils osps"><option value="ils adversaris"><option value="ils indigens"><option value="ils Turitgais"><option value="ils Tessinais"><option value="ils Vallesans">
+    <option value="ils Bernais"><option value="ils Basileais"><option value="ils Neuchâtelais"><option value="ils Songagliais"><option value="ils Turgovians"><option value="ils Svitters">
+  </datalist>
+</section>
+
+<section class="panel">
+  <div class="ph">Resultat</div>
+  <p class="hint">Sco sin SIHF: l'equipa da chasa vegn emprima. P.ex. 3:1, 0:1, 1:1.</p>
+  <div class="scores">
+    <div class="f"><label class="cap" for="t1">1. terz</label><input class="score" type="text" id="t1" inputmode="numeric" placeholder="0:0"></div>
+    <div class="f"><label class="cap" for="t2">2. terz</label><input class="score" type="text" id="t2" inputmode="numeric" placeholder="0:0"></div>
+    <div class="f"><label class="cap" for="t3">3. terz</label><input class="score" type="text" id="t3" inputmode="numeric" placeholder="0:0"></div>
+    <div class="f"><label class="cap" for="fin">Fin</label>
+      <select id="fin"><option value="60">60 minutas</option><option value="ot">Prolungaziun</option><option value="so">Penaltis</option></select></div>
+  </div>
+  <div class="f" id="otBox" hidden><span class="cap" id="otLbl">Gudagnà en prolungaziun / penaltis da</span>
+    <div class="seg" role="radiogroup" aria-labelledby="otLbl">
+      <input type="radio" name="otw" id="otw-us" value="us" checked><label for="otw-us">Nus</label>
+      <input type="radio" name="otw" id="otw-them" value="them"><label for="otw-them">Adversari</label>
+    </div></div>
+  <div class="row" style="gap:18px">
+    <label class="chk"><input type="checkbox" id="derby"> Derby grischun</label>
+    <label class="chk"><input type="checkbox" id="shots"> Adversari ha sajettà pli savens</label>
+    <label class="chk"><input type="checkbox" id="live"> Gieu gira anc</label>
+  </div>
+  <p class="warn" id="scoreWarn" role="status"></p>
+</section>
+
+<section class="panel">
+  <div class="ph">Tabella ed opziuns</div>
+  <div class="grid">
+    <div class="f"><label class="cap" for="pts">Puncts suenter il gieu</label><input type="number" id="pts" min="0" placeholder="—"></div>
+    <div class="f"><label class="cap" for="rank">Plaz</label><input type="number" id="rank" min="1" placeholder="—"></div>
+    <div class="f"><label class="cap" for="pos">Posiziun</label>
+      <select id="pos"><option value="">—</option><option value="first">A la testa</option><option value="above">Sur il stritg</option><option value="below">Sut il stritg</option><option value="penult">Penultim plaz</option><option value="last">A la cua</option></select></div>
+  </div>
+  <div class="f"><label class="cap" for="next">Proxim gieu (opziunal, sco frasa)</label><input type="text" id="next" placeholder="Il gieu da return suonda il mardi che vegn."></div>
+  <div class="row" style="gap:18px">
+    <span class="cap" id="lenLbl">Lunghezza</span>
+    <div class="seg" role="radiogroup" aria-labelledby="lenLbl">
+      <input type="radio" name="len" id="len-full" value="full" checked><label for="len-full">Cumplet</label>
+      <input type="radio" name="len" id="len-short" value="short"><label for="len-short">Curt</label>
+    </div>
+    <label class="chk"><input type="checkbox" id="prefix" checked> Liga en il titel</label>
+  </div>
+</section>
+  </div>
+</details>
+
+<section class="panel" aria-labelledby="outH">
+  <div class="ph" id="outH"><span class="num">2</span>Novitad</div>
+  <div class="out" id="out"><p class="hint">Endatar ils terzs per survegnir ina novitad.</p></div>
+  <div class="row">
+    <button type="button" class="btn primary" id="copyTitle">Copiar il titel</button>
+    <button type="button" class="btn primary" id="copyText">Copiar il text</button>
+    <button type="button" class="btn" id="shuffle">Autras formulaziuns</button>
+  </div>
+  <p class="hint">Cliccar sin ina frasa per vesair in'autra varianta.</p>
+  <ul class="notes" id="notes"></ul>
+</section>
+</div>
+
+<!-- ============ VIEW: PHRASE BANK ============ -->
+<div id="view-bank" role="tabpanel" aria-labelledby="tab-bank" hidden style="display:flex;flex-direction:column;gap:20px">
+<section class="panel">
+  <div class="ph">Formulaziuns</div>
+  <p class="hint">Ina varianta per lingia. Las formulaziuns vegnan memorisadas en quest browser. Per las dar vinavant a las collegas ed als collegas: «Telechargiar HTML» e chargiar si il file nov sin GitHub.</p>
+  <div class="legend" id="legend"></div>
+  <div class="row">
+    <button type="button" class="btn primary" id="saveBank">Memorisar</button>
+    <button type="button" class="btn" id="dlHtml">Telechargiar HTML</button>
+    <button type="button" class="btn" id="copyJson">Copiar sco JSON</button>
+    <button type="button" class="btn" id="resetBank">Restituir las formulaziuns oriundas</button>
+  </div>
+  <p class="status" id="bankStatus" role="status"></p>
+</section>
+<section class="panel"><div class="bank" id="bank"></div></section>
+</div>
+</div>
+
+<!-- Formulaziuns standard. Tschertas variantas: ina per element da la glista. -->
+<script type="application/json" id="phrases">
+{
+  "title_win_clear": [
+    "Clera victoria per {curt}",
+    "{curt} gudogna cleramain cunter {adv_curt}",
+    "Clera chaussa per {curt}",
+    "{curt} dominescha cunter {adv_curt}",
+    "{curt} na lascha nagina schanza a {adv_curt}"
+  ],
+  "title_win": [
+    "{curt} gudogna cunter {adv_curt}",
+    "Victoria per {curt}",
+    "Trais puncts per {curt}"
+  ],
+  "title_win_narrow": [
+    "Victoria stretga per {curt}",
+    "{curt} gudogna stretg cunter {adv_curt}",
+    "{curt} gudogna {resultat} cunter {adv_curt}"
+  ],
+  "title_win_comeback": [
+    "{curt} volva il gieu",
+    "{curt} volva la partida en atgna favur",
+    "Victoria suenter retard per {curt}"
+  ],
+  "title_win_ot": [
+    "{curt} gudogna suenter prolungaziun",
+    "Victoria en la prolungaziun per {curt}",
+    "Dus puncts per {curt}"
+  ],
+  "title_win_so": [
+    "{curt} gudogna suenter sajettar penaltis",
+    "Dus puncts per {curt}"
+  ],
+  "title_loss_clear": [
+    "Terrada clera per {curt}",
+    "Ina saira d'emblidar per {curt}",
+    "Saira stgira per {curt}",
+    "{curt} perda cleramain cunter {adv_curt}"
+  ],
+  "title_loss": [
+    "{curt} perda cunter {adv_curt}",
+    "Sconfitta per {curt}",
+    "Terrada per {curt}",
+    "{curt} sto ceder a {adv_curt}"
+  ],
+  "title_loss_narrow": [
+    "Sconfitta stretga per {curt}",
+    "{curt} perda stretg cunter {adv_curt}",
+    "{curt} sto ceder a {adv_curt} {resultat}"
+  ],
+  "title_loss_lead": [
+    "{curt} perda malgrà avantatg",
+    "{curt} na po betg tegnair l'avantatg"
+  ],
+  "title_loss_ot": [
+    "{curt} perda suenter prolungaziun",
+    "In punct per {curt}",
+    "Terrada suenter prolungaziun per {curt}"
+  ],
+  "title_loss_so": [
+    "{curt} perda suenter sajettar penaltis",
+    "In punct per {curt}"
+  ],
+  "title_derby_win": [
+    "Derby grischun: {curt} batta {adv_curt}",
+    "{curt} gudogna il derby grischun"
+  ],
+  "title_derby_loss": [
+    "Derby grischun: {adv_curt} batta {curt}",
+    "{curt} perda il derby grischun"
+  ],
+  "lead_win_home": [
+    "{team} gudogna a chasa cunter {adv} cun {resultat}{ot}.",
+    "Victoria a chasa per {team}: {nus} battan {adv} cun {resultat}{ot}.",
+    "A chasa ha {team} gudagnà cunter {adv} cun {resultat}{ot}."
+  ],
+  "lead_win_away": [
+    "{team} gudogna ordaifer cunter {adv} cun {resultat}{ot}.",
+    "{team} po turnar a chasa cun ina victoria: {resultat}{ot} cunter {adv}.",
+    "Ordaifer ha {team} gudagnà cunter {adv} cun {resultat}{ot} e turna cun {puncts_gieu} a chasa."
+  ],
+  "lead_loss_home": [
+    "{team} perda a chasa cunter {adv} cun {resultat}{ot}.",
+    "Ina sconfitta hai dà per {team}. L'equipa perda a chasa cunter {adv} cun {resultat}{ot}.",
+    "A chasa ha {team} stuì ceder a {adv} cun {resultat}{ot}."
+  ],
+  "lead_loss_away": [
+    "{team} perda ordaifer cunter {adv} cun {resultat}{ot}.",
+    "Ina sconfitta hai dà per {team}. L'equipa perda ordaifer cunter {adv} cun {resultat}{ot}.",
+    "{team} sto turnar a chasa cun ina terrada: {resultat}{ot} cunter {adv}."
+  ],
+  "p1_lead": [
+    "{nus} han cumenzà ferm ed han gia suenter l'emprim terz manà cun {p}.",
+    "Gia en l'emprim terz han {nus} fatg {gp_terz} ed han manà suenter 20 minutas cun {p}.",
+    "{nus} èn ids en avantatg ed han gia avant l'emprima pausa manà cun {p}."
+  ],
+  "p1_behind": [
+    "Suenter l'emprim terz stevan {nus} enavos cun {p}.",
+    "{nus} èn vegnids baud en retard e stevan suenter l'emprim terz {p}.",
+    "Il gieu ha cumenzà mal per {curt}: suenter l'emprim terz stevi {p}."
+  ],
+  "p1_tie": [
+    "Suenter l'emprim terz steva il gieu pari {p}.",
+    "L'emprim terz è ì a fin cun in pari da {p}."
+  ],
+  "p1_nil": [
+    "L'emprim terz è stà senza gols.",
+    "L'emprim terz è ì a fin senza gols."
+  ],
+  "mid_lead": [
+    "Suenter dus terzs han {nus} manà cun {p}."
+  ],
+  "mid_behind": [
+    "Suenter dus terzs stevan {nus} enavos cun {p}."
+  ],
+  "mid_tie": [
+    "Suenter dus terzs steva il gieu pari {p}.",
+    "Suenter 40 minutas stevi pari {p}."
+  ],
+  "tr_none": [
+    "{terz_en} n'hai dà nagins gols.",
+    "{terz_en} è il resultat restà {p}.",
+    "{terz_en} n'èn crudads nagins gols."
+  ],
+  "tr_same_lead": [
+    "{terz_en} hai dà gols sin omaduas varts, {nus} han dentant tegnì l'avantatg: {p}."
+  ],
+  "tr_same_tie": [
+    "{terz_en} han omaduas equipas fatg gols, suenter quel terz steva il gieu pari {p}."
+  ],
+  "tr_same_behind": [
+    "{terz_en} hai dà gols sin omaduas varts, {nus} han dentant stuì star enavos cun {p}."
+  ],
+  "tr_extend": [
+    "{terz_en} han {nus} augmentà sin {p}.",
+    "{terz_en} han {nus} fatg {gp_terz} ed augmentà sin {p}.",
+    "{terz_en} han {nus} lura dà gas e fatg {gp_terz}, al {p}."
+  ],
+  "tr_narrow_opp": [
+    "{terz_en} han {adv_pl} scursanì sin {p}."
+  ],
+  "tr_eq_opp": [
+    "{terz_en} han {adv_pl} schizunt egualisà al {p}.",
+    "{terz_en} han {adv_pl} egualisà al {p}.",
+    "{terz_en} han {adv_pl} anc pudì egualisar al {p}."
+  ],
+  "tr_lead_opp": [
+    "{terz_en} han {adv_pl} prendì il comando cun {p}.",
+    "{terz_en} han {adv_pl} volvì il gieu e manà cun {p}."
+  ],
+  "tr_lead_team": [
+    "{terz_en} han {nus} prendì il comando cun {p}.",
+    "{terz_en} han {nus} volvì il gieu e manà cun {p}.",
+    "{terz_en} han {nus} pudì volver la partida al {p}."
+  ],
+  "tr_more_behind": [
+    "{terz_en} han {adv_pl} augmentà sin {p}.",
+    "{terz_en} han {adv_pl} fatg {go_terz} ed augmentà sin {p}."
+  ],
+  "tr_narrow_team": [
+    "{terz_en} han {nus} scursanì sin {p}."
+  ],
+  "tr_eq_team": [
+    "{terz_en} han {nus} pudì egualisar al {p}.",
+    "{terz_en} han {nus} egualisà al {p}."
+  ],
+  "tr_decide_team": [
+    "{terz_en} han {nus} lura fatg {gp_terz} e decidì il gieu.",
+    "{terz_en} han {nus} fatg la differenza e gudagnà cun {p}.",
+    "{terz_en} han {nus} fatg ils gols decisivs."
+  ],
+  "tr_decide_opp": [
+    "{terz_en} han {adv_pl} dentant fatg {go_terz} e decidì il gieu.",
+    "{terz_en} han {adv_pl} dentant puspè prendì suramaun e decidì il gieu."
+  ],
+  "ot_win": [
+    "En la prolungaziun han {nus} lura fatg il gol decisiv.",
+    "En la prolungaziun han {nus} lura fatg il gol decisiv ed uschia salvà dus puncts."
+  ],
+  "ot_loss": [
+    "En la prolungaziun han {adv_pl} dentant fatg il gol decisiv.",
+    "En la prolungaziun han {adv_pl} dentant fatg il gol decisiv. {curt} turna almain cun in punct."
+  ],
+  "so_win": [
+    "En il sajettar penaltis èn {nus} stads pli precis."
+  ],
+  "so_loss": [
+    "En il sajettar penaltis èn {adv_pl} stads pli precis."
+  ],
+  "x_shutout": [
+    "{nus} n'han laschà passar nagin gol.",
+    "{curt} n'ha laschà passar nagin gol."
+  ],
+  "x_dominant": [
+    "{nus} han dominà il gieu da l'entschatta fin la fin.",
+    "{adv_pl} èn stads senza ina vaira schanza."
+  ],
+  "x_shots": [
+    "{adv_pl} han bain sajettà pli savens sin il gol, ma {curt} ha laschà passar be {gc_gols}."
+  ],
+  "tab_normal": [
+    "{curt} ha cunquai {puncts} ed è sin il {plaz} plaz da la tabella.",
+    "{curt} sa chatta uschia sin il {plaz} plaz da la tabella.",
+    "En la tabella è {curt} uss sin il {plaz} plaz."
+  ],
+  "tab_first": [
+    "{curt} ha cunquai {puncts} e maina la tabella.",
+    "Cun {puncts} è {curt} a la testa da la tabella."
+  ],
+  "tab_above": [
+    "{curt} ha cunquai {puncts} ed è sin il {plaz} plaz, sur il stritg.",
+    "{curt} sa chatta uschia sin il {plaz} plaz, gist sur il stritg."
+  ],
+  "tab_below": [
+    "{curt} ha cunquai {puncts} ed è sin il {plaz} plaz, sut il stritg."
+  ],
+  "tab_penult": [
+    "{curt} è sin il penultim plaz da la tabella.",
+    "{curt} resta cun {puncts} sin il penultim plaz da la tabella."
+  ],
+  "tab_last": [
+    "{curt} resta cun {puncts} a la cua da la tabella.",
+    "{curt} sa chatta uschia sin l'ultim plaz da la tabella."
+  ]
+}
+</script>
+
+<script>
+const $ = s => document.querySelector(s);
+const STORE = 'hockey-regiunal-phrases-v1';
+const DEFAULTS = JSON.parse($('#phrases').textContent);
+
+const TEAMS = [
+  { id:'davos', label:'HC Davos', team:'il HC Tavau', curt:'Tavau', liga:'nl', re:/\bDavos\b/i },
+  { id:'cuira', label:'EHC Cuira', team:"l'EHC Cuira", curt:'Cuira', liga:'sl', re:/\bChur\b/i },
+  { id:'arosa', label:'EHC Arosa', team:"l'EHC Arosa", curt:'Arosa', liga:'sl', re:/\bArosa\b/i },
+  { id:'partenz', label:'HC Partenz-Signuradi', team:'il HC Partenz-Signuradi', curt:'Partenz-Signuradi', liga:'l1', re:/Pr(ä|ae)ttigau/i },
+  { id:'engiadina', label:'CDH Engiadina', team:'il CDH Engiadina', curt:'Engiadina', liga:'l2', re:/Engiadina/i },
+  { id:'sanmurezzan', label:'EHC San Murezzan', team:"l'EHC San Murezzan", curt:'San Murezzan', liga:'l2', re:/St\.?\s*Moritz|San Murezzan/i },
+  { id:'laivalbella', label:'Lai-Valbella', team:'Lai-Valbella', curt:'Lai-Valbella', liga:'l2', re:/Valbella|Lenzerheide/i },
+  { id:'other', label:'Autra equipa …', team:'', curt:'', liga:'' }
+];
+const PREFIX = { nl:'National League: ', sl:'Swiss League: ', l1:'1. liga: ', l2:'2. liga: ' };
+
+/* Bank descriptions (German for the editor) */
+const GROUPS = [
+  ['Titel', [
+    ['title_win_clear','Sieg, klar (3+ Tore Differenz)'],['title_win','Sieg, normal'],['title_win_narrow','Sieg mit 1 Tor'],
+    ['title_win_comeback','Sieg nach Rückstand'],['title_win_ot','Sieg in der Verlängerung'],['title_win_so','Sieg im Penaltyschiessen'],
+    ['title_loss_clear','Niederlage, klar'],['title_loss','Niederlage, normal'],['title_loss_narrow','Niederlage mit 1 Tor'],
+    ['title_loss_lead','Niederlage trotz Führung'],['title_loss_ot','Niederlage in der Verlängerung'],['title_loss_so','Niederlage im Penaltyschiessen'],
+    ['title_derby_win','Derby gewonnen'],['title_derby_loss','Derby verloren']]],
+  ['Einstieg (Satz 1)', [
+    ['lead_win_home','Sieg zu Hause'],['lead_win_away','Sieg auswärts'],['lead_loss_home','Niederlage zu Hause'],['lead_loss_away','Niederlage auswärts']]],
+  ['1. Drittel', [
+    ['p1_lead','Führung'],['p1_behind','Rückstand'],['p1_tie','Unentschieden mit Toren'],['p1_nil','0:0']]],
+  ['Nach zwei Dritteln (nur Kurzversion)', [
+    ['mid_lead','Führung'],['mid_behind','Rückstand'],['mid_tie','Unentschieden']]],
+  ['2. und 3. Drittel', [
+    ['tr_none','Keine Tore'],['tr_same_lead','Beide treffen, wir führen weiter'],['tr_same_tie','Beide treffen, weiter unentschieden'],['tr_same_behind','Beide treffen, wir liegen weiter zurück'],['tr_extend','Führung ausgebaut'],
+    ['tr_narrow_opp','Gegner verkürzt'],['tr_eq_opp','Gegner gleicht aus'],['tr_lead_opp','Gegner geht in Führung'],
+    ['tr_lead_team','Wir gehen in Führung'],['tr_more_behind','Rückstand wird grösser'],['tr_narrow_team','Wir verkürzen'],
+    ['tr_eq_team','Wir gleichen aus'],['tr_decide_team','Schlussdrittel: wir entscheiden aus Unentschieden'],['tr_decide_opp','Schlussdrittel: Gegner entscheidet aus Unentschieden']]],
+  ['Verlängerung / Penaltys', [
+    ['ot_win','Verlängerung gewonnen'],['ot_loss','Verlängerung verloren'],['so_win','Penaltys gewonnen'],['so_loss','Penaltys verloren']]],
+  ['Zusätze', [
+    ['x_shutout','Zu null gewonnen'],['x_dominant','Sieg mit 5+ Toren Differenz'],['x_shots','Gegner mit mehr Schüssen (Häkchen)']]],
+  ['Tabelle', [
+    ['tab_normal','Normal'],['tab_first','Tabellenspitze'],['tab_above','Über dem Strich'],['tab_below','Unter dem Strich'],['tab_penult','Zweitletzter Platz'],['tab_last','Tabellenende']]]
+];
+const LEGEND = [
+  ['{team}','Num cumplet, p.ex. l\'EHC Cuira'],['{curt}','Num curt, p.ex. Cuira'],['{nus}','p.ex. ils Grischuns'],
+  ['{adv}','Adversari cun artitgel, p.ex. l\'EHC Basilea'],['{adv_curt}','Adversari curt, p.ex. Basilea'],['{puncts_gieu}','«trais puncts» u «dus puncts» (victoria suenter prolungaziun)'],['{adv_pl}','Adversari en plural'],['{resultat}','Resultat final, nus emprim (p.ex. 5:2)'],
+  ['{ot}','« suenter prolungaziun» u « suenter sajettar penaltis» u nagut'],['{p}','Resultat suenter quest terz'],
+  ['{terz_en}','«En il segund terz» / «En il terz final» / «En il davos terz»'],
+  ['{gp_terz} {go_terz}','Gols da nus / da l\'adversari en quest terz, p.ex. «dus gols»'],
+  ['{gc_gols}','Gols survegnids en total, p.ex. «be dus gols»'],['{puncts}','p.ex. «10 puncts»'],['{plaz}','p.ex. «5avel», «segund»']
+];
+
+/* ---------- Bank storage ---------- */
+let bank = loadBank();
+function loadBank(){
+  try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s && typeof s === 'object') return { ...DEFAULTS, ...s }; } catch {}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+
+/* ---------- Helpers ---------- */
+const WORDS = ['nagin','in','dus','trais','quatter','tschintg','sis','set','otg','nov','diesch'];
+const gols = n => (n <= 10 ? WORDS[n] : n) + (n === 1 || n === 0 ? ' gol' : ' gols');
+const ord = n => ({1:'emprim',2:'segund',3:'terz',4:'quart'})[n] || (n + 'avel');
+const cap = s => s.replace(/^(\s*)(\S)/, (m, a, b) => a + b.toUpperCase());
+function parseScore(s){ const m = String(s).trim().match(/^(\d+)\s*[:\-–]\s*(\d+)$/); return m ? [+m[1], +m[2]] : null; }
+function fill(tpl, v){ return tpl.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); }
+
+/* ---------- Form state ---------- */
+const sel = $('#teamSel');
+TEAMS.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.append(o); });
+function applyTeam(){
+  const t = TEAMS.find(x => x.id === sel.value);
+  if (t.id !== 'other'){ $('#team').value = t.team; $('#curt').value = t.curt; $('#liga').value = t.liga; }
+  else { $('#team').value = ''; $('#curt').value = ''; $('#team').focus(); }
+  $('#len-short').checked = ['l1','l2'].includes($('#liga').value);
+  $('#len-full').checked = !$('#len-short').checked;
+}
+sel.addEventListener('change', () => { applyTeam(); build(); });
+sel.value = 'cuira'; applyTeam();
+
+function homeAway(){ return document.querySelector('input[name=lieu]:checked').value; }
+function syncAdvPl(){
+  const f = $('#advpl');
+  if (!f.dataset.touched) f.value = homeAway() === 'home' ? 'ils osps' : 'ils adversaris';
+}
+$('#advpl').addEventListener('input', e => { e.target.dataset.touched = e.target.value ? '1' : ''; });
+document.querySelectorAll('input[name=lieu]').forEach(r => r.addEventListener('change', () => { syncAdvPl(); build(); }));
+syncAdvPl();
+$('#fin').addEventListener('change', () => { $('#otBox').hidden = $('#fin').value === '60'; build(); });
+
+/* ---------- Build message ---------- */
+let segs = [];        // {key, vars, i, para}
+let titleSeg = null;
+
+function choose(key){ const arr = bank[key] || []; return arr.length ? Math.floor(Math.random() * arr.length) : 0; }
+function seg(key, vars, para){ return { key, vars, i: choose(key), para }; }
+
+function readGame(){
+  const ps = ['#t1','#t2','#t3'].map(id => parseScore($(id).value));
+  if (ps.some(p => !p)) return null;
+  const home = homeAway() === 'home';
+  const per = ps.map(([h, a]) => home ? [h, a] : [a, h]);   // nus emprim
+  const fin = $('#fin').value;
+  const cum = []; let us = 0, them = 0;
+  per.forEach(([a, b]) => { us += a; them += b; cum.push([us, them]); });
+  let fu = us, ft = them;
+  if (fin !== '60'){ if (document.querySelector('input[name=otw]:checked').value === 'us') fu++; else ft++; }
+  return { home, per, cum, fin, fu, ft };
+}
+
+function build(){
+  const warn = $('#scoreWarn'); warn.textContent = '';
+  const g = readGame();
+  const out = $('#out'), notes = $('#notes'); notes.replaceChildren();
+  if (!g){ out.innerHTML = '<p class="hint">Endatar ils trais terzs (p.ex. 3:1) per survegnir ina novitad.</p>'; segs = []; titleSeg = null; return; }
+  const reg = g.cum[2];
+  if (g.fin !== '60' && reg[0] !== reg[1]) warn.textContent = 'Suenter 60 minutas na steva il gieu betg pari. Controllar ils terzs u la fin.';
+  if (g.fin === '60' && reg[0] === reg[1]) warn.textContent = 'Il gieu stat pari suenter 60 minutas. Tscherner prolungaziun u penaltis.';
+
+  const liga = $('#liga').value, short = document.querySelector('input[name=len]:checked').value === 'short';
+  const win = g.fu > g.ft, diff = Math.abs(g.fu - g.ft);
+  const d = g.cum.map(([a, b]) => a - b);
+  const ot = g.fin === 'ot' ? ' suenter prolungaziun' : g.fin === 'so' ? ' suenter sajettar penaltis' : '';
+  const base = {
+    team: $('#team').value.trim() || 'L\'equipa', curt: $('#curt').value.trim() || 'L\'equipa',
+    nus: $('#nus').value.trim() || 'ils Grischuns', adv: $('#adv').value.trim() || "l'adversari",
+    adv_pl: $('#advpl').value.trim() || 'ils adversaris', resultat: g.fu + ':' + g.ft, ot,
+    adv_curt: $('#advcurt').value.trim() || $('#adv').value.trim().replace(/^(il|ils|la|las|l')\s*/i, '') || "l'adversari",
+    puncts_gieu: g.fin === '60' ? 'trais puncts' : 'dus puncts',
+    gc_gols: gols(g.ft)
+  };
+  segs = [];
+
+  /* Title */
+  let tk;
+  if ($('#derby').checked) tk = win ? 'title_derby_win' : 'title_derby_loss';
+  else if (g.fin === 'ot') tk = win ? 'title_win_ot' : 'title_loss_ot';
+  else if (g.fin === 'so') tk = win ? 'title_win_so' : 'title_loss_so';
+  else if (win) tk = (d[0] < 0 || d[1] < 0) ? 'title_win_comeback' : diff >= 3 ? 'title_win_clear' : diff === 1 ? 'title_win_narrow' : 'title_win';
+  else tk = (d[0] > 0 || d[1] > 0) ? 'title_loss_lead' : diff >= 3 ? 'title_loss_clear' : diff === 1 ? 'title_loss_narrow' : 'title_loss';
+  titleSeg = seg(tk, base, -1);
+
+  /* Lead */
+  segs.push(seg('lead_' + (win ? 'win' : 'loss') + '_' + (g.home ? 'home' : 'away'), base, 0));
+
+  /* Course */
+  const pv = i => ({ ...base, p: g.cum[i][0] + ':' + g.cum[i][1], gp_terz: gols(g.per[i][0]), go_terz: gols(g.per[i][1]) });
+  const trans = (prev, cur, i, last) => {
+    const gT = g.per[i][0], gO = g.per[i][1];
+    if (gT + gO === 0) return 'tr_none';
+    if (last && g.fin === '60' && prev === 0 && cur !== 0) return cur > 0 ? 'tr_decide_team' : 'tr_decide_opp';
+    if (prev > 0) return cur > prev ? 'tr_extend' : cur === prev ? 'tr_same_lead' : cur > 0 ? 'tr_narrow_opp' : cur === 0 ? 'tr_eq_opp' : 'tr_lead_opp';
+    if (prev === 0) return cur > 0 ? 'tr_lead_team' : cur === 0 ? 'tr_same_tie' : 'tr_lead_opp';
+    return cur < prev ? 'tr_more_behind' : cur === prev ? 'tr_same_behind' : cur < 0 ? 'tr_narrow_team' : cur === 0 ? 'tr_eq_team' : 'tr_lead_team';
+  };
+  const lastTerz = Math.random() < .5 ? 'En il terz final' : 'En il davos terz';
+  if (!short){
+    const k1 = d[0] > 0 ? 'p1_lead' : d[0] < 0 ? 'p1_behind' : (g.cum[0][0] ? 'p1_tie' : 'p1_nil');
+    segs.push(seg(k1, pv(0), 1));
+    const k2 = trans(d[0], d[1], 1, false);
+    segs.push(seg(k2, { ...pv(1), terz_en: 'En il segund terz' }, 1));
+  } else if (d[1] !== 0 || g.cum[1][0]) {
+    // short: one sentence on the state after two periods
+    const k = d[1] > 0 ? 'mid_lead' : d[1] < 0 ? 'mid_behind' : 'mid_tie';
+    segs.push(seg(k, pv(1), 1));
+  }
+  const k3 = trans(d[1], d[2], 2, true);
+  if (!(short && k3 === 'tr_none')) segs.push(seg(k3, { ...pv(2), terz_en: lastTerz }, 1));
+  if (g.fin !== '60') segs.push(seg((g.fin === 'ot' ? 'ot_' : 'so_') + (win ? 'win' : 'loss'), base, 1));
+
+  /* Extras */
+  if (win && g.ft === 0) segs.push(seg('x_shutout', base, 1));
+  else if (win && diff >= 5) segs.push(seg('x_dominant', base, 1));
+  if (win && $('#shots').checked && g.ft > 0) segs.push(seg('x_shots', base, 1));
+
+  /* Table */
+  const pts = parseInt($('#pts').value, 10), rank = parseInt($('#rank').value, 10), pos = $('#pos').value;
+  let tabSeg = null;
+  if (!isNaN(pts)){
+    const tv = { ...base, puncts: pts + (pts === 1 ? ' punct' : ' puncts'), plaz: isNaN(rank) ? '?' : ord(rank) };
+    let k = 'tab_normal';
+    if (pos === 'first' || rank === 1) k = 'tab_first';
+    else if (pos === 'last') k = 'tab_last';
+    else if (pos === 'penult') k = 'tab_penult';
+    else if (pos === 'above') k = 'tab_above';
+    else if (pos === 'below') k = 'tab_below';
+    if (!['tab_first','tab_last','tab_penult'].includes(k) && isNaN(rank)) k = null;
+    if (k) tabSeg = seg(k, tv, 2);
+  }
+  if (tabSeg && !$('#live').checked) segs.push(tabSeg);
+  const next = $('#next').value.trim();
+  if (next) segs.push({ key: null, text: next, para: 2 });
+
+  render();
+
+  /* Notes */
+  const n = [];
+  if ($('#live').checked){
+    n.push('Il gieu gira anc: il text è formulà sco sch\'el fiss terminà. Controllar il resultat final.');
+    if (tabSeg) n.push('Da cumplettar suenter la fin dal gieu: «' + cap(fill(bank[tabSeg.key][tabSeg.i] || '', tabSeg.vars)) + '»');
+  }
+  if (liga === 'nl') n.push('National League: agiuntar a maun ils nums dals giugaders decisivs.');
+  if ($('#derby').checked) n.push('Derby: controllar «Nus en plural» (p.ex. «ils da Cuira» empè da «ils Grischuns»).');
+  if (!isNaN(pts) && isNaN(rank) && !['first','last','penult'].includes(pos)) n.push('Per la frasa da la tabella manca il plaz.');
+  n.forEach(t => { const li = document.createElement('li'); li.textContent = t; notes.append(li); });
+}
+
+function tplOf(s){ const arr = bank[s.key] || []; return arr.length ? arr[s.i % arr.length] : ''; }
+function textOf(s){
+  if (!s.key) return s.text;
+  const v = s.pron ? { ...s.vars, nus: 'els' } : s.vars;
+  return cap(fill(tplOf(s), v));
+}
+/* «ils Grischuns» be ina giada a la successiva: la proxima frasa cun {nus} survegn «els» */
+function markPronouns(){
+  let prevNus = false;
+  segs.forEach(s => {
+    if (!s.key || s.para !== 1){ s.pron = false; prevNus = false; return; }
+    const t = tplOf(s);
+    const has = t.includes('{nus}');
+    s.pron = has && prevNus && !/^\s*\{nus\}/.test(t);
+    prevNus = has && !t.includes('{adv_pl}');
+  });
+}
+function render(){
+  markPronouns();
+  const out = $('#out'); out.replaceChildren();
+  const h = document.createElement('h3');
+  const prefix = $('#prefix').checked ? (PREFIX[$('#liga').value] || '') : '';
+  h.append(document.createTextNode(prefix));
+  h.append(span(titleSeg));
+  out.append(h);
+  [0, 1, 2].forEach(pi => {
+    const parts = segs.filter(s => s.para === pi);
+    if (!parts.length) return;
+    const p = document.createElement('p');
+    parts.forEach((s, j) => { if (j) p.append(' '); p.append(span(s)); });
+    out.append(p);
+  });
+}
+function span(s){
+  const el = document.createElement('span');
+  el.textContent = textOf(s);
+  if (s.key && (bank[s.key] || []).length > 1){
+    el.className = 'seg-t'; el.tabIndex = 0;
+    el.title = 'Varianta ' + ((s.i % bank[s.key].length) + 1) + '/' + bank[s.key].length + ' · ' + s.key;
+    const next = () => { s.i = (s.i + 1) % bank[s.key].length; render(); };
+    el.onclick = next;
+    el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); next(); } };
+  }
+  return el;
+}
+
+document.querySelectorAll('#view-gen input, #view-gen select').forEach(el => {
+  if (el.id === 'teamSel') return;
+  el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio' ? 'change' : 'input', build);
+});
+$('#shuffle').onclick = () => { if (titleSeg){ titleSeg.i = choose(titleSeg.key); segs.forEach(s => { if (s.key) s.i = choose(s.key); }); render(); } };
+
+/* ---------- Copy ---------- */
+async function copy(text, btn){
+  const old = btn.textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = 'Copià'; }
+  catch { btn.textContent = 'Betg reussì'; }
+  setTimeout(() => btn.textContent = old, 1600);
+}
+$('#copyTitle').onclick = e => copy($('#out h3')?.innerText.trim() || '', e.currentTarget);
+$('#copyText').onclick = e => copy([...document.querySelectorAll('#out p')].map(p => p.innerText.trim()).join('\n'), e.currentTarget);
+
+/* ---------- Tabs ---------- */
+function showTab(which){
+  const gen = which === 'gen';
+  $('#tab-gen').setAttribute('aria-selected', gen); $('#tab-bank').setAttribute('aria-selected', !gen);
+  $('#view-gen').hidden = !gen; $('#view-bank').hidden = gen;
+  if (!gen) renderBank();
+}
+$('#tab-gen').onclick = () => showTab('gen');
+$('#tab-bank').onclick = () => showTab('bank');
+
+/* ---------- Bank editor ---------- */
+LEGEND.forEach(([k, t]) => { const c = document.createElement('code'); c.textContent = k; const s = document.createElement('span'); s.textContent = t; $('#legend').append(c, s); });
+function renderBank(){
+  const box = $('#bank'); box.replaceChildren();
+  GROUPS.forEach(([name, items]) => {
+    const grp = document.createElement('div'); grp.className = 'grp';
+    const h = document.createElement('h3'); h.textContent = name; grp.append(h);
+    items.forEach(([key, label]) => {
+      const it = document.createElement('div'); it.className = 'ph-item';
+      const lb = document.createElement('label'); lb.htmlFor = 'b-' + key; lb.textContent = label;
+      const sm = document.createElement('small'); sm.textContent = key; lb.append(sm);
+      const ta = document.createElement('textarea'); ta.id = 'b-' + key; ta.dataset.key = key;
+      ta.value = (bank[key] || []).join('\n'); ta.rows = Math.max(2, (bank[key] || []).length + 1);
+      it.append(lb, ta); grp.append(it);
+    });
+    box.append(grp);
+  });
+}
+function readBank(){
+  const b = { ...bank };
+  document.querySelectorAll('#bank textarea').forEach(ta => { b[ta.dataset.key] = ta.value.split('\n').map(s => s.trim()).filter(Boolean); });
+  return b;
+}
+function bankMsg(t){ $('#bankStatus').textContent = t; setTimeout(() => { if ($('#bankStatus').textContent === t) $('#bankStatus').textContent = ''; }, 3500); }
+$('#saveBank').onclick = () => {
+  bank = readBank();
+  try { localStorage.setItem(STORE, JSON.stringify(bank)); bankMsg('Memorisà en quest browser.'); } catch { bankMsg('Betg pussaivel da memorisar en quest browser.'); }
+  build();
+};
+$('#copyJson').onclick = e => copy(JSON.stringify(readBank(), null, 2), e.currentTarget);
+$('#resetBank').onclick = () => {
+  bank = JSON.parse(JSON.stringify(DEFAULTS));
+  try { localStorage.removeItem(STORE); } catch {}
+  renderBank(); build(); bankMsg('Formulaziuns oriundas restituidas.');
+};
+$('#dlHtml').onclick = async () => {
+  const b = readBank();
+  try {
+    const src = await (await fetch(location.href, { cache: 'no-store' })).text();
+    const json = '\n' + JSON.stringify(b, null, 2) + '\n';
+    const html = src.replace(/(<script type="application\/json" id="phrases">)[\s\S]*?(<\/script>)/, (m, a, z) => a + json + z);
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = (location.pathname.split('/').pop() || 'hockey').replace(/(\.html?)?$/i, '.html');
+    document.body.append(a); a.click(); a.remove();
+    bankMsg('Telechargià. Chargiar si il file sin GitHub.');
+  } catch {
+    bankMsg('Telechargiar na funcziuna betg qua. «Copiar sco JSON» e trametter las formulaziuns.');
+  }
+};
+
+/* ---------- SIHF text parser ---------- */
+/* Lieus tudestg → rumantsch (per nums d'equipas) */
+const PLACES = [
+  [/\bBasel\b/g,'Basilea'],[/\bBern\b/g,'Berna'],[/\bZürich\b/g,'Turitg'],[/\bLuzern\b/g,'Lucerna'],
+  [/\bSt\.?\s*Gallen\b/g,'Son Gagl'],[/\bThurgau\b/g,'Turgovia'],[/\bSchaffhausen\b/g,'Schaffusa'],
+  [/\bGlarus\b/g,'Glaruna'],[/\bGen(f|ève)\b/g,'Genevra'],[/\b(Freiburg|Fribourg)\b/g,'Friburg'],
+  [/\bSolothurn\b/g,'Soloturn'],[/\bAargau\b/g,'Argovia'],[/\bWallis\b/g,'Vallais'],[/\bChur\b/g,'Cuira'],
+  [/\bSt\.?\s*Moritz\b/g,'San Murezzan'],[/\bDavos\b/g,'Tavau']
+];
+/* Adversari en plural tenor regiun */
+const REGIONS = [
+  [/Basel/,'ils Basileais'],[/Z(ü|u)rich|ZSC|GCK|Winterthur|Kloten|D(ü|u)bendorf|Wallisellen|Dielsdorf|B(ü|u)lach|D(ü|u)rnten|Illnau/,'ils Turitgais'],
+  [/Bellinzona|Lugano|Ambr|Biasca|Ticino/,'ils Tessinais'],[/Sierre|Visp|Martigny|Sion|Saastal|Raron/,'ils Vallesans'],
+  [/Bern\b|Burgdorf|Langenthal|Langnau|SCL|Thun|Biel|Wiki|M(ü|u)nsingen/,'ils Bernais'],[/La Chaux|Neuch|Fleurier|Universit/,'ils Neuchâtelais'],
+  [/St\.?\s*Gallen|\bWil\b|Uzwil|Herisau|Rheintal|Rapperswil|Eisb(ä|a)ren/,'ils Songagliais'],
+  [/Thurgau|Weinfelden|Kreuzlingen|Frauenfeld/,'ils Turgovians'],[/Olten|Solothurn/,'ils Soloturnais'],
+  [/Argovia|Aarau|Reinach|Zofingen/,'ils Argovians'],[/Luzern/,'ils Lucernais'],[/K(ü|u)ssnacht|Seewen|Schwyz/,'ils Svitters'],
+  [/Glarus|Glarner/,'ils Glaruners'],[/\bZug\b/,'ils Zugais'],[/Schaffhausen/,'ils Schaffusans']
+];
+const PLURAL_RE = /(Lions|Lakers|Snakes|Tigers|Vikings|Flyers|Eagles|Bulls|Bears|Wolves|Devils|Hawks|Pirates|Dragons|Rockets|Sharks|Jets|Stars|Eisbären)$/i;
+const PREFIX_RE = /^(HC|EHC|EV|EC|SC|KSC|GDT|CDH|SCL|EHV|HCC|Hockey|Club da hockey)\s+/i;
+function cleanName(name){ return name.replace(/\s+I{1,3}$/, '').trim(); }
+function toRm(name){ let n = name; PLACES.forEach(([re, rm]) => { n = n.replace(re, rm); }); return n; }
+function withArticle(rmName){
+  if (/^Eisbären/i.test(rmName) || PLURAL_RE.test(rmName)) return 'ils ' + rmName;
+  if (/^(EHC|EV|EC|EHV)\b/.test(rmName)) return "l'" + rmName;
+  if (/^[A-Z]{2,5}\b/.test(rmName)) return 'il ' + rmName;
+  return rmName;
+}
+function shortName(rmName){
+  if (/^Glarner/i.test(rmName)) return 'Glaruna';
+  const n = rmName.replace(PREFIX_RE, '');
+  return n || rmName;
+}
+function regionPlural(deName){ const hit = REGIONS.find(([re]) => re.test(deName)); return hit ? hit[1] : null; }
+
+function parseSihf(raw){
+  const t = raw.replace(/\r/g, '');
+  const r = {};
+  let m = t.match(/^\s*(.+?)\s+vs\.?\s+(.+?)\s*$/m) || t.match(/\|\s*(.+?)\s+-\s+(.+?)\s*\|/);
+  if (m){ r.home = m[1].trim(); r.away = m[2].trim(); }
+  m = t.match(/(\d{2}\.\d{2}\.\d{4})\s*-\s*([^\n]+)/);
+  if (m){ r.date = m[1]; r.status = m[2].trim(); }
+  const lm = t.match(/^\s*(NL|SL|1L|2L|MHL)\b[^\n]*$/m);
+  if (lm){ const k = lm[1].toUpperCase(); r.liga = k === 'NL' ? 'nl' : k === '1L' ? 'l1' : k === '2L' ? 'l2' : 'sl'; }
+  // score block: from league line (or status line) to «Übersicht»
+  const startIdx = lm ? lm.index : (m ? m.index : 0);
+  const rest = t.slice(startIdx);
+  const endRel = rest.search(/\n\s*(Übersicht|ÜBERSICHT|Aufstellung|AUFSTELLUNG|Verlauf|VERLAUF|Watch on)\b/);
+  const block = rest.slice(0, endRel > 0 ? endRel : 600);
+  const sog = [...block.matchAll(/SOG:\s*(\d+)/g)].map(x => +x[1]);
+  if (sog.length >= 2) r.sog = sog;
+  const abbr = [...block.matchAll(/^\s*([A-ZÄÖÜ][A-ZÄÖÜ0-9]{1,6})\s*\n\s*SOG:/gm)].map(x => x[1]);
+  if (abbr.length >= 2) r.abbr = abbr;
+  const fm = block.match(/(\d+)\s*\n\s*:\s*\n\s*(\d+)/) || block.match(/(\d+)\s+:\s+(\d+)/);
+  if (fm) r.final = [+fm[1], +fm[2]];
+  const after = fm ? block.slice(fm.index + fm[0].length) : block;
+  r.periods = [...after.matchAll(/^\s*(\d+):(\d+)\s*$/gm)].map(x => [+x[1], +x[2]]);
+  if (/^\s*(SO|PS|n\.\s?P\.)\s*$/m.test(after) || /Penaltyschiessen/i.test(t)) r.fin = 'so';
+  else if (/^\s*(OT|n\.\s?V\.)\s*$/m.test(after) || /\bVerlängerung\b/i.test(t)) r.fin = 'ot';
+  else r.fin = '60';
+  // table A (game report): rank / name / name / GP PTS P/GP W OTW SOW SOL OTL L GF GA GDF
+  r.table = [...t.matchAll(/^\s*(\d{1,2})\s*\n\s*([^\n\t]+?)\s*\n\s*\2\s*\n\s*(\d+)\s+(\d+)\s+[\d.]+\s/gm)]
+    .map(x => ({ rank: +x[1], name: x[2].trim(), gp: +x[3], pts: +x[4] }));
+  // table B (short): rank / ABBR / GP PTS GDF
+  if (!r.table.length)
+    r.table = [...t.matchAll(/^\s*(\d{1,2})\s*\n\s*([A-ZÄÖÜ][A-ZÄÖÜ0-9]{1,6})\s*\n\s*(\d+)\s+(\d+)\s+(-?\d+)/gm)]
+      .map(x => ({ rank: +x[1], abbr: x[2], gp: +x[3], pts: +x[4] }));
+  return r;
+}
+function setVal(id, v){ const el = $('#' + id); if (el) el.value = v; }
+function setRadio(id){ const el = $('#' + id); if (el) el.checked = true; }
+function applySihf(){
+  const raw = $('#sihf').value, found = $('#found'), warn = $('#parseWarn');
+  found.replaceChildren(); warn.textContent = '';
+  if (!raw.trim()){ found.hidden = true; return; }
+  const r = parseSihf(raw);
+  const chips = [];
+  if (!r.home || !r.away){ warn.textContent = 'Betg chattà las equipas. Copiar il rapport dal gieu (Übersicht) u endatar a maun.'; found.hidden = true; return; }
+  const hTeam = TEAMS.find(x => x.re && x.re.test(r.home)), aTeam = TEAMS.find(x => x.re && x.re.test(r.away));
+  const ours = hTeam || aTeam;
+  if (!ours){ warn.textContent = 'Nagina equipa grischuna chattada. Tscherner l\'equipa a maun.'; $('#manual').open = true; }
+  const home = ours ? !!hTeam : true;
+  if (ours){ sel.value = ours.id; applyTeam(); }
+  if (r.liga) setVal('liga', r.liga);
+  $('#len-short').checked = ['l1','l2'].includes($('#liga').value); $('#len-full').checked = !$('#len-short').checked;
+  setRadio(home ? 'l-home' : 'l-away');
+  const oppDe = cleanName(home ? r.away : r.home);
+  const oppRm = toRm(oppDe);
+  setVal('adv', withArticle(oppRm));
+  setVal('advcurt', shortName(oppRm));
+  const advpl = $('#advpl');
+  if (!advpl.dataset.touched) advpl.value = regionPlural(oppDe) || (home ? 'ils osps' : 'ils indigens');
+  $('#derby').checked = !!(hTeam && aTeam);
+  if (hTeam && aTeam){ const sn = shortName(oppRm); advpl.value = (/^[AEIOUÄÖÜ]/i.test(sn) ? "ils d'" : 'ils da ') + sn; }
+  // periods
+  const per = r.periods.slice(0, 3);
+  if (per.length === 3) ['t1','t2','t3'].forEach((id, i) => setVal(id, per[i][0] + ':' + per[i][1]));
+  else warn.textContent = 'Ils resultats dals terzs n\'èn betg vegnids chattads. Endatar a maun.';
+  setVal('fin', r.fin);
+  if (r.final && per.length === 3){
+    const sh = per.reduce((a, p) => a + p[0], 0), sa = per.reduce((a, p) => a + p[1], 0);
+    if (r.fin === '60' && r.final[0] + r.final[1] === sh + sa + 1) setVal('fin', 'ot');
+    if ($('#fin').value !== '60') setRadio(((r.final[0] > sh) === home) ? 'otw-us' : 'otw-them');
+  }
+  $('#otBox').hidden = $('#fin').value === '60';
+  const ended = /Ende|Final|Schluss/i.test(r.status || '');
+  $('#live').checked = !ended;
+  if (r.sog && r.final){
+    const ourSog = home ? r.sog[0] : r.sog[1], oppSog = home ? r.sog[1] : r.sog[0];
+    const ourG = home ? r.final[0] : r.final[1], oppG = home ? r.final[1] : r.final[0];
+    $('#shots').checked = ourG > oppG && oppSog > ourSog;
+  } else $('#shots').checked = false;
+  // table
+  setVal('pts', ''); setVal('rank', ''); setVal('pos', '');
+  if (r.table.length && ours){
+    const ourName = home ? r.home : r.away;
+    const row = r.table.find(x => x.name ? (x.name === ourName || ours.re.test(x.name)) : (r.abbr && x.abbr === (home ? r.abbr[0] : r.abbr[1])));
+    if (row){
+      setVal('pts', row.pts); setVal('rank', row.rank);
+      const maxR = Math.max(...r.table.map(x => x.rank));
+      if (row.rank === 1) setVal('pos', 'first');
+      else if (row.rank === maxR) setVal('pos', 'last');
+      else if (row.rank === maxR - 1) setVal('pos', 'penult');
+      chips.push(['Tabella', row.rank + '. plaz da ' + maxR + ' · ' + row.pts + ' puncts · ' + row.gp + ' gieus']);
+    }
+  }
+  const finTxt = $('#fin').value === 'ot' ? ' suenter prolungaziun' : $('#fin').value === 'so' ? ' suenter penaltis' : '';
+  chips.unshift(['Gieu', r.home + ' – ' + r.away]);
+  if (r.final) chips.splice(1, 0, ['Resultat', r.final.join(':') + (per.length === 3 ? ' (' + per.map(p => p.join(':')).join(', ') + ')' : '') + finTxt]);
+  if (r.status) chips.splice(2, 0, ['Stadi', r.status]);
+  chips.forEach(([k, v]) => { const c = document.createElement('span'); c.className = 'chip'; const b = document.createElement('b'); b.textContent = k; c.append(b, document.createTextNode(v)); found.append(c); });
+  found.hidden = false;
+  if (!ended) warn.textContent = 'Il gieu na para betg anc dad esser terminà (' + (r.status || '?') + '). Controllar il resultat final.';
+  build();
+}
+$('#sihf').addEventListener('input', applySihf);
+
+build();
+</script>
+</body>
+</html>
