@@ -220,37 +220,41 @@ function toNumber(raw, dec) {
   if (!isFinite(n)) return NaN;
   return n; // Prozentwerte bleiben als Zahl (12% → 12)
 }
-const isDate = s => /^\d{1,2}\.\d{1,2}\.(\d{2}|\d{4})$/.test(s.trim()) || /^\d{4}-\d{2}-\d{2}/.test(s.trim());
+const isDate = s => { s = s.trim(); return /^\d{1,2}[./]\d{1,2}[./](\d{2}|\d{4})$/.test(s) || /^\d{4}-\d{2}(-\d{2})?/.test(s) || /^\d{1,2}[./]\d{4}$/.test(s) || /^[A-Za-zäéû]{3,9}\.? \d{4}$/.test(s); };
 
 // ---------- Tabelle erkennen (Titel, Spaltentitel, Fussnoten) ----------
 // Statistik-Exporte (z. B. BFS) haben oft einen Titel über der Tabelle, leere Zeilen
 // und Fussnoten darunter. Gesucht wird der grösste zusammenhängende Block «breiter» Zeilen.
 const filledCells = r => r.filter(c => String(c ?? '').trim() !== '').length;
 const looksNum = v => { const n = toNumber(v, '.'), m = toNumber(v, ','); return (n != null && !isNaN(n)) || (m != null && !isNaN(m)); };
+const looksNumCell = c => { const v = String(c ?? '').trim(); return v !== '' && !NULLS.has(v.toLowerCase()) && looksNum(v); };
 const numShare = r => { const f = r.filter(c => !NULLS.has(String(c ?? '').trim().toLowerCase())); return f.length ? f.filter(looksNum).length / f.length : 0; };
 function detectTable(raw, forcedHeader) {
-  const maxFill = Math.max(...raw.map(filledCells));
-  const wide = raw.map(r => filledCells(r) >= Math.max(2, Math.ceil(maxFill * 0.4)));
-  // längster Block breiter Zeilen
-  let best = [0, -1], start = -1;
-  for (let i = 0; i <= raw.length; i++) {
-    if (i < raw.length && wide[i]) { if (start < 0) start = i; }
-    else if (start >= 0) { if (i - 1 - start > best[1] - best[0]) best = [start, i - 1]; start = -1; }
+  // Kopfzeile: in den ersten 30 Zeilen die Zeile mit den meisten Zellen, die überwiegend Text enthält
+  // (Titelzeilen haben nur eine Zelle). Funktioniert auch, wenn die Daten anfangs lückenhaft sind.
+  let hdr = forcedHeader;
+  if (hdr == null) {
+    let bestFill = 1;
+    raw.slice(0, 30).forEach((r, i) => {
+      const f = filledCells(r);
+      const hasDataBelow = raw.slice(i + 1, i + 6).some(x => numShare(x) >= 0.5);
+      if (f > bestFill && numShare(r) < 0.5 && hasDataBelow) { bestFill = f; hdr = i; }
+    });
   }
-  let [s, e] = best;
-  let headerRows;
-  if (forcedHeader != null) {
-    headerRows = [forcedHeader]; s = forcedHeader; if (e < s + 1) e = raw.length - 1;
-  } else {
-    // Kopfzeilen = führende Zeilen des Blocks, die hauptsächlich Text enthalten
-    headerRows = [];
-    for (let i = s; i <= e && headerRows.length < 3; i++) { if (numShare(raw[i]) < 0.3) headerRows.push(i); else break; }
-    // kein Text-Kopf im Block: die Zeile davor nehmen, falls sie Text hat
-    if (!headerRows.length && s > 0 && filledCells(raw[s - 1]) >= 2 && numShare(raw[s - 1]) < 0.3) headerRows = [s - 1];
-    if (headerRows.length === e - s + 1) headerRows = headerRows.slice(0, 1); // nur Text: erste Zeile ist Kopf
+  // Kopf direkt über der Kopfzeile (mehrzeilig), falls breit genug und Text
+  const headerRows = hdr == null ? [] : [hdr];
+  if (hdr != null && forcedHeader == null) {
+    for (let i = hdr - 1; i >= 0 && headerRows.length < 3; i--) {
+      // Oberkategorien: genug Zellen und kein Titel (Titelzeilen haben 1–2 Zellen)
+      if (filledCells(raw[i]) >= Math.max(3, filledCells(raw[hdr]) * 0.25) && numShare(raw[i]) < 0.3) headerRows.unshift(i); else break;
+    }
   }
+  const dataStart = hdr == null ? raw.findIndex(r => numShare(r) >= 0.5) : hdr + 1;
+  // Datenende: letzte Zeile mit mindestens einer Zahl
+  let e = raw.length - 1;
+  while (e > dataStart && !raw[e].some(looksNumCell)) e--;
+  const s = dataStart;
   const first = headerRows.length ? headerRows[0] : s;
-  const dataStart = headerRows.length ? Math.max(...headerRows) + 1 : s;
   const width = Math.max(...raw.slice(first, e + 1).map(r => r.length));
   // mehrzeilige Köpfe zusammensetzen; obere Zeilen nach rechts auffüllen (zusammengeführte Zellen)
   const names = Array.from({ length: width }, () => []);
@@ -263,15 +267,19 @@ function detectTable(raw, forcedHeader) {
     }
   });
   // Titel und Metadaten ausserhalb des Blocks
-  const single = (from, to) => raw.slice(from, to).filter(r => filledCells(r) === 1).map(r => String(r.find(c => String(c ?? '').trim()) ?? '').trim());
+  const cellsOf = r => r.map(c => String(c ?? '').trim()).filter(Boolean);
+  const single = (from, to) => raw.slice(from, to).filter(r => filledCells(r) === 1).map(r => cellsOf(r)[0]);
   const clean = t => t.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-  const above = single(0, first), below = single(e + 1, raw.length);
+  const aboveRows = raw.slice(0, first).filter(r => filledCells(r) >= 1 && filledCells(r) <= 2).map(cellsOf);
+  const above = aboveRows.map(r => r[0]), below = single(e + 1, raw.length);
+  const copyright = aboveRows.flat().find(t => /©|copyright/i.test(t)) || '';
   const after = label => { const i = below.findIndex(t => t.toLowerCase().startsWith(label)); return i >= 0 ? clean(below[i + 1] || '') : ''; };
   return {
     names: names.map(n => n.join(' – ')),
-    body: raw.slice(dataStart, e + 1),
+    // leere Zeilen und eingestreute Anmerkungen (eine einzelne lange Textzelle) weglassen
+    body: raw.slice(dataStart, e + 1).filter(r => filledCells(r) > 0 && !(filledCells(r) === 1 && !r.some(looksNumCell) && String(r.find(c => String(c ?? '').trim())).length > 40)),
     title: above.length ? clean(above[0]) : '',
-    source: after('quelle') || after('funtauna') || after('source') || after('datenbank'),
+    source: after('quelle') || after('funtauna') || after('source') || after('datenbank') || clean(copyright).split(',')[0],
     unit: after('einheit'),
     headerRow: headerRows.length ? Math.max(...headerRows) : null,
     skipped: raw.length - (e - first + 1)
