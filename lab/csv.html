@@ -78,7 +78,7 @@ td .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accen
   </header>
 
   <section class="card">
-    <h2><span class="num">1</span>Plazzar datas</h2>
+    <h2><span class="num">1</span>Chargiar datas</h2>
     <div class="drop" id="drop" tabindex="0" role="button">
       <b>Trair qua in file</b>CSV, TSV u Excel (.xlsx) – u cliccar per tscherner
     </div>
@@ -261,13 +261,13 @@ function render() {
     (srcDelim ? ` · separatur: ${srcDelim}` : '') +
     ` · <b>${numCols().length}</b> numericas, <b>${txtCols().length}</b> text/data`;
   $('cols').innerHTML = cols.map(c => {
-    const tag = { n: '<span class="tag n">cefra</span>', t: '<span class="tag t">text</span>', d: '<span class="tag d">data</span>' }[c.type];
+    const tag = { n: '<span class="tag n">cifra</span>', t: '<span class="tag t">text</span>', d: '<span class="tag d">data</span>' }[c.type];
     const rows = c.type === 'n'
       ? [['Min', fmt(c.min)], ['Max', fmt(c.max)], ['Media', fmt(c.mean)], ['Median', fmt(c.median)], ['Summa', fmt(c.sum)], ['Vids', c.empty]]
       : [['Emplenids', c.filled], ['Vids', c.empty], ['Differents', c.unique]];
     const warn = [];
     if (c.type === 'n' && c.dec === ',') warn.push('Comma sco segn decimal renconuschì');
-    if (c.bad) warn.push(c.bad + ' valurs n\'èn betg cefras');
+    if (c.bad) warn.push(c.bad + ' valurs n\'èn betg cifras');
     return `<div class="col"><h3>${esc(c.name)}${tag}</h3><dl>${rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>` +
       (warn.length ? `<div class="warn">${warn.join(' · ')}</div>` : '') + '</div>';
   }).join('');
@@ -410,7 +410,7 @@ Tusaun;Viamala;6'500;24,5;35'200
 Savognin;Alvra;1'710;84,4;164'900
 Breil/Brigels;Surselva;1'250;117,0;88'100
 Val Müstair;Engiadina Bassa/Val Müstair;1'420;198,6;61'300`;
-  load(() => textRows($('paste').value), 'Exempel cun cefras fictivas');
+  load(() => textRows($('paste').value), 'Exempel cun cifras fictivas');
 };
 </script>
 </body>
