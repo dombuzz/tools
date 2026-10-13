@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>dombuzz Lab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ffb020'/%3E%3Cpath d='M38 18h24M42 18v24L22 78a6 6 0 0 0 5 9h46a6 6 0 0 0 5-9L58 42V18' stroke='%23121214' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #121214; --card: #1c1c1f; --field: #26262a; --text: #ececef; --muted: #9a9aa2;
+    --line: #2f2f34; --lab: #ffb020; --accent: #ff4d64; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--text); min-height: 100vh;
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    /* Millimeterpapier */
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(rgba(255,176,32,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,176,32,.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  /* Warnband oben */
+  .tape {
+    height: 10px;
+    background: repeating-linear-gradient(-45deg, var(--lab) 0 14px, #121214 14px 28px);
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 56px 16px 64px; }
+  .homelink { display: inline-block; margin: 0 0 10px; font-size: .85rem; color: var(--muted); text-decoration: none; }
+  .homelink:hover, .homelink:focus-visible { color: var(--accent); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; margin: 0 0 14px;
+    font: 700 .72rem/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--lab); border: 1px dashed var(--lab); border-radius: 999px; padding: 6px 11px;
+  }
+  .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--lab); animation: blink 1.6s infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
+  @media (prefers-reduced-motion: reduce) { .badge::before { animation: none; } }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  h1 span { color: var(--lab); }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .select { position: relative; }
+  select {
+    width: 100%; appearance: none; -webkit-appearance: none;
+    padding: 14px 44px 14px 16px; font: inherit; font-weight: 600; color: var(--text);
+    background: var(--field); border: 1px dashed var(--lab); border-radius: 12px;
+    cursor: pointer; outline: none;
+  }
+  select:hover, select:focus { border-style: solid; }
+  select:disabled { cursor: default; color: var(--muted); }
+  .select::after {
+    content: ""; position: absolute; right: 18px; top: 50%; width: 8px; height: 8px;
+    border-right: 2px solid var(--lab); border-bottom: 2px solid var(--lab);
+    transform: translateY(-70%) rotate(45deg); pointer-events: none;
+  }
+  option { background: var(--card); color: var(--text); font-weight: 400; }
+  .note {
+    margin-top: 22px; padding: 12px 14px; border-left: 3px solid var(--lab);
+    background: rgba(255,176,32,.07); border-radius: 0 10px 10px 0; color: #e7cf9f; font-size: .88rem;
+  }
+  .msg { color: var(--muted); margin-top: 16px; font-size: .9rem; }
+  .msg a { color: var(--lab); }
+  .meta { margin-top: 40px; font: .75rem/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #6a6a72; }
+</style>
+</head>
+<body>
+<div class="tape" aria-hidden="true"></div>
+<main>
+  <a class="homelink" href="/">← Tools</a><br>
+  <span class="badge">Labor · en emprova</span>
+  <h1>dombuzz <span>Lab</span></h1>
+  <p class="sub">Tscherner in experiment, el s'avra directamain.</p>
+  <div class="select">
+    <select id="tools" aria-label="Tscherner in experiment" disabled>
+      <option value="">Chargel ils experiments …</option>
+    </select>
+  </div>
+  <p class="msg" id="msg" hidden></p>
+  <p class="note">Ils tools qua èn experiments. Els pon avair errurs, sa midar u svanir dad ina giada a l'autra.</p>
+  <p class="meta" id="meta" aria-live="polite"></p>
+</main>
+
+<script>
+  // Die Liste entsteht automatisch aus den HTML-Dateien im Ordner «lab» auf GitHub.
+  const REPO = 'dombuzz/tools', BRANCH = 'main', FOLDER = 'lab';
+  const HIDE = ['index.html'];
+  // Optionale schöne Namen (Dateiname -> Name). Sonst wird der Dateiname verwendet.
+  const NAMES = {
+    'idioms.html': 'Pleds en ils idioms'
+  };
+
+  const sel = document.getElementById('tools'), msg = document.getElementById('msg'), meta = document.getElementById('meta');
+  const pretty = f => f.replace(/\.html?$/i, '').replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
+
+  async function load() {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${FOLDER}?ref=${BRANCH}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const files = (await res.json())
+        .filter(f => f.type === 'file' && /\.html?$/i.test(f.name) && !HIDE.includes(f.name))
+        .map(f => ({ url: f.name.replace(/\.html?$/i, ''), title: NAMES[f.name] || pretty(f.name), kb: Math.round(f.size / 1024) }))
+        .sort((a, b) => a.title.localeCompare(b.title, 'de'));
+
+      sel.innerHTML = '';
+      sel.append(new Option(files.length ? 'Tscherner in experiment …' : 'Anc nagins experiments', ''));
+      for (const f of files) sel.append(new Option(f.title, '/' + FOLDER + '/' + f.url));
+      sel.disabled = !files.length;
+      meta.textContent = `/${FOLDER} · ${files.length} ${files.length === 1 ? 'experiment' : 'experiments'}`;
+    } catch (e) {
+      sel.innerHTML = '<option value="">Glista betg disponibla</option>';
+      msg.hidden = false;
+      msg.innerHTML = 'La glista n\'ha betg pudì vegnir chargiada (' + e.message +
+        '). Guardar directamain en il <a href="https://github.com/' + REPO + '/tree/' + BRANCH + '/' + FOLDER + '">repository</a>.';
+    }
+  }
+
+  sel.addEventListener('change', () => { if (sel.value) location.href = sel.value; });
+  window.addEventListener('pageshow', () => { sel.selectedIndex = 0; });
+  load();
+</script>
+</body>
+</html>
