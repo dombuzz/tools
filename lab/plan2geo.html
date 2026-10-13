@@ -52,6 +52,9 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
 .wandopts input[type=range]{accent-color:var(--accent);width:120px}
 .wandopts output{font:.75rem var(--mono);color:var(--ink);min-width:2ch}
 .wandopts .chk{font-size:.8rem}
+.wseg{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
+.wseg button{font:600 .78rem var(--sans);background:transparent;color:var(--muted);border:0;padding:4px 10px;border-radius:6px;cursor:pointer}
+.wseg button[aria-pressed="true"]{background:var(--accent);color:#121214}
 .badge{font:600 .75rem var(--sans);border-radius:999px;padding:3px 10px;border:1px solid transparent}
 .badge.warn{background:var(--warn-soft);color:var(--warn);border-color:rgba(255,179,92,.35)}
 .badge.ok{background:var(--ok-soft);color:var(--ok);border-color:rgba(76,175,111,.4)}
@@ -167,10 +170,15 @@ details[open] summary{margin-bottom:8px}
         </div>
         <div class="hint" id="hint"></div>
         <div class="wandopts" id="wandOpts" hidden>
+          <div class="wseg" role="group" aria-label="Was erkennen">
+            <button type="button" data-wk="area" aria-pressed="true">Fläche</button>
+            <button type="button" data-wk="line" aria-pressed="false">Linie</button>
+          </div>
           <label for="wandTol">Toleranz</label>
           <input type="range" id="wandTol" min="5" max="120" value="40">
           <output id="wandTolOut">40</output>
           <label class="chk"><input type="checkbox" id="wandEdge" checked> Randlinie einschliessen</label>
+          <label class="chk"><input type="checkbox" id="wandMerge"> Mit letzter Fläche vereinen</label>
         </div>
         <span class="badge" id="status"></span>
       </div>
@@ -477,7 +485,7 @@ function undo(){
   const s = undoStack.pop();
   if (!s){ toast('Nichts zum Rückgängigmachen.'); return; }
   const o = JSON.parse(s);
-  S.cps = o.cps; S.feats = o.feats; S.nextId = o.nextId;
+  S.cps = o.cps; S.feats = o.feats; S.nextId = o.nextId; S.lastWand = null;
   updateTransform(); refreshAll();
 }
 
@@ -621,6 +629,7 @@ const HINTS = {
   pan: 'Ziehen verschiebt · Mausrad oder zwei Finger zoomen · Klick auf ein Objekt wählt es aus',
   cp: 'Klick auf eine Stelle mit bekannten Koordinaten, z.&nbsp;B. ein Gitterkreuz. Die Koordinaten trägst du dann in Schritt 2 ein.',
   wand: 'Tippe mitten in eine farbige Fläche: Das Tool fährt ihren Rand nach. Läuft die Erkennung aus, Toleranz kleiner stellen; bleibt sie zu klein, grösser.',
+  wandLine: 'Tippe auf oder knapp neben eine farbige Linie: Das Tool folgt ihr bis zu beiden Enden, auch über kleine Lücken. Bricht sie zu früh ab, Toleranz grösser stellen.',
   line: 'Klicken setzt Punkte · Doppelklick, Enter oder «Fertig» beendet · Esc bricht ab · Punkte rasten an bestehenden Ecken ein',
   polygon: 'Klicken setzt Ecken · Klick auf die erste Ecke oder Enter schliesst die Fläche · Esc bricht ab',
   point: 'Klick setzt einen Punkt'
@@ -630,8 +639,9 @@ function setMode(m){
   S.mode = m;
   document.querySelectorAll('.tool').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
   cv.classList.toggle('draw', m !== 'pan');
-  $('#hint').innerHTML = HINTS[m];
+  $('#hint').innerHTML = HINTS[m === 'wand' && wandKind === 'line' ? 'wandLine' : m];
   $('#wandOpts').hidden = m !== 'wand';
+  $('#wandEdge').closest('label').hidden = wandKind === 'line';
   refreshDraft(); draw();
 }
 
@@ -653,10 +663,16 @@ function wandMask(img, sx, sy, tol){
     const k = (y*w + x)*4; r += d[k]; g += d[k+1]; b += d[k+2]; n++;
   }
   r /= n; g /= n; b /= n;
-  const t2 = tol*tol*3, stack = new Int32Array(w*h);
+  // Vergleich vor allem nach Farbton, kaum nach Helligkeit: so stört Schummerung/Relief in der Fläche nicht
+  const L0 = (r + g + b) / 3, c0 = r - L0, c1 = g - L0, c2 = b - L0;
+  const thr = (tol * 0.75) ** 2, stack = new Int32Array(w*h);
   let sp = 0, count = 1;
   stack[sp++] = sy*w + sx; mask[sy*w + sx] = 1;
-  const near = j => { const k = j*4, dr = d[k]-r, dg = d[k+1]-g, db = d[k+2]-b; return dr*dr + dg*dg + db*db <= t2; };
+  const near = j => {
+    const k = j*4, R = d[k], G = d[k+1], B = d[k+2], L = (R + G + B) / 3;
+    const e0 = R - L - c0, e1 = G - L - c1, e2 = B - L - c2, eL = L - L0;
+    return 9*(e0*e0 + e1*e1 + e2*e2) + 0.25*eL*eL <= thr;
+  };
   while (sp){
     const i = stack[--sp], x = i % w;
     if (x > 0 && !mask[i-1] && near(i-1)){ mask[i-1] = 1; stack[sp++] = i-1; count++; }
@@ -729,17 +745,149 @@ function wandAt(w){
   const {mask, count, color} = wandMask(img, x, y, +$('#wandTol').value);
   if (count < 40){ toast('Hier ist keine Fläche zu erkennen. Mitten in die Fläche tippen oder Toleranz erhöhen.'); return; }
   if (count > 0.5 * img.width * img.height){ toast('Die Erkennung läuft über den halben Plan aus. Toleranz kleiner stellen.'); return; }
-  const m = $('#wandEdge').checked ? dilate(mask, img.width, img.height, 2) : mask;
+  const prev = S.lastWand && S.lastWand.plan === S.plan && S.feats.find(f => f.id === S.lastWand.id);
+  const merge = $('#wandMerge').checked && prev;
+  let base = mask;
+  if (merge){ base = S.lastWand.mask.slice(); for (let i = 0; i < base.length; i++) if (mask[i]) base[i] = 1; }
+  // beim Vereinen trennende Grenzlinien (wenige Pixel) überbrücken
+  const m = ($('#wandEdge').checked || merge) ? dilate(base, img.width, img.height, merge ? 3 : 2) : base;
   const eps = Math.max(1, Math.min(img.width, img.height) / 700);
   const ring = simplifyRing(traceOutline(m, img.width, img.height), eps).map(p => [p[0] + .5, p[1] + .5]);
   if (ring.length < 3){ toast('Der Rand liess sich nicht nachfahren.'); return; }
   snapshot();
   const hex = '#' + color.map(v => Math.round(Math.max(0, v*0.7)).toString(16).padStart(2, '0')).join('');
-  const f = makeFeature('polygon', ring, 'px', null, hex);
-  S.feats.push(f); refreshAll();
-  toast(`${f.name} erkannt · ${ring.length} Ecken` + (f.lv ? ' · ' + fmtArea(areaOf(f.lv)) : ' · für Koordinaten noch Passpunkte setzen'));
+  let f;
+  if (merge){
+    f = prev; f.px = ring; f.lv = S.T ? ring.map(S.T.fwd) : null;
+  } else {
+    f = makeFeature('polygon', ring, 'px', null, hex);
+    S.feats.push(f);
+  }
+  S.lastWand = {plan: S.plan, id: f.id, mask: base};
+  refreshAll();
+  toast(`${f.name} ${merge ? 'erweitert' : 'erkannt'} · ${ring.length} Ecken` + (f.lv ? ' · ' + fmtArea(areaOf(f.lv)) : ' · für Koordinaten noch Passpunkte setzen') + (merge ? '' : ' · weitere Teile: «Mit letzter Fläche vereinen»'));
 }
 $('#wandTol').addEventListener('input', () => { $('#wandTolOut').textContent = $('#wandTol').value; });
+let wandKind = 'area';
+document.querySelectorAll('.wseg button').forEach(b => b.addEventListener('click', () => {
+  wandKind = b.dataset.wk;
+  document.querySelectorAll('.wseg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  setMode('wand');
+}));
+
+/* ---------- Linie erkennen ---------- */
+const sat = (d, k) => Math.max(d[k], d[k+1], d[k+2]) - Math.min(d[k], d[k+1], d[k+2]);
+// Zhang-Suen-Verdünnung auf einem Ausschnitt
+function thin(m, w, h){
+  const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : m[y*w + x];
+  let changed = true, guard = 0;
+  while (changed && guard++ < 200){
+    changed = false;
+    for (let pass = 0; pass < 2; pass++){
+      const del = [];
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+        if (!m[y*w + x]) continue;
+        const p = [at(x, y-1), at(x+1, y-1), at(x+1, y), at(x+1, y+1), at(x, y+1), at(x-1, y+1), at(x-1, y), at(x-1, y-1)];
+        const B = p.reduce((a, v) => a + v, 0); if (B < 2 || B > 6) continue;
+        let A = 0; for (let i = 0; i < 8; i++) if (!p[i] && p[(i+1) % 8]) A++;
+        if (A !== 1) continue;
+        if (pass === 0 ? (p[0]*p[2]*p[4] || p[2]*p[4]*p[6]) : (p[0]*p[2]*p[6] || p[0]*p[4]*p[6])) continue;
+        del.push(y*w + x);
+      }
+      if (del.length){ changed = true; del.forEach(i => m[i] = 0); }
+    }
+  }
+  return m;
+}
+function longestPath(pts, gap){
+  // Knoten = Skelettpixel; Kanten zu Nachbarn bis Abstand «gap» (überbrückt Lücken)
+  const key = (x, y) => x + ',' + y, idx = new Map();
+  pts.forEach((p, i) => idx.set(key(p[0], p[1]), i));
+  const nb = i => {
+    const [x, y] = pts[i], out = [];
+    for (let dy = -gap; dy <= gap; dy++) for (let dx = -gap; dx <= gap; dx++){
+      if (!dx && !dy) continue;
+      const j = idx.get(key(x + dx, y + dy));
+      if (j !== undefined){ const c = Math.hypot(dx, dy); out.push([j, c > 1.5 ? c * 3 : c]); }
+    }
+    return out;
+  };
+  const N = pts.length, adj = new Array(N);
+  for (let i = 0; i < N; i++) adj[i] = nb(i);
+  const dijkstra = src => {
+    const D = new Float64Array(N).fill(Infinity), P = new Int32Array(N).fill(-1), heap = [[0, src]];
+    D[src] = 0;
+    const push = e => { heap.push(e); let i = heap.length - 1; while (i){ const q = (i - 1) >> 1; if (heap[q][0] <= heap[i][0]) break; [heap[q], heap[i]] = [heap[i], heap[q]]; i = q; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length){ heap[0] = last; let i = 0; for (;;){ const l = 2*i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+    while (heap.length){
+      const [d, u] = pop(); if (d > D[u]) continue;
+      for (const [v, c] of adj[u]) if (d + c < D[v]){ D[v] = d + c; P[v] = u; push([D[v], v]); }
+    }
+    let far = src; for (let i = 0; i < N; i++) if (D[i] < Infinity && D[i] > D[far]) far = i;
+    return {far, P};
+  };
+  const a = dijkstra(0).far, {far: b, P} = dijkstra(a);
+  const path = []; for (let v = b; v !== -1; v = P[v]) path.push(pts[v]);
+  return path;
+}
+function wandLineAt(w){
+  if (space() !== 'plan'){ toast('Die Erkennung braucht einen Plan.'); return; }
+  const img = planPixels();
+  if (!img){ toast('Dieses Bild lässt sich nicht auslesen.'); return; }
+  const {width: W0, height: H0, data: d} = img;
+  const tx = Math.floor(w[0]), ty = Math.floor(w[1]);
+  // im Umkreis des Tipps das farbigste Pixel suchen (Linien sind meist kräftig gefärbt)
+  const R = Math.max(4, Math.round(14 / V.s));
+  let best = -1, bs = -1;
+  for (let y = Math.max(0, ty - R); y <= Math.min(H0 - 1, ty + R); y++) for (let x = Math.max(0, tx - R); x <= Math.min(W0 - 1, tx + R); x++){
+    if ((x - tx)**2 + (y - ty)**2 > R*R) continue;
+    const s = sat(d, (y*W0 + x)*4); if (s > bs){ bs = s; best = y*W0 + x; }
+  }
+  if (best < 0 || bs < 40){ toast('Hier ist keine farbige Linie. Näher an die Linie tippen.'); return; }
+  const k0 = best*4, c = [d[k0], d[k0+1], d[k0+2]];
+  const tol = +$('#wandTol').value, t2 = tol*tol*3;
+  const match = i => { const k = i*4, a = d[k]-c[0], b = d[k+1]-c[1], e = d[k+2]-c[2]; return a*a + b*b + e*e <= t2; };
+  // Pixel gleicher Farbe einsammeln, kleine Lücken (bis «gap» px) überspringen
+  const gap = Math.max(3, Math.round(Math.min(W0, H0) / 250));
+  const seen = new Uint8Array(W0*H0), comp = [], stack = [best];
+  seen[best] = 1;
+  const limit = Math.min(400000, W0*H0*0.08);
+  while (stack.length){
+    const i = stack.pop(); comp.push(i);
+    if (comp.length > limit) break;
+    const x = i % W0, y = (i / W0) | 0;
+    for (let dy = -gap; dy <= gap; dy++){
+      const yy = y + dy; if (yy < 0 || yy >= H0) continue;
+      for (let dx = -gap; dx <= gap; dx++){
+        const xx = x + dx; if (xx < 0 || xx >= W0) continue;
+        const j = yy*W0 + xx; if (seen[j]) continue;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1){ if (!match(j)) continue; } else if (!match(j)) continue;
+        seen[j] = 1; stack.push(j);
+      }
+    }
+  }
+  if (comp.length > limit){ toast('Diese Farbe kommt im Plan zu oft vor. Toleranz kleiner stellen.'); return; }
+  if (comp.length < 15){ toast('Die Linie ist zu kurz oder zu blass. Toleranz grösser stellen.'); return; }
+  // Ausschnitt, leicht verdicken (schliesst Haarrisse), dann verdünnen
+  let x0 = W0, y0 = H0, x1 = 0, y1 = 0;
+  comp.forEach(i => { const x = i % W0, y = (i / W0) | 0; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; });
+  x0 = Math.max(0, x0 - 2); y0 = Math.max(0, y0 - 2); x1 = Math.min(W0 - 1, x1 + 2); y1 = Math.min(H0 - 1, y1 + 2);
+  const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+  let m = new Uint8Array(cw*ch);
+  comp.forEach(i => { m[(((i / W0) | 0) - y0)*cw + (i % W0 - x0)] = 1; });
+  m = thin(dilate(m, cw, ch, 1), cw, ch);
+  const sk = []; for (let i = 0; i < m.length; i++) if (m[i]) sk.push([i % cw, (i / cw) | 0]);
+  if (sk.length < 3){ toast('Die Linie liess sich nicht nachfahren.'); return; }
+  const path = longestPath(sk, gap + 1);
+  const eps = Math.max(0.8, Math.min(W0, H0) / 1500);
+  const line = dpSimplify(path, eps).map(p => [p[0] + x0 + .5, p[1] + y0 + .5]);
+  if (line.length < 2){ toast('Die Linie liess sich nicht nachfahren.'); return; }
+  snapshot();
+  const hex = '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+  const f = makeFeature('line', line, 'px', null, hex);
+  S.feats.push(f); refreshAll();
+  toast(`${f.name} erkannt · ${line.length} Punkte` + (f.lv ? ' · ' + fmtLen(lenOf(f.lv)) : ' · für Koordinaten noch Passpunkte setzen'));
+}
 function computeSnap(sp){
   let best = null;
   const consider = (w, flags) => { const d = dist(toS(w), sp); if (d < 10 && (!best || d < best.d)) best = {w, d, ...flags}; };
@@ -776,7 +924,7 @@ function handleClick(sp){
     if (f) f.sel = !f.sel; else S.feats.forEach(x => x.sel = false);
     refreshFeats(); draw(); return;
   }
-  if (m === 'wand'){ wandAt(toW(sp)); return; }
+  if (m === 'wand'){ (wandKind === 'line' ? wandLineAt : wandAt)(toW(sp)); return; }
   if (m === 'cp'){
     if (space() !== 'plan'){ toast('Passpunkte braucht es nur mit einem Plan.'); return; }
     snapshot();
