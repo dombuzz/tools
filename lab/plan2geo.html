@@ -1,0 +1,1194 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Plan zu GeoJSON</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Cpath d='M24 70 34 26l38 10 6 34-30 10z' fill='white' fill-opacity='.3' stroke='white' stroke-width='7' stroke-linejoin='round'/%3E%3Cg fill='white'%3E%3Ccircle cx='24' cy='70' r='7'/%3E%3Ccircle cx='34' cy='26' r='7'/%3E%3Ccircle cx='72' cy='36' r='7'/%3E%3Ccircle cx='78' cy='70' r='7'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+/* Layout: wie die übrigen Tools auf tools.dombuzz.ch – dunkle Karten, Systemschrift, Akzent Koralle; Arbeitsfläche links, nummerierte Schritte rechts */
+:root{
+  --bg:#121214; --panel:#1c1c1f; --ink:#ececef; --muted:#9a9aa2; --line:#2f2f34; --field:#26262a;
+  --canvas:#0e0e10; --grid:rgba(236,236,239,.13);
+  --accent:#ff4d64; --accent-dark:#d93a50; --accent-ink:#121214;
+  --sel:#4da3ff; --halo:#121214;
+  --warn:#ffb35c; --warn-soft:rgba(255,179,92,.10); --ok:#4caf6f; --ok-soft:rgba(76,175,111,.12);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+.app{display:flex;flex-direction:column;height:100%;padding-inline:16px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 20px;padding-block:24px 16px}
+.hd{flex:1 1 320px;min-width:0}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:#ff4d64}
+.labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:1px}
+.top h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
+.top h1 .acc{color:var(--accent)}
+.top .sub{margin:0;color:var(--muted);font-size:.9rem;max-width:65ch}
+.top .acts{display:flex;gap:8px}
+.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;padding-block:0 20px}
+
+/* Arbeitsfläche */
+.stage{position:relative;min-height:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--canvas)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.stage canvas.draw{cursor:crosshair}
+.ov-top{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none}
+.ov-top>*{pointer-events:auto}
+.toolbar{display:inline-flex;flex-wrap:wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.tool{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:var(--muted);font:600 .86rem var(--sans);padding:7px 12px;border-radius:7px;cursor:pointer}
+.tool kbd{font:600 .68rem var(--mono);color:inherit;opacity:.7;border:1px solid currentColor;border-radius:4px;padding:0 4px}
+.tool:hover{color:var(--ink)}
+.tool[aria-pressed="true"]{background:var(--accent);color:#121214}
+.tool svg{width:16px;height:16px;flex:none}
+.hint{font-size:.8rem;background:rgba(28,28,31,.92);border:1px solid var(--line);border-radius:8px;padding:5px 10px;max-width:min(560px,100%);color:var(--muted)}
+.badge{font:600 .75rem var(--sans);border-radius:999px;padding:3px 10px;border:1px solid transparent}
+.badge.warn{background:var(--warn-soft);color:var(--warn);border-color:rgba(255,179,92,.35)}
+.badge.ok{background:var(--ok-soft);color:var(--ok);border-color:rgba(76,175,111,.4)}
+.badge.info{background:var(--panel);color:var(--muted);border-color:var(--line)}
+.zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;background:var(--field);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.zoom button{border:0;background:transparent;color:var(--ink);width:36px;height:34px;font:500 18px var(--sans);cursor:pointer}
+.zoom button+button{border-top:1px solid var(--line)}
+.zoom button:hover{color:var(--accent)}
+.readout{position:absolute;left:10px;bottom:10px;font:.75rem var(--mono);color:var(--muted);background:rgba(28,28,31,.92);border:1px solid var(--line);border-radius:8px;padding:5px 9px;max-width:calc(100% - 80px);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.draftbar{position:absolute;left:50%;bottom:56px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 14px;box-shadow:0 6px 24px rgba(0,0,0,.4);white-space:nowrap}
+.draftbar span{font-size:.85rem;color:var(--muted)}
+.drop{position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,77,100,.08);border:2px dashed var(--accent);border-radius:14px;font-weight:700;font-size:1.1rem;color:var(--accent);pointer-events:none}
+.empty-stage{position:absolute;inset:0;display:grid;place-items:center;padding:16px;pointer-events:none}
+.empty-stage .box{pointer-events:auto;border:2px dashed var(--line);border-radius:12px;padding:30px 24px;text-align:center;background:var(--field);color:var(--muted);font-size:.85rem;max-width:420px;cursor:pointer;transition:border-color .15s}
+.empty-stage .box:hover{border-color:var(--accent)}
+.empty-stage .box b{display:block;font-size:1rem;margin-bottom:4px;color:var(--ink)}
+
+/* Seitenspalte */
+.side{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:14px;padding-right:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.card h2{margin:0;display:flex;align-items:center;gap:10px;font-size:.95rem}
+.card h2 .step{font-size:.8rem;font-weight:700;background:var(--accent);color:#121214;border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.card h2 .aside{margin-left:auto;font-weight:400;font-size:.8rem;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.82rem;line-height:1.5}
+p{margin:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 .85rem var(--sans);background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:8px 13px;cursor:pointer;text-decoration:none;line-height:1.25}
+.btn:hover{color:var(--ink);border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#121214}
+.btn.primary:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#121214}
+.btn.danger:hover{color:var(--accent)}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.38;cursor:not-allowed;pointer-events:none}
+.btn.file{position:relative}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.btn.file:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input[type=text],textarea,select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 11px;min-width:0;width:100%}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--accent);outline:none}
+textarea{font-family:var(--mono);font-size:.75rem;resize:vertical}
+input[type=checkbox]{accent-color:var(--accent)}
+label.chk{display:inline-flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer}
+.empty{color:var(--muted);font-size:.85rem;border:1px dashed var(--line);border-radius:10px;padding:12px;list-style:none}
+.note{font-size:.82rem;line-height:1.5;border-radius:0 10px 10px 0;padding:9px 12px;background:var(--field);color:var(--muted);border-left:3px solid var(--line)}
+.note.warn{background:var(--warn-soft);color:#ffd2a8;border-left-color:var(--warn)}
+.note.ok{background:var(--ok-soft);color:#b6e6c6;border-left-color:var(--ok)}
+
+/* Passpunkte */
+.cp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding-block:8px;border-top:1px solid var(--line)}
+.cp:first-child{border-top:0;padding-top:0}
+.cp .num{font:700 .75rem var(--sans);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--accent);color:var(--accent)}
+.cp .num.unset{border-style:dashed}
+.cp .px,.cp .res{grid-column:2/4;font:.72rem var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.cp .res.bad{color:var(--warn)}
+
+/* Objekte */
+.feats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
+.feat{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto auto;gap:2px 8px;align-items:center;padding:6px 8px;border-radius:10px;border:1px solid transparent;background:var(--field)}
+.feat.sel{border-color:var(--accent);background:rgba(255,77,100,.08)}
+.feat input[type=color]{width:22px;height:22px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer}
+.feat input.nm{background:transparent;border-color:transparent;padding:3px 6px;font-weight:600}
+.feat input.nm:hover,.feat input.nm:focus{border-color:var(--line);background:var(--bg)}
+.feat .meta{grid-column:3/6;font:.72rem var(--mono);color:var(--muted);padding-left:6px;font-variant-numeric:tabular-nums}
+.icon{border:0;background:transparent;color:var(--muted);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
+.icon:hover{color:var(--ink);background:var(--bg)}
+.icon.danger:hover{color:var(--accent)}
+.ops{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.conv-out{font:.8rem var(--mono);display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;margin:0;font-variant-numeric:tabular-nums}
+.conv-out dt{color:var(--muted)} .conv-out dd{margin:0;overflow-wrap:anywhere}
+details summary{cursor:pointer;font-size:.85rem;color:var(--muted)}
+details summary:hover{color:var(--ink)}
+details[open] summary{margin-bottom:8px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#121214;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;z-index:10}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast,.empty-stage .box{transition:none}}
+
+@media (max-width:940px){
+  html,body{height:auto}
+  .app{height:auto}
+  .work{grid-template-columns:minmax(0,1fr)}
+  .stage{height:66vh;min-height:380px}
+  .side{overflow:visible;padding-right:0}
+  .tool .lbl{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="hd">
+      <a class="homelink" href="/lab/">← Lab</a>
+      <h1>Plan <span class="acc">→</span> GeoJSON<span class="labbadge">Labor</span></h1>
+      <p class="sub">Plan einpassen, Linien und Flächen nachzeichnen, Geometrien verbinden und für Google&nbsp;Maps, QGIS oder map.geo.admin.ch exportieren.</p>
+    </div>
+    <div class="acts">
+      <button class="btn" id="undoBtn" type="button" title="Ctrl/Cmd+Z">Rückgängig</button>
+      <button class="btn danger" id="clearBtn" type="button">Alles leeren</button>
+    </div>
+  </header>
+
+  <main class="work">
+    <section class="stage" id="stage" aria-label="Arbeitsfläche">
+      <canvas id="cv"></canvas>
+      <div class="ov-top">
+        <div class="toolbar" role="toolbar" aria-label="Werkzeuge">
+          <button class="tool" data-mode="pan" type="button" title="Verschieben und auswählen (V)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg><span class="lbl">Verschieben</span><kbd>V</kbd></button>
+          <button class="tool" data-mode="cp" type="button" title="Passpunkt setzen (P)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="4.5"/><path d="M8 0.8v4M8 11.2v4M0.8 8h4M11.2 8h4"/></svg><span class="lbl">Passpunkt</span><kbd>P</kbd></button>
+          <button class="tool" data-mode="line" type="button" title="Linie zeichnen (L)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 13 6 6l4 4 4-7"/></svg><span class="lbl">Linie</span><kbd>L</kbd></button>
+          <button class="tool" data-mode="polygon" type="button" title="Fläche zeichnen (F)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 11 5 3l8 2 1 7-7 2z" fill="currentColor" fill-opacity=".2"/></svg><span class="lbl">Fläche</span><kbd>F</kbd></button>
+          <button class="tool" data-mode="point" type="button" title="Punkt setzen (O)"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3.5"/></svg><span class="lbl">Punkt</span><kbd>O</kbd></button>
+        </div>
+        <div class="hint" id="hint"></div>
+        <span class="badge" id="status"></span>
+      </div>
+      <div class="draftbar" id="draftbar" hidden>
+        <span id="draftInfo"></span>
+        <button class="btn" id="draftBack" type="button" title="Letzten Punkt entfernen (⌫)">↶</button>
+        <button class="btn" id="draftCancel" type="button">Abbrechen</button>
+        <button class="btn primary" id="draftDone" type="button">Fertig</button>
+      </div>
+      <div class="zoom">
+        <button id="zIn" type="button" title="Hineinzoomen" aria-label="Hineinzoomen">+</button>
+        <button id="zOut" type="button" title="Herauszoomen" aria-label="Herauszoomen">−</button>
+        <button id="zFit" type="button" title="Alles zeigen (0)" aria-label="Alles zeigen">⤢</button>
+      </div>
+      <div class="readout" id="readout">–</div>
+      <div class="empty-stage" id="emptyStage"><div class="box" id="emptyBox" role="button" tabindex="0"><b>Plan laden</b>oder Bild hierher ziehen, Screenshot mit Ctrl/Cmd+V einfügen.<br>Ohne Plan zeichnest du direkt in Landeskoordinaten.</div></div>
+      <div class="drop" id="drop" hidden>Datei loslassen</div>
+    </section>
+
+    <aside class="side">
+      <section class="card">
+        <h2><span class="step">1</span>Plan</h2>
+        <p class="muted small">Bild laden, auf die Fläche ziehen oder als Screenshot mit Ctrl/Cmd+V einfügen. Ohne Plan zeichnest du direkt in Landeskoordinaten.</p>
+        <div class="row">
+          <label class="btn file">Plan laden<input class="vh" type="file" id="planFile" accept="image/*"></label>
+          <button class="btn" id="planRemove" type="button">Plan entfernen</button>
+        </div>
+        <p class="small muted" id="planInfo"></p>
+      </section>
+
+      <section class="card" id="cpCard">
+        <h2><span class="step">2</span>Passpunkte</h2>
+        <p class="muted small">Mit «Passpunkt» eine Stelle im Plan anklicken, deren Koordinaten du kennst (Gitterkreuz, Höhenpunkt, Hausecke). Koordinaten in LV95 oder WGS84 eintragen. In map.geo.admin.ch zeigt ein Rechtsklick die Koordinaten zum Kopieren.</p>
+        <div id="cpList"></div>
+        <div id="tInfo" class="note"></div>
+        <label class="chk"><input type="checkbox" id="gridChk" checked> LV95-Gitter über den Plan legen</label>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">3</span>Objekte <span class="aside" id="featCount"></span></h2>
+        <div class="row">
+          <label class="btn file">Datei importieren<input class="vh" type="file" id="impFile" accept=".geojson,.json,.kml,.gpx,application/geo+json,application/json,application/vnd.google-earth.kml+xml,application/gpx+xml" multiple></label>
+          <button class="btn" id="selAll" type="button">Alle wählen</button>
+          <button class="btn" id="selNone" type="button">Keine</button>
+        </div>
+        <details>
+          <summary>Text einfügen (GeoJSON, KML, GPX oder Koordinatenliste)</summary>
+          <textarea id="impText" rows="4" placeholder='{"type":"FeatureCollection", …} oder pro Zeile: 2715000, 1174500'></textarea>
+          <div class="row" style="margin-top:6px"><button class="btn" id="impTextBtn" type="button">Importieren</button></div>
+        </details>
+        <ul class="feats" id="featList"></ul>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">4</span>Bearbeiten <span class="aside" id="selInfo"></span></h2>
+        <div class="ops">
+          <button class="btn" id="opPoly" type="button" title="Ausgewählte Linien oder Punkte zu einer geschlossenen Fläche verbinden">Zu Fläche verbinden</button>
+          <button class="btn" id="opLine" type="button" title="Ausgewählte Linien oder Punkte zu einer Linie verbinden">Zu Linie verbinden</button>
+          <button class="btn" id="opRev" type="button">Richtung umkehren</button>
+          <button class="btn" id="opOutline" type="button">Fläche → Umriss</button>
+          <button class="btn danger" id="opDel" type="button">Auswahl löschen</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="keepOrig" checked> Originale behalten</label>
+        <label class="chk"><input type="checkbox" id="nnOrder" checked> Lose Punkte nach Nähe ordnen</label>
+        <p class="muted small">Linien werden an den nächstgelegenen Enden aneinandergehängt und bei Bedarf umgedreht.</p>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">5</span>Export</h2>
+        <div class="row" style="flex-wrap:nowrap">
+          <select id="expFmt" aria-label="Format">
+            <option value="geojson">GeoJSON (WGS84)</option>
+            <option value="kml">KML (Google Maps / Earth)</option>
+            <option value="gpx">GPX (GPS, Apps)</option>
+            <option value="lv95">GeoJSON (LV95, EPSG:2056)</option>
+          </select>
+        </div>
+        <div class="row">
+          <input type="text" id="expName" value="zeichnung" aria-label="Dateiname" style="flex:1 1 140px">
+          <label class="chk"><input type="checkbox" id="expSel"> nur Auswahl</label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="expSave" type="button">Herunterladen</button>
+          <button class="btn" id="expCopy" type="button">Kopieren</button>
+          <a class="btn" id="expGeojsonio" href="#" target="_blank" rel="noopener">In geojson.io prüfen</a>
+          <a class="btn" id="expGeoadmin" href="#" target="_blank" rel="noopener">map.geo.admin.ch</a>
+        </div>
+        <p class="note" id="expNote"></p>
+        <details>
+          <summary>Vorschau</summary>
+          <textarea id="expPreview" rows="7" readonly></textarea>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2>Koordinaten umrechnen</h2>
+        <input type="text" id="convIn" placeholder="2’715’000, 1’174’500 · 46.7118, 8.9427 · 715000/174500" aria-label="Koordinaten">
+        <dl class="conv-out" id="convOut"></dl>
+        <div class="row">
+          <button class="btn" id="convAdd" type="button" disabled>Als Punkt hinzufügen</button>
+          <a class="btn" id="convGeo" href="#" target="_blank" rel="noopener" aria-disabled="true">map.geo.admin.ch</a>
+          <a class="btn" id="convGoogle" href="#" target="_blank" rel="noopener" aria-disabled="true">Google Maps</a>
+        </div>
+      </section>
+    </aside>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const el = (t, p) => Object.assign(document.createElement(t), p || {});
+const PALETTE = ['#d7261e','#1f4fd1','#2e8b3d','#e08a00','#7b3fb5','#0f8a8a'];
+const KIND = {point:'Punkt', multipoint:'Punkte', line:'Linie', polygon:'Fläche'};
+const S = {plan:null, cps:[], feats:[], mode:'pan', draft:[], T:null, nextId:1, hoverW:null, hoverS:null, snap:null};
+const V = {s:1, tx:0, ty:0};
+let W = 0, H = 0, dpr = 1, raf = 0, undoStack = [];
+
+/* ---------- Format ---------- */
+const fmt0 = n => Math.round(n).toLocaleString('de-CH');
+const fmtD = (n, d) => n.toLocaleString('de-CH', {minimumFractionDigits:d, maximumFractionDigits:d});
+const fmtLen = m => m >= 1000 ? fmtD(m/1000, 2) + ' km' : fmt0(m) + ' m';
+const fmtArea = a => a >= 10000 ? fmtD(a/10000, 2) + ' ha' : fmt0(a) + ' m²';
+const round = (n, d) => { const k = 10 ** d; return Math.round(n * k) / k; };
+const dist = (a, b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
+
+/* ---------- Schweizer Koordinaten (swisstopo-Näherung, ca. 1 m) ---------- */
+function lvToWgs(E, N){
+  const y = (E - 2600000) / 1e6, x = (N - 1200000) / 1e6;
+  const l = 2.6779094 + 4.728982*y + 0.791484*y*x + 0.1306*y*x*x - 0.0436*y**3;
+  const p = 16.9023892 + 3.238272*x - 0.270978*y*y - 0.002528*x*x - 0.0447*y*y*x - 0.0140*x**3;
+  return [l * 100 / 36, p * 100 / 36]; // [lon, lat]
+}
+function wgsToLv(lat, lon){
+  const p = (lat*3600 - 169028.66) / 10000, l = (lon*3600 - 26782.5) / 10000;
+  const E = 2600072.37 + 211455.93*l - 10938.51*l*p - 0.36*l*p*p - 44.54*l**3;
+  const N = 1200147.07 + 308807.95*p + 3745.25*l*l + 76.63*p*p - 194.56*l*l*p + 119.79*p**3;
+  return [E, N];
+}
+function anyToLv(c){
+  const [x, y] = c;
+  if (x > 1e6) return [x, y];
+  if (x > 1e5) return [x + 2e6, y + 1e6];
+  return wgsToLv(y, x);
+}
+function parseCoord(t){
+  if (!t) return null;
+  let s = String(t).replace(/['’‘`´ʼ]/g, '');
+  let nums = s.match(/-?\d+(?:\.\d+)?/g);
+  if (!nums) return null;
+  if (nums.length === 4 && !s.includes('.')) nums = [nums[0]+'.'+nums[1], nums[2]+'.'+nums[3]];
+  if (nums.length < 2) return null;
+  let [a, b] = nums.slice(0, 2).map(Number);
+  if (a >= 2e6 && b >= 1e6 && b < 2e6) return {E:a, N:b, src:'LV95'};
+  if (b >= 2e6 && a >= 1e6 && a < 2e6) return {E:b, N:a, src:'LV95'};
+  if (a >= 4e5 && a < 1e6 && b < 4e5 && b > 0) return {E:a+2e6, N:b+1e6, src:'LV03'};
+  if (b >= 4e5 && b < 1e6 && a < 4e5 && a > 0) return {E:b+2e6, N:a+1e6, src:'LV03'};
+  const isLat = v => v >= 43 && v <= 49, isLon = v => v >= 3 && v <= 13;
+  if (isLat(a) && isLon(b)) { const [E, N] = wgsToLv(a, b); return {E, N, src:'WGS84'}; }
+  if (isLon(a) && isLat(b)) { const [E, N] = wgsToLv(b, a); return {E, N, src:'WGS84'}; }
+  return null;
+}
+
+/* ---------- Transformation Plan-Pixel → LV95 ---------- */
+function solve3(M, b){
+  const A = M.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < 3; c++){
+    let p = c;
+    for (let r = c + 1; r < 3; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]];
+    if (Math.abs(A[c][c]) < 1e-12) return null;
+    for (let r = 0; r < 3; r++){
+      if (r === c) continue;
+      const f = A[r][c] / A[c][c];
+      for (let k = c; k < 4; k++) A[r][k] -= f * A[c][k];
+    }
+  }
+  return [A[0][3]/A[0][0], A[1][3]/A[1][1], A[2][3]/A[2][2]];
+}
+function fitTransform(cps){
+  const pts = cps.filter(c => c.E != null);
+  if (pts.length < 2) return null;
+  let a, b, c, d, e, f, kind;
+  if (pts.length === 2){
+    const [p, q] = pts;
+    const z0 = [p.px[0], -p.px[1]], z1 = [q.px[0], -q.px[1]];
+    const dz = [z1[0]-z0[0], z1[1]-z0[1]], dw = [q.E-p.E, q.N-p.N];
+    const den = dz[0]**2 + dz[1]**2;
+    if (den < 1e-9) return null;
+    const ar = (dw[0]*dz[0] + dw[1]*dz[1]) / den, ai = (dw[1]*dz[0] - dw[0]*dz[1]) / den;
+    const br = p.E - (ar*z0[0] - ai*z0[1]), bi = p.N - (ar*z0[1] + ai*z0[0]);
+    a = ar; b = ai; c = br; d = ai; e = -ar; f = bi; kind = 'sim';
+  } else {
+    const M = [[0,0,0],[0,0,0],[0,0,0]], bx = [0,0,0], by = [0,0,0];
+    for (const p of pts){
+      const v = [p.px[0], p.px[1], 1];
+      for (let i = 0; i < 3; i++){ for (let j = 0; j < 3; j++) M[i][j] += v[i]*v[j]; bx[i] += v[i]*p.E; by[i] += v[i]*p.N; }
+    }
+    const sx = solve3(M, bx), sy = solve3(M, by);
+    if (!sx || !sy) return null;
+    [a, b, c] = sx; [d, e, f] = sy; kind = 'aff';
+  }
+  const det = a*e - b*d;
+  if (Math.abs(det) < 1e-12) return null;
+  const T = {kind, n: pts.length};
+  T.fwd = ([x, y]) => [a*x + b*y + c, d*x + e*y + f];
+  T.inv = ([E, N]) => { const X = E - c, Y = N - f; return [(e*X - b*Y)/det, (-d*X + a*Y)/det]; };
+  T.scale = Math.sqrt(Math.abs(det));
+  T.rot = Math.atan2(d, a) * 180 / Math.PI;
+  T.res = new Map();
+  let ss = 0;
+  for (const p of pts){ const r = dist(T.fwd(p.px), [p.E, p.N]); T.res.set(p.id, r); ss += r*r; }
+  T.rms = Math.sqrt(ss / pts.length);
+  return T;
+}
+function updateTransform(){
+  S.T = S.plan ? fitTransform(S.cps) : null;
+  for (const f of S.feats) if (f.src === 'plan') f.lv = S.T ? f.px.map(S.T.fwd) : null;
+}
+
+/* ---------- Geometrie ---------- */
+function lenOf(c, closed){ let L = 0; for (let i = 1; i < c.length; i++) L += dist(c[i-1], c[i]); if (closed && c.length > 2) L += dist(c[c.length-1], c[0]); return L; }
+function signedArea(c){ let A = 0; for (let i = 0; i < c.length; i++){ const p = c[i], q = c[(i+1) % c.length]; A += p[0]*q[1] - q[0]*p[1]; } return A / 2; }
+const areaOf = c => Math.abs(signedArea(c));
+const ringCCW = c => signedArea(c) > 0 ? c : c.slice().reverse();
+const openRing = c => (c.length > 1 && dist(c[0], c[c.length-1]) < 1e-9) ? c.slice(0, -1) : c;
+function dedupe(c, tol = 0.01){ const o = []; for (const p of c) if (!o.length || dist(o[o.length-1], p) > tol) o.push(p); return o; }
+function chain(parts){
+  parts = parts.filter(p => p.length).map(p => p.map(q => q.slice()));
+  if (!parts.length) return [];
+  let out = parts.shift();
+  if (parts.length){
+    const ends = parts.flatMap(p => [p[0], p[p.length-1]]);
+    const dEnd = Math.min(...ends.map(q => dist(out[out.length-1], q)));
+    const dStart = Math.min(...ends.map(q => dist(out[0], q)));
+    if (dStart < dEnd) out.reverse();
+  }
+  while (parts.length){
+    const end = out[out.length-1];
+    let best = null;
+    parts.forEach((p, i) => {
+      const ds = dist(end, p[0]), de = dist(end, p[p.length-1]);
+      if (!best || ds < best.d) best = {i, d: ds, rev: false};
+      if (de < best.d) best = {i, d: de, rev: true};
+    });
+    const p = parts.splice(best.i, 1)[0];
+    if (best.rev) p.reverse();
+    out = out.concat(p);
+  }
+  return out;
+}
+function nnOrder(c){
+  if (c.length < 3) return c;
+  const rest = c.slice(1), out = [c[0]];
+  while (rest.length){
+    const last = out[out.length-1];
+    let bi = 0, bd = Infinity;
+    rest.forEach((p, i) => { const d = dist(last, p); if (d < bd){ bd = d; bi = i; } });
+    out.push(rest.splice(bi, 1)[0]);
+  }
+  return out;
+}
+
+/* ---------- Räume: Plan-Pixel oder Karte (E, −N) ---------- */
+const space = () => S.plan ? 'plan' : 'geo';
+function featWorld(f){
+  if (space() === 'plan'){
+    if (f.src === 'plan') return f.px;
+    return (f.lv && S.T) ? f.lv.map(S.T.inv) : null;
+  }
+  return f.lv ? f.lv.map(([E, N]) => [E, -N]) : null;
+}
+function worldToLv(w){
+  if (space() === 'plan') return S.T ? S.T.fwd(w) : null;
+  return [w[0], -w[1]];
+}
+const toS = ([x, y]) => [x*V.s + V.tx, y*V.s + V.ty];
+const toW = ([X, Y]) => [(X - V.tx)/V.s, (Y - V.ty)/V.s];
+
+/* ---------- Objekte ---------- */
+function defaultName(kind){ return KIND[kind === 'multipoint' ? 'point' : kind] + ' ' + (S.feats.filter(f => f.kind === kind).length + 1); }
+const nextColor = () => PALETTE[S.feats.length % PALETTE.length];
+function makeFeature(kind, coords, key, name, color){
+  const f = {id: S.nextId++, kind, name: name || defaultName(kind), color: color || nextColor(), visible: true, sel: false};
+  if (key === 'px'){ f.src = 'plan'; f.px = coords; f.lv = S.T ? coords.map(S.T.fwd) : null; }
+  else { f.src = 'geo'; f.lv = coords; }
+  return f;
+}
+function addFromWorld(kind, pts){
+  let f;
+  if (space() === 'plan') f = makeFeature(kind, pts.map(p => [round(p[0], 2), round(p[1], 2)]), 'px');
+  else f = makeFeature(kind, pts.map(([x, y]) => [round(x, 2), round(-y, 2)]), 'lv');
+  S.feats.push(f);
+  return f;
+}
+const selected = () => S.feats.filter(f => f.sel);
+
+/* ---------- Rückgängig ---------- */
+function snapshot(){ undoStack.push(JSON.stringify({cps: S.cps, feats: S.feats, nextId: S.nextId})); if (undoStack.length > 80) undoStack.shift(); }
+function undo(){
+  if (S.draft.length){ S.draft.pop(); refreshDraft(); draw(); return; }
+  const s = undoStack.pop();
+  if (!s){ toast('Nichts zum Rückgängigmachen.'); return; }
+  const o = JSON.parse(s);
+  S.cps = o.cps; S.feats = o.feats; S.nextId = o.nextId;
+  updateTransform(); refreshAll();
+}
+
+/* ---------- Zeichnen ---------- */
+const cv = $('#cv'), ctx = cv.getContext('2d'), stage = $('#stage');
+let C = {};
+function readColors(){
+  const cs = getComputedStyle(document.documentElement), g = v => cs.getPropertyValue(v).trim();
+  C = {canvas: g('--canvas'), grid: g('--grid'), muted: g('--muted'), ink: g('--ink'), accent: g('--accent'), halo: g('--halo'), sel: g('--sel'), panel: g('--panel')};
+}
+function hexA(hex, a){ const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(x => x+x).join('') : h, 16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
+function resize(){
+  const r = stage.getBoundingClientRect();
+  dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  draw();
+}
+function draw(){ if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); }
+function niceStep(minWorld){ const steps = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000]; return steps.find(s => s >= minWorld) || 100000; }
+
+function render(){
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = C.canvas; ctx.fillRect(0, 0, W, H);
+  ctx.font = '11px "IBM Plex Mono", ui-monospace, monospace';
+  if (space() === 'plan'){
+    const [x0, y0] = toS([0, 0]);
+    ctx.imageSmoothingEnabled = V.s < 2;
+    ctx.drawImage(S.plan.img, x0, y0, S.plan.w*V.s, S.plan.h*V.s);
+    if (S.T && $('#gridChk').checked) gridOnPlan();
+  } else gridGeo();
+  for (const f of S.feats) if (f.visible) drawFeat(f);
+  if (space() === 'plan') S.cps.forEach((cp, i) => drawCp(cp, i));
+  drawDraft();
+  if (S.snap){ const [x, y] = toS(S.snap.w); ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke(); }
+}
+function gridLabel(text, x, y, align){
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(text).width + 8;
+  const bx = align === 'left' ? x - 4 : x - w/2;
+  ctx.fillStyle = hexA(C.panel.startsWith('#') ? C.panel : '#ffffff', .85); ctx.fillRect(bx, y - 8, w, 16);
+  ctx.fillStyle = C.muted; ctx.fillText(text, x, y);
+}
+function gridGeo(){
+  const [wx0, wy0] = toW([0, 0]), [wx1, wy1] = toW([W, H]);
+  const step = niceStep(90 / V.s);
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = Math.ceil(wx0/step)*step; x <= wx1; x += step){ const X = Math.round(toS([x, 0])[0]) + .5; ctx.moveTo(X, 0); ctx.lineTo(X, H); }
+  for (let y = Math.ceil(wy0/step)*step; y <= wy1; y += step){ const Y = Math.round(toS([0, y])[1]) + .5; ctx.moveTo(0, Y); ctx.lineTo(W, Y); }
+  ctx.stroke();
+  for (let x = Math.ceil(wx0/step)*step; x <= wx1; x += step) gridLabel(fmt0(x), toS([x, 0])[0], H - 46, 'center');
+  for (let y = Math.ceil(wy0/step)*step; y <= wy1; y += step) gridLabel(fmt0(-y), 8, toS([0, y])[1], 'left');
+}
+function gridOnPlan(){
+  const T = S.T, w = S.plan.w, h = S.plan.h;
+  const cs = [[0,0],[w,0],[0,h],[w,h]].map(T.fwd);
+  const Es = cs.map(c => c[0]), Ns = cs.map(c => c[1]);
+  const E0 = Math.min(...Es), E1 = Math.max(...Es), N0 = Math.min(...Ns), N1 = Math.max(...Ns);
+  const step = niceStep(110 * T.scale / V.s);
+  const [px0, py0] = toS([0, 0]), [px1, py1] = toS([w, h]);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(px0, py0, px1 - px0, py1 - py0); ctx.clip();
+  ctx.strokeStyle = hexA(C.accent.startsWith('#') ? C.accent : '#d52b1e', .55); ctx.lineWidth = 1; ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  const vis = [];
+  for (let E = Math.ceil(E0/step)*step; E <= E1; E += step){ const a = toS(T.inv([E, N0])), b = toS(T.inv([E, N1])); ctx.moveTo(...a); ctx.lineTo(...b); vis.push(['E', E, a, b]); }
+  for (let N = Math.ceil(N0/step)*step; N <= N1; N += step){ const a = toS(T.inv([E0, N])), b = toS(T.inv([E1, N])); ctx.moveTo(...a); ctx.lineTo(...b); vis.push(['N', N, a, b]); }
+  ctx.stroke(); ctx.setLineDash([]);
+  const top = Math.max(py0, 0) + 70, left = Math.max(px0, 0) + 8, bottom = Math.min(py1, H) - 46;
+  for (const [k, v, a, b] of vis){
+    if (k === 'E'){ const y = bottom; if (Math.abs(b[1]-a[1]) < 1e-6) continue; const x = a[0] + (b[0]-a[0]) * (y - a[1]) / (b[1]-a[1]); if (x > 0 && x < W) gridLabel(fmt0(v), x, y, 'center'); }
+    else { const x = left; if (Math.abs(b[0]-a[0]) < 1e-6) continue; const y = a[1] + (b[1]-a[1]) * (x - a[0]) / (b[0]-a[0]); if (y > top && y < H) gridLabel(fmt0(v), x + 4, y, 'left'); }
+  }
+  ctx.restore();
+}
+function drawFeat(f){
+  const w = featWorld(f); if (!w || !w.length) return;
+  const s = w.map(toS);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (f.kind === 'point' || f.kind === 'multipoint'){
+    for (const [x, y] of s){ ctx.beginPath(); ctx.arc(x, y, f.sel ? 7 : 5.5, 0, 7); ctx.fillStyle = f.color; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = f.sel ? C.sel : C.halo; ctx.stroke(); }
+    return;
+  }
+  const path = () => { ctx.beginPath(); s.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); if (f.kind === 'polygon') ctx.closePath(); };
+  if (f.kind === 'polygon'){ path(); ctx.fillStyle = hexA(f.color, f.sel ? .32 : .22); ctx.fill(); }
+  path(); ctx.strokeStyle = f.sel ? C.sel : hexA(C.halo.startsWith('#') ? C.halo : '#ffffff', .75); ctx.lineWidth = f.sel ? 8 : 6; ctx.stroke();
+  path(); ctx.strokeStyle = f.color; ctx.lineWidth = 3.2; ctx.stroke();
+  if (f.sel){
+    for (const [x, y] of s){ ctx.fillStyle = C.halo; ctx.fillRect(x - 3.5, y - 3.5, 7, 7); ctx.strokeStyle = C.sel; ctx.lineWidth = 1.5; ctx.strokeRect(x - 3.5, y - 3.5, 7, 7); }
+    if (f.kind === 'line' && s.length > 1){ // Richtungspfeil am Ende
+      const [x1, y1] = s[s.length-2], [x2, y2] = s[s.length-1], ang = Math.atan2(y2-y1, x2-x1);
+      ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 - 13*Math.cos(ang-.45), y2 - 13*Math.sin(ang-.45)); ctx.lineTo(x2 - 13*Math.cos(ang+.45), y2 - 13*Math.sin(ang+.45)); ctx.closePath(); ctx.fillStyle = C.sel; ctx.fill();
+    }
+  }
+}
+function drawCp(cp, i){
+  const [x, y] = toS(cp.px);
+  ctx.save();
+  ctx.lineWidth = 4; ctx.strokeStyle = C.halo;
+  ctx.beginPath(); ctx.arc(x, y, 10, 0, 7); ctx.stroke();
+  ctx.lineWidth = 2; ctx.strokeStyle = C.accent; if (cp.E == null) ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.arc(x, y, 10, 0, 7); ctx.moveTo(x - 16, y); ctx.lineTo(x - 4, y); ctx.moveTo(x + 4, y); ctx.lineTo(x + 16, y); ctx.moveTo(x, y - 16); ctx.lineTo(x, y - 4); ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 16); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = '600 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = C.accent; ctx.fillRect(x + 10, y - 24, 18, 16); ctx.fillStyle = '#fff'; ctx.fillText(String(i + 1), x + 19, y - 16);
+  ctx.restore();
+}
+function drawDraft(){
+  if (!S.draft.length) return;
+  const s = S.draft.map(toS), hov = S.snap ? toS(S.snap.w) : S.hoverS;
+  ctx.save();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = C.accent; ctx.lineJoin = 'round';
+  ctx.beginPath(); s.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
+  if (hov){ ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.moveTo(...s[s.length-1]); ctx.lineTo(...hov); if (S.mode === 'polygon' && s.length >= 2) ctx.lineTo(...s[0]); ctx.stroke(); ctx.setLineDash([]); }
+  for (const [x, y] of s){ ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fillStyle = C.halo; ctx.fill(); ctx.lineWidth = 2; ctx.stroke(); }
+  ctx.restore();
+}
+
+/* ---------- Ansicht ---------- */
+function fit(){
+  let b;
+  if (space() === 'plan') b = [0, 0, S.plan.w, S.plan.h];
+  else {
+    const pts = S.feats.flatMap(f => (f.visible && featWorld(f)) || []);
+    if (pts.length){ const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); b = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
+    else b = [2758500, -1191600, 2760500, -1190000]; // Chur
+    const cx = (b[0]+b[2])/2, cy = (b[1]+b[3])/2, half = Math.max(b[2]-b[0], b[3]-b[1], 300) / 2;
+    b = [cx - half, cy - half, cx + half, cy + half];
+  }
+  const bw = b[2]-b[0], bh = b[3]-b[1], pad = 40;
+  V.s = Math.min((W - pad*2)/bw, (H - pad*2 - 50)/bh);
+  V.tx = (W - bw*V.s)/2 - b[0]*V.s; V.ty = (H - bh*V.s)/2 + 22 - b[1]*V.s;
+  draw();
+}
+function zoomAt(x, y, k){
+  const s = Math.min(Math.max(V.s * k, 1e-5), 200), kk = s / V.s;
+  V.tx = x - (x - V.tx)*kk; V.ty = y - (y - V.ty)*kk; V.s = s; draw();
+}
+
+/* ---------- Interaktion ---------- */
+const HINTS = {
+  pan: 'Ziehen verschiebt · Mausrad oder zwei Finger zoomen · Klick auf ein Objekt wählt es aus',
+  cp: 'Klick auf eine Stelle mit bekannten Koordinaten, z.&nbsp;B. ein Gitterkreuz. Koordinaten dann rechts eintragen.',
+  line: 'Klicken setzt Punkte · Doppelklick, Enter oder «Fertig» beendet · Esc bricht ab · Punkte rasten an bestehenden Ecken ein',
+  polygon: 'Klicken setzt Ecken · Klick auf die erste Ecke oder Enter schliesst die Fläche · Esc bricht ab',
+  point: 'Klick setzt einen Punkt'
+};
+function setMode(m){
+  if (S.draft.length && m !== S.mode) S.draft = [];
+  S.mode = m;
+  document.querySelectorAll('.tool').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+  cv.classList.toggle('draw', m !== 'pan');
+  $('#hint').innerHTML = HINTS[m];
+  refreshDraft(); draw();
+}
+function computeSnap(sp){
+  let best = null;
+  const consider = (w, flags) => { const d = dist(toS(w), sp); if (d < 10 && (!best || d < best.d)) best = {w, d, ...flags}; };
+  for (const f of S.feats){ if (!f.visible) continue; const w = featWorld(f); if (w) w.forEach(p => consider(p, {})); }
+  if (S.draft.length){
+    consider(S.draft[0], {first: true});
+    if (S.draft.length > 1) consider(S.draft[S.draft.length-1], {last: true});
+    else if (S.draft.length === 1 && best && best.w === S.draft[0]) best.last = true;
+  }
+  return best;
+}
+function segDist(p, a, b){
+  const dx = b[0]-a[0], dy = b[1]-a[1], L = dx*dx + dy*dy;
+  let t = L ? ((p[0]-a[0])*dx + (p[1]-a[1])*dy) / L : 0; t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p[0] - (a[0] + t*dx), p[1] - (a[1] + t*dy));
+}
+function inPoly(p, s){ let c = false; for (let i = 0, j = s.length - 1; i < s.length; j = i++){ const [xi, yi] = s[i], [xj, yj] = s[j]; if ((yi > p[1]) !== (yj > p[1]) && p[0] < (xj - xi)*(p[1] - yi)/(yj - yi) + xi) c = !c; } return c; }
+function hitTest(sp){
+  for (let k = S.feats.length - 1; k >= 0; k--){
+    const f = S.feats[k]; if (!f.visible) continue;
+    const w = featWorld(f); if (!w) continue;
+    const s = w.map(toS);
+    if (f.kind === 'point' || f.kind === 'multipoint'){ if (s.some(q => dist(q, sp) < 9)) return f; continue; }
+    for (let i = 1; i < s.length; i++) if (segDist(sp, s[i-1], s[i]) < 7) return f;
+    if (f.kind === 'polygon' && (segDist(sp, s[s.length-1], s[0]) < 7 || inPoly(sp, s))) return f;
+  }
+  return null;
+}
+function handleClick(sp){
+  const w = S.snap ? S.snap.w.slice() : toW(sp);
+  const m = S.mode;
+  if (m === 'pan'){
+    const f = hitTest(sp);
+    if (f) f.sel = !f.sel; else S.feats.forEach(x => x.sel = false);
+    refreshFeats(); draw(); return;
+  }
+  if (m === 'cp'){
+    if (space() !== 'plan'){ toast('Passpunkte braucht es nur mit einem Plan.'); return; }
+    snapshot();
+    const cp = {id: S.nextId++, px: [round(w[0], 2), round(w[1], 2)], E: null, N: null, txt: ''};
+    S.cps.push(cp); renderCps(); draw();
+    const inp = document.getElementById('cp' + cp.id); if (inp) inp.focus();
+    return;
+  }
+  if (m === 'point'){ snapshot(); addFromWorld('point', [w]); refreshAll(); return; }
+  if (S.snap && ((S.snap.first && m === 'polygon' && S.draft.length >= 3) || (S.snap.last && S.draft.length >= (m === 'polygon' ? 3 : 2)))){ finishDraft(); return; }
+  if (S.snap && S.snap.last) return; // Doppelklick zu früh
+  S.draft.push(w); refreshDraft(); draw();
+}
+function finishDraft(){
+  const m = S.mode, pts = dedupe(S.draft, 1e-6);
+  const need = m === 'polygon' ? 3 : 2;
+  if (pts.length < need){ toast(m === 'polygon' ? 'Eine Fläche braucht mindestens 3 Ecken.' : 'Eine Linie braucht mindestens 2 Punkte.'); return; }
+  snapshot();
+  const f = addFromWorld(m, pts);
+  S.draft = []; S.snap = null;
+  refreshAll();
+  toast(`${f.name} erstellt` + (f.lv ? ' · ' + (m === 'polygon' ? fmtArea(areaOf(f.lv)) : fmtLen(lenOf(f.lv))) : ''));
+}
+function refreshDraft(){
+  const n = S.draft.length;
+  $('#draftbar').hidden = !n;
+  if (n) $('#draftInfo').textContent = `${S.mode === 'polygon' ? 'Fläche' : 'Linie'} · ${n} ${n === 1 ? 'Punkt' : 'Punkte'}`;
+}
+
+const ptrs = new Map(); let drag = null, pinch = null, gesture = false;
+const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId);
+  const p = pos(e); ptrs.set(e.pointerId, p);
+  if (ptrs.size === 1){ drag = {p0: p, tx: V.tx, ty: V.ty, moved: false, btn: e.button}; gesture = false; }
+  else if (ptrs.size === 2){
+    const [a, b] = [...ptrs.values()];
+    pinch = {d: dist(a, b), m: [(a[0]+b[0])/2, (a[1]+b[1])/2], s: V.s, tx: V.tx, ty: V.ty};
+    drag = null; gesture = true;
+  }
+});
+cv.addEventListener('pointermove', e => {
+  const p = pos(e);
+  if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, p);
+  if (pinch && ptrs.size === 2){
+    const [a, b] = [...ptrs.values()], m = [(a[0]+b[0])/2, (a[1]+b[1])/2];
+    const s = Math.min(Math.max(pinch.s * dist(a, b) / pinch.d, 1e-5), 200);
+    const wx = (pinch.m[0] - pinch.tx)/pinch.s, wy = (pinch.m[1] - pinch.ty)/pinch.s;
+    V.s = s; V.tx = m[0] - wx*s; V.ty = m[1] - wy*s; draw(); return;
+  }
+  if (drag){
+    const dx = p[0] - drag.p0[0], dy = p[1] - drag.p0[1];
+    if (!drag.moved && Math.hypot(dx, dy) > 4) drag.moved = true;
+    if (drag.moved){ V.tx = drag.tx + dx; V.ty = drag.ty + dy; }
+  }
+  S.hoverS = p; S.hoverW = toW(p);
+  S.snap = (S.mode === 'line' || S.mode === 'polygon' || S.mode === 'point') && !(drag && drag.moved) ? computeSnap(p) : null;
+  updateReadout(); draw();
+});
+const endPtr = e => {
+  const p = pos(e);
+  const wasClick = drag && !drag.moved && drag.btn === 0 && !gesture && ptrs.size === 1;
+  ptrs.delete(e.pointerId);
+  if (ptrs.size < 2) pinch = null;
+  if (wasClick && e.type === 'pointerup') handleClick(p);
+  if (!ptrs.size){ drag = null; gesture = false; }
+};
+cv.addEventListener('pointerup', endPtr);
+cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('pointerleave', () => { if (!ptrs.size){ S.hoverS = S.hoverW = S.snap = null; updateReadout(); draw(); } });
+cv.addEventListener('wheel', e => { e.preventDefault(); const p = pos(e); zoomAt(p[0], p[1], Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015))); }, {passive: false});
+cv.addEventListener('contextmenu', e => { if (S.draft.length){ e.preventDefault(); finishDraft(); } });
+
+function updateReadout(){
+  const r = $('#readout');
+  if (!S.hoverW){ r.textContent = space() === 'plan' ? (S.T ? 'Maus über den Plan: Koordinaten' : 'Plan · noch ohne Koordinaten') : 'Kartenmodus · LV95'; return; }
+  const lv = worldToLv(S.hoverW);
+  if (!lv){ r.textContent = `Plan x ${fmt0(S.hoverW[0])} · y ${fmt0(S.hoverW[1])}`; return; }
+  const [lon, lat] = lvToWgs(lv[0], lv[1]);
+  r.textContent = `E ${fmt0(lv[0])} · N ${fmt0(lv[1])} · ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+}
+
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)){ e.preventDefault(); undo(); return; }
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  if (k === 'Enter' && S.draft.length){ e.preventDefault(); finishDraft(); }
+  else if (k === 'Escape'){ if (S.draft.length){ S.draft = []; refreshDraft(); draw(); } else { S.feats.forEach(f => f.sel = false); refreshFeats(); draw(); } }
+  else if ((k === 'Backspace' || k === 'Delete') && S.draft.length){ e.preventDefault(); S.draft.pop(); refreshDraft(); draw(); }
+  else if ((k === 'Backspace' || k === 'Delete') && selected().length){ e.preventDefault(); opDelete(); }
+  else if (k === 'v' || k === 'V') setMode('pan');
+  else if (k === 'p' || k === 'P') setMode('cp');
+  else if (k === 'l' || k === 'L') setMode('line');
+  else if (k === 'f' || k === 'F') setMode('polygon');
+  else if (k === 'o' || k === 'O') setMode('point');
+  else if (k === '0') fit();
+  else if (k === '+' || k === '=') zoomAt(W/2, H/2, 1.4);
+  else if (k === '-') zoomAt(W/2, H/2, 1/1.4);
+});
+document.querySelectorAll('.tool').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+$('#zIn').onclick = () => zoomAt(W/2, H/2, 1.4);
+$('#zOut').onclick = () => zoomAt(W/2, H/2, 1/1.4);
+$('#zFit').onclick = fit;
+$('#draftDone').onclick = finishDraft;
+$('#draftCancel').onclick = () => { S.draft = []; refreshDraft(); draw(); };
+$('#draftBack').onclick = () => { S.draft.pop(); refreshDraft(); draw(); };
+$('#undoBtn').onclick = undo;
+$('#gridChk').onchange = draw;
+
+/* ---------- Plan ---------- */
+function setPlan(img, name){
+  let lost = 0;
+  S.feats = S.feats.filter(f => { if (f.src !== 'plan') return true; if (!f.lv) { lost++; return false; } f.src = 'geo'; delete f.px; return true; });
+  S.plan = img ? {img, w: img.naturalWidth, h: img.naturalHeight, name} : null;
+  S.cps = []; S.draft = []; undoStack = [];
+  updateTransform(); fit(); refreshAll(); refreshDraft();
+  if (lost) toast(`${lost} nicht georeferenzierte Objekt(e) entfernt.`);
+}
+function loadPlanBlob(blob, name){
+  const url = URL.createObjectURL(blob), img = new Image();
+  img.onload = () => { setPlan(img, name || 'Eingefügtes Bild'); toast('Plan geladen. Jetzt Passpunkte setzen.'); if (S.mode === 'pan') setMode('cp'); };
+  img.onerror = () => toast('Dieses Bild kann nicht geöffnet werden. PNG oder JPG verwenden.');
+  img.src = url;
+}
+$('#planFile').onchange = e => { const f = e.target.files[0]; if (f) loadPlanBlob(f, f.name); e.target.value = ''; };
+$('#emptyBox').onclick = () => $('#planFile').click();
+$('#emptyBox').onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('#planFile').click(); } };
+$('#planRemove').onclick = () => { if (!S.plan) return; setPlan(null); toast('Plan entfernt. Georeferenzierte Objekte bleiben erhalten.'); };
+
+/* ---------- Passpunkte ---------- */
+function renderCps(){
+  const box = $('#cpList'); box.textContent = '';
+  $('#cpCard').style.opacity = S.plan ? '' : '.6';
+  if (!S.plan){ box.append(el('p', {className: 'empty', textContent: 'Ohne Plan braucht es keine Passpunkte.'})); renderTInfo(); return; }
+  if (!S.cps.length) box.append(el('p', {className: 'empty', textContent: 'Noch keine Passpunkte. Werkzeug «Passpunkt» wählen und im Plan klicken.'}));
+  S.cps.forEach((cp, i) => {
+    const row = el('div', {className: 'cp'});
+    const num = el('span', {className: 'num' + (cp.E == null ? ' unset' : ''), textContent: i + 1});
+    const inp = el('input', {type: 'text', id: 'cp' + cp.id, value: cp.txt || '', placeholder: '2’715’000, 1’174’500 oder 46.71, 8.94'});
+    inp.setAttribute('aria-label', `Koordinaten Passpunkt ${i + 1}`);
+    const del = el('button', {className: 'icon danger', type: 'button', title: 'Passpunkt löschen', textContent: '×'});
+    const px = el('span', {className: 'px'});
+    const p = cp.E != null ? {E: cp.E, N: cp.N} : null;
+    px.textContent = `Plan x ${fmt0(cp.px[0])} · y ${fmt0(cp.px[1])}` + (p ? `  →  E ${fmt0(p.E)} · N ${fmt0(p.N)}` : cp.txt ? '  →  Koordinaten nicht erkannt' : '');
+    row.append(num, inp, del, px);
+    if (S.T && S.T.n >= 4 && S.T.res.has(cp.id)){
+      const r = S.T.res.get(cp.id);
+      row.append(el('span', {className: 'res' + (r > Math.max(3*S.T.rms, 5) ? ' bad' : ''), textContent: `Abweichung ${fmtD(r, 1)} m`}));
+    }
+    inp.onchange = () => {
+      snapshot();
+      cp.txt = inp.value.trim();
+      const q = parseCoord(cp.txt);
+      if (q){ cp.E = q.E; cp.N = q.N; } else { cp.E = cp.N = null; if (cp.txt) toast('Koordinaten nicht erkannt. Beispiel: 2715000, 1174500'); }
+      updateTransform(); refreshAll();
+    };
+    inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
+    del.onclick = () => { snapshot(); S.cps = S.cps.filter(x => x !== cp); updateTransform(); refreshAll(); };
+    box.append(row);
+  });
+  renderTInfo();
+}
+function renderTInfo(){
+  const n = $('#tInfo'), T = S.T;
+  n.className = 'note';
+  if (!S.plan){ n.textContent = 'Kartenmodus: Du zeichnest direkt in Landeskoordinaten LV95.'; return; }
+  if (!T){ n.classList.add('warn'); n.textContent = 'Noch nicht georeferenziert. Es braucht mindestens 2 Passpunkte mit Koordinaten.'; return; }
+  n.classList.add('ok');
+  const base = `${T.n} Passpunkte · ${fmtD(T.scale, 3)} m pro Pixel · Drehung ${fmtD(T.rot, 1)}°`;
+  if (T.kind === 'sim') n.textContent = base + ' · Massstab und Drehung (Ähnlichkeit). Ein 3. Punkt erlaubt auch Verzerrung, ein 4. eine Kontrolle.';
+  else if (T.n === 3) n.textContent = base + ' · Affintransformation. Ein 4. Punkt zeigt, wie genau es passt.';
+  else n.textContent = base + ` · Affintransformation · mittlere Abweichung ${fmtD(T.rms, 1)} m`;
+}
+
+/* ---------- Objektliste ---------- */
+function metaText(f){
+  const k = KIND[f.kind], c = f.src === 'plan' ? f.px : f.lv, n = c.length;
+  if (!f.lv) return `${k} · ${n} Punkte · noch ohne Koordinaten`;
+  if (f.kind === 'line') return `${k} · ${n} Punkte · ${fmtLen(lenOf(f.lv))}`;
+  if (f.kind === 'polygon') return `${k} · ${n} Ecken · ${fmtArea(areaOf(f.lv))} · Umfang ${fmtLen(lenOf(f.lv, true))}`;
+  if (f.kind === 'multipoint') return `${n} Punkte`;
+  return `${k} · E ${fmt0(f.lv[0][0])} · N ${fmt0(f.lv[0][1])}`;
+}
+function renderFeats(){
+  const ul = $('#featList'); ul.textContent = '';
+  $('#featCount').textContent = S.feats.length ? `${S.feats.length} ${S.feats.length === 1 ? 'Objekt' : 'Objekte'}` : '';
+  if (!S.feats.length){ ul.append(el('li', {className: 'empty', textContent: 'Noch keine Objekte. Im Plan zeichnen oder eine Datei importieren.'})); return; }
+  S.feats.forEach(f => {
+    const li = el('li', {className: 'feat' + (f.sel ? ' sel' : '')});
+    li.dataset.id = f.id;
+    const cb = el('input', {type: 'checkbox', id: 'sel' + f.id, checked: f.sel, title: 'Auswählen'});
+    cb.setAttribute('aria-label', 'Auswählen: ' + f.name);
+    cb.onchange = () => { f.sel = cb.checked; refreshFeats(); draw(); };
+    const col = el('input', {type: 'color', id: 'col' + f.id, value: f.color, title: 'Farbe'});
+    col.oninput = () => { f.color = col.value; draw(); };
+    col.onchange = () => updateExport();
+    const nm = el('input', {type: 'text', id: 'nm' + f.id, className: 'nm', value: f.name});
+    nm.setAttribute('aria-label', 'Name');
+    nm.onchange = () => { snapshot(); f.name = nm.value.trim() || defaultName(f.kind); updateExport(); };
+    const eye = el('button', {type: 'button', className: 'icon', title: f.visible ? 'Ausblenden' : 'Einblenden', textContent: f.visible ? '◉' : '○'});
+    eye.onclick = () => { f.visible = !f.visible; renderFeats(); draw(); };
+    const del = el('button', {type: 'button', className: 'icon danger', title: 'Löschen', textContent: '×'});
+    del.onclick = () => { snapshot(); S.feats = S.feats.filter(x => x !== f); refreshAll(); };
+    const meta = el('div', {className: 'meta', textContent: metaText(f)});
+    li.append(cb, col, nm, eye, del, meta);
+    ul.append(li);
+  });
+}
+function refreshFeats(){
+  document.querySelectorAll('#featList .feat').forEach(li => {
+    const f = S.feats.find(x => String(x.id) === li.dataset.id); if (!f) return;
+    li.classList.toggle('sel', f.sel); li.querySelector('input[type=checkbox]').checked = f.sel;
+  });
+  updateTools(); updateExport();
+}
+$('#selAll').onclick = () => { S.feats.forEach(f => f.sel = true); refreshFeats(); draw(); };
+$('#selNone').onclick = () => { S.feats.forEach(f => f.sel = false); refreshFeats(); draw(); };
+
+/* ---------- Bearbeiten ---------- */
+function updateTools(){
+  const sel = selected(), n = sel.length;
+  const verts = sel.reduce((a, f) => a + (f.src === 'plan' ? f.px : f.lv).length, 0);
+  $('#selInfo').textContent = n ? `${n} ausgewählt` : 'nichts ausgewählt';
+  $('#opPoly').disabled = verts < 3;
+  $('#opLine').disabled = verts < 2;
+  $('#opRev').disabled = !sel.some(f => f.kind === 'line' || f.kind === 'polygon');
+  $('#opOutline').disabled = !sel.some(f => f.kind === 'polygon');
+  $('#opDel').disabled = !n;
+}
+function baseFor(fs){
+  if (S.plan && fs.every(f => f.src === 'plan')) return 'px';
+  if (fs.every(f => f.lv)) return 'lv';
+  return null;
+}
+function opJoin(asPolygon){
+  const fs = selected(); if (!fs.length) return;
+  const key = baseFor(fs);
+  if (!key){ toast('Die Auswahl enthält Objekte ohne Koordinaten. Zuerst den Plan georeferenzieren.'); return; }
+  const get = f => (key === 'px' ? f.px : f.lv).map(p => p.slice());
+  let c;
+  if (fs.every(f => f.kind === 'point' || f.kind === 'multipoint')){
+    c = fs.flatMap(get);
+    if ($('#nnOrder').checked) c = nnOrder(c);
+  } else {
+    c = chain(fs.map(f => { const a = get(f); if (f.kind === 'polygon') a.push(a[0].slice()); return a; }));
+  }
+  c = dedupe(c);
+  if (asPolygon){ if (c.length > 2 && dist(c[0], c[c.length-1]) < 0.01) c.pop(); if (c.length < 3){ toast('Für eine Fläche braucht es mindestens 3 Punkte.'); return; } }
+  else if (c.length < 2){ toast('Für eine Linie braucht es mindestens 2 Punkte.'); return; }
+  snapshot();
+  const kind = asPolygon ? 'polygon' : 'line';
+  const name = (asPolygon ? 'Fläche' : 'Linie') + ' aus ' + (fs.length === 1 ? fs[0].name : fs.length + ' Objekten');
+  if (!$('#keepOrig').checked) S.feats = S.feats.filter(f => !fs.includes(f));
+  else fs.forEach(f => { f.sel = false; if (asPolygon) f.visible = false; });
+  const nf = makeFeature(kind, c, key, name, fs[0].color);
+  nf.sel = true; S.feats.push(nf);
+  refreshAll();
+  toast(`${name}` + (nf.lv ? ' · ' + (asPolygon ? fmtArea(areaOf(nf.lv)) : fmtLen(lenOf(nf.lv))) : '') + ($('#keepOrig').checked && asPolygon ? ' · Originale ausgeblendet' : ''));
+}
+function opReverse(){
+  const fs = selected().filter(f => f.kind === 'line' || f.kind === 'polygon'); if (!fs.length) return;
+  snapshot();
+  fs.forEach(f => { if (f.px) f.px.reverse(); if (f.lv && f.src !== 'plan') f.lv.reverse(); });
+  updateTransform(); refreshAll(); toast('Richtung umgekehrt.');
+}
+function opOutline(){
+  const fs = selected().filter(f => f.kind === 'polygon'); if (!fs.length) return;
+  snapshot();
+  fs.forEach(f => { f.kind = 'line'; if (f.px) f.px.push(f.px[0].slice()); if (f.src !== 'plan' && f.lv) f.lv.push(f.lv[0].slice()); });
+  updateTransform(); refreshAll(); toast('Fläche in Umrisslinie umgewandelt.');
+}
+function opDelete(){
+  const n = selected().length; if (!n) return;
+  snapshot(); S.feats = S.feats.filter(f => !f.sel); refreshAll();
+  toast(`${n} ${n === 1 ? 'Objekt' : 'Objekte'} gelöscht · Ctrl/Cmd+Z stellt wieder her`);
+}
+$('#opPoly').onclick = () => opJoin(true);
+$('#opLine').onclick = () => opJoin(false);
+$('#opRev').onclick = opReverse;
+$('#opOutline').onclick = opOutline;
+$('#opDel').onclick = opDelete;
+
+/* ---------- Import ---------- */
+const validHex = h => (typeof h === 'string' && /^#[0-9a-f]{6}$/i.test(h)) ? h : null;
+function fromGeoJSON(obj){
+  const out = [];
+  const geom = (g, name, color) => {
+    if (!g) return;
+    const C = g.coordinates, t = g.type;
+    const sub = (i, n) => n > 1 ? `${name || KIND.line} ${i + 1}` : name;
+    if (t === 'Point') out.push({kind: 'point', lv: [anyToLv(C)], name, color});
+    else if (t === 'MultiPoint') out.push({kind: 'multipoint', lv: C.map(anyToLv), name, color});
+    else if (t === 'LineString') out.push({kind: 'line', lv: C.map(anyToLv), name, color});
+    else if (t === 'MultiLineString') C.forEach((l, i) => out.push({kind: 'line', lv: l.map(anyToLv), name: sub(i, C.length), color}));
+    else if (t === 'Polygon') out.push({kind: 'polygon', lv: openRing(C[0].map(anyToLv)), name, color});
+    else if (t === 'MultiPolygon') C.forEach((p, i) => out.push({kind: 'polygon', lv: openRing(p[0].map(anyToLv)), name: sub(i, C.length), color}));
+    else if (t === 'GeometryCollection') (g.geometries || []).forEach(x => geom(x, name, color));
+  };
+  const walk = o => {
+    if (!o) return;
+    if (Array.isArray(o)) return o.forEach(walk);
+    if (o.type === 'FeatureCollection') (o.features || []).forEach(walk);
+    else if (o.type === 'Feature'){ const p = o.properties || {}; geom(o.geometry, String(p.name || p.Name || p.title || p.NAME || ''), validHex(p.stroke) || validHex(p.fill) || validHex(p['marker-color'])); }
+    else geom(o, '', null);
+  };
+  walk(obj);
+  return out;
+}
+function xmlDoc(t){ const d = new DOMParser().parseFromString(t, 'application/xml'); if (d.getElementsByTagName('parsererror').length) throw new Error('XML fehlerhaft'); return d; }
+const kids = (n, tag) => [...n.getElementsByTagName(tag)];
+const txt = (n, tag) => { const e = n.getElementsByTagName(tag)[0]; return e ? e.textContent.trim() : ''; };
+function kmlCoords(s){ return s.trim().split(/\s+/).map(q => q.split(',').map(Number)).filter(a => a.length >= 2 && !isNaN(a[0]) && !isNaN(a[1])).map(a => wgsToLv(a[1], a[0])); }
+function fromKML(t){
+  const d = xmlDoc(t), out = [];
+  kids(d, 'Placemark').forEach(pm => {
+    const name = txt(pm, 'name');
+    kids(pm, 'Point').forEach(g => out.push({kind: 'point', lv: kmlCoords(txt(g, 'coordinates')), name}));
+    kids(pm, 'LineString').forEach(g => out.push({kind: 'line', lv: kmlCoords(txt(g, 'coordinates')), name}));
+    kids(pm, 'Polygon').forEach(g => { const ob = g.getElementsByTagName('outerBoundaryIs')[0] || g; out.push({kind: 'polygon', lv: openRing(kmlCoords(txt(ob, 'coordinates'))), name}); });
+  });
+  return out;
+}
+function fromGPX(t){
+  const d = xmlDoc(t), out = [];
+  const pt = n => wgsToLv(+n.getAttribute('lat'), +n.getAttribute('lon'));
+  kids(d, 'wpt').forEach(w => out.push({kind: 'point', lv: [pt(w)], name: txt(w, 'name')}));
+  kids(d, 'trk').forEach(tr => { const nm = txt(tr, 'name'); const segs = kids(tr, 'trkseg'); segs.forEach((s, i) => out.push({kind: 'line', lv: kids(s, 'trkpt').map(pt), name: segs.length > 1 ? `${nm} ${i + 1}` : nm})); });
+  kids(d, 'rte').forEach(r => out.push({kind: 'line', lv: kids(r, 'rtept').map(pt), name: txt(r, 'name')}));
+  return out;
+}
+function importText(text, fname){
+  const t = (text || '').trim(); let found = [];
+  try {
+    if (/^[\[{]/.test(t)) found = fromGeoJSON(JSON.parse(t));
+    else if (/<kml[\s>]/i.test(t)) found = fromKML(t);
+    else if (/<gpx[\s>]/i.test(t)) found = fromGPX(t);
+    else { const pts = t.split(/\r?\n+/).map(parseCoord).filter(Boolean).map(p => [p.E, p.N]); if (pts.length) found = [{kind: pts.length > 1 ? 'multipoint' : 'point', lv: pts, name: 'Koordinatenliste'}]; }
+  } catch (err){ toast(`${fname || 'Text'} konnte nicht gelesen werden (${err.message}).`); return 0; }
+  found = found.filter(g => g.lv.length && g.lv.every(p => isFinite(p[0]) && isFinite(p[1])));
+  if (!found.length){ toast(`In ${fname || 'diesem Text'} sind keine Geometrien.`); return 0; }
+  snapshot();
+  found.forEach(g => S.feats.push(makeFeature(g.kind, g.lv, 'lv', g.name || null, g.color || null)));
+  if (!S.plan) fit();
+  refreshAll();
+  toast(`${found.length} ${found.length === 1 ? 'Objekt' : 'Objekte'} importiert` + (S.plan && !S.T ? ' · auf dem Plan sichtbar, sobald er georeferenziert ist' : ''));
+  return found.length;
+}
+function handleFiles(files){
+  [...files].forEach(f => {
+    if (f.type.startsWith('image/')) loadPlanBlob(f, f.name);
+    else f.text().then(t => importText(t, f.name));
+  });
+}
+$('#impFile').onchange = e => { handleFiles(e.target.files); e.target.value = ''; };
+$('#impTextBtn').onclick = () => { if (importText($('#impText').value, 'dem Text')) $('#impText').value = ''; };
+let dragDepth = 0;
+stage.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; $('#drop').hidden = false; });
+stage.addEventListener('dragover', e => e.preventDefault());
+stage.addEventListener('dragleave', () => { if (--dragDepth <= 0){ dragDepth = 0; $('#drop').hidden = true; } });
+stage.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; $('#drop').hidden = true; if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+document.addEventListener('paste', e => {
+  const t = e.target;
+  if (/^(INPUT|TEXTAREA)$/.test(t.tagName)) return;
+  const items = [...(e.clipboardData?.items || [])];
+  const img = items.find(i => i.type.startsWith('image/'));
+  if (img){ e.preventDefault(); loadPlanBlob(img.getAsFile(), 'Eingefügtes Bild'); return; }
+  const text = e.clipboardData?.getData('text');
+  if (text){ e.preventDefault(); importText(text, 'der Zwischenablage'); }
+});
+
+/* ---------- Export ---------- */
+const wgs = c => { const [lon, lat] = lvToWgs(c[0], c[1]); return [round(lon, 7), round(lat, 7)]; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+function exportList(){ const only = $('#expSel').checked; return S.feats.filter(f => f.lv && (!only || f.sel)); }
+function props(f){
+  const p = {name: f.name, typ: KIND[f.kind]};
+  if (f.kind === 'line') Object.assign(p, {laenge_m: Math.round(lenOf(f.lv)), stroke: f.color, 'stroke-width': 4});
+  else if (f.kind === 'polygon') Object.assign(p, {flaeche_m2: Math.round(areaOf(f.lv)), umfang_m: Math.round(lenOf(f.lv, true)), stroke: f.color, 'stroke-width': 3, fill: f.color, 'fill-opacity': 0.3});
+  else p['marker-color'] = f.color;
+  return p;
+}
+function buildGeoJSON(list, lv95){
+  const cv_ = lv95 ? (c => [round(c[0], 2), round(c[1], 2)]) : wgs;
+  const feats = list.map(f => {
+    let g;
+    if (f.kind === 'point') g = {type: 'Point', coordinates: cv_(f.lv[0])};
+    else if (f.kind === 'multipoint') g = {type: 'MultiPoint', coordinates: f.lv.map(cv_)};
+    else if (f.kind === 'line') g = {type: 'LineString', coordinates: f.lv.map(cv_)};
+    else { const r = ringCCW(f.lv).map(cv_); r.push(r[0]); g = {type: 'Polygon', coordinates: [r]}; }
+    return JSON.stringify({type: 'Feature', properties: props(f), geometry: g});
+  });
+  const crs = lv95 ? '"crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:EPSG::2056"}},\n' : '';
+  return `{"type":"FeatureCollection",\n${crs}"features":[\n${feats.join(',\n')}\n]}\n`;
+}
+const kmlColor = (hex, a) => { const h = hex.replace('#', ''); return a + h.slice(4, 6) + h.slice(2, 4) + h.slice(0, 2); };
+function buildKML(list, title){
+  const cs = c => wgs(c).join(',') + ',0';
+  let o = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>${esc(title)}</name>\n`;
+  list.forEach(f => { o += `<Style id="s${f.id}"><LineStyle><color>${kmlColor(f.color, 'ff')}</color><width>${f.kind === 'polygon' ? 3 : 4}</width></LineStyle><PolyStyle><color>${kmlColor(f.color, '4d')}</color></PolyStyle><IconStyle><color>${kmlColor(f.color, 'ff')}</color></IconStyle></Style>\n`; });
+  list.forEach(f => {
+    let g;
+    if (f.kind === 'point') g = `<Point><coordinates>${cs(f.lv[0])}</coordinates></Point>`;
+    else if (f.kind === 'multipoint') g = `<MultiGeometry>${f.lv.map(c => `<Point><coordinates>${cs(c)}</coordinates></Point>`).join('')}</MultiGeometry>`;
+    else if (f.kind === 'line') g = `<LineString><tessellate>1</tessellate><coordinates>${f.lv.map(cs).join(' ')}</coordinates></LineString>`;
+    else { const r = ringCCW(f.lv); g = `<Polygon><tessellate>1</tessellate><outerBoundaryIs><LinearRing><coordinates>${[...r, r[0]].map(cs).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon>`; }
+    const p = props(f), desc = p.laenge_m != null ? `Länge ca. ${p.laenge_m} m` : p.flaeche_m2 != null ? `Fläche ca. ${p.flaeche_m2} m², Umfang ca. ${p.umfang_m} m` : '';
+    o += `<Placemark><name>${esc(f.name)}</name>${desc ? `<description>${esc(desc)}</description>` : ''}<styleUrl>#s${f.id}</styleUrl>${g}</Placemark>\n`;
+  });
+  return o + '</Document>\n</kml>\n';
+}
+function buildGPX(list){
+  const ll = c => { const [lon, lat] = wgs(c); return `lat="${lat}" lon="${lon}"`; };
+  let w = '', t = '';
+  list.forEach(f => {
+    if (f.kind === 'point') w += `<wpt ${ll(f.lv[0])}><name>${esc(f.name)}</name></wpt>\n`;
+    else if (f.kind === 'multipoint') f.lv.forEach((c, i) => { w += `<wpt ${ll(c)}><name>${esc(f.name)} ${i + 1}</name></wpt>\n`; });
+    else { const c = f.kind === 'polygon' ? [...f.lv, f.lv[0]] : f.lv; t += `<trk><name>${esc(f.name)}</name><trkseg>\n${c.map(p => `<trkpt ${ll(p)}/>`).join('\n')}\n</trkseg></trk>\n`; }
+  });
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Plan zu GeoJSON" xmlns="http://www.topografix.com/GPX/1/1">\n${w}${t}</gpx>\n`;
+}
+const FMT = {geojson: {ext: 'geojson', mime: 'application/geo+json'}, lv95: {ext: 'geojson', mime: 'application/geo+json'}, kml: {ext: 'kml', mime: 'application/vnd.google-earth.kml+xml'}, gpx: {ext: 'gpx', mime: 'application/gpx+xml'}};
+function buildExport(){
+  const list = exportList(), fmt = $('#expFmt').value, title = $('#expName').value.trim() || 'zeichnung';
+  const text = fmt === 'kml' ? buildKML(list, title) : fmt === 'gpx' ? buildGPX(list) : buildGeoJSON(list, fmt === 'lv95');
+  return {list, fmt, title, text};
+}
+function setLink(a, href){ if (href){ a.href = href; a.removeAttribute('aria-disabled'); } else { a.href = '#'; a.setAttribute('aria-disabled', 'true'); } }
+function updateExport(){
+  const {list, text} = buildExport();
+  $('#expPreview').value = text;
+  const skipped = S.feats.filter(f => !f.lv && (!$('#expSel').checked || f.sel)).length;
+  const note = $('#expNote');
+  note.className = 'note' + (skipped ? ' warn' : '');
+  let msg = list.length ? `${list.length} ${list.length === 1 ? 'Objekt' : 'Objekte'} im Export.` : 'Nichts zu exportieren.';
+  if (skipped) msg += ` ${skipped} ohne Koordinaten fehlen, weil der Plan noch nicht georeferenziert ist.`;
+  if ($('#expFmt').value === 'kml') msg += ' Google My Maps: «Importieren» und die KML-Datei wählen.';
+  note.textContent = msg;
+  $('#expSave').disabled = !list.length; $('#expCopy').disabled = !list.length;
+  const gj = list.length ? buildGeoJSON(list, false).replace(/\n/g, '') : '';
+  setLink($('#expGeojsonio'), gj && gj.length < 60000 ? 'https://geojson.io/#data=data:application/json,' + encodeURIComponent(gj) : null);
+  if (list.length){
+    const all = list.flatMap(f => f.lv), Es = all.map(p => p[0]), Ns = all.map(p => p[1]);
+    const ext = Math.max(Math.max(...Es) - Math.min(...Es), Math.max(...Ns) - Math.min(...Ns), 200);
+    const z = Math.max(2, Math.min(12, Math.round(8 - Math.log2(ext / 1000))));
+    setLink($('#expGeoadmin'), `https://map.geo.admin.ch/#/map?lang=de&center=${Math.round((Math.min(...Es) + Math.max(...Es))/2)},${Math.round((Math.min(...Ns) + Math.max(...Ns))/2)}&z=${z}&bgLayer=ch.swisstopo.pixelkarte-farbe&crosshair=marker`);
+  } else setLink($('#expGeoadmin'), null);
+}
+let dlNs; const dlReady = (window.claude && typeof window.claude.use === 'function') ? window.claude.use('downloads').then(x => (dlNs = x)).catch(() => (dlNs = null)) : Promise.resolve((dlNs = null));
+async function saveFile(){
+  const {fmt, title, text, list} = buildExport(); if (!list.length) return;
+  const base = title.replace(/[\\/:*?"<>|]+/g, '-');
+  await dlReady;
+  if (dlNs){
+    const ext = (fmt === 'geojson' || fmt === 'lv95') ? 'json' : FMT[fmt].ext;
+    try { await dlNs.save({filename: `${base}.${ext}`, data: text}); toast('Gespeichert.'); }
+    catch (e){
+      if (e && (e.code === 'rejected_extension' || e.code === 'extension_not_enabled')) toast(`${FMT[fmt].ext.toUpperCase()}-Dateien lassen sich in dieser Vorschau nicht speichern. «Kopieren» nutzen oder das Tool auf der eigenen Website öffnen.`);
+      else if (e && e.code === 'declined') {}
+      else toast('Speichern hat nicht geklappt. «Kopieren» funktioniert immer.');
+    }
+    return;
+  }
+  const a = el('a', {href: URL.createObjectURL(new Blob([text], {type: FMT[fmt].mime})), download: `${base}.${FMT[fmt].ext}`});
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+async function copyText(text, msg){
+  try { await navigator.clipboard.writeText(text); toast(msg); }
+  catch { const ta = $('#expPreview'); ta.closest('details').open = true; ta.focus(); ta.select(); toast('Text ist markiert: Ctrl/Cmd+C drücken.'); }
+}
+$('#expSave').onclick = saveFile;
+$('#expCopy').onclick = () => { const {fmt} = buildExport(); copyText($('#expPreview').value, `${fmt === 'kml' ? 'KML' : fmt === 'gpx' ? 'GPX' : 'GeoJSON'} kopiert.`); };
+['expFmt', 'expSel', 'expName'].forEach(id => $('#' + id).addEventListener(id === 'expName' ? 'input' : 'change', updateExport));
+
+/* ---------- Umrechnen ---------- */
+let convVal = null;
+function updateConv(){
+  const out = $('#convOut'); out.textContent = '';
+  convVal = parseCoord($('#convIn').value);
+  $('#convAdd').disabled = !convVal;
+  if (!convVal){ setLink($('#convGeo'), null); setLink($('#convGoogle'), null); if ($('#convIn').value.trim()) out.append(el('dd', {textContent: 'Nicht erkannt. LV95, LV03 oder WGS84 eingeben.', style: 'grid-column:1/3;color:var(--warn)'})); return; }
+  const [lon, lat] = lvToWgs(convVal.E, convVal.N);
+  const rows = [['LV95', `${fmtD(convVal.E, 1)}, ${fmtD(convVal.N, 1)}`], ['LV03', `${fmtD(convVal.E - 2e6, 1)}, ${fmtD(convVal.N - 1e6, 1)}`], ['WGS84', `${lat.toFixed(6)}, ${lon.toFixed(6)}`], ['erkannt', convVal.src]];
+  rows.forEach(([k, v]) => out.append(el('dt', {textContent: k}), el('dd', {textContent: v})));
+  setLink($('#convGeo'), `https://map.geo.admin.ch/#/map?lang=de&center=${Math.round(convVal.E)},${Math.round(convVal.N)}&z=9&crosshair=marker`);
+  setLink($('#convGoogle'), `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lon.toFixed(6)}`);
+}
+$('#convIn').addEventListener('input', updateConv);
+$('#convAdd').onclick = () => {
+  if (!convVal) return;
+  snapshot();
+  const f = makeFeature('point', [[convVal.E, convVal.N]], 'lv', null, null);
+  S.feats.push(f); if (!S.plan) fit(); refreshAll();
+  toast(`${f.name} hinzugefügt` + (S.plan && !S.T ? ' · auf dem Plan sichtbar, sobald er georeferenziert ist' : ''));
+};
+
+/* ---------- Alles ---------- */
+function refreshAll(){
+  renderCps(); renderFeats(); updateTools(); updateExport(); updateStatus(); updateReadout(); draw();
+}
+function updateStatus(){
+  const b = $('#status');
+  $('#planInfo').textContent = S.plan ? `${S.plan.name} · ${S.plan.w} × ${S.plan.h} px` : 'Kein Plan geladen.';
+  $('#planRemove').disabled = !S.plan;
+  $('#emptyStage').hidden = !!(S.plan || S.feats.length);
+  if (!S.plan){ b.className = 'badge info'; b.textContent = 'Kartenmodus · LV95'; }
+  else if (!S.T){ b.className = 'badge warn'; b.textContent = 'Plan noch nicht georeferenziert'; }
+  else { b.className = 'badge ok'; b.textContent = `Georeferenziert · ${S.T.n} Passpunkte`; }
+}
+let clearArm = 0;
+$('#clearBtn').onclick = () => {
+  const b = $('#clearBtn');
+  if (!clearArm){ b.textContent = 'Wirklich leeren?'; clearArm = setTimeout(() => { clearArm = 0; b.textContent = 'Alles leeren'; }, 3000); return; }
+  clearTimeout(clearArm); clearArm = 0; b.textContent = 'Alles leeren';
+  S.feats = []; S.cps = []; S.draft = []; setPlan(null); undoStack = [];
+  toast('Alles geleert.');
+};
+let toastT = 0;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3600); }
+
+/* ---------- Start ---------- */
+readColors();
+const mq = matchMedia('(prefers-color-scheme: dark)');
+mq.addEventListener && mq.addEventListener('change', () => { readColors(); draw(); });
+new MutationObserver(() => { readColors(); draw(); }).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+new ResizeObserver(resize).observe(stage);
+resize();
+setMode('pan');
+refreshAll();
+document.fonts && document.fonts.ready.then(draw);
+})();
+</script>
+</body>
+</html>
