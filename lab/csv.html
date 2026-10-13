@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>CSV-Analisa</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Cpath d='M26 74V52M42 74V34M58 74V44M74 74V24' stroke='white' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<style>
+:root{
+  --bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;
+  --line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;--ok:#4caf6f;--warn:#ffb86b;color-scheme:dark
+}
+*{box-sizing:border-box}
+body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:#ff4d64}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+.labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:1px}
+.lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h2{margin:0 0 14px;font-size:.95rem;display:flex;gap:10px;align-items:center}
+.num{font-size:.8rem;font-weight:700;background:var(--accent);color:#121214;border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;background:var(--field);cursor:pointer;color:var(--muted);font-size:.85rem;transition:border-color .15s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop b{display:block;font-size:1rem;margin-bottom:4px;color:var(--text)}
+textarea{width:100%;min-height:90px;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--text);font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+button,.btn{background:var(--accent);color:#121214;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer}
+button:hover{background:var(--accent-dark)}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.ghost:hover{color:var(--text)}
+select,input[type=number],input[type=search]{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text);font:inherit;font-size:.9rem}
+label.inl{font-size:.82rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+.info{font-size:.85rem;color:var(--muted)}
+.info b{color:var(--text)}
+.err{color:var(--accent)}
+.hidden{display:none!important}
+/* Spaltenübersicht */
+.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.col{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#18181b}
+.col h3{margin:0 0 6px;font-size:.92rem;word-break:break-word}
+.tag{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:5px;padding:1px 6px;margin-left:4px;vertical-align:2px}
+.tag.n{background:rgba(76,175,111,.18);color:#8fd9a8}.tag.t{background:rgba(154,154,162,.18);color:#c4c4cb}.tag.d{background:rgba(108,180,255,.18);color:#a9d1ff}
+.col dl{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;margin:0;font-size:.8rem}
+.col dt{color:var(--muted)}.col dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.col .warn{color:var(--warn);font-size:.78rem;margin-top:6px}
+/* Tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 14px;font-weight:600}
+.tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#121214}
+.tab:hover{background:transparent;color:var(--text)}.tab[aria-selected=true]:hover{background:var(--accent);color:#121214}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+/* Tabelle */
+.tbl{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:#202024;font-weight:600;cursor:pointer;user-select:none}
+th:hover{color:var(--accent)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.out td{background:rgba(255,77,100,.09)}
+td .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-right:8px;opacity:.85}
+.foot{font-size:.8rem;color:var(--muted);margin-top:8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:#121214;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="homelink" href="/lab/">← Lab</a>
+    <h1>CSV-<span class="acc">Analisa</span><span class="labbadge">Labor</span></h1>
+    <p class="lead">Chargiar ina tabella (CSV u Excel), survesta da las colonnas, rangaziuns, gruppas e valurs extremas – e exportar il resultat per Datawrapper. Tut vegn elavurà en il browser, nagina data na banduna tes computer.</p>
+  </header>
+
+  <section class="card">
+    <h2><span class="num">1</span>Chargiar datas</h2>
+    <div class="drop" id="drop" tabindex="0" role="button">
+      <b>Trair qua in file</b>CSV, TSV u Excel (.xlsx) – u cliccar per tscherner
+    </div>
+    <input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
+    <textarea id="paste" placeholder="… u integrar qua datas (p. ex. copiadas dad Excel u dad ina pagina web)"></textarea>
+    <div class="row">
+      <button id="go">Analisar</button>
+      <button class="ghost" id="demo">Exempel</button>
+      <label class="inl hidden" id="sheetWrap">Fegl <select id="sheet"></select></label>
+      <span class="info" id="srcInfo"></span>
+    </div>
+  </section>
+
+  <section class="card hidden" id="overview">
+    <h2><span class="num">2</span>Survesta</h2>
+    <p class="info" id="sum"></p>
+    <div class="cols" id="cols"></div>
+  </section>
+
+  <section class="card hidden" id="views">
+    <h2><span class="num">3</span>Analisa</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-v="table" aria-selected="true">Tabella</button>
+      <button class="tab" role="tab" data-v="rank" aria-selected="false">Rangaziun</button>
+      <button class="tab" role="tab" data-v="group" aria-selected="false">Gruppas</button>
+      <button class="tab" role="tab" data-v="out" aria-selected="false">Valurs extremas</button>
+    </div>
+    <div class="ctrl" id="ctrl"></div>
+    <div class="tbl"><table id="tbl"></table></div>
+    <p class="foot" id="foot"></p>
+  </section>
+
+  <section class="card hidden" id="export">
+    <h2><span class="num">4</span>Exportar per Datawrapper</h2>
+    <p class="info">Exporta la vista actuala: puncts sco segn decimal, nagins separaturs da milli, UTF-8. En Datawrapper: «Copiar» e lura integrar en il pass «Upload Data».</p>
+    <div class="row">
+      <button id="copy">Copiar</button>
+      <button class="ghost" id="dl">Telechargiar CSV</button>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- Hilfen ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 2000); };
+const fmt = (v, d = 2) => v == null || isNaN(v) ? '–' :
+  v.toLocaleString('de-CH', { maximumFractionDigits: Math.abs(v) >= 1000 ? 0 : d });
+
+// ---------- Einlesen ----------
+function detectDelim(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim()).slice(0, 20);
+  let best = ',', bestScore = -1;
+  for (const d of ['\t', ';', ',', '|']) {
+    const counts = lines.map(l => splitLine(l, d).length);
+    const same = counts.filter(c => c === counts[0]).length;
+    const score = counts[0] > 1 ? same * 10 + counts[0] : 0;
+    if (score > bestScore) { bestScore = score; best = d; }
+  }
+  return best;
+}
+function splitLine(line, d) { return parseCSV(line, d)[0] || []; }
+function parseCSV(text, d) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"' && cell === '') q = true;
+    else if (c === d) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell); rows.push(row); row = []; cell = '';
+    } else cell += c;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ''));
+}
+async function readFile(f) {
+  if (/\.xlsx?$/i.test(f.name)) {
+    if (!window.XLSX) throw new Error('La biblioteca per Excel n\'è betg chargiada (internet?)');
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array' });
+    workbook = wb;
+    const sel = $('sheet'); sel.innerHTML = wb.SheetNames.map(n => `<option>${esc(n)}</option>`).join('');
+    $('sheetWrap').classList.toggle('hidden', wb.SheetNames.length < 2);
+    return sheetRows(wb.SheetNames[0]);
+  }
+  workbook = null; $('sheetWrap').classList.add('hidden');
+  const buf = await f.arrayBuffer();
+  let text = new TextDecoder('utf-8').decode(buf);
+  if (text.includes('�')) text = new TextDecoder('windows-1252').decode(buf); // ältere Excel-Exporte
+  return textRows(text);
+}
+let workbook = null;
+function sheetRows(name) {
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: false, defval: '' });
+  return rows.filter(r => r.some(c => String(c).trim() !== '')).map(r => r.map(c => String(c)));
+}
+function textRows(text) {
+  text = text.replace(/^﻿/, '');
+  const d = detectDelim(text);
+  srcDelim = { '\t': 'Tab', ';': 'Punct-comma', ',': 'Comma', '|': 'Lingia' }[d];
+  return parseCSV(text, d);
+}
+let srcDelim = '';
+
+// ---------- Zahlen (Schweizer Formate) ----------
+const NULLS = new Set(['', '-', '–', '—', 'n/a', 'na', 'k.a.', 'x', '...', '…']);
+// Erkennt pro Spalte, ob Komma oder Punkt das Dezimalzeichen ist
+function decimalStyle(values) {
+  let comma = 0, dot = 0;
+  for (const v of values) {
+    const s = v.replace(/['’   ]/g, '').replace(/%$/, '');
+    if (/^-?\d{1,3}(\.\d{3})+,\d+$/.test(s) || /^-?\d+,\d{1,2}$/.test(s) || /^-?\d+,\d{4,}$/.test(s)) comma++;
+    else if (/^-?\d{1,3}(,\d{3})+\.\d+$/.test(s) || /^-?\d+\.\d+$/.test(s)) dot++;
+  }
+  return comma > dot ? ',' : '.';
+}
+function toNumber(raw, dec) {
+  let s = String(raw).trim();
+  if (NULLS.has(s.toLowerCase())) return null;
+  let pct = false;
+  if (s.endsWith('%')) { pct = true; s = s.slice(0, -1).trim(); }
+  s = s.replace(/^(CHF|Fr\.|EUR|€)\s*/i, '').replace(/\s*(CHF|Fr\.)$/i, '');
+  s = s.replace(/['’   ]/g, '').replace(/^[−–]/, '-');
+  if (dec === ',') s = s.replace(/\./g, '').replace(',', '.');
+  else s = s.replace(/,/g, '');
+  if (!/^-?(\d+\.?\d*|\.\d+)(e-?\d+)?$/i.test(s)) return NaN;
+  const n = parseFloat(s);
+  return n; // Prozentwerte bleiben als Zahl (12% → 12)
+}
+const isDate = s => /^\d{1,2}\.\d{1,2}\.(\d{2}|\d{4})$/.test(s.trim()) || /^\d{4}-\d{2}-\d{2}/.test(s.trim());
+
+// ---------- Analyse ----------
+let head = [], data = [], cols = [];
+function analyse(rows) {
+  if (rows.length < 2) throw new Error('Memia lingias – almain in titel ed ina lingia da datas.');
+  const width = Math.max(...rows.map(r => r.length));
+  head = rows[0].map((h, i) => (h || '').trim() || 'Colonna ' + (i + 1));
+  while (head.length < width) head.push('Colonna ' + (head.length + 1));
+  // gleiche Spaltennamen unterscheiden
+  const seen = {}; head = head.map(h => seen[h] ? h + ' (' + (++seen[h]) + ')' : (seen[h] = 1, h));
+  const body = rows.slice(1).map(r => head.map((_, i) => (r[i] ?? '').trim()));
+  cols = head.map((name, i) => {
+    const vals = body.map(r => r[i]);
+    const filled = vals.filter(v => !NULLS.has(v.toLowerCase()));
+    const dec = decimalStyle(filled);
+    const nums = filled.map(v => toNumber(v, dec));
+    const okNums = nums.filter(n => n != null && !isNaN(n));
+    const dates = filled.filter(isDate).length;
+    let type = 't';
+    if (filled.length && okNums.length / filled.length >= 0.9) type = 'n';
+    else if (filled.length && dates / filled.length >= 0.9) type = 'd';
+    const c = { name, i, type, dec, filled: filled.length, empty: vals.length - filled.length,
+                unique: new Set(filled).size, bad: type === 'n' ? filled.length - okNums.length : 0 };
+    if (type === 'n') {
+      const s = okNums.slice().sort((a, b) => a - b);
+      const q = p => { const k = (s.length - 1) * p, f = Math.floor(k); return s[f] + (s[Math.ceil(k)] - s[f]) * (k - f); };
+      c.min = s[0]; c.max = s.at(-1); c.sum = s.reduce((a, b) => a + b, 0);
+      c.mean = c.sum / s.length; c.median = q(.5); c.q1 = q(.25); c.q3 = q(.75);
+      const iqr = c.q3 - c.q1; c.lo = c.q1 - 1.5 * iqr; c.hi = c.q3 + 1.5 * iqr;
+    }
+    return c;
+  });
+  data = body.map(r => r.map((v, i) => cols[i].type === 'n' ? toNumber(v, cols[i].dec) : v));
+  render();
+}
+
+// ---------- Darstellung ----------
+let view = 'table', sortCol = -1, sortDir = 1, current = { head: [], rows: [], types: [] };
+const numCols = () => cols.filter(c => c.type === 'n');
+const txtCols = () => cols.filter(c => c.type !== 'n');
+
+function render() {
+  ['overview', 'views', 'export'].forEach(id => $(id).classList.remove('hidden'));
+  $('sum').innerHTML = `<b>${data.length.toLocaleString('de-CH')}</b> lingias · <b>${cols.length}</b> colonnas` +
+    (srcDelim ? ` · separatur: ${srcDelim}` : '') +
+    ` · <b>${numCols().length}</b> numericas, <b>${txtCols().length}</b> text/data`;
+  $('cols').innerHTML = cols.map(c => {
+    const tag = { n: '<span class="tag n">cefra</span>', t: '<span class="tag t">text</span>', d: '<span class="tag d">data</span>' }[c.type];
+    const rows = c.type === 'n'
+      ? [['Min', fmt(c.min)], ['Max', fmt(c.max)], ['Media', fmt(c.mean)], ['Median', fmt(c.median)], ['Summa', fmt(c.sum)], ['Vids', c.empty]]
+      : [['Emplenids', c.filled], ['Vids', c.empty], ['Differents', c.unique]];
+    const warn = [];
+    if (c.type === 'n' && c.dec === ',') warn.push('Comma sco segn decimal renconuschì');
+    if (c.bad) warn.push(c.bad + ' valurs n\'èn betg cefras');
+    return `<div class="col"><h3>${esc(c.name)}${tag}</h3><dl>${rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>` +
+      (warn.length ? `<div class="warn">${warn.join(' · ')}</div>` : '') + '</div>';
+  }).join('');
+  buildCtrl(); draw();
+}
+
+function opt(list, sel) { return list.map(c => `<option value="${c.i}"${c.i == sel ? ' selected' : ''}>${esc(c.name)}</option>`).join(''); }
+const state = { q: '', rankCol: null, rankN: 10, rankDir: 'desc', grpCol: null, grpVal: null, grpFn: 'sum', outCol: null };
+
+function buildCtrl() {
+  const n = numCols(), t = txtCols(), c = $('ctrl');
+  state.rankCol ??= n[0]?.i; state.grpCol ??= (t.filter(c => c.unique > 1 && c.unique < c.filled).sort((x, y) => x.unique - y.unique)[0] || t[0])?.i; state.grpVal ??= n[0]?.i; state.outCol ??= n[0]?.i;
+  if (view === 'table') c.innerHTML = `<input type="search" id="q" placeholder="Filtrar …" value="${esc(state.q)}">`;
+  if (view === 'rank') c.innerHTML = n.length ? `<label class="inl">Colonna <select id="rankCol">${opt(n, state.rankCol)}</select></label>
+    <label class="inl"><select id="rankDir"><option value="desc"${state.rankDir === 'desc' ? ' selected' : ''}>Ils pli auts</option><option value="asc"${state.rankDir === 'asc' ? ' selected' : ''}>Ils pli bass</option></select></label>
+    <label class="inl">Dumber <input type="number" id="rankN" min="1" max="500" value="${state.rankN}" style="width:80px"></label>` : '<span class="info">Naginas colonnas numericas.</span>';
+  if (view === 'group') c.innerHTML = t.length && n.length ? `<label class="inl">Gruppar tenor <select id="grpCol">${opt(t, state.grpCol)}</select></label>
+    <label class="inl"><select id="grpFn">${[['sum', 'Summa'], ['mean', 'Media'], ['median', 'Median'], ['count', 'Dumber'], ['min', 'Min'], ['max', 'Max']].map(([v, l]) => `<option value="${v}"${state.grpFn === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label class="inl">da <select id="grpVal">${opt(n, state.grpVal)}</select></label>` : '<span class="info">Per gruppas dovri almain ina colonna da text ed ina numerica.</span>';
+  if (view === 'out') c.innerHTML = n.length ? `<label class="inl">Colonna <select id="outCol">${opt(n, state.outCol)}</select></label>` : '<span class="info">Naginas colonnas numericas.</span>';
+  c.querySelectorAll('select,input').forEach(el => el.addEventListener('input', () => {
+    const v = el.value;
+    if (el.id === 'q') state.q = v; else if (el.id === 'rankN') state.rankN = Math.max(1, +v || 10);
+    else if (el.id === 'rankDir' || el.id === 'grpFn') state[el.id] = v; else state[el.id] = +v;
+    draw();
+  }));
+}
+
+function draw() {
+  let h = [], rows = [], types = [], foot = '', outRows = new Set(), barCol = -1;
+  if (view === 'table') {
+    h = head; types = cols.map(c => c.type);
+    const q = state.q.toLowerCase();
+    rows = q ? data.filter(r => r.some(v => String(v ?? '').toLowerCase().includes(q))) : data.slice();
+    foot = `${rows.length.toLocaleString('de-CH')} da ${data.length.toLocaleString('de-CH')} lingias`;
+  }
+  if (view === 'rank' && state.rankCol != null) {
+    const k = state.rankCol, d = state.rankDir === 'desc' ? -1 : 1;
+    const label = txtCols()[0];
+    h = ['Rang', ...(label ? [label.name] : []), head[k]]; types = ['n', ...(label ? ['t'] : []), 'n'];
+    rows = data.filter(r => r[k] != null && !isNaN(r[k])).sort((a, b) => (a[k] - b[k]) * d)
+      .slice(0, state.rankN).map((r, i) => [i + 1, ...(label ? [r[label.i]] : []), r[k]]);
+    barCol = h.length - 1; foot = 'Rangaziun tenor «' + head[k] + '»';
+  }
+  if (view === 'group' && state.grpCol != null && state.grpVal != null) {
+    const g = state.grpCol, v = state.grpVal, m = new Map();
+    for (const r of data) { const key = r[g] || '(vid)'; (m.get(key) || m.set(key, []).get(key)); if (r[v] != null && !isNaN(r[v])) m.get(key).push(r[v]); }
+    const agg = a => {
+      if (state.grpFn === 'count') return a.length; if (!a.length) return null;
+      const s = a.slice().sort((x, y) => x - y);
+      return { sum: s.reduce((x, y) => x + y, 0), mean: s.reduce((x, y) => x + y, 0) / s.length,
+        median: s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2, min: s[0], max: s.at(-1) }[state.grpFn];
+    };
+    const fnLabel = { sum: 'Summa', mean: 'Media', median: 'Median', count: 'Dumber', min: 'Min', max: 'Max' }[state.grpFn];
+    h = [head[g], fnLabel + ' ' + head[v], 'Lingias']; types = ['t', 'n', 'n'];
+    rows = [...m].map(([k, a]) => [k, agg(a), a.length]).sort((a, b) => (b[1] ?? -Infinity) - (a[1] ?? -Infinity));
+    barCol = 1; foot = `${rows.length} ${rows.length === 1 ? 'gruppa' : 'gruppas'}`;
+  }
+  if (view === 'out' && state.outCol != null) {
+    const c = cols[state.outCol];
+    h = head; types = cols.map(x => x.type);
+    rows = data.filter(r => r[c.i] != null && (r[c.i] < c.lo || r[c.i] > c.hi)).sort((a, b) => b[c.i] - a[c.i]);
+    rows.forEach(r => outRows.add(r));
+    foot = `Valurs sut ${fmt(c.lo)} u sur ${fmt(c.hi)} (metoda IQR: 1,5 × distanza tranter quartil 1 e 3). ${rows.length} ${rows.length === 1 ? 'lingia' : 'lingias'}.`;
+  }
+  // sortieren per Klick auf Spaltenkopf
+  if (sortCol >= 0 && sortCol < h.length) {
+    const k = sortCol;
+    rows = rows.slice().sort((a, b) => {
+      const x = a[k], y = b[k];
+      if (typeof x === 'number' || typeof y === 'number') return ((x ?? -Infinity) - (y ?? -Infinity)) * sortDir;
+      return String(x).localeCompare(String(y), 'de', { numeric: true }) * sortDir;
+    });
+  }
+  current = { head: h, rows, types };
+  const max = barCol >= 0 ? Math.max(...rows.map(r => Math.abs(r[barCol] ?? 0)), 1) : 1;
+  const shown = rows.slice(0, 1000);
+  $('tbl').innerHTML = `<thead><tr>${h.map((x, i) => `<th class="${types[i] === 'n' ? 'n' : ''}" data-i="${i}">${esc(x)}${sortCol === i ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>` +
+    shown.map(r => `<tr${outRows.has(r) ? ' class="out"' : ''}>${r.map((v, i) => types[i] === 'n'
+      ? `<td class="n">${i === barCol && v != null ? `<span class="bar" style="width:${Math.round(Math.abs(v) / max * 90)}px"></span>` : ''}${typeof v === 'number' ? fmt(v) : (v == null ? '–' : esc(v))}</td>`
+      : `<td>${esc(v)}</td>`).join('')}</tr>`).join('') + '</tbody>';
+  $('foot').textContent = foot + (rows.length > 1000 ? ' · mussadas las emprimas 1000' : '');
+  $('tbl').querySelectorAll('th').forEach(th => th.onclick = () => {
+    const i = +th.dataset.i; sortDir = sortCol === i ? -sortDir : (current.types[i] === 'n' ? -1 : 1); sortCol = i; draw();
+  });
+}
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+  view = t.dataset.v; sortCol = -1; buildCtrl(); draw();
+});
+
+// ---------- Export (Datawrapper-freundlich) ----------
+function exportText(delim) {
+  const cell = (v, i) => {
+    if (v == null || (typeof v === 'number' && isNaN(v))) return '';
+    if (typeof v === 'number') return String(Math.round(v * 1e6) / 1e6);
+    const s = String(v);
+    return delim === ',' && /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s.replace(/\t|\n/g, ' ');
+  };
+  return [current.head.map(h => cell(h)).join(delim), ...current.rows.map(r => r.map(cell).join(delim))].join('\n');
+}
+$('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(exportText('\t')); toast('Copià – ussa integrar en Datawrapper'); }
+  catch (e) { toast('Copiar n\'ha betg funcziunà'); }
+};
+$('dl').onclick = () => {
+  const blob = new Blob(['﻿' + exportText(',')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'datawrapper-' + view + '.csv'; a.click(); URL.revokeObjectURL(a.href);
+};
+
+// ---------- Eingabe ----------
+async function load(getRows, label) {
+  try { $('srcInfo').textContent = ''; srcDelim = ''; analyse(await getRows()); $('srcInfo').innerHTML = label ? esc(label) : ''; }
+  catch (e) { $('srcInfo').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+const drop = $('drop'), fileIn = $('file');
+drop.onclick = () => fileIn.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); } };
+fileIn.onchange = () => fileIn.files[0] && load(() => readFile(fileIn.files[0]), fileIn.files[0].name);
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) load(() => readFile(f), f.name); });
+$('go').onclick = () => $('paste').value.trim() ? load(() => textRows($('paste').value), 'Datas integradas') : $('paste').focus();
+$('sheet').onchange = () => load(() => sheetRows($('sheet').value), 'Fegl: ' + $('sheet').value);
+
+// Beispiel: erfundene Zahlen, nur zum Ausprobieren
+$('demo').onclick = () => {
+  $('paste').value = `Vischnanca;Regiun;Abitants;Surfatscha km2;Pernottaziuns 2025
+Cuira;Plessur;38'512;54,2;512'300
+Domat/Ems;Imboden;8'110;24,0;21'400
+Laax;Surselva;2'210;31,8;812'900
+Mustér;Surselva;2'030;140,4;96'200
+Glion;Surselva;4'990;46,2;58'700
+Scuol;Engiadina Bassa/Val Müstair;4'700;438,6;398'400
+Samedan;Maloja;2'950;113,8;141'300
+San Murezzan;Maloja;5'040;28,7;1'024'800
+Tusaun;Viamala;6'500;24,5;35'200
+Savognin;Alvra;1'710;84,4;164'900
+Breil/Brigels;Surselva;1'250;117,0;88'100
+Val Müstair;Engiadina Bassa/Val Müstair;1'420;198,6;61'300`;
+  load(() => textRows($('paste').value), 'Exempel cun cefras fictivas');
+};
+</script>
+</body>
+</html>
