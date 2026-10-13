@@ -8,6 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Cpath d='M26 74V52M42 74V34M58 74V44M74 74V24' stroke='white' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 <style>
 :root{
   --bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;
@@ -57,6 +58,8 @@ label.inl{font-size:.82rem;color:var(--muted);display:flex;gap:6px;align-items:c
 .tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#121214}
 .tab:hover{background:transparent;color:var(--text)}.tab[aria-selected=true]:hover{background:var(--accent);color:#121214}
 .ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.ctrl label.inl{min-width:0;max-width:100%}
+.ctrl select{min-width:0;max-width:min(340px,calc(100vw - 110px));text-overflow:ellipsis}
 /* Tabelle */
 .tbl{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px}
 table{border-collapse:collapse;width:100%;font-size:.84rem}
@@ -69,6 +72,16 @@ td .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accen
 .foot{font-size:.8rem;color:var(--muted);margin-top:8px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:#121214;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+/* Grafica */
+.sugg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:16px}
+.sg{text-align:left;background:#18181b;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--text);cursor:pointer;font-weight:400;display:flex;flex-direction:column;gap:4px}
+.sg:hover{background:#202024;border-color:#4a4a52}
+.sg[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:#18181b}
+.sg b{font-size:.92rem}.sg span{font-size:.8rem;color:var(--muted);line-height:1.4}
+.sg small{font-size:.72rem;color:#8fd9a8;font-weight:600;letter-spacing:.02em}
+.chartbox{position:relative;height:380px;background:#18181b;border:1px solid var(--line);border-radius:12px;padding:12px}
+.col canvas{display:block;width:100%;height:36px;margin-top:8px}
+.note{font-size:.82rem;color:var(--warn);margin-top:6px}
 </style>
 </head>
 <body>
@@ -76,7 +89,7 @@ td .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accen
   <header>
     <a class="homelink" href="/lab/">← Lab</a>
     <h1>CSV-<span class="acc">Analisa</span><span class="labbadge">Labor</span></h1>
-    <p class="lead">Chargiar ina tabella (CSV u Excel), survista da las colonnas, rangaziuns, gruppas e valurs extremas – e exportar il resultat per Datawrapper. Tut vegn elavurà en il browser, naginas datas bandunan tes computer.</p>
+    <p class="lead">Chargiar ina tabella (CSV u Excel), survista da las colonnas, rangaziuns, gruppas, midadas e valurs extremas, propostas per grafica – e exportar il resultat per Datawrapper. Tut vegn elavurà en il browser, naginas datas bandunan tes computer.</p>
   </header>
 
   <section class="card">
@@ -106,6 +119,7 @@ td .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accen
       <button class="tab" role="tab" data-v="table" aria-selected="true">Tabella</button>
       <button class="tab" role="tab" data-v="rank" aria-selected="false">Rangaziun</button>
       <button class="tab" role="tab" data-v="group" aria-selected="false">Gruppas</button>
+      <button class="tab" role="tab" data-v="change" aria-selected="false">Midada</button>
       <button class="tab" role="tab" data-v="out" aria-selected="false">Valurs extremas</button>
     </div>
     <div class="ctrl" id="ctrl"></div>
@@ -113,8 +127,21 @@ td .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accen
     <p class="foot" id="foot"></p>
   </section>
 
+  <section class="card hidden" id="viz">
+    <h2><span class="num">4</span>Grafica</h2>
+    <p class="info" style="margin:0 0 12px">Propostas per questas datas – tscherner ina per la vesair. Mo per l'orientaziun: la grafica finala fas ti en Datawrapper (il tip adattà stat sin mintga proposta).</p>
+    <div class="sugg" id="sugg"></div>
+    <div class="ctrl" id="vctrl"></div>
+    <div class="chartbox"><canvas id="chart"></canvas></div>
+    <div class="row">
+      <button id="vcopy">Copiar las datas da la grafica</button>
+      <button class="ghost" id="vpng">Telechargiar PNG</button>
+      <span class="info" id="vinfo"></span>
+    </div>
+  </section>
+
   <section class="card hidden" id="export">
-    <h2><span class="num">4</span>Exportar per Datawrapper</h2>
+    <h2><span class="num">5</span>Exportar per Datawrapper</h2>
     <p class="info">Exporta la vista actuala: puncts sco segn decimal, nagins separaturs da milli, UTF-8. En Datawrapper: «Copiar» e lura integrar en il pass «Upload Data».</p>
     <div class="row">
       <button id="copy">Copiar</button>
@@ -332,6 +359,15 @@ function analyse(rows, forcedHeader) {
     return c;
   });
   data = body.map(r => r.map((v, i) => cols[i].type === 'n' ? toNumber(v, cols[i].dec) : v));
+  // Total-Zeilen (z. B. «Total», «Schweiz» oder Summe aller übrigen Zeilen) für Ranglisten und Grafiken ausklammern
+  totalRows = new Set();
+  const lab = cols.find(c => c.type === 't'), main = mainNum();
+  if (lab) data.forEach(r => { if (/^(total|totale|tut|summa|insgesamt|schweiz|suisse|svizra|svizzera)\b/i.test(String(r[lab.i] || '').trim())) totalRows.add(r); });
+  if (main && data.length > 3) {
+    const vals = data.map(r => r[main.i]).filter(v => v != null && !isNaN(v)), mx = Math.max(...vals), rest = vals.reduce((a, b) => a + b, 0) - mx;
+    if (rest > 0 && Math.abs(mx - rest) / mx < 0.005) totalRows.add(data.find(r => r[main.i] === mx));
+  }
+  vizSel = 0; vizManual = null;
   render();
 }
 
@@ -339,9 +375,17 @@ function analyse(rows, forcedHeader) {
 let view = 'table', sortCol = -1, sortDir = 1, current = { head: [], rows: [], types: [] };
 const numCols = () => cols.filter(c => c.type === 'n');
 const txtCols = () => cols.filter(c => c.type !== 'n');
+let totalRows = new Set();
+const rowsNoTotal = () => data.filter(r => !totalRows.has(r));
+// Hauptspalte: «Total» im Namen, sonst die vollständigste Zahlenspalte
+function mainNum() {
+  const n = numCols(); if (!n.length) return null;
+  return n.find(c => /total|totale|insgesamt|summa/i.test(c.name)) || n.slice().sort((a, b) => b.filled - a.filled)[0];
+}
+const yearIn = name => { const m = String(name).match(/(1[89]|20)\d{2}/); return m ? +m[0] : null; };
 
 function render() {
-  ['overview', 'views', 'export'].forEach(id => $(id).classList.remove('hidden'));
+  ['overview', 'views', 'viz', 'export'].forEach(id => $(id).classList.remove('hidden'));
   $('sum').innerHTML = `<b>${data.length.toLocaleString('de-CH')}</b> lingias · <b>${cols.length}</b> colonnas` +
     (srcDelim ? ` · separatur: ${srcDelim}` : '') +
     ` · <b>${numCols().length}</b> numericas, <b>${txtCols().length}</b> text/data` +
@@ -349,6 +393,7 @@ function render() {
     (meta.unit ? ` · Unitad: ${esc(meta.unit)}` : '') +
     (meta.source ? `<br>Funtauna: ${esc(meta.source)}` : '') +
     (meta.skipped ? `<br>${meta.skipped} lingias sur u sut la tabella (titel, notas) èn vegnidas ignoradas.` : '') +
+    (totalRows.size ? `<br><span class="note">${[...totalRows].map(r => '«' + esc(String(r[(cols.find(c => c.type === 't') || cols[0]).i])) + '»').join(', ')} pare d'esser ina lingia da total – exclusa da rangaziuns, gruppas e grafica.</span>` : '') +
     `<label class="hdrpick">Titels da las colonnas en la lingia <select id="hdr">${
       raw.slice(0, 25).map((r, i) => `<option value="${i}"${i === meta.headerRow ? ' selected' : ''}>${i + 1}: ${esc(r.filter(c => String(c ?? '').trim()).slice(0, 3).join(' · ').slice(0, 50))}</option>`).join('')
     }</select></label>`;
@@ -363,13 +408,15 @@ function render() {
     if (c.type === 'n' && c.dec === ',') warn.push('Comma sco segn decimal renconuschì');
     if (c.bad) warn.push(c.bad + ' valurs n\'èn betg cifras');
     return `<div class="col"><h3>${esc(c.name)}${tag}</h3><dl>${rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>` +
+      (c.type === 'n' ? `<canvas data-h="${c.i}" aria-label="Distribuziun"></canvas>` : '') +
       (warn.length ? `<div class="warn">${warn.join(' · ')}</div>` : '') + '</div>';
   }).join('');
-  buildCtrl(); draw();
+  document.querySelectorAll('#cols canvas[data-h]').forEach(cv => drawHist(cv, cols[cv.dataset.h]));
+  buildCtrl(); draw(); renderViz();
 }
 
 function opt(list, sel) { return list.map(c => `<option value="${c.i}"${c.i == sel ? ' selected' : ''}>${esc(c.name)}</option>`).join(''); }
-const state = { q: '', rankCol: null, rankN: 10, rankDir: 'desc', grpCol: null, grpVal: null, grpFn: 'sum', outCol: null };
+const state = { q: '', rankCol: null, rankN: 10, rankDir: 'desc', grpCol: null, grpVal: null, grpFn: 'sum', outCol: null, chLab: null, chA: null, chB: null, chMode: 'pct' };
 
 function buildCtrl() {
   const n = numCols(), t = txtCols(), c = $('ctrl');
@@ -381,11 +428,21 @@ function buildCtrl() {
   if (view === 'group') c.innerHTML = t.length && n.length ? `<label class="inl">Gruppar tenor <select id="grpCol">${opt(t, state.grpCol)}</select></label>
     <label class="inl"><select id="grpFn">${[['sum', 'Summa'], ['mean', 'Media'], ['median', 'Median'], ['count', 'Dumber'], ['min', 'Min'], ['max', 'Max']].map(([v, l]) => `<option value="${v}"${state.grpFn === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
     <label class="inl">da <select id="grpVal">${opt(n, state.grpVal)}</select></label>` : '<span class="info">Per gruppas dovri almain ina colonna da text ed ina numerica.</span>';
+  if (view === 'change') {
+    // Standard: die beiden Spalten mit dem frühesten und spätesten Jahr im Namen, sonst erste und letzte Zahlenspalte
+    const yc = n.filter(x => yearIn(x.name)).sort((a, b) => yearIn(a.name) - yearIn(b.name));
+    const twoYears = yc.length >= 2 && yearIn(yc[0].name) !== yearIn(yc.at(-1).name);
+    state.chA ??= (twoYears ? yc[0] : n[0])?.i; state.chB ??= (twoYears ? yc.at(-1) : n.at(-1))?.i; state.chLab ??= (t[0] || cols[0])?.i;
+    c.innerHTML = n.length > 1 ? `<label class="inl">Num <select id="chLab">${opt(t.length ? t : cols, state.chLab)}</select></label>
+      <label class="inl">Da <select id="chA">${opt(n, state.chA)}</select></label>
+      <label class="inl">tar <select id="chB">${opt(n, state.chB)}</select></label>
+      <label class="inl"><select id="chMode"><option value="pct"${state.chMode === 'pct' ? ' selected' : ''}>tenor %</option><option value="abs"${state.chMode === 'abs' ? ' selected' : ''}>absolut</option></select></label>` : '<span class="info">Per ina midada dovri almain duas colonnas numericas.</span>';
+  }
   if (view === 'out') c.innerHTML = n.length ? `<label class="inl">Colonna <select id="outCol">${opt(n, state.outCol)}</select></label>` : '<span class="info">Naginas colonnas numericas.</span>';
   c.querySelectorAll('select,input').forEach(el => el.addEventListener('input', () => {
     const v = el.value;
     if (el.id === 'q') state.q = v; else if (el.id === 'rankN') state.rankN = Math.max(1, +v || 10);
-    else if (el.id === 'rankDir' || el.id === 'grpFn') state[el.id] = v; else state[el.id] = +v;
+    else if (el.id === 'rankDir' || el.id === 'grpFn' || el.id === 'chMode') state[el.id] = v; else state[el.id] = +v;
     draw();
   }));
 }
@@ -402,13 +459,13 @@ function draw() {
     const k = state.rankCol, d = state.rankDir === 'desc' ? -1 : 1;
     const label = txtCols()[0];
     h = ['Rang', ...(label ? [label.name] : []), head[k]]; types = ['n', ...(label ? ['t'] : []), 'n'];
-    rows = data.filter(r => r[k] != null && !isNaN(r[k])).sort((a, b) => (a[k] - b[k]) * d)
+    rows = rowsNoTotal().filter(r => r[k] != null && !isNaN(r[k])).sort((a, b) => (a[k] - b[k]) * d)
       .slice(0, state.rankN).map((r, i) => [i + 1, ...(label ? [r[label.i]] : []), r[k]]);
     barCol = h.length - 1; foot = 'Rangaziun tenor «' + head[k] + '»';
   }
   if (view === 'group' && state.grpCol != null && state.grpVal != null) {
     const g = state.grpCol, v = state.grpVal, m = new Map();
-    for (const r of data) { const key = r[g] || '(vid)'; (m.get(key) || m.set(key, []).get(key)); if (r[v] != null && !isNaN(r[v])) m.get(key).push(r[v]); }
+    for (const r of rowsNoTotal()) { const key = r[g] || '(vid)'; (m.get(key) || m.set(key, []).get(key)); if (r[v] != null && !isNaN(r[v])) m.get(key).push(r[v]); }
     const agg = a => {
       if (state.grpFn === 'count') return a.length; if (!a.length) return null;
       const s = a.slice().sort((x, y) => x - y);
@@ -419,6 +476,17 @@ function draw() {
     h = [head[g], fnLabel + ' ' + head[v], 'Lingias']; types = ['t', 'n', 'n'];
     rows = [...m].map(([k, a]) => [k, agg(a), a.length]).sort((a, b) => (b[1] ?? -Infinity) - (a[1] ?? -Infinity));
     barCol = 1; foot = `${rows.length} ${rows.length === 1 ? 'gruppa' : 'gruppas'}`;
+  }
+  if (view === 'change' && state.chA != null && state.chB != null && numCols().length > 1) {
+    const a = state.chA, b = state.chB, l = state.chLab, pctMode = state.chMode === 'pct';
+    const list = rowsNoTotal().filter(r => r[a] != null && r[b] != null && !isNaN(r[a]) && !isNaN(r[b]))
+      .map(r => [r[l], r[a], r[b], r[b] - r[a], r[a] ? (r[b] - r[a]) / Math.abs(r[a]) * 100 : null]);
+    h = [head[l], head[a], head[b], 'Differenza', 'Differenza %']; types = [cols[l].type === 'n' ? 'n' : 't', 'n', 'n', 'n', 'n'];
+    rows = list.sort((x, y) => ((pctMode ? y[4] : y[3]) ?? -Infinity) - ((pctMode ? x[4] : x[3]) ?? -Infinity));
+    barCol = pctMode ? 4 : 3;
+    const ta = list.reduce((t, r) => t + r[1], 0), tb = list.reduce((t, r) => t + r[2], 0);
+    const up = list.filter(r => r[3] > 0).length, down = list.filter(r => r[3] < 0).length;
+    foot = `Total: ${fmt(ta)} → ${fmt(tb)} (${ta ? fmt((tb - ta) / Math.abs(ta) * 100, 1) + ' %' : '–'}) · ${up} creschids, ${down} sminuids, ${list.length - up - down} nunmidads`;
   }
   if (view === 'out' && state.outCol != null) {
     const c = cols[state.outCol];
@@ -441,7 +509,7 @@ function draw() {
   const shown = rows.slice(0, 1000);
   $('tbl').innerHTML = `<thead><tr>${h.map((x, i) => `<th class="${types[i] === 'n' ? 'n' : ''}" data-i="${i}">${esc(x)}${sortCol === i ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>` +
     shown.map(r => `<tr${outRows.has(r) ? ' class="out"' : ''}>${r.map((v, i) => types[i] === 'n'
-      ? `<td class="n">${i === barCol && v != null ? `<span class="bar" style="width:${Math.round(Math.abs(v) / max * 90)}px"></span>` : ''}${typeof v === 'number' ? fmt(v) : (v == null ? '–' : esc(v))}</td>`
+      ? `<td class="n">${i === barCol && v != null ? `<span class="bar" style="width:${Math.round(Math.abs(v) / max * 90)}px${v < 0 ? ';background:#6cb4ff' : ''}"></span>` : ''}${typeof v === 'number' ? (view === 'change' && i >= 3 && v > 0 ? '+' : '') + fmt(v) + (view === 'change' && i === 4 ? ' %' : '') : (v == null ? '–' : esc(v))}</td>`
       : `<td>${esc(v)}</td>`).join('')}</tr>`).join('') + '</tbody>';
   $('foot').textContent = foot + (rows.length > 1000 ? ' · mussadas las emprimas 1000' : '');
   $('tbl').querySelectorAll('th').forEach(th => th.onclick = () => {
@@ -453,6 +521,188 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
   view = t.dataset.v; sortCol = -1; buildCtrl(); draw();
 });
+
+// ---------- Mini-Histogramm pro Zahlenspalte ----------
+function drawHist(cv, c) {
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 200, h = 36;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const v = data.map(r => r[c.i]).filter(x => x != null && !isNaN(x));
+  if (v.length < 3 || c.max === c.min) return;
+  const bins = 24, cnt = Array(bins).fill(0), out = Array(bins).fill(0);
+  v.forEach(x => { const b = Math.min(bins - 1, Math.floor((x - c.min) / (c.max - c.min) * bins)); cnt[b]++; if (x < c.lo || x > c.hi) out[b]++; });
+  const m = Math.max(...cnt), bw = w / bins;
+  cnt.forEach((n, i) => {
+    if (!n) return;
+    const bh = Math.max(2, n / m * (h - 2));
+    ctx.fillStyle = out[i] === n ? '#ff4d64' : '#5a5a62';
+    ctx.fillRect(i * bw + 1, h - bh, bw - 2, bh);
+  });
+}
+
+// ---------- Grafik-Vorschläge ----------
+// Jeder Vorschlag: Titel, Begründung, passender Datawrapper-Typ und die Daten für die Vorschau.
+let vizSel = 0, vizManual = null, chart = null, vizList = [], vizData = { head: [], rows: [] };
+const PALETTE = ['#ff4d64', '#6cb4ff', '#ffb86b', '#8fd9a8', '#c4a7ff', '#f2e07a'];
+const corr = (x, y) => {
+  const n = x.length, mx = x.reduce((a, b) => a + b, 0) / n, my = y.reduce((a, b) => a + b, 0) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++) { const dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+  return sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0;
+};
+function suggest() {
+  const out = [], rows = rowsNoTotal(), n = numCols().filter(c => c.filled >= 3), main = mainNum();
+  if (!n.length || !main) return out;
+  const time = cols.find(c => c.type === 'y' || c.type === 'd');
+  const cat = cols.find(c => c.type === 't' && c.unique >= 2);
+  const grp = cols.find(c => c.type === 't' && c.unique >= 2 && c.unique < c.filled && c.unique <= 30);
+  const valid = (r, c) => r[c.i] != null && !isNaN(r[c.i]);
+  if (time) {
+    // Linien: Hauptreihe plus bis zu drei weitere gut gefüllte Reihen
+    // weitere Reihen nur in ähnlicher Grössenordnung (keine Prozente neben absoluten Zahlen)
+    const similar = c => c !== main && c.max <= main.max * 5 && c.max >= main.max / 5;
+    const series = [main, ...n.filter(similar).sort((a, b) => b.filled - a.filled)].slice(0, 4);
+    out.push({ kind: 'line', x: time, ys: series.slice(0, 1), title: 'Svilup en il temp', dw: 'Lines',
+      why: `«${main.name}» da ${time.type === 'y' ? time.minY : rows[0]?.[time.i]} fin ${time.type === 'y' ? time.maxY : rows.at(-1)?.[time.i]}.` });
+    if (series.length > 1) out.push({ kind: 'line', x: time, ys: series, title: 'Pliras serias en il temp', dw: 'Lines (pliras colonnas)',
+      why: `Cumparegliar ${series.length} colonnas: ${series.map(c => '«' + c.name + '»').join(', ')}.` });
+    const pts = rows.filter(r => valid(r, main)).length;
+    if (pts <= 40) out.push({ kind: 'bar', x: time, ys: [main], title: 'Colonnas per onn', dw: 'Column chart', why: `${pts} puncts da temp – colonnas èn bain legiblas.` });
+    // Spalte mit positiven und negativen Werten (z. B. Veränderung in %): die mit der grössten Spannweite
+    const posNeg = n.filter(c => c.min < 0 && c.max > 0).sort((a, b) => (b.max - b.min) - (a.max - a.min))[0];
+    if (posNeg) {
+      const many = rows.filter(r => valid(r, posNeg)).length > 80;
+      out.push({ kind: many ? 'line' : 'bar', x: time, ys: [posNeg], diverge: !many, title: 'Creschida e regress', dw: many ? 'Lines (cun lingia da nulla)' : 'Column chart (valurs negativas en autra colur)',
+        why: `«${posNeg.name}» ha valurs positivas e negativas.` });
+    }
+  }
+  if (cat) {
+    const many = rows.length > 25;
+    out.push({ kind: 'hbar', x: cat, ys: [main], sort: true, limit: many ? 15 : 40, title: many ? 'Top 15' : 'Rangaziun', dw: 'Bar chart',
+      why: `«${main.name}» tenor «${cat.name}», zavrà${many ? ' – mo ils 15 pli gronds' : ''}.` });
+    if (grp) out.push({ kind: 'hbar', x: grp, ys: [main], group: true, sort: true, title: 'Summa per gruppa', dw: 'Bar chart',
+      why: `Summa da «${main.name}» per «${grp.name}».` });
+    if (rows.length >= 2 && rows.length <= 6 && main.min >= 0) out.push({ kind: 'donut', x: cat, ys: [main], title: 'Parts dal total', dw: 'Donut chart',
+      why: `${rows.length} parts positivas – adattà sco parts dal total.` });
+    // zwei Zahlenspalten mit Jahren im Namen → Veränderung
+    const yc = n.filter(c => yearIn(c.name)).sort((a, b) => yearIn(a.name) - yearIn(b.name));
+    if (yc.length >= 2 && yearIn(yc[0].name) !== yearIn(yc.at(-1).name)) out.push({ kind: 'change', x: cat, a: yc[0], b: yc.at(-1), title: 'Midada en %', dw: 'Bar chart (u Arrow plot)',
+      why: `Da «${yc[0].name}» tar «${yc.at(-1).name}».` });
+  }
+  // Streudiagramm: stärkster Zusammenhang zwischen zwei Zahlenspalten
+  if (!time && n.length >= 2 && rows.length >= 8) {
+    let best = null;
+    const cand = n.slice(0, 10);
+    for (let i = 0; i < cand.length; i++) for (let j = i + 1; j < cand.length; j++) {
+      const pr = rows.filter(r => valid(r, cand[i]) && valid(r, cand[j]));
+      if (pr.length < 8) continue;
+      const r = corr(pr.map(x => x[cand[i].i]), pr.map(x => x[cand[j].i]));
+      if (Math.abs(r) < 0.999 && (!best || Math.abs(r) > Math.abs(best.r))) best = { a: cand[i], b: cand[j], r };
+    }
+    if (best && Math.abs(best.r) >= 0.5) out.push({ kind: 'scatter', x: best.a, ys: [best.b], label: cat || time, title: 'Connex tranter duas cifras', dw: 'Scatter plot',
+      why: `«${best.a.name}» e «${best.b.name}»: correlaziun r = ${fmt(best.r, 2)} (${best.r > 0 ? 'positiva' : 'negativa'}).` });
+  }
+  if (!time && !cat || out.length < 2) out.push({ kind: 'hist', ys: [main], title: 'Distribuziun', dw: 'Column chart (histogram)', why: `Co èn las valurs da «${main.name}» repartidas?` });
+  return out.slice(0, 6);
+}
+
+function vizSpec() { return vizManual || vizList[vizSel]; }
+function renderViz() {
+  vizList = suggest();
+  $('sugg').innerHTML = vizList.length ? vizList.map((v, i) =>
+    `<button class="sg" data-i="${i}" aria-pressed="${!vizManual && i === vizSel}"><b>${esc(v.title)}</b><span>${esc(v.why)}</span><small>Datawrapper: ${esc(v.dw)}</small></button>`).join('')
+    : '<p class="info">Per grafica dovri almain ina colonna numerica.</p>';
+  document.querySelectorAll('#sugg .sg').forEach(b => b.onclick = () => { vizSel = +b.dataset.i; vizManual = null; renderViz(); });
+  // manuelle Auswahl
+  const n = numCols(), sp = vizSpec();
+  $('vctrl').innerHTML = n.length ? `<label class="inl">Tip <select id="vk">${[['line', 'Lingias'], ['bar', 'Colonnas'], ['hbar', 'Travs'], ['scatter', 'Puncts'], ['donut', 'Circul'], ['hist', 'Distribuziun']]
+      .map(([k, l]) => `<option value="${k}"${sp?.kind === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label class="inl">X <select id="vx">${opt(cols, (sp?.x || cols[0]).i)}</select></label>
+    <label class="inl">Y <select id="vy">${opt(n, (sp?.ys?.[0] || sp?.b || n[0]).i)}</select></label>` : '';
+  ['vk', 'vx', 'vy'].forEach(id => $(id) && ($(id).onchange = () => {
+    const kind = $('vk').value, x = cols[$('vx').value], y = cols[$('vy').value];
+    vizManual = { kind, x, ys: [y], sort: kind === 'hbar', limit: 40, label: cols.find(c => c.type === 't') || cols.find(c => c.type === 'y' || c.type === 'd'), title: 'Agen' };
+    renderViz();
+  }));
+  drawChart();
+}
+
+function drawChart() {
+  const sp = vizSpec();
+  if (chart) { chart.destroy(); chart = null; }
+  if (!sp) return;
+  if (!window.Chart) { $('vinfo').textContent = 'La biblioteca per grafica n\'è betg chargiada (internet?).'; return; }
+  const rows = rowsNoTotal(), lbl = v => v instanceof Date ? v.toLocaleDateString('de-CH') : String(v ?? '');
+  const ok = (r, c) => r[c.i] != null && (typeof r[c.i] !== 'number' || !isNaN(r[c.i]));
+  let cfg, dataHead = [], dataRows = [];
+  const base = { responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { display: false, labels: { color: '#c4c4cb' } }, tooltip: { callbacks: {} } },
+    scales: { x: { ticks: { color: '#9a9aa2', maxRotation: 0, autoSkip: true }, grid: { color: '#2a2a2f' } },
+              y: { ticks: { color: '#9a9aa2', callback: v => fmt(v) }, grid: { color: '#2a2a2f' } } } };
+  if (sp.kind === 'line' || (sp.kind === 'bar' && !sp.group)) {
+    const rs = rows.filter(r => sp.ys.some(c => ok(r, c)) && ok(r, sp.x));
+    cfg = { type: sp.kind === 'line' ? 'line' : 'bar', data: { labels: rs.map(r => lbl(r[sp.x.i])), datasets: sp.ys.map((c, k) => ({
+      label: c.name, data: rs.map(r => ok(r, c) ? r[c.i] : null), borderColor: PALETTE[k % 6], spanGaps: false,
+      backgroundColor: sp.diverge ? rs.map(r => (r[c.i] ?? 0) < 0 ? '#6cb4ff' : '#ff4d64') : PALETTE[k % 6],
+      pointRadius: rs.length > 60 ? 0 : 2, borderWidth: 2, tension: .15 })) }, options: base };
+    if (sp.ys.length > 1) base.plugins.legend.display = true;
+    dataHead = [sp.x.name, ...sp.ys.map(c => c.name)]; dataRows = rs.map(r => [r[sp.x.i], ...sp.ys.map(c => r[c.i])]);
+  } else if (sp.kind === 'hbar' || sp.kind === 'donut' || (sp.kind === 'bar' && sp.group)) {
+    const y = sp.ys[0];
+    let pairs;
+    if (sp.group) { const m = new Map(); rows.forEach(r => { if (ok(r, y)) m.set(lbl(r[sp.x.i]) || '(vid)', (m.get(lbl(r[sp.x.i]) || '(vid)') || 0) + r[y.i]); }); pairs = [...m]; }
+    else pairs = rows.filter(r => ok(r, y)).map(r => [lbl(r[sp.x.i]), r[y.i]]);
+    if (sp.sort) pairs.sort((a, b) => b[1] - a[1]);
+    pairs = pairs.slice(0, sp.limit || 40);
+    if (sp.kind === 'donut') {
+      cfg = { type: 'doughnut', data: { labels: pairs.map(p => p[0]), datasets: [{ data: pairs.map(p => p[1]), backgroundColor: PALETTE, borderColor: '#18181b', borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'right', labels: { color: '#c4c4cb' } } } } };
+    } else {
+      base.indexAxis = 'y'; base.scales.x.ticks.callback = v => fmt(v); base.scales.y.ticks.callback = function (v) { const t = this.getLabelForValue(v); return t.length > 28 ? t.slice(0, 27) + '…' : t; };
+      cfg = { type: 'bar', data: { labels: pairs.map(p => p[0]), datasets: [{ label: y.name, data: pairs.map(p => p[1]), backgroundColor: '#ff4d64', borderRadius: 3 }] }, options: base };
+    }
+    dataHead = [sp.x.name, (sp.group ? 'Summa ' : '') + y.name]; dataRows = pairs;
+  } else if (sp.kind === 'change') {
+    const list = rows.filter(r => ok(r, sp.a) && ok(r, sp.b) && r[sp.a.i]).map(r => [lbl(r[sp.x.i]), (r[sp.b.i] - r[sp.a.i]) / Math.abs(r[sp.a.i]) * 100])
+      .sort((a, b) => b[1] - a[1]).slice(0, 40);
+    base.indexAxis = 'y'; base.scales.x.ticks.callback = v => fmt(v) + ' %';
+    cfg = { type: 'bar', data: { labels: list.map(p => p[0]), datasets: [{ label: 'Midada %', data: list.map(p => p[1]), backgroundColor: list.map(p => p[1] < 0 ? '#6cb4ff' : '#ff4d64'), borderRadius: 3 }] }, options: base };
+    dataHead = [sp.x.name, `Midada ${sp.a.name} – ${sp.b.name} (%)`]; dataRows = list.map(p => [p[0], Math.round(p[1] * 10) / 10]);
+  } else if (sp.kind === 'scatter') {
+    const y = sp.ys[0], rs = rows.filter(r => ok(r, sp.x) && ok(r, y) && typeof r[sp.x.i] === 'number');
+    base.scales.x.ticks.callback = v => fmt(v);
+    base.scales.x.title = { display: true, text: sp.x.name, color: '#9a9aa2' }; base.scales.y.title = { display: true, text: y.name, color: '#9a9aa2' };
+    base.plugins.tooltip.callbacks.label = c => `${c.raw.l ? c.raw.l + ': ' : ''}${fmt(c.raw.x)} / ${fmt(c.raw.y)}`;
+    cfg = { type: 'scatter', data: { datasets: [{ data: rs.map(r => ({ x: r[sp.x.i], y: r[y.i], l: sp.label ? lbl(r[sp.label.i]) : '' })), backgroundColor: '#ff4d64', pointRadius: 4 }] }, options: base };
+    dataHead = [...(sp.label ? [sp.label.name] : []), sp.x.name, y.name]; dataRows = rs.map(r => [...(sp.label ? [r[sp.label.i]] : []), r[sp.x.i], r[y.i]]);
+  } else if (sp.kind === 'hist') {
+    const y = sp.ys[0], v = rows.map(r => r[y.i]).filter(x => x != null && !isNaN(x));
+    const bins = Math.min(20, Math.max(5, Math.round(Math.sqrt(v.length)))), w = (y.max - y.min) / bins || 1, cnt = Array(bins).fill(0);
+    v.forEach(x => cnt[Math.min(bins - 1, Math.floor((x - y.min) / w))]++);
+    const labels = cnt.map((_, i) => `${fmt(y.min + i * w)}–${fmt(y.min + (i + 1) * w)}`);
+    cfg = { type: 'bar', data: { labels, datasets: [{ label: 'Dumber', data: cnt, backgroundColor: '#ff4d64', categoryPercentage: 1, barPercentage: .95 }] }, options: base };
+    dataHead = ['Interval ' + y.name, 'Dumber']; dataRows = labels.map((l, i) => [l, cnt[i]]);
+  }
+  // Höhe: Balkendiagramme wachsen mit der Anzahl Balken
+  const nBars = cfg.options?.indexAxis === 'y' ? cfg.data.labels.length : 0;
+  document.querySelector('.chartbox').style.height = (nBars ? Math.max(260, nBars * 24 + 60) : 380) + 'px';
+  chart = new Chart($('chart'), { ...cfg, plugins: [{ id: 'bg', beforeDraw: c => { const x = c.ctx; x.save(); x.fillStyle = '#18181b'; x.fillRect(0, 0, c.width, c.height); x.restore(); } }] });
+  vizData = { head: dataHead, rows: dataRows };
+  $('vinfo').textContent = `${dataRows.length} ${dataRows.length === 1 ? 'lingia' : 'lingias'} da datas · Datawrapper: ${sp.dw || '–'}`;
+}
+$('vcopy').onclick = async () => {
+  const keep = current; current = { head: vizData.head, rows: vizData.rows };
+  try { await navigator.clipboard.writeText(exportText('\t')); toast('Datas da la grafica copiadas'); } catch (e) { toast('Copiar n\'ha betg funcziunà'); }
+  current = keep;
+};
+$('vpng').onclick = () => { if (!chart) return; const a = document.createElement('a'); a.href = chart.toBase64Image('image/png', 1); a.download = 'grafica.png'; a.click(); };
+// Daten auch per Ctrl/Cmd+V irgendwo auf der Seite einfügen
+document.addEventListener('paste', e => {
+  if (e.target.closest && e.target.closest('textarea,input')) return;
+  const t = e.clipboardData.getData('text/plain');
+  if (t && t.includes('\n')) { $('paste').value = t; load(() => textRows(t), 'Datas integradas'); }
+});
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => document.querySelectorAll('#cols canvas[data-h]').forEach(cv => drawHist(cv, cols[cv.dataset.h])), 200); });
 
 // ---------- Export (Datawrapper-freundlich) ----------
 function exportText(delim) {
@@ -476,6 +726,7 @@ $('dl').onclick = () => {
 
 // ---------- Eingabe ----------
 async function load(getRows, label) {
+  Object.assign(state, { q: '', rankCol: null, grpCol: null, grpVal: null, outCol: null, chLab: null, chA: null, chB: null }); sortCol = -1;
   try { $('srcInfo').textContent = ''; srcDelim = ''; analyse(await getRows()); $('srcInfo').innerHTML = label ? esc(label) : ''; }
   catch (e) { $('srcInfo').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
 }
