@@ -101,7 +101,7 @@ h1 .acc{color:var(--accent)}
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
   <h1>Memorisar <span class="acc">grafica Datawrapper</span></h1>
-  <p class="subtitle">Integrar il link da Datawrapper &rarr; grafica senza titel e funtauna sco PNG 16:9 en auta resoluziun. Funcziuna cun chartas, diagrams da travs, da colonnas e da lingias, locator maps etc.</p>
+  <p class="subtitle">Integrar il link da Datawrapper &rarr; grafica cun titel (u senza) e senza funtauna sco PNG 16:9 en auta resoluziun. Funcziuna cun chartas, diagrams da travs, da colonnas e da lingias, locator maps etc.</p>
 
   <div class="card">
     <div class="opts">
@@ -137,7 +137,14 @@ h1 .acc{color:var(--accent)}
           <option value="hide">Zuppentar</option>
         </select>
       </div>
-      <div class="full" id="padField">
+      <div>
+        <label for="titleSel">Titel</label>
+        <select id="titleSel">
+          <option value="show">Mussar</option>
+          <option value="hide">Zuppentar</option>
+        </select>
+      </div>
+      <div id="padField">
         <label for="padRange">Ur</label>
         <div class="range-row"><input id="padRange" type="range" min="0" max="25" step="1" value="7"><span id="padVal">7 %</span></div>
       </div>
@@ -198,6 +205,7 @@ h1 .acc{color:var(--accent)}
   const bgSel = document.getElementById('bgSel');
   const textSel = document.getElementById('textSel');
   const legendSel = document.getElementById('legendSel');
+  const titleSel = document.getElementById('titleSel');
   const padRange = document.getElementById('padRange');
   const padVal = document.getElementById('padVal');
   const padField = document.getElementById('padField');
@@ -208,12 +216,13 @@ h1 .acc{color:var(--accent)}
       bg: bgSel.value,
       pad: Number(padRange.value) / 100,
       baseW: Number(textSel.value),
-      legend: legendSel.value
+      legend: legendSel.value,
+      title: titleSel.value
     };
   }
   // Nur diese Einstellungen erfordern ein neues Rechnen bei Datawrapper;
   // Format, Rand und Weiss/Transparent werden aus dem fertigen Bild zusammengesetzt.
-  function renderKey(o){ return o.baseW + '|' + o.legend + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
+  function renderKey(o){ return o.baseW + '|' + o.legend + '|' + o.title + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
 
   function suffixFor(size){
     return size === 'crop' ? '_grafica' : size === '1920x1080' ? '_16x9_hd' : '_16x9_4k';
@@ -333,7 +342,7 @@ h1 .acc{color:var(--accent)}
         '<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden;}</style></head><body>' +
         '<div id="' + targetId + '" style="height:100%"></div>' +
         '<script type="text/javascript" defer src="' + DW + id + '/embed.js?_=' + Date.now() + '" charset="utf-8" ' +
-        'data-target="#' + targetId + '" data-plain="true" data-fitchart="true" data-dark="' + (dark ? 'true' : 'false') + '"><\/script>' +
+        'data-target="#' + targetId + '" data-plain="' + (o.title === 'hide' ? 'true' : 'false') + '" data-fitchart="true" data-dark="' + (dark ? 'true' : 'false') + '"><\/script>' +
         '</body></html>';
       stage.appendChild(iframe);
 
@@ -362,7 +371,9 @@ h1 .acc{color:var(--accent)}
             const st = doc.createElement('style');
             st.textContent =
               '.web-component-body,.chart,.dw-chart,.outer-container,.container,.dw-chart-body,.dw-chart-body-content{background:transparent !important;}' +
-              (hideLegend ? '.legend-container,.dw-chart-legend{display:none !important;}' : '');
+              (hideLegend ? '.legend-container,.dw-chart-legend{display:none !important;}' : '') +
+              // Mit Titel: nur die Überschrift behalten – Beschreibung, Quelle, Byline usw. ausblenden
+              (o.title !== 'hide' ? '.block-description,.container-footer,.dw-chart-footer,.block-notes{display:none !important;}' : '');
             root.appendChild(st);
             styled = true;
             setTimeout(poll, 400);
@@ -981,7 +992,7 @@ h1 .acc{color:var(--accent)}
     refreshSingle();
     batchItems.forEach(function(it){ it.refresh(); });
   }
-  [sizeSel, bgSel, textSel, legendSel].forEach(function(el){ el.addEventListener('change', onOptsChange); });
+  [sizeSel, bgSel, textSel, legendSel, titleSel].forEach(function(el){ el.addEventListener('change', onOptsChange); });
   let padTimer = null;
   padRange.addEventListener('input', function(){
     padVal.textContent = padRange.value + ' %';
