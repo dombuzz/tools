@@ -50,6 +50,10 @@
   .range-row input{ flex:1; accent-color:var(--accent); }
   .range-row span{ font-size:0.85rem; min-width:3em; text-align:right; color:var(--muted); }
   @media (max-width:480px){ .opts{ grid-template-columns:1fr; } }
+  .ratio-seg{ display:inline-flex; flex-wrap:wrap; max-width:100%; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .ratio-seg button{ background:var(--mono); color:var(--text); border:0; border-left:1px solid var(--border); border-radius:0; padding:9px 16px; font-size:0.9rem; font-weight:600; }
+  .ratio-seg button:first-child{ border-left:0; }
+  .ratio-seg button.active{ background:var(--text); color:var(--card); }
   .checks{ display:flex; flex-wrap:wrap; gap:6px 18px; }
   .checks label{ display:flex; align-items:center; gap:6px; margin:0; text-transform:none; letter-spacing:0; font-size:0.88rem; font-weight:500; color:var(--text); cursor:pointer; }
   .checks input{ width:16px; height:16px; margin:0; accent-color:var(--accent); cursor:pointer; }
@@ -108,12 +112,22 @@ h1 .acc{color:var(--accent)}
 
   <div class="card">
     <div class="opts">
+      <div class="full">
+        <span class="lbl">Format</span>
+        <div class="ratio-seg" id="ratioSeg" role="radiogroup" aria-label="Format">
+          <button type="button" role="radio" aria-checked="true" class="active" data-r="16:9">16:9</button>
+          <button type="button" role="radio" aria-checked="false" data-r="4:3">4:3</button>
+          <button type="button" role="radio" aria-checked="false" data-r="4:5">4:5</button>
+          <button type="button" role="radio" aria-checked="false" data-r="2:3">2:3</button>
+          <button type="button" role="radio" aria-checked="false" data-r="1:1">1:1</button>
+          <button type="button" role="radio" aria-checked="false" data-r="orig">Original</button>
+        </div>
+      </div>
       <div>
-        <label for="sizeSel">Format</label>
+        <label for="sizeSel">Resoluziun</label>
         <select id="sizeSel">
-          <option value="3840x2160">16:9 · 3840 × 2160 (4K)</option>
-          <option value="1920x1080">16:9 · 1920 × 1080 (HD)</option>
-          <option value="crop">Mo la grafica, taglià stretg</option>
+          <option value="2160">Auta (4K, 2160 px)</option>
+          <option value="1080">HD (1080 px)</option>
         </select>
       </div>
       <div>
@@ -204,6 +218,8 @@ h1 .acc{color:var(--accent)}
 
   /* ---------- Einstellungen ---------- */
   const sizeSel = document.getElementById('sizeSel');
+  const ratioSeg = document.getElementById('ratioSeg');
+  let aspectVal = '16:9';
   const bgSel = document.getElementById('bgSel');
   const textSel = document.getElementById('textSel');
   const legendSel = document.getElementById('legendSel');
@@ -217,7 +233,8 @@ h1 .acc{color:var(--accent)}
 
   function getOpts(){
     return {
-      size: sizeSel.value,
+      aspect: aspectVal,
+      res: Number(sizeSel.value),
       bg: bgSel.value,
       pad: Number(padRange.value) / 100,
       baseW: Number(textSel.value),
@@ -227,10 +244,16 @@ h1 .acc{color:var(--accent)}
   }
   // Nur diese Einstellungen erfordern ein neues Rechnen bei Datawrapper;
   // Format, Rand und Weiss/Transparent werden aus dem fertigen Bild zusammengesetzt.
-  function renderKey(o){ return o.baseW + '|' + o.legend + '|' + ['title','desc','byline','source'].map(function(k){ return o.parts[k] ? 1 : 0; }).join('') + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
+  function renderKey(o){ return o.baseW + '|' + o.aspect + '|' + o.legend + '|' + ['title','desc','byline','source'].map(function(k){ return o.parts[k] ? 1 : 0; }).join('') + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
 
-  function suffixFor(size){
-    return size === 'crop' ? '_grafica' : size === '1920x1080' ? '_16x9_hd' : '_16x9_4k';
+  // "16:9" -> 1.777…, "orig" -> null (Grafik in ihrer eigenen Höhe)
+  function aspectNum(a){
+    if (a === 'orig') return null;
+    const p = a.split(':').map(Number);
+    return p[0] / p[1];
+  }
+  function suffixFor(o){
+    return '_' + (o.aspect === 'orig' ? 'original' : o.aspect.replace(':', 'x')) + (o.res === 1080 ? '_hd' : '');
   }
 
   /* ---------- Tabs ---------- */
@@ -326,8 +349,13 @@ h1 .acc{color:var(--accent)}
   }
 
   function renderChart(id, o){
-    const baseW = o.baseW, baseH = Math.round(baseW * 9 / 16);
-    const ratio = RENDER_OUT_W / baseW;
+    // Die Schriftgrösse legt die Höhe der Fläche fest (wie bei 16:9); die Breite
+    // ergibt sich aus dem Seitenverhältnis. "Original": eigene Höhe der Grafik.
+    const asp = aspectNum(o.aspect);
+    const baseH0 = Math.round(o.baseW * 9 / 16);
+    const baseW = asp ? Math.round(baseH0 * asp) : o.baseW;
+    const baseH = asp ? baseH0 : 2400;
+    const ratio = RENDER_OUT_W / o.baseW;
     const dark = o.bg === 'dark';
     const p = o.parts;
     const anyPart = p.title || p.desc || p.byline || p.source;
@@ -338,7 +366,9 @@ h1 .acc{color:var(--accent)}
       iframe.style.width = baseW + 'px';
       iframe.style.height = baseH + 'px';
       const targetId = 'datawrapper-vis-' + id;
-      iframe.srcdoc =
+      // Kein srcdoc: Locator-Maps (MapLibre) zeichnen in about:srcdoc nichts. Darum
+      // ein leeres iFrame (about:blank, gleiche Domain) per document.write befüllen.
+      const html =
         '<!doctype html><html><head><meta charset="utf-8">' +
         '<script>' +
           'Object.defineProperty(window,"devicePixelRatio",{get:function(){return ' + ratio + ';},configurable:true});' +
@@ -349,9 +379,11 @@ h1 .acc{color:var(--accent)}
         '<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden;}</style></head><body>' +
         '<div id="' + targetId + '" style="height:100%"></div>' +
         '<script type="text/javascript" defer src="' + DW + id + '/embed.js?_=' + Date.now() + '" charset="utf-8" ' +
-        'data-target="#' + targetId + '" data-plain="' + (anyPart ? 'false' : 'true') + '" data-fitchart="true" data-dark="' + (dark ? 'true' : 'false') + '"><\/script>' +
+        'data-target="#' + targetId + '" data-plain="' + (anyPart ? 'false' : 'true') + '" data-fitchart="' + (asp ? 'true' : 'false') + '" data-dark="' + (dark ? 'true' : 'false') + '"><\/script>' +
         '</body></html>';
       stage.appendChild(iframe);
+      const idoc = iframe.contentDocument;
+      idoc.open(); idoc.write(html); idoc.close();
 
       const started = Date.now();
       let foundAt = 0, lastSig = null, stable = 0, styled = false, busy = false;
@@ -622,12 +654,19 @@ h1 .acc{color:var(--accent)}
 
   function compose(source, opts){
     const out = document.createElement('canvas');
-    let W, H;
-    if (opts.size === 'crop') {
-      W = source.width; H = source.height;
+    const asp = aspectNum(opts.aspect);
+    const k = opts.res / 2160; // HD = halbe Grösse
+    let W, H, dw, dh;
+    if (!asp) {
+      // Original: Grafik in eigener Proportion, Rand rundherum
+      const m = Math.round(opts.pad * Math.min(source.width, source.height));
+      W = Math.round((source.width + 2 * m) * k); H = Math.round((source.height + 2 * m) * k);
+      dw = source.width * k; dh = source.height * k;
     } else {
-      const p = opts.size.split('x').map(Number);
-      W = p[0]; H = p[1];
+      H = opts.res; W = Math.round(H * asp);
+      const availW = W * (1 - 2 * opts.pad), availH = H * (1 - 2 * opts.pad);
+      const s = Math.min(availW / source.width, availH / source.height);
+      dw = source.width * s; dh = source.height * s;
     }
     out.width = W; out.height = H;
     const ctx = out.getContext('2d');
@@ -635,14 +674,7 @@ h1 .acc{color:var(--accent)}
     if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); }
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    if (opts.size === 'crop') {
-      ctx.drawImage(source, 0, 0);
-    } else {
-      const availW = W * (1 - 2 * opts.pad), availH = H * (1 - 2 * opts.pad);
-      const s = Math.min(availW / source.width, availH / source.height);
-      const dw = source.width * s, dh = source.height * s;
-      ctx.drawImage(source, (W - dw) / 2, (H - dh) / 2, dw, dh);
-    }
+    ctx.drawImage(source, (W - dw) / 2, (H - dh) / 2, dw, dh);
     return out;
   }
 
@@ -759,7 +791,7 @@ h1 .acc{color:var(--accent)}
       img.src = out.toDataURL('image/png');
       previewWrap.appendChild(img);
       resolutionEl.textContent = out.width + ' × ' + out.height + ' px';
-      if (!filenameTouched) filenameInput.value = entry.stem + suffixFor(cur.size) + '.png';
+      if (!filenameTouched) filenameInput.value = entry.stem + suffixFor(cur) + '.png';
       downloadBtn.disabled = false;
       statusEl.textContent = '';
       statusEl.className = '';
@@ -781,7 +813,7 @@ h1 .acc{color:var(--accent)}
     versionTag.textContent = 'ID ' + id;
     statusEl.textContent = '';
     statusEl.className = '';
-    filenameInput.value = id + suffixFor(getOpts().size) + '.png';
+    filenameInput.value = id + suffixFor(getOpts()) + '.png';
     renderOriginals(id, id);
 
     fetchInfo(id).then(function(info){
@@ -790,7 +822,7 @@ h1 .acc{color:var(--accent)}
         chartTitleEl.textContent = info.title;
         single.stem = slugify(info.title) || id;
         renderOriginals(id, single.stem);
-        if (!filenameTouched) filenameInput.value = single.stem + suffixFor(getOpts().size) + '.png';
+        if (!filenameTouched) filenameInput.value = single.stem + suffixFor(getOpts()) + '.png';
       }
       if (info.version) versionTag.textContent = 'ID ' + id + ' · versiun actuala ' + info.version;
     });
@@ -878,7 +910,7 @@ h1 .acc{color:var(--accent)}
     info.className = 'rc-info';
     const fn = document.createElement('input');
     fn.type = 'text'; fn.className = 'rc-filename'; fn.spellcheck = false;
-    fn.value = id + suffixFor(getOpts().size) + '.png';
+    fn.value = id + suffixFor(getOpts()) + '.png';
     fn.addEventListener('input', function(){ item.touched = true; });
     const st = document.createElement('div');
     st.className = 'rc-status';
@@ -916,7 +948,7 @@ h1 .acc{color:var(--accent)}
         const img = document.createElement('img');
         img.src = small.toDataURL('image/png');
         thumb.appendChild(img);
-        if (!item.touched) fn.value = item.stem + suffixFor(cur.size) + '.png';
+        if (!item.touched) fn.value = item.stem + suffixFor(cur) + '.png';
         btn.disabled = false;
         item.setStatus('pronta');
         return true;
@@ -951,7 +983,7 @@ h1 .acc{color:var(--accent)}
         if (!info.title) return;
         it.title = info.title;
         it.stem = slugify(info.title) || it.id;
-        if (!it.touched) it.fn.value = it.stem + suffixFor(getOpts().size) + '.png';
+        if (!it.touched) it.fn.value = it.stem + suffixFor(getOpts()) + '.png';
         it.setStatus(it.current ? 'pronta' : 'vegn calculada…');
       });
     });
@@ -1003,11 +1035,19 @@ h1 .acc{color:var(--accent)}
   /* ---------- Einstellungen live anwenden ---------- */
   function onOptsChange(){
     padVal.textContent = padRange.value + ' %';
-    padField.style.opacity = sizeSel.value === 'crop' ? '0.4' : '1';
-    padRange.disabled = sizeSel.value === 'crop';
     refreshSingle();
     batchItems.forEach(function(it){ it.refresh(); });
   }
+  ratioSeg.addEventListener('click', function(e){
+    const b = e.target.closest('button[data-r]');
+    if (!b || b.dataset.r === aspectVal) return;
+    aspectVal = b.dataset.r;
+    Array.from(ratioSeg.children).forEach(function(x){
+      x.classList.toggle('active', x === b);
+      x.setAttribute('aria-checked', String(x === b));
+    });
+    onOptsChange();
+  });
   [sizeSel, bgSel, textSel, legendSel, partTitle, partDesc, partByline, partSource].forEach(function(el){ el.addEventListener('change', onOptsChange); });
   let padTimer = null;
   padRange.addEventListener('input', function(){
