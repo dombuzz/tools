@@ -50,6 +50,9 @@
   .range-row input{ flex:1; accent-color:var(--accent); }
   .range-row span{ font-size:0.85rem; min-width:3em; text-align:right; color:var(--muted); }
   @media (max-width:480px){ .opts{ grid-template-columns:1fr; } }
+  .checks{ display:flex; flex-wrap:wrap; gap:6px 18px; }
+  .checks label{ display:flex; align-items:center; gap:6px; margin:0; text-transform:none; letter-spacing:0; font-size:0.88rem; font-weight:500; color:var(--text); cursor:pointer; }
+  .checks input{ width:16px; height:16px; margin:0; accent-color:var(--accent); cursor:pointer; }
 
   /* Vorschau mit Schachbrett für Transparenz */
   .preview-wrap{
@@ -101,7 +104,7 @@ h1 .acc{color:var(--accent)}
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
   <h1>Memorisar <span class="acc">grafica Datawrapper</span></h1>
-  <p class="subtitle">Integrar il link da Datawrapper &rarr; grafica cun titel (u senza) e senza funtauna sco PNG 16:9 en auta resoluziun. Funcziuna cun chartas, diagrams da travs, da colonnas e da lingias, locator maps etc.</p>
+  <p class="subtitle">Integrar il link da Datawrapper &rarr; grafica sco PNG 16:9 en auta resoluziun – titel, descripziun, byline e funtauna tenor giavisch en auta resoluziun. Funcziuna cun chartas, diagrams da travs, da colonnas e da lingias, locator maps etc.</p>
 
   <div class="card">
     <div class="opts">
@@ -137,16 +140,15 @@ h1 .acc{color:var(--accent)}
           <option value="hide">Zuppentar</option>
         </select>
       </div>
-      <div>
-        <label for="titleSel">Titel</label>
-        <select id="titleSel">
-          <option value="show">Mussar</option>
-          <option value="hide">Zuppentar</option>
-        </select>
-      </div>
-      <div id="padField">
+      <div class="full" id="padField">
         <label for="padRange">Ur</label>
         <div class="range-row"><input id="padRange" type="range" min="0" max="25" step="1" value="7"><span id="padVal">7 %</span></div>
+      </div>
+      <div class="full checks" id="partsField">
+        <label><input type="checkbox" id="partTitle" checked> Titel</label>
+        <label><input type="checkbox" id="partDesc"> Descripziun</label>
+        <label><input type="checkbox" id="partByline"> Byline</label>
+        <label><input type="checkbox" id="partSource"> Funtauna</label>
       </div>
     </div>
   </div>
@@ -205,7 +207,10 @@ h1 .acc{color:var(--accent)}
   const bgSel = document.getElementById('bgSel');
   const textSel = document.getElementById('textSel');
   const legendSel = document.getElementById('legendSel');
-  const titleSel = document.getElementById('titleSel');
+  const partTitle = document.getElementById('partTitle');
+  const partDesc = document.getElementById('partDesc');
+  const partByline = document.getElementById('partByline');
+  const partSource = document.getElementById('partSource');
   const padRange = document.getElementById('padRange');
   const padVal = document.getElementById('padVal');
   const padField = document.getElementById('padField');
@@ -217,12 +222,12 @@ h1 .acc{color:var(--accent)}
       pad: Number(padRange.value) / 100,
       baseW: Number(textSel.value),
       legend: legendSel.value,
-      title: titleSel.value
+      parts: { title: partTitle.checked, desc: partDesc.checked, byline: partByline.checked, source: partSource.checked }
     };
   }
   // Nur diese Einstellungen erfordern ein neues Rechnen bei Datawrapper;
   // Format, Rand und Weiss/Transparent werden aus dem fertigen Bild zusammengesetzt.
-  function renderKey(o){ return o.baseW + '|' + o.legend + '|' + o.title + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
+  function renderKey(o){ return o.baseW + '|' + o.legend + '|' + ['title','desc','byline','source'].map(function(k){ return o.parts[k] ? 1 : 0; }).join('') + '|' + (o.bg === 'dark' ? 'dark' : 'light'); }
 
   function suffixFor(size){
     return size === 'crop' ? '_grafica' : size === '1920x1080' ? '_16x9_hd' : '_16x9_4k';
@@ -324,6 +329,8 @@ h1 .acc{color:var(--accent)}
     const baseW = o.baseW, baseH = Math.round(baseW * 9 / 16);
     const ratio = RENDER_OUT_W / baseW;
     const dark = o.bg === 'dark';
+    const p = o.parts;
+    const anyPart = p.title || p.desc || p.byline || p.source;
 
     return new Promise(function(resolve, reject){
       const stage = document.getElementById('stage');
@@ -342,7 +349,7 @@ h1 .acc{color:var(--accent)}
         '<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden;}</style></head><body>' +
         '<div id="' + targetId + '" style="height:100%"></div>' +
         '<script type="text/javascript" defer src="' + DW + id + '/embed.js?_=' + Date.now() + '" charset="utf-8" ' +
-        'data-target="#' + targetId + '" data-plain="' + (o.title === 'hide' ? 'true' : 'false') + '" data-fitchart="true" data-dark="' + (dark ? 'true' : 'false') + '"><\/script>' +
+        'data-target="#' + targetId + '" data-plain="' + (anyPart ? 'false' : 'true') + '" data-fitchart="true" data-dark="' + (dark ? 'true' : 'false') + '"><\/script>' +
         '</body></html>';
       stage.appendChild(iframe);
 
@@ -372,8 +379,17 @@ h1 .acc{color:var(--accent)}
             st.textContent =
               '.web-component-body,.chart,.dw-chart,.outer-container,.container,.dw-chart-body,.dw-chart-body-content{background:transparent !important;}' +
               (hideLegend ? '.legend-container,.dw-chart-legend{display:none !important;}' : '') +
-              // Mit Titel: nur die Überschrift behalten – Beschreibung, Quelle, Byline usw. ausblenden
-              (o.title !== 'hide' ? '.block-description,.container-footer,.dw-chart-footer,.block-notes{display:none !important;}' : '');
+              // Titel/Beschreibung/Byline/Quelle einzeln; alles andere im Kopf und Fuss (Notizen, Daten-Link, Logo …) weg
+              (anyPart ?
+                '.container-header [class*="block-"]:not(.block-headline):not(.block-description),' +
+                '.container-footer [class*="block-"]:not(.block-byline):not(.block-source){display:none !important;}' +
+                (p.title ? '' : '.block-headline{display:none !important;}') +
+                (p.desc ? '' : '.block-description{display:none !important;}') +
+                (p.byline ? '' : '.block-byline{display:none !important;}') +
+                (p.source ? '' : '.block-source{display:none !important;}') +
+                (p.title || p.desc ? '' : '.container-header{display:none !important;}') +
+                (p.byline || p.source ? '' : '.container-footer,.dw-chart-footer{display:none !important;}')
+              : '');
             root.appendChild(st);
             styled = true;
             setTimeout(poll, 400);
@@ -992,7 +1008,7 @@ h1 .acc{color:var(--accent)}
     refreshSingle();
     batchItems.forEach(function(it){ it.refresh(); });
   }
-  [sizeSel, bgSel, textSel, legendSel, titleSel].forEach(function(el){ el.addEventListener('change', onOptsChange); });
+  [sizeSel, bgSel, textSel, legendSel, partTitle, partDesc, partByline, partSource].forEach(function(el){ el.addEventListener('change', onOptsChange); });
   let padTimer = null;
   padRange.addEventListener('input', function(){
     padVal.textContent = padRange.value + ' %';
