@@ -426,6 +426,8 @@ window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
 .dbz-like svg{width:18px;height:18px;flex:none}
 .dbz-like svg path{fill:none;stroke:#ff4d64;stroke-width:2}
 .dbz-like button.done svg path{fill:#ff4d64}
+.dbz-like button:disabled{cursor:default;opacity:.55}
+.dbz-like button:disabled:hover{border-color:#2f2f34;background:transparent}
 .dbz-like button.pop svg{animation:dbzpop .35s ease}
 @keyframes dbzpop{40%{transform:scale(1.45)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.dbz-like button.pop svg{animation:none}}
@@ -446,11 +448,20 @@ window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
   if (host) host.append(box);
   const show = n => { out.textContent = n ? (n === 1 ? 'Gidà 1 giada' : `Gidà ${n.toLocaleString('de-CH')} giadas`) : ''; };
   fetch(API + '/likes').then(r => r.json()).then(d => show(d[tool] || 0)).catch(() => {});
+  // Höchstens 5 Klicks pro Tool, Gerät (Browser) und Tag
+  const LIMIT = 5, day = new Date().toLocaleDateString('sv'), key = `dbz-like-${tool}`;
+  const used = () => { try { const v = JSON.parse(localStorage.getItem(key) || '{}'); return v.day === day ? v.n : 0; } catch (e) { return 0; } };
+  const use = () => { try { localStorage.setItem(key, JSON.stringify({ day, n: used() + 1 })); } catch (e) {} };
+  const full = () => { btn.disabled = true; btn.classList.add('done'); btn.title = 'Turna damaun'; };
+  if (used() >= LIMIT) full();
   btn.addEventListener('click', () => {
+    if (used() >= LIMIT) return full();
+    use();
     btn.classList.add('done', 'pop'); setTimeout(() => btn.classList.remove('pop'), 400);
     fetch(API + '/like/' + encodeURIComponent(tool), { method: 'POST' })
       .then(r => r.json()).then(d => { if (d.count) { show(d.count); out.textContent += ' – grazia!'; } })
       .catch(() => { out.textContent = 'Betg reussì – emprova pli tard.'; });
+    if (used() >= LIMIT) full();
   });
 })();
 </script>
