@@ -715,7 +715,7 @@ function exportText(delim) {
   return [current.head.map(h => cell(h)).join(delim), ...current.rows.map(r => r.map(cell).join(delim))].join('\n');
 }
 $('copy').onclick = async () => {
-  try { await navigator.clipboard.writeText(exportText('\t')); toast('Copià – ussa integrar en Datawrapper'); }
+  try { await navigator.clipboard.writeText(exportText('\t')); toast('Copià – ussa integrar en Datawrapper'); dispatchEvent(new Event('dbz-success')); }
   catch (e) { toast('Copiar n\'ha betg funcziunà'); }
 };
 $('dl').onclick = () => {
@@ -758,5 +758,6 @@ Val Müstair;Engiadina Bassa/Val Müstair;1'420;198,6;61'300`;
   load(() => textRows($('paste').value), 'Exempel cun cifras fictivas');
 };
 </script>
+<script src="/like.js" defer></script>
 </body>
 </html>

@@ -732,7 +732,7 @@ $('#shuffle').onclick = () => { if (titleSeg){ titleSeg.i = choose(titleSeg.key)
 /* ---------- Copy ---------- */
 async function copy(text, btn){
   const old = btn.textContent;
-  try { await navigator.clipboard.writeText(text); btn.textContent = 'Copià'; }
+  try { await navigator.clipboard.writeText(text); btn.textContent = 'Copià'; dispatchEvent(new Event('dbz-success')); }
   catch { btn.textContent = 'Betg reussì'; }
   setTimeout(() => btn.textContent = old, 1600);
 }
@@ -940,5 +940,6 @@ $('#sihf').addEventListener('input', applySihf);
 
 build();
 </script>
+<script src="/like.js" defer></script>
 </body>
 </html>
