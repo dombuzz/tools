@@ -34,6 +34,9 @@
   .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.75rem}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
   .msg{padding:22px 18px;color:var(--muted);text-align:center;font-size:.9rem}
+  .labh{font-size:1.05rem;margin:34px 0 10px;color:#ff9a3c}
+  .card.lab{border-style:dashed;border-color:rgba(255,154,60,.35)}
+  .card.lab .bar{background:#ff9a3c}.card.lab .name a:hover{color:#ff9a3c}
 </style>
 </head>
 <body>
@@ -50,6 +53,10 @@
 
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <p class="meta" id="meta"></p>
+
+  <h2 class="labh">Lab <span>🧪</span></h2>
+  <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
+  <p class="meta" id="labmeta"></p>
 </div>
 
 <script>
@@ -60,34 +67,49 @@
     'PlanOnline': 'Plan Squadra online', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
     'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR'
   };
+  // Lab-Tools (Kennung «lab-<datei>»), separat dargestellt
+  const LAB = {
+    'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
+    'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal'
+  };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const MONTHS = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
 
+  // Eine Rangliste zeichnen; gibt die Summe der Klicks zurück
+  function draw(el, names, counts, belongs, href) {
+    const tools = [...new Set([...Object.keys(names), ...Object.keys(counts).filter(belongs)])]
+      .map(t => ({ t, n: counts[t] || 0 }))
+      .sort((a, b) => b.n - a.n || (names[a.t] || a.t).localeCompare(names[b.t] || b.t, 'de'));
+    const total = tools.reduce((s, x) => s + x.n, 0), max = Math.max(1, ...tools.map(x => x.n));
+    let rank = 0, prev = null;
+    el.innerHTML = tools.map((x, i) => {
+      if (x.n !== prev) { rank = i + 1; prev = x.n; }
+      const pct = total ? Math.round(x.n / total * 100) : 0;
+      return `<div class="row${x.n ? '' : ' zero'}"><span class="rank">${x.n ? rank : '–'}</span>
+        <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x.n / max * 100}%"></div></div>
+        <span class="cnt">${x.n.toLocaleString('de-CH')}<small>${x.n ? pct + ' %' : ''}</small></span></div>`;
+    }).join('');
+    return total;
+  }
+
   async function load(range) {
     const list = document.getElementById('list'), meta = document.getElementById('meta');
-    list.innerHTML = '<div class="msg">Chargel …</div>'; meta.textContent = '';
+    ['list', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = '';
     try {
       const r = await fetch(`${API}/ranking?range=${range}`);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();
       const counts = Object.fromEntries(d.items.map(i => [i.tool, i.count]));
-      const tools = [...new Set([...Object.keys(NAMES), ...Object.keys(counts)])]
-        .map(t => ({ t, n: counts[t] || 0 }))
-        .sort((a, b) => b.n - a.n || (NAMES[a.t] || a.t).localeCompare(NAMES[b.t] || b.t, 'de'));
-      const max = Math.max(1, ...tools.map(x => x.n));
-      let rank = 0, prev = null;
-      list.innerHTML = tools.map((x, i) => {
-        if (x.n !== prev) { rank = i + 1; prev = x.n; }
-        const pct = d.total ? Math.round(x.n / d.total * 100) : 0;
-        return `<div class="row${x.n ? '' : ' zero'}"><span class="rank">${x.n ? rank : '–'}</span>
-          <div class="name"><a href="/${esc(x.t)}">${esc(NAMES[x.t] || x.t)}</a><div class="bar" style="width:${x.n / max * 100}%"></div></div>
-          <span class="cnt">${x.n.toLocaleString('de-CH')}<small>${x.n ? pct + ' %' : ''}</small></span></div>`;
-      }).join('');
+      const isLab = t => t.startsWith('lab-');
+      const main = draw(document.getElementById('list'), NAMES, counts, t => !isLab(t), t => '/' + t);
+      const lab = draw(document.getElementById('lablist'), LAB, counts, isLab, t => '/lab/' + t.slice(4));
       const now = new Date();
       const label = { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
-      meta.textContent = `${label} · ${d.total.toLocaleString('de-CH')} ${d.total === 1 ? 'clic' : 'clics'} en total`;
+      const clics = n => `${n.toLocaleString('de-CH')} ${n === 1 ? 'clic' : 'clics'}`;
+      meta.textContent = `${label} · ${clics(main)} en total`;
+      document.getElementById('labmeta').textContent = `${label} · ${clics(lab)} en il Lab`;
     } catch (e) {
-      list.innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>';
+      ['list', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     }
   }
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => {

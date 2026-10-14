@@ -1410,7 +1410,7 @@ async function saveFile(){
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 async function copyText(text, msg){
-  try { await navigator.clipboard.writeText(text); toast(msg); }
+  try { await navigator.clipboard.writeText(text); toast(msg); dispatchEvent(new Event('dbz-success')); }
   catch { const ta = $('#expPreview'); ta.closest('details').open = true; ta.focus(); ta.select(); toast('Text ist markiert: Ctrl/Cmd+C drücken.'); }
 }
 $('#expSave').onclick = saveFile;
@@ -1474,5 +1474,6 @@ refreshAll();
 document.fonts && document.fonts.ready.then(draw);
 })();
 </script>
+<script src="/like.js" defer></script>
 </body>
 </html>

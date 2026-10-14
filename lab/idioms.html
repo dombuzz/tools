@@ -112,6 +112,7 @@
   const q = document.getElementById('q'), res = document.getElementById('res'),
         status = document.getElementById('status'), hit = document.getElementById('hit');
 
+  let asked = false;
   function search(text) {
     const n = norm(text);
     if (n.length < 2) { res.innerHTML = ''; status.textContent = ''; hit.hidden = true; return; }
@@ -136,6 +137,7 @@
       return;
     }
     status.textContent = gids.length === 1 ? '1 significaziun' : gids.length + ' significaziuns';
+    if (!asked) { asked = true; setTimeout(() => dispatchEvent(new Event('dbz-success')), 20000); }
     res.innerHTML = gids.map(g => {
       const rows = IDIOMS.map(([k, name]) => {
         const list = (byG[k].get(g) || []).slice().sort((a, b) => b[2] - a[2] || a[1] - b[1] || a[0].localeCompare(b[0]));
@@ -167,5 +169,6 @@
     ex.append(b);
   }
 </script>
+<script src="/like.js" defer></script>
 </body>
 </html>
