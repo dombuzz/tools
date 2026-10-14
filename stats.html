@@ -31,7 +31,9 @@
   .bar{height:6px;border-radius:3px;background:var(--accent);margin-top:6px;min-width:3px;transition:width .3s}
   .row.zero .bar{background:#3a3a40}.row.zero .name{color:var(--muted)}
   .cnt{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
-  .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.75rem}
+  .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;white-space:nowrap}
+  .hrt{color:var(--accent)}
+  .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
   .msg{padding:22px 18px;color:var(--muted);text-align:center;font-size:.9rem}
   .labh{font-size:1.05rem;margin:34px 0 10px;color:#ff9a3c}
@@ -43,7 +45,8 @@
 <div class="wrap">
   <a class="homelink" href="/">← Tools</a>
   <h1><span class="acc">Statistica</span></h1>
-  <p class="lead">Tge tools han gidà il pli savens da simplifitgar la lavur?<br>Dumbrads vegnan ils clics sin «Gea» sut ils tools.</p>
+  <p class="lead">Tge tools vegnan duvrads il pli savens – e tge han gidà da simplifitgar la lavur?<br>
+    <b>Duvrà</b>: mintga giada ch'in tool ha furnì in resultat (telechargià, copià). <span class="hrt">♥</span> clics sin «Gea» sut ils tools.</p>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" data-r="all" aria-selected="true">entir temp</button>
@@ -75,21 +78,24 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const MONTHS = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
 
-  // Eine Rangliste zeichnen; gibt die Summe der Klicks zurück
-  function draw(el, names, counts, belongs, href) {
-    const tools = [...new Set([...Object.keys(names), ...Object.keys(counts).filter(belongs)])]
-      .map(t => ({ t, n: counts[t] || 0 }))
-      .sort((a, b) => b.n - a.n || (names[a.t] || a.t).localeCompare(names[b.t] || b.t, 'de'));
-    const total = tools.reduce((s, x) => s + x.n, 0), max = Math.max(1, ...tools.map(x => x.n));
+  const fmt = n => n.toLocaleString('de-CH');
+  // Eine Rangliste zeichnen (nach Nutzungen, dann Likes); gibt die Summen zurück
+  function draw(el, names, uses, likes, belongs, href) {
+    const tools = [...new Set([...Object.keys(names), ...Object.keys(uses).filter(belongs), ...Object.keys(likes).filter(belongs)])]
+      .map(t => ({ t, n: uses[t] || 0, h: likes[t] || 0 }))
+      .sort((a, b) => b.n - a.n || b.h - a.h || (names[a.t] || a.t).localeCompare(names[b.t] || b.t, 'de'));
+    const sum = { n: tools.reduce((s, x) => s + x.n, 0), h: tools.reduce((s, x) => s + x.h, 0) };
+    const max = Math.max(1, ...tools.map(x => x.n));
     let rank = 0, prev = null;
     el.innerHTML = tools.map((x, i) => {
-      if (x.n !== prev) { rank = i + 1; prev = x.n; }
-      const pct = total ? Math.round(x.n / total * 100) : 0;
-      return `<div class="row${x.n ? '' : ' zero'}"><span class="rank">${x.n ? rank : '–'}</span>
+      const key = x.n + '/' + x.h;
+      if (key !== prev) { rank = i + 1; prev = key; }
+      const any = x.n || x.h;
+      return `<div class="row${any ? '' : ' zero'}"><span class="rank">${any ? rank : '–'}</span>
         <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x.n / max * 100}%"></div></div>
-        <span class="cnt">${x.n.toLocaleString('de-CH')}<small>${x.n ? pct + ' %' : ''}</small></span></div>`;
+        <span class="cnt" title="${fmt(x.n)} giadas duvrà · ${fmt(x.h)} × «Gea»">${fmt(x.n)}<small><span class="hrt">♥</span> ${fmt(x.h)}</small></span></div>`;
     }).join('');
-    return total;
+    return sum;
   }
 
   async function load(range) {
@@ -99,15 +105,16 @@
       const r = await fetch(`${API}/ranking?range=${range}`);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();
-      const counts = Object.fromEntries(d.items.map(i => [i.tool, i.count]));
+      const likes = Object.fromEntries(d.items.map(i => [i.tool, i.count]));
+      const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
       const isLab = t => t.startsWith('lab-');
-      const main = draw(document.getElementById('list'), NAMES, counts, t => !isLab(t), t => '/' + t);
-      const lab = draw(document.getElementById('lablist'), LAB, counts, isLab, t => '/lab/' + t.slice(4));
+      const main = draw(document.getElementById('list'), NAMES, uses, likes, t => !isLab(t), t => '/' + t);
+      const lab = draw(document.getElementById('lablist'), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4));
       const now = new Date();
       const label = { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
-      const clics = n => `${n.toLocaleString('de-CH')} ${n === 1 ? 'clic' : 'clics'}`;
-      meta.textContent = `${label} · ${clics(main)} en total`;
-      document.getElementById('labmeta').textContent = `${label} · ${clics(lab)} en il Lab`;
+      const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
+      meta.textContent = `${label} · ${sum(main)} en total`;
+      document.getElementById('labmeta').textContent = `${label} · ${sum(lab)} en il Lab`;
     } catch (e) {
       ['list', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     }

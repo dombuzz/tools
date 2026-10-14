@@ -3,6 +3,7 @@
 // Frage «Ha quest tool gidà da simplifitgar tia lavur?» unten im Tool und als Karte nach dem ersten Download.
 // Ein Tool kann die Karte auch selbst auslösen: dispatchEvent(new Event('dbz-success'))
 // Gezählt wird über den Cloudflare Worker (nur Tool-Name und Zeitpunkt), höchstens 5 Klicks pro Tool, Browser und Tag.
+// Nutzung: beim ersten Resultat (Download, Kopie, «dbz-success») eine Meldung pro Seitenaufruf, unabhängig vom Like.
 
 { // eigener Block: keine Namen gelangen in den globalen Bereich der Tools
 const CSS = `.dbz-like{max-width:640px;margin:36px auto 8px;padding:0 16px;text-align:center;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#9a9aa2}
@@ -94,10 +95,16 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   toast.addEventListener('mouseleave', () => later(6000));
   toast.querySelector('.dbz-x').addEventListener('click', hide);
   tBtn.addEventListener('click', () => { if (like(tBtn)) later(2500); else hide(); });
+  // Nutzung zählen: einmal pro Seitenaufruf
+  let counted = false;
+  function done() {
+    if (!counted) { counted = true; fetch(API + '/use/' + encodeURIComponent(tool), { method: 'POST', keepalive: true }).catch(() => {}); }
+    ask();
+  }
   // Downloads erkennen: Klick auf einen Download-Link oder a.click() im Skript
-  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('a[download]')) ask(); }, true);
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('a[download]')) done(); }, true);
   const origClick = HTMLAnchorElement.prototype.click;
-  HTMLAnchorElement.prototype.click = function () { if (this.hasAttribute('download')) ask(); return origClick.apply(this, arguments); };
-  window.addEventListener('dbz-success', ask);
+  HTMLAnchorElement.prototype.click = function () { if (this.hasAttribute('download')) done(); return origClick.apply(this, arguments); };
+  window.addEventListener('dbz-success', done);
 })();
 }
