@@ -218,7 +218,7 @@ function parsePlan(pages, SVC){
 }
 
 
-const CFG=[[["Clic", ["Clic"]], ["Dus da nus", ["DusN"]], ["Ils Dus Da Nus", ["I2DN"]], ["On demand divertiment", ["oDdi"]], ["On demand societad e cultura", ["oDs&"]], ["Social media 1", ["soc1"]], ["Advent", ["Adve"]], ["Battas", ["Batt"]], ["Chalender d'advent", ["Chal"]]]];
+const CFG=[[["Clic", ["Clic"]], ["Ils Dus Da Nus", ["DusN", "I2DN"]], ["On demand divertiment", ["oDdi"]], ["On demand societad e cultura", ["oDs&"]], ["Advent", ["Adve"]], ["Battas", ["Batt"]], ["Chalender d'advent", ["Chal"]]]];
 const CODE2ROW={}; CFG.flat().forEach(([lab,cs])=>cs.forEach(c=>CODE2ROW[c.toLowerCase()]=lab));
 const SVC=Object.keys(CODE2ROW); const SVCL=new Set(SVC);
 let ROWS=[];
