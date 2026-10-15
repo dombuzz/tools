@@ -14,7 +14,7 @@
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000       -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
 //   POST /view/Resizer2000      -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an)
-//   GET  /ranking?range=all     -> Rangliste: all | 30d | month | lastmonth (optional &scope=main|lab)
+//   GET  /ranking?range=all     -> Rangliste: all | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
 //                                  sortiert nach Nutzungen, dann Likes, dann Name (wie /stats)
@@ -62,6 +62,8 @@ function period(range) {
   if (range === '30d') return { from: sqlDate(new Date(now - 30 * 864e5)), to: null };
   if (range === 'month') return { from: sqlDate(new Date(Date.UTC(y, m, 1))), to: null };
   if (range === 'lastmonth') return { from: sqlDate(new Date(Date.UTC(y, m - 1, 1))), to: sqlDate(new Date(Date.UTC(y, m, 1))) };
+  const mm = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(range);
+  if (mm) { const yy = +mm[1], mo = +mm[2] - 1; return { from: sqlDate(new Date(Date.UTC(yy, mo, 1))), to: sqlDate(new Date(Date.UTC(yy, mo + 1, 1))) }; }
   return null; // all
 }
 
@@ -80,7 +82,8 @@ export default {
 
       // Rangliste für einen Zeitraum
       if (request.method === 'GET' && parts[0] === 'ranking' && parts.length === 1) {
-        const range = ['all', '30d', 'month', 'lastmonth'].includes(url.searchParams.get('range')) ? url.searchParams.get('range') : 'all';
+        const rq = url.searchParams.get('range') || '';
+        const range = ['all', '30d', 'month', 'lastmonth'].includes(rq) || /^\d{4}-(0[1-9]|1[0-2])$/.test(rq) ? rq : 'all';
         const p = period(range);
         const { results } = p
           ? await env.DB.prepare('SELECT tool, COUNT(*) AS count FROM clicks WHERE ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC')
