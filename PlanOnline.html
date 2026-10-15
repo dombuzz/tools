@@ -311,7 +311,7 @@ function render(){
     let mine=0;
     let h='<table><thead><tr><th>Servetsch</th>'+days.map((d,i)=>{const c=[i>4?'we':'',iso(d)===todayIso?'today':'',fromIso&&iso(d)<fromIso?'past':''].join(' ');return `<th class="${c}">${DAYS[i]}<small>${fmt(d)}</small></th>`}).join('')+'</tr></thead><tbody>';
     for(const sv of ROWS){
-      h+=`<tr><th>${sv}</th>`;
+      h+=`<tr><th>${({O1:'Online 1',O2:'Online 2',O3:'Online 3',O4:'Online 4',pOn:'prod On'})[sv]||sv}</th>`;
       days.forEach((d,i)=>{
         const k=iso(d), we=i>4;
         const c=[we?'we':'',k===todayIso?'today':'',fromIso&&k<fromIso?'past':''].join(' ');

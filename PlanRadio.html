@@ -218,7 +218,7 @@ function parsePlan(pages, SVC){
 }
 
 
-const CFG=[[["mod actual org vial 1", ["oV1"]], ["mod 1", ["m1", "m1_s"]], ["mod 2", ["m2", "m2_s", "mAcc"]], ["mod magazins", ["m_ma"]], ["planisar/manar", ["pl/m"]], ["org prod radio 1", ["oP1"]], ["prod radio 1", ["p1", "p1_s"]], ["prod radio 2", ["p2", "pV2"]], ["p_ra", ["p_ra"]], ["planisaziun", ["plan"]], ["reporterA radio", ["rRad"]], ["reporterA radio Cussegl Grond", ["rCGR"]], ["sport reporter", ["rSpo"]], ["sport hockey", ["rSph"]], ["novitads 1", ["N1"]], ["novitads 2", ["N2"]]]];
+const CFG=[[["mod actual org vial 1", ["oV1"]], ["mod 1", ["m1", "m1_s"]], ["mod 2", ["m2", "m2_s", "mAcc"]], ["mod magazins", ["m_ma"]], ["planisar/manar", ["pl/m"]], ["org prod radio 1", ["oP1"]], ["prod radio 1", ["p1", "p1_s"]], ["prod radio 2", ["p2", "pV2"]], ["p_ra", ["p_ra"]], ["planisaziun", ["plan"]], ["reporterA radio", ["rRad"]], ["reporterA radio Cussegl Grond", ["rCGR"]], ["sport reporter", ["rSpo"]], ["sport hockey", ["rSph"]], ["Novitads 1", ["N1"]], ["Novitads 2", ["N2"]]]];
 const CODE2ROW={}; CFG.flat().forEach(([lab,cs])=>cs.forEach(c=>CODE2ROW[c.toLowerCase()]=lab));
 const SVC=Object.keys(CODE2ROW); const SVCL=new Set(SVC);
 let ROWS=[];
