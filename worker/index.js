@@ -26,11 +26,20 @@ const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = {
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'Resizer2000': 'Resizer 2000',
-  'PlanOnline': 'Plan Squadra online', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
+  'PlanOnline': 'Survistas plans', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
   'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
 };
+
+// Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
+// «Survistas plans»: Plan Squadra online, Newsdesk, Televisiun, On demand & social media
+const GROUP = { PlanNewsdesk: 'PlanOnline', PlanTelevisiun: 'PlanOnline', PlanOnDemand: 'PlanOnline' };
+const grp = t => GROUP[t] || t;
+const merge = rows => Object.values(rows.reduce((m, r) => {
+  const k = grp(r.tool) + (r.day ? '|' + r.day : '');
+  (m[k] ||= { ...r, tool: grp(r.tool), count: 0 }).count += r.count; return m;
+}, {}));
 
 // Tabelle für Seitenaufrufe bei Bedarf anlegen (einmal pro Worker-Start)
 let viewsReady;
@@ -86,16 +95,17 @@ export default {
         const rq = url.searchParams.get('range') || '';
         const range = ['all', '30d', 'month', 'lastmonth'].includes(rq) || /^\d{4}-(0[1-9]|1[0-2])$/.test(rq) ? rq : 'all';
         const p = period(range);
-        const { results } = p
+        const { results: resultsRaw } = p
           ? await env.DB.prepare('SELECT tool, COUNT(*) AS count FROM clicks WHERE ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC')
               .bind(p.from, p.to ?? '9999').all()
           : await env.DB.prepare('SELECT tool, count FROM likes ORDER BY count DESC').all();
+        const results = merge(resultsRaw).sort((a, b) => b.count - a.count);
         const total = results.reduce((t, r) => t + r.count, 0);
         const { results: usesRaw } = await env.DB
           .prepare('SELECT tool, COUNT(*) AS count FROM uses WHERE ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const heart = Object.fromEntries(results.map(r => [r.tool, r.count]));
-        const useMap = Object.fromEntries(usesRaw.map(r => [r.tool, r.count]));
+        const useMap = Object.fromEntries(merge(usesRaw).map(r => [r.tool, r.count]));
         // optional: scope=main (ohne Lab) oder scope=lab (nur Lab)
         const scope = url.searchParams.get('scope');
         const inScope = t => scope === 'main' ? !t.startsWith('lab-') : scope === 'lab' ? t.startsWith('lab-') : true;
@@ -109,7 +119,7 @@ export default {
         const { results: viewRows } = await env.DB
           .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE ts >= ?1 AND ts < ?2 GROUP BY tool')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
-        const views = Object.fromEntries(viewRows.map(r => [r.tool, r.count]));
+        const views = Object.fromEntries(merge(viewRows).map(r => [r.tool, r.count]));
         const viewsTotal = viewRows.reduce((t, r) => t + r.count, 0);
         const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
@@ -120,7 +130,7 @@ export default {
             const { results: rr } = await env.DB
               .prepare(`SELECT substr(ts, 1, 10) AS day, tool, COUNT(*) AS count FROM ${tbl} WHERE ts >= ?1 AND ts < ?2 GROUP BY day, tool`)
               .bind(from, to).all();
-            for (const r of rr) { const k = r.day + '|' + r.tool; (day[k] ||= { day: r.day, tool: r.tool, uses: 0, likes: 0, views: 0 })[key] = r.count; }
+            for (const r of merge(rr)) { const k = r.day + '|' + r.tool; (day[k] ||= { day: r.day, tool: r.tool, uses: 0, likes: 0, views: 0 })[key] = r.count; }
           }
           out.daily = Object.values(day).sort((a, b) => a.day.localeCompare(b.day) || a.tool.localeCompare(b.tool));
         }
