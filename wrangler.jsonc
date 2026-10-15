@@ -1,0 +1,14 @@
+{
+  // Cloudflare Worker für Likes und Nutzungen (Code: worker/index.js)
+  // Wird von Cloudflare bei jedem Push auf main automatisch veröffentlicht.
+  "name": "fragrant-grass-c193",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-09-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dombuzz-likes",
+      "database_id": "be639ac8-3c52-4c14-8a2c-4d3b1b84c320"
+    }
+  ]
+}
