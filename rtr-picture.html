@@ -200,6 +200,15 @@ h1 .acc{color:var(--accent)}
       return { url: DEFAULT_BASE + trimmed, filename: trimmed };
     }
 
+    // Backend-Link des CMS (z.B. https://srf-cms.rokka.io/320ws/387025.jpg, auch ohne «https://»):
+    // dasselbe Bild liegt mit gleichem Dateinamen unter www.rtr.ch/static/cms/images/dynamic/noop/
+    const rokka = trimmed.match(/^(?:https?:\/\/)?[a-z0-9.-]*rokka\.io\/([^?#]*)/i);
+    if (rokka) {
+      const name = rokka[1].split('/').pop();
+      if (!name) return { error: 'I n\'è betg reussì da leger in num da file dal link.' };
+      return { url: DEFAULT_BASE + name, filename: name, source: 'rokka' };
+    }
+
     // Relativer Pfad ohne Domain (typisch für srcset in Bildergalerien),
     // z.B. "/static/cms/images/1280w/o-dpr-1/685636.webp"
     let toParse = trimmed;
@@ -644,7 +653,9 @@ h1 .acc{color:var(--accent)}
     const patterns = [
       /https?:\/\/[^\s"'<>\\]+\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif)/gi,
       // il.srf.ch, il.rtr.ch, il.rsi.ch, il.rts.ch, il.swissinfo.ch — derselbe SRG-SSR-Bildproxy auf allen Portalen
-      /https?:\/\/il\.[a-z0-9-]+\.ch\/images\/\?[^\s"'<>\\]+/gi
+      /https?:\/\/il\.[a-z0-9-]+\.ch\/images\/\?[^\s"'<>\\]+/gi,
+      // CMS-Backend (srf-cms.rokka.io/…/387025.jpg): gleicher Dateiname unter rtr.ch …/dynamic/noop/
+      /(?:https?:\/\/)?[a-z0-9.-]*rokka\.io\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif)/gi
     ];
     const found = new Set();
     patterns.forEach(function(re){
