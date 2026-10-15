@@ -218,7 +218,7 @@ function parsePlan(pages, SVC){
 }
 
 
-const CFG=[[["MSG moderaziun", ["hMSG"]], ["MSG producziun", ["pMSG"]], ["Minisguard", ["MSG"]], ["tagl 1 Minisguard", ["t_MS"]], ["grafica MSG", ["gr_M"]], ["TSG organisaziun", ["oTSG"]], ["TSG producziun", ["pTSG"]], ["TSG moderaziun", ["mTSG"]], ["TSG contribuziun", ["cTSG"]], ["TSG Cussegl Grond", ["CGTS"]], ["TSG videonews", ["vNew"]], ["tagl 1 Telesguard", ["t1_T"]], ["tagl 2 Telesguard", ["t2_T"]], ["CUN", ["CUN"]]]];
+const CFG=[[["MSG moderaziun", ["hMSG"]], ["MSG producziun", ["pMSG"]], ["Minisguard", ["MSG"]], ["Tagl 1 Minisguard", ["t_MS"]], ["Grafica MSG", ["gr_M"]], ["TSG organisaziun", ["oTSG"]], ["TSG producziun", ["pTSG"]], ["TSG moderaziun", ["mTSG"]], ["TSG contribuziun", ["cTSG"]], ["TSG Cussegl Grond", ["CGTS"]], ["TSG videonews", ["vNew"]], ["Tagl 1 Telesguard", ["t1_T"]], ["Tagl 2 Telesguard", ["t2_T"]], ["CUN", ["CUN"]]]];
 const CODE2ROW={}; CFG.flat().forEach(([lab,cs])=>cs.forEach(c=>CODE2ROW[c.toLowerCase()]=lab));
 const SVC=Object.keys(CODE2ROW); const SVCL=new Set(SVC);
 let ROWS=[];
