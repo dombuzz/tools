@@ -124,9 +124,16 @@ function addResult(fileName, text){
   $('allRow').hidden = results.length<2;
 }
 
+function decodeSrt(buf){
+  const b=new Uint8Array(buf);
+  if (b[0]===0xFF&&b[1]===0xFE) return new TextDecoder('utf-16le').decode(b);
+  if (b[0]===0xFE&&b[1]===0xFF) return new TextDecoder('utf-16be').decode(b);
+  try { return new TextDecoder('utf-8',{fatal:true}).decode(b); }
+  catch(e){ return new TextDecoder('windows-1252').decode(b); } // ANSI-SRT (z. B. aus Windows-Programmen)
+}
 function handle(fileList){
   const files=[...fileList];
-  files.forEach(f=>{ const r=new FileReader(); r.onload=()=>{ addResult(f.name, r.result); if (files.length===1 && results.length) download(results[results.length-1]); }; r.readAsText(f,'utf-8'); });
+  files.forEach(f=>{ const r=new FileReader(); r.onload=()=>{ addResult(f.name, decodeSrt(r.result)); if (files.length===1 && results.length) download(results[results.length-1]); }; r.readAsArrayBuffer(f); });
 }
 
 const drop=$('drop');
