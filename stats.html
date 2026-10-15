@@ -233,7 +233,9 @@
       marks = `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
         + vals.map((v, i) => `<circle cx="${cx(i)}" cy="${y(v)}" r="${v ? 2.6 : 1.8}" fill="${color}"/>`).join('');
     } else {
-      marks = vals.map((v, i) => `<rect x="${L + i * bw + 1}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${H - B - y(v)}" rx="2" fill="${color}"/>`).join('');
+      // höchster Wert (bei Gleichstand alle) = dunklerer Balken mit Kontur in der Grundfarbe
+      const dark = '#' + [1, 3, 5].map(k => Math.round(parseInt(color.slice(k, k + 2), 16) * .6).toString(16).padStart(2, '0')).join('');
+      marks = vals.map((v, i) => { const top = v > 0 && v === max; return `<rect x="${L + i * bw + 1}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${H - B - y(v)}" rx="2" fill="${top ? dark : color}"${top ? ` stroke="${color}" stroke-width="1.5"` : ''}/>`; }).join('');
     }
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`
       + ticks.map(t => `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#2f2f34"/><text class="ax" x="${L - 5}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('')
