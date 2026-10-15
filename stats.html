@@ -107,6 +107,15 @@
   .archive .archh{margin:0 0 2px;font-size:1.25rem;color:var(--accent)}
   .archive .archh span{color:var(--text)}
   .archive .archsub{margin:0 0 16px;color:var(--muted);font-size:.82rem}
+  /* auf-/zuklappbare Abschnitte */
+  .fold>summary{font-weight:700;list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold>summary::before{content:'▸';display:inline-block;width:1em;color:var(--muted);transition:transform .18s;font-size:.9em}
+  .fold[open]>summary::before{transform:rotate(90deg)}
+  .fold>summary:hover::before{color:var(--text)}
+  .fold>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+  .fold:not([open])>summary{margin-bottom:0}
+  .archive .subh{margin:22px 0 8px}
 </style>
 </head>
 <body>
@@ -140,12 +149,16 @@
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <p class="meta" id="meta"></p>
 
-  <h2 class="labh other">Autras paginas</h2>
-  <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
+  <details class="fold" data-k="other">
+    <summary class="labh other">Autras paginas</summary>
+    <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
+  </details>
 
-  <h2 class="labh">Lab <span>🧪</span></h2>
-  <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
-  <p class="meta" id="labmeta"></p>
+  <details class="fold" data-k="lab">
+    <summary class="labh">Lab <span>🧪</span></summary>
+    <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
+    <p class="meta" id="labmeta"></p>
+  </details>
 
   <section class="archive" id="archive">
   <h2 class="archh"><span aria-hidden="true">🗄</span> Archiv</h2>
@@ -156,11 +169,15 @@
     <div class="card chart" id="achart"></div>
     <div class="card" id="alist"></div>
     <p class="meta" id="ameta"></p>
-    <h3 class="subh">Autras paginas</h3>
-    <div class="card" id="aotherlist"></div>
-    <h3 class="subh lab">Lab <span>🧪</span></h3>
-    <div class="card lab" id="alablist"></div>
-    <p class="meta" id="alabmeta"></p>
+    <details class="fold" data-k="aother">
+      <summary class="subh">Autras paginas</summary>
+      <div class="card" id="aotherlist"></div>
+    </details>
+    <details class="fold" data-k="alab">
+      <summary class="subh lab">Lab <span>🧪</span></summary>
+      <div class="card lab" id="alablist"></div>
+      <p class="meta" id="alabmeta"></p>
+    </details>
   </div>
   </section>
 </div>
@@ -283,6 +300,11 @@
       if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     } finally { upd.classList.remove('busy'); }
   }
+  // Auf-/Zuklappen merken (Standard: zugeklappt)
+  document.querySelectorAll('details.fold').forEach(el => {
+    try { if (localStorage.getItem('dbz-fold-' + el.dataset.k) === '1') el.open = true; } catch (e) {}
+    el.addEventListener('toggle', () => { try { localStorage.setItem('dbz-fold-' + el.dataset.k, el.open ? '1' : '0'); } catch (e) {} });
+  });
   // ⟳ anklicken = sofort aktualisieren
   document.getElementById('updbtn').onclick = () => { if (started && !document.getElementById('upd').classList.contains('busy')) load(lastRange, true); };
   // alle 5 Minuten neu laden, solange die Seite offen und sichtbar ist (holt nach dem Zurückkehren nach)
