@@ -40,6 +40,11 @@
   .lock .err{color:var(--accent);min-height:1.4em;margin:10px 0 0;font-size:.88rem}
   .locked .wrap>:not(.lock){display:none}
   html:not(.locked) .lock{display:none}
+  .sortbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px;color:var(--muted);font-size:.82rem}
+  .sort{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:4px 11px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
+  .sort:hover{color:var(--text)}
+  .sort[aria-pressed=true]{color:var(--text);border-color:var(--accent)}
+  .sort .arr{color:var(--accent);margin-left:3px}
   .hrt{color:var(--accent)}.row.zero .hrt{color:#3a3a40}
   .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
@@ -73,6 +78,13 @@
     <button class="tab" role="tab" data-r="month" aria-selected="false">mais actual</button>
   </div>
 
+  <div class="sortbar" role="group" aria-label="Sortar">Sortar:
+    <button class="sort" data-k="rank" aria-pressed="true">Rang</button>
+    <button class="sort" data-k="n" aria-pressed="false">Duvrà</button>
+    <button class="sort" data-k="h" aria-pressed="false"><span class="hrt">♥</span></button>
+    <button class="sort" data-k="v" aria-pressed="false">Visitas</button>
+  </div>
+
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <p class="meta" id="meta"></p>
 
@@ -100,24 +112,32 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const MONTHS = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
 
+  // Sortierung: Standard = Rang (beste zuerst); erneutes Tippen kehrt um
+  let sortKey = 'rank', sortAsc = true, lastData = null, lastRange = 'all';
   const fmt = n => n.toLocaleString('de-CH');
   const EYE = '<svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'top': 'top Tools', 'stats': 'Statistica', 'lab-index': 'Lab (survista)' };
   // Eine Rangliste zeichnen (nach Nutzungen, dann Likes); gibt die Summen zurück
   function draw(el, names, uses, likes, belongs, href, views = {}) {
     const tools = [...new Set([...Object.keys(names), ...Object.keys(uses).filter(belongs), ...Object.keys(likes).filter(belongs)])]
-      .map(t => ({ t, n: uses[t] || 0, h: likes[t] || 0 }))
+      .map(t => ({ t, n: uses[t] || 0, h: likes[t] || 0, v: views[t] || 0 }))
       .sort((a, b) => b.n - a.n || b.h - a.h || (names[a.t] || a.t).localeCompare(names[b.t] || b.t, 'de'));
     const sum = { n: tools.reduce((s, x) => s + x.n, 0), h: tools.reduce((s, x) => s + x.h, 0) };
     const max = Math.max(1, ...tools.map(x => x.n));
+    // Rang nach Standardreihenfolge (Nutzungen, Likes) vergeben, danach nach Wunsch sortieren
     let rank = 0, prev = null;
-    el.innerHTML = tools.map((x, i) => {
-      const key = x.n + '/' + x.h;
-      if (key !== prev) { rank = i + 1; prev = key; }
+    tools.forEach((x, i) => { const key = x.n + '/' + x.h; if (key !== prev) { rank = i + 1; prev = key; } x.r = rank; });
+    if (sortKey !== 'rank' || sortAsc === false) {
+      const base = new Map(tools.map((x, i) => [x, i]));
+      // Rang: erstes Tippen = beste zuerst (Standard), erneut = umgekehrt; Zahlen: erstes Tippen = höchste zuerst, erneut = niedrigste zuerst
+      if (sortKey === 'rank') tools.reverse();
+      else tools.sort((a, b) => (sortAsc ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey]) || base.get(a) - base.get(b));
+    }
+    el.innerHTML = tools.map(x => {
       const any = x.n || x.h;
-      return `<div class="row${any ? '' : ' zero'}"><span class="rank">${any ? rank : '–'}</span>
+      return `<div class="row${any ? '' : ' zero'}"><span class="rank">${any ? x.r : '–'}</span>
         <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x.n / max * 100}%"></div></div>
-        <span class="cnt" title="${fmt(x.n)} giadas duvrà · ${fmt(x.h)} × «Gea» · ${fmt(views[x.t] || 0)} visitas">${fmt(x.n)}<small><span class="hrt">♥</span> ${fmt(x.h)} · ${EYE} ${fmt(views[x.t] || 0)}</small></span></div>`;
+        <span class="cnt" title="${fmt(x.n)} giadas duvrà · ${fmt(x.h)} × «Gea» · ${fmt(x.v)} visitas">${fmt(x.n)}<small><span class="hrt">♥</span> ${fmt(x.h)} · ${EYE} ${fmt(x.v)}</small></span></div>`;
     }).join('');
     return sum;
   }
@@ -145,7 +165,15 @@
     try {
       const r = await fetch(`${API}/ranking?range=${range}`);
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      const d = await r.json();
+      lastData = await r.json(); lastRange = range;
+      render();
+    } catch (e) {
+      ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
+    }
+  }
+  function render() {
+    const d = lastData, range = lastRange, meta = document.getElementById('meta');
+    {
       const likes = Object.fromEntries(d.items.map(i => [i.tool, i.count]));
       const views = d.views || {};
       const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
@@ -161,10 +189,22 @@
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
       meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
       document.getElementById('labmeta').textContent = `${label} · ${sum(lab)} en il Lab`;
-    } catch (e) {
-      ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     }
   }
+  const bars = [...document.querySelectorAll('.sort')];
+  function paintSort() {
+    bars.forEach(b => {
+      const on = b.dataset.k === sortKey;
+      b.setAttribute('aria-pressed', on);
+      b.querySelector('.arr')?.remove();
+      if (on) { const a = document.createElement('span'); a.className = 'arr'; a.textContent = (sortKey === 'rank' ? sortAsc : !sortAsc) ? '↑' : '↓'; b.append(a); }
+    });
+  }
+  bars.forEach(b => b.onclick = () => {
+    if (b.dataset.k === sortKey) sortAsc = !sortAsc; else { sortKey = b.dataset.k; sortAsc = true; }
+    paintSort(); if (lastData) render();
+  });
+  paintSort();
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
     document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b));
     load(b.dataset.r);
