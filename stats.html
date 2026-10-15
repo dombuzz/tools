@@ -67,6 +67,8 @@
   .labh{font-size:1.05rem;margin:34px 0 10px;color:#ff9a3c}
   .card.lab{border-style:dashed;border-color:rgba(255,154,60,.35)}
   .card.lab .bar{background:#ff9a3c}.card.lab .name a:hover{color:#ff9a3c}
+  .arch{width:100%;padding:12px 14px;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;margin-bottom:14px}
+  .subh{font-size:.95rem;margin:22px 0 8px;color:var(--muted)}.subh.lab{color:#ff9a3c}
 </style>
 </head>
 <body>
@@ -105,6 +107,18 @@
   <h2 class="labh">Lab <span>🧪</span></h2>
   <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
   <p class="meta" id="labmeta"></p>
+
+  <h2 class="labh other">Archiv</h2>
+  <select class="arch" id="archsel" aria-label="Mais tscherner"></select>
+  <div id="archbody" hidden>
+    <div class="card" id="alist"></div>
+    <p class="meta" id="ameta"></p>
+    <h3 class="subh">Autras paginas</h3>
+    <div class="card" id="aotherlist"></div>
+    <h3 class="subh lab">Lab <span>🧪</span></h3>
+    <div class="card lab" id="alablist"></div>
+    <p class="meta" id="alabmeta"></p>
+  </div>
 </div>
 
 <script>
@@ -190,26 +204,52 @@
       ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     }
   }
-  function render() {
-    const d = lastData, range = lastRange, meta = document.getElementById('meta');
+  function render() { renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
+  function renderInto(d, range, ids) {
+    const meta = document.getElementById(ids[3]);
     {
       const likes = Object.fromEntries(d.items.map(i => [i.tool, i.count]));
       const views = d.views || {};
       const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
       const isLab = t => t.startsWith('lab-');
-      const main = draw(document.getElementById('list'), NAMES, uses, likes, t => !isLab(t), t => '/' + t, views);
-      const lab = draw(document.getElementById('lablist'), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
+      const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => '/' + t, views);
+      const lab = draw(document.getElementById(ids[2]), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
       const hrefs = { index: '/', 'top-popup': '/', top: '/top', stats: '/stats', 'lab-index': '/lab/', '404': '/404' };
-      document.getElementById('otherlist').innerHTML = Object.keys(OTHER).map(t => `<div class="row"><span class="rank">·</span>
+      document.getElementById(ids[1]).innerHTML = Object.keys(OTHER).map(t => `<div class="row"><span class="rank">·</span>
         <div class="name"><a href="${hrefs[t]}">${esc(OTHER[t])}</a></div>
         <span class="cnt" title="${fmt(views[t] || 0)} ${t === 'top-popup' ? 'clics' : 'visitas'}">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
       const now = new Date();
-      const label = { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
+      const label = /^\d{4}-\d\d$/.test(range) ? `${MONTHS[+range.slice(5) - 1]} ${range.slice(0, 4)}` : { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
       meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
-      document.getElementById('labmeta').textContent = `${label} · ${sum(lab)} en il Lab`;
+      document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;
     }
   }
+  // Archiv: ein Eintrag pro Monat, beginnend mit Oktober 2026
+  let archData = null, archRange = null;
+  (function () {
+    const sel = document.getElementById('archsel'), now = new Date();
+    sel.innerHTML = '<option value="">Tscherner in mais …</option>';
+    for (let y = now.getFullYear(), m = now.getMonth(); y > 2026 || (y === 2026 && m >= 9); m--) {
+      if (m < 0) { m = 11; y--; }
+      sel.innerHTML += `<option value="${y}-${String(m + 1).padStart(2, '0')}">${MONTHS[m]} ${y}</option>`;
+    }
+    sel.onchange = async () => {
+      const body = document.getElementById('archbody');
+      if (!sel.value) { archData = null; body.hidden = true; return; }
+      body.hidden = false;
+      ['alist', 'aotherlist', 'alablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>');
+      try {
+        const r = await fetch(`${API}/ranking?range=${sel.value}`);
+        const d = await r.json();
+        if (!r.ok || d.range !== sel.value) throw new Error('range');
+        archData = d; archRange = sel.value; render();
+      } catch (e) {
+        archData = null;
+        ['alist', 'aotherlist', 'alablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
+      }
+    };
+  })();
   // Spaltentitel sortieren, «senza duvrada» klappt auf, «?» zeigt die Legende
   document.addEventListener('click', e => {
     const h = e.target.closest('.hd'), z = e.target.closest('.zerot');
