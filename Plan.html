@@ -280,23 +280,22 @@ function shortNames(names){
 }
 function setPlan(p,save){
   const months=new Set(), names=new Set(), dates=new Set();
-  const maps={}, rows={};
+  const maps={}, rows={}, people={};
   for(const [k,sp] of Object.entries(SPARTEN)){
     const c2r={}; sp.blocks.flat().forEach(([lab,cs])=>cs.forEach(c=>c2r[c.toLowerCase()]=lab));
-    const map={}, used=new Set();
+    const map={}, used=new Set(), ppl=new Set();
     for(const [date,svc,name] of p.entries){
       const row=c2r[svc.toLowerCase()]; if(!row) continue;
       ((map[date]??={})[row]??=[]); if(!map[date][row].includes(name)) map[date][row].push(name);
-      used.add(row);
+      used.add(row); ppl.add(name);
     }
+    people[k]=ppl;
     maps[k]=map; rows[k]=sp.blocks.map(b=>b.map(r=>r[0]).filter(l=>used.has(l))).filter(b=>b.length);
   }
   for(const [date,,name] of p.entries){months.add(date.slice(0,7)); names.add(name); dates.add(date)}
   const ds=[...dates].sort();
-  plan={...p,maps,rows,months,short:shortNames([...names]),names:[...names].sort((a,b)=>DISP[a].localeCompare(DISP[b],"de")),first:ds[0],last:ds[ds.length-1]};
-  const sel=$("who"), keep=sel.value||store.get("who")||"";
-  sel.innerHTML='<option value="">nagina</option>'+plan.names.map(n=>`<option value="${n.replace(/"/g,"&quot;")}">${DISP[n].replace(/</g,"&lt;")}</option>`).join("");
-  if(plan.names.includes(keep)) sel.value=keep;
+  plan={...p,maps,rows,people,months,short:shortNames([...names]),names:[...names].sort((a,b)=>DISP[a].localeCompare(DISP[b],"de")),first:ds[0],last:ds[ds.length-1]};
+  $("who").dataset.k="";
   const mlist=[...months].sort().map(m=>{const [y,mo]=m.split("-");return MONTHS[mo-1]+" "+y});
   $("status").className="status ok";
   $("status").innerHTML=`<b>${plan.names.length} persunas, ${p.entries.length} servetschs</b> · ${mlist.join(", ")} · ${p.label.replace(/</g,"&lt;")}`;
@@ -343,6 +342,7 @@ function render(){
   const out=$("out"); out.innerHTML="";
   if(!plan){out.innerHTML='<p class="empty">Chargia l\'actual plan da lavur (PDF) per vesair ils servetschs.</p>';return}
   if(!render.liked){render.liked=true; setTimeout(()=>dispatchEvent(new Event('dbz-success')),20000)}
+  fillWho();
   const map=plan.maps[sparte], ROWS=plan.rows[sparte];
   if(!ROWS.length){out.innerHTML=`<p class="empty">En il plan chargià na sa chattan nagins servetschs da la redacziun ${sp.name}.</p>`;return}
   const who=$("who").value;
@@ -380,6 +380,15 @@ function render(){
   }
   const anyInPlan=iso(end)>=plan.first&&iso(start)<=plan.last;
   if(!anyInPlan){const p=document.createElement('p');p.className='empty';p.textContent=`Il plan chargià na cuntegna betg questa perioda (dals ${fmt(parseIso(plan.first))} fin ils ${fmt(parseIso(plan.last))}${plan.last.slice(0,4)}). Chargia in plan pli nov.`;out.prepend(p)}
+}
+// «Marcar ina persuna»: mo persunas da la redacziun tschernida
+function fillWho(){
+  const sel=$("who"); if(sel.dataset.k===sparte) return;
+  sel.dataset.k=sparte;
+  const list=plan.names.filter(n=>plan.people[sparte].has(n));
+  const keep=store.get("who")||"";
+  sel.innerHTML='<option value="">nagina</option>'+list.map(n=>`<option value="${n.replace(/"/g,"&quot;")}">${DISP[n].replace(/</g,"&lt;")}</option>`).join("");
+  sel.value=list.includes(keep)?keep:"";
 }
 function setSparte(s,save){
   if(!SPARTEN[s]) return;
