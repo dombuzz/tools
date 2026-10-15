@@ -69,6 +69,8 @@
   .card.lab .bar{background:#ff9a3c}.card.lab .name a:hover{color:#ff9a3c}
   .arch{width:100%;padding:12px 14px;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;margin-bottom:14px}
   .subh{font-size:.95rem;margin:22px 0 8px;color:var(--muted)}.subh.lab{color:#ff9a3c}
+  .dl{margin:0 0 12px;padding:9px 15px;font:inherit;font-size:.9rem;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:999px;cursor:pointer}
+  .dl:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -111,6 +113,7 @@
   <h2 class="labh other">Archiv</h2>
   <select class="arch" id="archsel" aria-label="Mais tscherner"></select>
   <div id="archbody" hidden>
+    <button class="dl" id="archdl" type="button">↓ Telechargiar (CSV)</button>
     <div class="card" id="alist"></div>
     <p class="meta" id="ameta"></p>
     <h3 class="subh">Autras paginas</h3>
@@ -250,6 +253,24 @@
       }
     };
   })();
+  // Monat als CSV herunterladen (Semikolon + BOM, damit Excel in der Schweiz es direkt öffnet)
+  document.getElementById('archdl').onclick = () => {
+    if (!archData) return;
+    const d = archData, likes = Object.fromEntries(d.items.map(i => [i.tool, i.count])), views = d.views || {};
+    const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
+    const all = { ...NAMES, ...LAB, ...OTHER };
+    const tools = [...new Set([...Object.keys(all), ...Object.keys(uses), ...Object.keys(likes), ...Object.keys(views)])];
+    const area = t => t in OTHER ? 'Autras paginas' : t.startsWith('lab-') ? 'Lab' : 'Tools';
+    const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const rows = tools.map(t => ({ a: area(t), t, name: all[t] || t, n: uses[t] || 0, h: likes[t] || 0, v: views[t] || 0 }))
+      .filter(r => r.n || r.h || r.v).sort((x, y) => x.a.localeCompare(y.a) || y.n - x.n || y.h - x.h || y.v - x.v);
+    const csv = [['Mais', 'Secziun', 'Id', 'Num', 'Duvrà', 'Gea', 'Visitas'], ...rows.map(r => [archRange, r.a, r.t, r.name, r.n, r.h, r.v]),
+      [archRange, 'Total', '', '', d.usesTotal || 0, d.total || 0, d.viewsTotal || 0]].map(r => r.map(q).join(';')).join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = `statistica-${archRange}.csv`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
   // Spaltentitel sortieren, «senza duvrada» klappt auf, «?» zeigt die Legende
   document.addEventListener('click', e => {
     const h = e.target.closest('.hd'), z = e.target.closest('.zerot');
