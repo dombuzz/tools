@@ -84,6 +84,12 @@
   .ctog{display:inline-flex;margin:0 0 10px;border:1px solid var(--line);border-radius:999px;overflow:hidden}
   .ctog button{background:transparent;border:0;padding:5px 13px;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer}
   .ctog button[aria-pressed=true]{background:var(--accent);color:#121214}
+  .upd{margin:-2px 0 10px;text-align:right;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .upd.busy span:first-child{display:inline-block;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .archive{margin-top:64px;padding:22px 18px 20px;background:#17171a;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:16px;box-shadow:0 -28px 0 -26px var(--bg)}
+  .archive .archh{margin:0 0 2px;font-size:1.25rem;color:var(--text)}
+  .archive .archsub{margin:0 0 16px;color:var(--muted);font-size:.82rem}
 </style>
 </head>
 <body>
@@ -113,6 +119,7 @@
     <button class="tab" role="tab" data-r="month" aria-selected="false">mais actual</button>
   </div>
 
+  <p class="upd" id="upd" title="Actualisaziun automatica mintga 5 minutas"><span aria-hidden="true">⟳</span> <span id="updt">–</span></p>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <p class="meta" id="meta"></p>
 
@@ -123,7 +130,9 @@
   <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
   <p class="meta" id="labmeta"></p>
 
-  <h2 class="labh other">Archiv</h2>
+  <section class="archive" id="archive">
+  <h2 class="archh"><span aria-hidden="true">🗄</span> Archiv</h2>
+  <p class="archsub">Datas da mais vargads · betg actualisà automaticamain</p>
   <select class="arch" id="archsel" aria-label="Mais tscherner"></select>
   <div id="archbody" hidden>
     <button class="dl" id="archdl" type="button">↓ Telechargiar (CSV)</button>
@@ -136,6 +145,7 @@
     <div class="card lab" id="alablist"></div>
     <p class="meta" id="alabmeta"></p>
   </div>
+  </section>
 </div>
 
 <script>
@@ -209,75 +219,33 @@
     else { err.textContent = 'Pled-clav sbaglià.'; document.getElementById('pw').select(); }
   });
 
-  async function load(range) {
-    const list = document.getElementById('list'), meta = document.getElementById('meta');
-    ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = '';
+  const pad2 = n => String(n).padStart(2, '0');
+  let lastOk = 0, timer = null;
+  function stamp() {
+    const n = new Date(); lastOk = n.getTime();
+    document.getElementById('updt').textContent = `${pad2(n.getHours())}:${pad2(n.getMinutes())} dals ${pad2(n.getDate())}-${pad2(n.getMonth() + 1)}`;
+  }
+  // silent = Auto-Refresh im Hintergrund: keine «Chargel …»-Anzeige, bei Fehler bleiben die alten Daten stehen
+  async function load(range, silent) {
+    const meta = document.getElementById('meta'), upd = document.getElementById('upd');
+    if (!silent) { lastRange = range; ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = ''; }
+    upd.classList.add('busy');
     try {
       const r = await fetch(`${API}/ranking?range=${range}`);
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      lastData = await r.json(); lastRange = range;
-      render();
+      const d = await r.json();
+      if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
+      lastData = d; lastRange = range;
+      render(); stamp();
     } catch (e) {
-      ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
-    }
+      if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
+    } finally { upd.classList.remove('busy'); }
   }
-  // Diagramm pro Tag (reines SVG, Balken oder Linie); vals = Werte je Tag des Monats
-  let chartType = 'bar', chartCache = null;
-  function bars(vals, color, label, ci, range) {
-    const W = 560, H = 120, L = 26, B = 16, n = vals.length, max = Math.max(1, ...vals), bw = (W - L) / n;
-    const step = max <= 4 ? 1 : Math.ceil(max / 4), ticks = []; for (let t = 0; t <= max; t += step) ticks.push(t);
-    const y = v => H - B - v / max * (H - B - 6), cx = i => L + i * bw + bw / 2;
-    let marks;
-    if (chartType === 'line') {
-      const pts = vals.map((v, i) => `${cx(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-      marks = `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
-        + vals.map((v, i) => `<circle cx="${cx(i)}" cy="${y(v)}" r="${v ? 2.6 : 1.8}" fill="${color}"/>`).join('');
-    } else {
-      // höchster Wert (bei Gleichstand alle) = dunklerer Balken mit Kontur in der Grundfarbe
-      const dark = '#' + [1, 3, 5].map(k => Math.round(parseInt(color.slice(k, k + 2), 16) * .6).toString(16).padStart(2, '0')).join('');
-      marks = vals.map((v, i) => { const top = v > 0 && v === max; return `<rect x="${L + i * bw + 1}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${H - B - y(v)}" rx="2" fill="${top ? dark : color}"${top ? ` stroke="${color}" stroke-width="1.5"` : ''}/>`; }).join('');
-    }
-    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`
-      + ticks.map(t => `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#2f2f34"/><text class="ax" x="${L - 5}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('')
-      + marks
-      + vals.map((v, i) => (i === 0 || (i + 1) % 5 === 0) ? `<text class="ax" x="${cx(i)}" y="${H - 3}" text-anchor="middle">${i + 1}</text>` : '').join('')
-      + vals.map((v, i) => `<rect class="hit" x="${L + i * bw}" y="0" width="${bw}" height="${H - B}" data-c="${ci}" data-d="${i}" data-v="${v}" fill="transparent"/>`).join('') + '</svg>';
-  }
-  function drawChart(d, range) {
-    const el = document.getElementById('achart'), [y, m] = range.split('-').map(Number), days = new Date(y, m, 0).getDate();
-    const u = Array(days).fill(0), v = Array(days).fill(0), h = Array(days).fill(0);
-    for (const r of d.daily || []) { const i = +r.day.slice(8, 10) - 1; if (i >= 0 && i < days) { u[i] += r.uses; v[i] += r.views; h[i] += r.likes; } }
-    const sum = a => a.reduce((s, x) => s + x, 0);
-    const defs = [['Visitas', v, '#9a9aa2', 'visitas'], ['Duvrà', u, '#4d9fff', 'giadas duvrà'], ['Ha gidà ♥', h, '#ff4d64', 'Ha gidà']];
-    chartCache = { range, units: defs.map(x => x[3]) };
-    el.innerHTML = `<div class="ctog" role="group" aria-label="Tip da diagram"><button type="button" data-t="bar" aria-pressed="${chartType === 'bar'}">Balcas</button><button type="button" data-t="line" aria-pressed="${chartType === 'line'}">Lingias</button></div>`
-      + defs.map((x, ci) => `<h4>${x[0]} · <b>${fmt(sum(x[1]))}</b> en total</h4>${bars(x[1], x[2], x[0], ci, range)}`).join('')
-      + '<div class="tip" id="ctip" hidden></div>';
-  }
-  // Tooltip: Hover (Maus) oder Tippen/Klicken (Touch) zeigt die genaue Zahl pro Tag
-  (function () {
-    const box = document.getElementById('achart'), tip = () => document.getElementById('ctip');
-    const show = r => {
-      const t = tip(); if (!t || !chartCache) return;
-      const [y, m] = chartCache.range.split('-').map(Number), d = +r.dataset.d + 1;
-      const v = +r.dataset.v, ci = +r.dataset.c;
-      const txt = ci === 2 ? `gidà ${fmt(v)} ${v === 1 ? 'giada' : 'giadas'}` : `${fmt(v)} ${chartCache.units[ci]}`;
-      t.innerHTML = `<b>${d}. ${MONTHS[m - 1]}</b><br>${txt}`;
-      t.hidden = false;
-      const br = box.getBoundingClientRect(), rr = r.getBoundingClientRect();
-      const x = rr.left - br.left + rr.width / 2, w = t.offsetWidth;
-      t.style.left = Math.max(4, Math.min(br.width - w - 4, x - w / 2)) + 'px';
-      t.style.top = Math.max(0, rr.top - br.top - t.offsetHeight - 4) + 'px';
-      box.querySelectorAll('.hit.on').forEach(e => e.classList.remove('on')); r.classList.add('on');
-    };
-    box.addEventListener('mouseover', e => { const r = e.target.closest('.hit'); if (r) show(r); });
-    box.addEventListener('click', e => {
-      const r = e.target.closest('.hit'); if (r) return show(r);
-      const b = e.target.closest('.ctog button');
-      if (b && b.dataset.t !== chartType) { chartType = b.dataset.t; if (archData) drawChart(archData, archRange); }
-    });
-    box.addEventListener('mouseleave', () => { const t = tip(); if (t) t.hidden = true; box.querySelectorAll('.hit.on').forEach(e => e.classList.remove('on')); });
-  })();
+  // alle 5 Minuten neu laden, solange die Seite offen und sichtbar ist (holt nach dem Zurückkehren nach)
+  const EVERY = 5 * 60 * 1000;
+  const tick = () => { if (started && !document.hidden && Date.now() - lastOk >= EVERY - 2000) load(lastRange, true); };
+  setInterval(tick, 30 * 1000);
+  document.addEventListener('visibilitychange', tick);
   function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
   function renderInto(d, range, ids) {
     const meta = document.getElementById(ids[3]);
