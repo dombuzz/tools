@@ -13,10 +13,12 @@
 //   GET  /likes                 -> {"Resizer2000": 14, ...}            (Total pro Tool)
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000       -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
+//   POST /view/Resizer2000      -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an)
 //   GET  /ranking?range=all     -> Rangliste: all | 30d | month | lastmonth (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
 //                                  sortiert nach Nutzungen, dann Likes, dann Name (wie /stats)
+//                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe (nur für /stats)
 
 const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
@@ -28,6 +30,13 @@ const NAMES = {
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
 };
+
+// Tabelle für Seitenaufrufe bei Bedarf anlegen (einmal pro Worker-Start)
+let viewsReady;
+const ensureViews = env => viewsReady ||= env.DB.batch([
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS views (tool TEXT NOT NULL, ts TEXT NOT NULL)'),
+  env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
+]).catch(e => { viewsReady = null; throw e; });
 
 function cors(request) {
   const origin = request.headers.get('Origin') || '';
@@ -92,7 +101,13 @@ export default {
           .filter(r => r.count || r.likes)
           .sort((a, b) => b.count - a.count || b.likes - a.likes || a.name.localeCompare(b.name, 'de'));
         const usesTotal = uses.reduce((t, r) => t + r.count, 0);
-        return json({ range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses }, request);
+        await ensureViews(env);
+        const { results: viewRows } = await env.DB
+          .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE ts >= ?1 AND ts < ?2 GROUP BY tool')
+          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const views = Object.fromEntries(viewRows.map(r => [r.tool, r.count]));
+        const viewsTotal = viewRows.reduce((t, r) => t + r.count, 0);
+        return json({ range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal }, request);
       }
 
       // Ein Like dazuzählen
@@ -118,6 +133,17 @@ export default {
         const tool = decodeURIComponent(parts[1]);
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
         await env.DB.prepare("INSERT INTO uses (tool, ts) VALUES (?1, datetime('now'))").bind(tool).run();
+        return json({ ok: true }, request);
+      }
+
+      // Einen Seitenaufruf zählen (einmal pro Seitenaufruf, nur Tool-Name und Zeitpunkt)
+      if (request.method === 'POST' && parts[0] === 'view' && parts.length === 2) {
+        const origin = request.headers.get('Origin') || '';
+        if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
+        const tool = decodeURIComponent(parts[1]);
+        if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
+        await ensureViews(env);
+        await env.DB.prepare("INSERT INTO views (tool, ts) VALUES (?1, datetime('now'))").bind(tool).run();
         return json({ ok: true }, request);
       }
 
