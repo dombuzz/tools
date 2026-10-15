@@ -32,10 +32,12 @@
   .row.zero .bar{background:#3a3a40}.row.zero .name{color:var(--muted)}
   .cnt{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
   .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;white-space:nowrap}
+  .eye{display:inline-block;width:.95em;height:.95em;vertical-align:-.12em;fill:none;stroke:currentColor;stroke-width:2}
   .hrt{color:var(--accent)}.row.zero .hrt{color:#3a3a40}
   .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
   .msg{padding:22px 18px;color:var(--muted);text-align:center;font-size:.9rem}
+  .labh.other{color:var(--text)}
   .labh{font-size:1.05rem;margin:34px 0 10px;color:#ff9a3c}
   .card.lab{border-style:dashed;border-color:rgba(255,154,60,.35)}
   .card.lab .bar{background:#ff9a3c}.card.lab .name a:hover{color:#ff9a3c}
@@ -47,7 +49,8 @@
   <h1><span class="acc">Statistica</span></h1>
   <p class="lead">Tge tools vegnan duvrads il pli savens – u han gidà da simplifitgar la lavur?<br><br>
     <b>Duvrà</b>: mintga giada ch'in tool ha furnì in resultat.<br>
-    <span class="hrt">♥</span>: clics sin «Gea» sut ils tools.</p>
+    <span class="hrt">♥</span>: clics sin «Gea» sut ils tools.<br>
+    <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>: giadas ch'ina pagina è vegnida averta.</p>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" data-r="all" aria-selected="true">entir temp</button>
@@ -57,6 +60,9 @@
 
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <p class="meta" id="meta"></p>
+
+  <h2 class="labh other">Autras paginas</h2>
+  <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
 
   <h2 class="labh">Lab <span>🧪</span></h2>
   <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
@@ -80,8 +86,10 @@
   const MONTHS = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
 
   const fmt = n => n.toLocaleString('de-CH');
+  const EYE = '<svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'top': 'top Tools', 'stats': 'Statistica', 'lab-index': 'Lab (survista)' };
   // Eine Rangliste zeichnen (nach Nutzungen, dann Likes); gibt die Summen zurück
-  function draw(el, names, uses, likes, belongs, href) {
+  function draw(el, names, uses, likes, belongs, href, views = {}) {
     const tools = [...new Set([...Object.keys(names), ...Object.keys(uses).filter(belongs), ...Object.keys(likes).filter(belongs)])]
       .map(t => ({ t, n: uses[t] || 0, h: likes[t] || 0 }))
       .sort((a, b) => b.n - a.n || b.h - a.h || (names[a.t] || a.t).localeCompare(names[b.t] || b.t, 'de'));
@@ -94,30 +102,35 @@
       const any = x.n || x.h;
       return `<div class="row${any ? '' : ' zero'}"><span class="rank">${any ? rank : '–'}</span>
         <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x.n / max * 100}%"></div></div>
-        <span class="cnt" title="${fmt(x.n)} giadas duvrà · ${fmt(x.h)} × «Gea»">${fmt(x.n)}<small><span class="hrt">♥</span> ${fmt(x.h)}</small></span></div>`;
+        <span class="cnt" title="${fmt(x.n)} giadas duvrà · ${fmt(x.h)} × «Gea» · ${fmt(views[x.t] || 0)} visitas">${fmt(x.n)}<small><span class="hrt">♥</span> ${fmt(x.h)} · ${EYE} ${fmt(views[x.t] || 0)}</small></span></div>`;
     }).join('');
     return sum;
   }
 
   async function load(range) {
     const list = document.getElementById('list'), meta = document.getElementById('meta');
-    ['list', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = '';
+    ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = '';
     try {
       const r = await fetch(`${API}/ranking?range=${range}`);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();
       const likes = Object.fromEntries(d.items.map(i => [i.tool, i.count]));
+      const views = d.views || {};
       const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
       const isLab = t => t.startsWith('lab-');
-      const main = draw(document.getElementById('list'), NAMES, uses, likes, t => !isLab(t), t => '/' + t);
-      const lab = draw(document.getElementById('lablist'), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4));
+      const main = draw(document.getElementById('list'), NAMES, uses, likes, t => !isLab(t), t => '/' + t, views);
+      const lab = draw(document.getElementById('lablist'), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
+      const hrefs = { index: '/', top: '/top', stats: '/stats', 'lab-index': '/lab/' };
+      document.getElementById('otherlist').innerHTML = Object.keys(OTHER).map(t => `<div class="row"><span class="rank">·</span>
+        <div class="name"><a href="${hrefs[t]}">${esc(OTHER[t])}</a></div>
+        <span class="cnt" title="${fmt(views[t] || 0)} visitas">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
       const now = new Date();
       const label = { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
-      meta.textContent = `${label} · ${sum(main)} en total`;
+      meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
       document.getElementById('labmeta').textContent = `${label} · ${sum(lab)} en il Lab`;
     } catch (e) {
-      ['list', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
+      ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     }
   }
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
@@ -126,5 +139,6 @@
   });
   load('all');
 </script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/stats',{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>

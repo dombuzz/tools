@@ -3,6 +3,7 @@
 // Frage «Ha quest tool gidà da simplifitgar tia lavur?» unten im Tool und als Karte nach dem ersten Download.
 // Ein Tool kann die Karte auch selbst auslösen: dispatchEvent(new Event('dbz-success'))
 // Gezählt wird über den Cloudflare Worker (nur Tool-Name und Zeitpunkt), höchstens 5 Klicks pro Tool, Browser und Tag.
+// Aufrufe: jeder Seitenaufruf wird gezählt (nur auf /stats sichtbar).
 // Nutzung: beim ersten Resultat (Download, Kopie, «dbz-success») eine Meldung pro Seitenaufruf, unabhängig vom Like.
 
 { // eigener Block: keine Namen gelangen in den globalen Bereich der Tools
@@ -51,6 +52,8 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   // Tool-Kennung aus der Adresse: /Resizer2000 → Resizer2000, /lab/csv → lab-csv
   const segs = location.pathname.replace(/\.html?$/i, '').split('/').filter(Boolean);
   const tool = (segs[0] === 'lab' && segs.length > 1 ? 'lab-' : '') + (segs.at(-1) || 'index');
+  // Seitenaufruf zählen (einmal pro Aufruf; nur Tool-Name und Zeitpunkt)
+  fetch(API + '/view/' + encodeURIComponent(tool), { method: 'POST', keepalive: true }).catch(() => {});
   const box = document.getElementById('dbz-like'), btn = box.querySelector('button'), out = box.querySelector('.n');
   const toast = document.getElementById('dbz-toast'), tBtn = toast.querySelector('.dbz-yes'), tOut = toast.querySelector('small');
   // in den Hauptbereich der Seite verschieben, damit der Block unter dem Tool steht
