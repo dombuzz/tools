@@ -40,11 +40,25 @@
   .lock .err{color:var(--accent);min-height:1.4em;margin:10px 0 0;font-size:.88rem}
   .locked .wrap>:not(.lock){display:none}
   html:not(.locked) .lock{display:none}
-  .sortbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px;color:var(--muted);font-size:.82rem}
-  .sort{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:4px 11px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
-  .sort:hover{color:var(--text)}
-  .sort[aria-pressed=true]{color:var(--text);border-color:var(--accent)}
-  .sort .arr{color:var(--accent);margin-left:3px}
+  .row.m,.hdrow{display:grid;grid-template-columns:18px 1fr 34px 26px 32px 40px;gap:6px;align-items:center;padding:10px 12px}
+  .row.m{border-top:1px solid var(--line)}
+  .row.m .name{font-size:.9rem}
+  .row.m .c{text-align:right;font-variant-numeric:tabular-nums;font-size:.88rem;color:var(--muted)}
+  .row.m .c.n{color:var(--text);font-weight:600;font-size:.95rem}
+  .row.m .c.act{color:var(--text)}
+  .row.zero .c{color:#5a5a62}
+  .hdrow{padding-top:6px;padding-bottom:6px}
+  .hd{background:none;border:0;padding:6px 0;font:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:right;white-space:nowrap}
+  .hd:hover{color:var(--text)}
+  .hd.on{color:var(--text)}
+  .hd .arr{color:var(--accent);margin-left:1px}
+  .hd.first{grid-column:1 / 3;text-align:left}
+  .zerot{display:block;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:11px 14px;font:inherit;font-size:.85rem;color:var(--muted);cursor:pointer;text-align:left}
+  .zerot:hover{color:var(--text)}
+  .help{display:inline-grid;place-items:center;width:22px;height:22px;margin-left:8px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;vertical-align:middle}
+  .help:hover,.help[aria-expanded=true]{color:var(--text);border-color:var(--accent)}
+  .legend{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 18px;color:var(--muted);font-size:.85rem}
+  .legend[hidden]{display:none}
   .hrt{color:var(--accent)}.row.zero .hrt{color:#3a3a40}
   .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
@@ -66,23 +80,20 @@
     <p class="err" id="err" role="alert"></p>
   </form>
   <a class="homelink" href="/">← Tools</a>
-  <h1><span class="acc">Statistica</span></h1>
-  <p class="lead">Tge tools vegnan duvrads il pli savens – u han gidà da simplifitgar la lavur?<br><br>
+  <h1><span class="acc">Statistica</span><button class="help" id="help" type="button" aria-expanded="false" aria-controls="legend" aria-label="Declaraziun">?</button></h1>
+  <p class="lead">Tge tools vegnan duvrads il pli savens – u han gidà da simplifitgar la lavur?</p>
+  <div class="legend" id="legend" hidden>
     <b>Duvrà</b>: mintga giada ch'in tool ha furnì in resultat.<br>
     <span class="hrt">♥</span>: clics sin «Gea» sut ils tools.<br>
-    <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>: giadas ch'ina pagina è vegnida averta.</p>
+    <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>: giadas ch'ina pagina è vegnida averta.<br>
+    <b>%</b>: giadas duvrà per 100 visitas.<br>
+    Cliccar sin il titel d'ina colonna sortescha, anc ina giada inversescha.
+  </div>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" data-r="all" aria-selected="true">entir temp</button>
     <button class="tab" role="tab" data-r="30d" aria-selected="false">ultims 30 dis</button>
     <button class="tab" role="tab" data-r="month" aria-selected="false">mais actual</button>
-  </div>
-
-  <div class="sortbar" role="group" aria-label="Sortar">Sortar:
-    <button class="sort" data-k="rank" aria-pressed="true">Rang</button>
-    <button class="sort" data-k="n" aria-pressed="false">Duvrà</button>
-    <button class="sort" data-k="h" aria-pressed="false"><span class="hrt">♥</span></button>
-    <button class="sort" data-k="v" aria-pressed="false">Visitas</button>
   </div>
 
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
@@ -117,28 +128,35 @@
   const fmt = n => n.toLocaleString('de-CH');
   const EYE = '<svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'top': 'top Tools', 'stats': 'Statistica', 'lab-index': 'Lab (survista)' };
-  // Eine Rangliste zeichnen (nach Nutzungen, dann Likes); gibt die Summen zurück
+  // Eine Rangliste zeichnen (Standard: nach Nutzungen, dann Likes); gibt die Summen zurück
+  const showZero = {};
+  const HEAD = [['n', 'Duvrà'], ['h', '♥'], ['v', EYE], ['p', '%']];
+  const TITLES = { n: 'Duvrà', h: 'Gea (♥)', v: 'Visitas', p: 'Duvrà per 100 visitas' };
+  const arrow = k => k !== sortKey ? '' : `<span class="arr">${(k === 'rank' ? sortAsc : !sortAsc) ? '↑' : '↓'}</span>`;
+  const header = () => `<div class="hdrow"><button class="hd first${sortKey === 'rank' ? ' on' : ''}" data-k="rank">Rang${arrow('rank')}</button>`
+    + HEAD.map(([k, l]) => `<button class="hd${sortKey === k ? ' on' : ''}" data-k="${k}" title="${TITLES[k]}">${l}${arrow(k)}</button>`).join('') + '</div>';
   function draw(el, names, uses, likes, belongs, href, views = {}) {
     const tools = [...new Set([...Object.keys(names), ...Object.keys(uses).filter(belongs), ...Object.keys(likes).filter(belongs)])]
       .map(t => ({ t, n: uses[t] || 0, h: likes[t] || 0, v: views[t] || 0 }))
       .sort((a, b) => b.n - a.n || b.h - a.h || (names[a.t] || a.t).localeCompare(names[b.t] || b.t, 'de'));
     const sum = { n: tools.reduce((s, x) => s + x.n, 0), h: tools.reduce((s, x) => s + x.h, 0) };
-    const max = Math.max(1, ...tools.map(x => x.n));
     // Rang nach Standardreihenfolge (Nutzungen, Likes) vergeben, danach nach Wunsch sortieren
     let rank = 0, prev = null;
-    tools.forEach((x, i) => { const key = x.n + '/' + x.h; if (key !== prev) { rank = i + 1; prev = key; } x.r = rank; });
-    if (sortKey !== 'rank' || sortAsc === false) {
-      const base = new Map(tools.map((x, i) => [x, i]));
-      // Rang: erstes Tippen = beste zuerst (Standard), erneut = umgekehrt; Zahlen: erstes Tippen = höchste zuerst, erneut = niedrigste zuerst
-      if (sortKey === 'rank') tools.reverse();
-      else tools.sort((a, b) => (sortAsc ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey]) || base.get(a) - base.get(b));
-    }
-    el.innerHTML = tools.map(x => {
-      const any = x.n || x.h;
-      return `<div class="row${any ? '' : ' zero'}"><span class="rank">${any ? x.r : '–'}</span>
-        <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x.n / max * 100}%"></div></div>
-        <span class="cnt" title="${fmt(x.n)} giadas duvrà · ${fmt(x.h)} × «Gea» · ${fmt(x.v)} visitas">${fmt(x.n)}<small><span class="hrt">♥</span> ${fmt(x.h)} · ${EYE} ${fmt(x.v)}</small></span></div>`;
-    }).join('');
+    tools.forEach((x, i) => { const key = x.n + '/' + x.h; if (key !== prev) { rank = i + 1; prev = key; } x.r = rank; x.p = x.v ? x.n / x.v * 100 : -1; });
+    const active = tools.filter(x => x.n || x.h), zero = tools.filter(x => !(x.n || x.h));
+    const base = new Map(tools.map((x, i) => [x, i]));
+    // Rang: erstes Tippen = beste zuerst (Standard), erneut = umgekehrt; Zahlen: erstes Tippen = höchste zuerst, erneut = niedrigste zuerst
+    if (sortKey === 'rank') { if (!sortAsc) active.reverse(); }
+    else active.sort((a, b) => (sortAsc ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey]) || base.get(a) - base.get(b));
+    const mk = sortKey === 'rank' || sortKey === 'p' ? 'n' : sortKey;
+    const max = Math.max(1, ...tools.map(x => x[mk]));
+    const row = x => `<div class="row m${x.n || x.h ? '' : ' zero'}"><span class="rank">${x.n || x.h ? x.r : '–'}</span>
+        <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x[mk] / max * 100}%"></div></div>
+        <span class="c n${sortKey === 'n' ? ' act' : ''}">${fmt(x.n)}</span><span class="c${sortKey === 'h' ? ' act' : ''}">${fmt(x.h)}</span>
+        <span class="c${sortKey === 'v' ? ' act' : ''}">${fmt(x.v)}</span><span class="c${sortKey === 'p' ? ' act' : ''}" title="${fmt(x.n)} giadas duvrà · ${fmt(x.v)} visitas">${x.p < 0 ? '–' : Math.round(x.p) + '%'}</span></div>`;
+    const open = !!showZero[el.id];
+    el.innerHTML = header() + active.map(row).join('') + (open ? zero.map(row).join('') : '')
+      + (zero.length ? `<button class="zerot" data-z="${el.id}">${open ? 'Zuppar' : `${zero.length} ${zero.length === 1 ? 'tool' : 'tools'} senza duvrada`} ${open ? '▴' : '▾'}</button>` : '');
     return sum;
   }
 
@@ -191,20 +209,15 @@
       document.getElementById('labmeta').textContent = `${label} · ${sum(lab)} en il Lab`;
     }
   }
-  const bars = [...document.querySelectorAll('.sort')];
-  function paintSort() {
-    bars.forEach(b => {
-      const on = b.dataset.k === sortKey;
-      b.setAttribute('aria-pressed', on);
-      b.querySelector('.arr')?.remove();
-      if (on) { const a = document.createElement('span'); a.className = 'arr'; a.textContent = (sortKey === 'rank' ? sortAsc : !sortAsc) ? '↑' : '↓'; b.append(a); }
-    });
-  }
-  bars.forEach(b => b.onclick = () => {
-    if (b.dataset.k === sortKey) sortAsc = !sortAsc; else { sortKey = b.dataset.k; sortAsc = true; }
-    paintSort(); if (lastData) render();
+  // Spaltentitel sortieren, «senza duvrada» klappt auf, «?» zeigt die Legende
+  document.addEventListener('click', e => {
+    const h = e.target.closest('.hd'), z = e.target.closest('.zerot');
+    if (h) { const k = h.dataset.k; if (k === sortKey) sortAsc = !sortAsc; else { sortKey = k; sortAsc = true; } if (lastData) render(); }
+    if (z) { showZero[z.dataset.z] = !showZero[z.dataset.z]; if (lastData) render(); }
   });
-  paintSort();
+  document.getElementById('help').onclick = e => {
+    const lg = document.getElementById('legend'); lg.hidden = !lg.hidden; e.currentTarget.setAttribute('aria-expanded', !lg.hidden);
+  };
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
     document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b));
     load(b.dataset.r);
