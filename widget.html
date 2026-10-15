@@ -72,7 +72,12 @@
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       const likes = Object.fromEntries((d.items || []).map(i => [i.tool, i.count]));
-      const list = (d.uses || []).slice(0, SHOW);
+      // wie /stats: ohne Lab, nach Nutzungen, dann Likes, dann Name
+      const list = [...new Set([...(d.uses || []).map(x => x.tool), ...Object.keys(likes)])].filter(t => !t.startsWith('lab-'))
+        .map(t => ({ tool: t, count: ((d.uses || []).find(x => x.tool === t) || {}).count || 0 }))
+        .filter(x => x.count || likes[x.tool])
+        .sort((a, b) => b.count - a.count || (likes[b.tool] || 0) - (likes[a.tool] || 0) || (NAMES[a.tool] || a.tool).localeCompare(NAMES[b.tool] || b.tool, 'de'))
+        .slice(0, SHOW);
       const max = Math.max(1, ...list.map(x => x.count));
       $('list').innerHTML = list.length ? list.map((x, i) => `<div class="row${x.tool.startsWith('lab-') ? ' lab' : ''}"><span class="rank">${i + 1}</span>
         <div><div class="name">${esc(NAMES[x.tool] || x.tool)}</div><div class="bar" style="width:${x.count / max * 100}%"></div></div>
