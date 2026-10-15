@@ -26,14 +26,14 @@ const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = {
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'Resizer2000': 'Resizer 2000',
-  'Plan': 'Survistas plans', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
+  'Plan': 'Plans da teams', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
   'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
 };
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
-// «Survistas plans»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
+// «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan' };
 const grp = t => GROUP[t] || t;
 const merge = rows => Object.values(rows.reduce((m, r) => {
