@@ -327,7 +327,14 @@ function loadText(text,name){
   $('paste').value=''; $('pasteMsg').innerHTML=''; updateCount();
   renderChunks();
 }
-function readFile(f){ const r=new FileReader(); r.onload=()=>loadText(r.result,f.name); r.readAsText(f,'utf-8'); }
+function decodeSrt(buf){
+  const b=new Uint8Array(buf);
+  if (b[0]===0xFF&&b[1]===0xFE) return new TextDecoder('utf-16le').decode(b);
+  if (b[0]===0xFE&&b[1]===0xFF) return new TextDecoder('utf-16be').decode(b);
+  try { return new TextDecoder('utf-8',{fatal:true}).decode(b); }
+  catch(e){ return new TextDecoder('windows-1252').decode(b); } // ANSI-SRT (z. B. aus Windows-Programmen)
+}
+function readFile(f){ const r=new FileReader(); r.onload=()=>loadText(decodeSrt(r.result),f.name); r.readAsArrayBuffer(f); }
 const drop=$('drop');
 drop.onclick=()=>$('file').click();
 $('file').onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0]); };
