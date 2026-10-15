@@ -127,7 +127,8 @@
   let sortKey = 'rank', sortAsc = true, lastData = null, lastRange = 'all';
   const fmt = n => n.toLocaleString('de-CH');
   const EYE = '<svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-  const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'top': 'top Tools', 'stats': 'Statistica', 'lab-index': 'Lab (survista)' };
+  // Alle übrigen Seiten (erscheinen auch ohne Aufrufe); 'top-popup' = Klicks auf das Symbol «top Tools» in der Übersicht
+  const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'top-popup': 'top Tools (clics sin il pop-up)', 'top': 'top Tools (pagina /top)', 'stats': 'Statistica', 'lab-index': 'Lab (survista)', '404': 'Pagina betg chattada (404)' };
   // Eine Rangliste zeichnen (Standard: nach Nutzungen, dann Likes); gibt die Summen zurück
   const showZero = {};
   const HEAD = [['n', 'Duvrà'], ['h', '♥'], ['v', EYE], ['p', '%']];
@@ -143,20 +144,20 @@
     // Rang nach Standardreihenfolge (Nutzungen, Likes) vergeben, danach nach Wunsch sortieren
     let rank = 0, prev = null;
     tools.forEach((x, i) => { const key = x.n + '/' + x.h; if (key !== prev) { rank = i + 1; prev = key; } x.r = rank; x.p = x.v ? x.n / x.v * 100 : -1; });
-    const active = tools.filter(x => x.n || x.h), zero = tools.filter(x => !(x.n || x.h));
+    const active = tools.filter(x => x.n || x.h || x.v), zero = tools.filter(x => !(x.n || x.h || x.v));
     const base = new Map(tools.map((x, i) => [x, i]));
     // Rang: erstes Tippen = beste zuerst (Standard), erneut = umgekehrt; Zahlen: erstes Tippen = höchste zuerst, erneut = niedrigste zuerst
     if (sortKey === 'rank') { if (!sortAsc) active.reverse(); }
     else active.sort((a, b) => (sortAsc ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey]) || base.get(a) - base.get(b));
     const mk = sortKey === 'rank' || sortKey === 'p' ? 'n' : sortKey;
     const max = Math.max(1, ...tools.map(x => x[mk]));
-    const row = x => `<div class="row m${x.n || x.h ? '' : ' zero'}"><span class="rank">${x.n || x.h ? x.r : '–'}</span>
+    const row = x => `<div class="row m${x.n || x.h || x.v ? '' : ' zero'}"><span class="rank">${x.n || x.h ? x.r : '–'}</span>
         <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x[mk] / max * 100}%"></div></div>
         <span class="c n${sortKey === 'n' ? ' act' : ''}">${fmt(x.n)}</span><span class="c${sortKey === 'h' ? ' act' : ''}">${fmt(x.h)}</span>
         <span class="c${sortKey === 'v' ? ' act' : ''}">${fmt(x.v)}</span><span class="c${sortKey === 'p' ? ' act' : ''}" title="${fmt(x.n)} giadas duvrà · ${fmt(x.v)} visitas">${x.p < 0 ? '–' : Math.round(x.p) + '%'}</span></div>`;
     const open = !!showZero[el.id];
     el.innerHTML = header() + active.map(row).join('') + (open ? zero.map(row).join('') : '')
-      + (zero.length ? `<button class="zerot" data-z="${el.id}">${open ? 'Zuppar' : `${zero.length} ${zero.length === 1 ? 'tool' : 'tools'} senza duvrada`} ${open ? '▴' : '▾'}</button>` : '');
+      + (zero.length ? `<button class="zerot" data-z="${el.id}">${open ? 'Zuppar' : `${zero.length} ${zero.length === 1 ? 'tool anc betg duvrà' : 'tools anc betg duvrads'}`} ${open ? '▴' : '▾'}</button>` : '');
     return sum;
   }
 
@@ -198,10 +199,10 @@
       const isLab = t => t.startsWith('lab-');
       const main = draw(document.getElementById('list'), NAMES, uses, likes, t => !isLab(t), t => '/' + t, views);
       const lab = draw(document.getElementById('lablist'), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
-      const hrefs = { index: '/', top: '/top', stats: '/stats', 'lab-index': '/lab/' };
+      const hrefs = { index: '/', 'top-popup': '/', top: '/top', stats: '/stats', 'lab-index': '/lab/', '404': '/404' };
       document.getElementById('otherlist').innerHTML = Object.keys(OTHER).map(t => `<div class="row"><span class="rank">·</span>
         <div class="name"><a href="${hrefs[t]}">${esc(OTHER[t])}</a></div>
-        <span class="cnt" title="${fmt(views[t] || 0)} visitas">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
+        <span class="cnt" title="${fmt(views[t] || 0)} ${t === 'top-popup' ? 'clics' : 'visitas'}">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
       const now = new Date();
       const label = { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
