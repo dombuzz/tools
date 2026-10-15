@@ -248,7 +248,7 @@
     const sum = a => a.reduce((s, x) => s + x, 0);
     const defs = [['Visitas per di', v, '#9a9aa2', 'visitas'], ['Duvrà per di', u, '#4d9fff', 'giadas duvrà'], ['Ha gidà (♥) per di', h, '#ff4d64', 'Ha gidà']];
     chartCache = { range, units: defs.map(x => x[3]) };
-    el.innerHTML = `<div class="ctog" role="group" aria-label="Tip da diagram"><button type="button" data-t="bar" aria-pressed="${chartType === 'bar'}">Balkens</button><button type="button" data-t="line" aria-pressed="${chartType === 'line'}">Lingia</button></div>`
+    el.innerHTML = `<div class="ctog" role="group" aria-label="Tip da diagram"><button type="button" data-t="bar" aria-pressed="${chartType === 'bar'}">Balcas</button><button type="button" data-t="line" aria-pressed="${chartType === 'line'}">Lingias</button></div>`
       + defs.map((x, ci) => `<h4>${x[0]} · <b>${fmt(sum(x[1]))}</b> en total</h4>${bars(x[1], x[2], x[0], ci, range)}`).join('')
       + '<div class="tip" id="ctip" hidden></div>';
   }
@@ -258,7 +258,9 @@
     const show = r => {
       const t = tip(); if (!t || !chartCache) return;
       const [y, m] = chartCache.range.split('-').map(Number), d = +r.dataset.d + 1;
-      t.innerHTML = `<b>${d}. ${MONTHS[m - 1]}</b><br>${fmt(+r.dataset.v)} ${chartCache.units[+r.dataset.c]}`;
+      const v = +r.dataset.v, ci = +r.dataset.c;
+      const txt = ci === 2 ? `gidà ${fmt(v)} ${v === 1 ? 'giada' : 'giadas'}` : `${fmt(v)} ${chartCache.units[ci]}`;
+      t.innerHTML = `<b>${d}. ${MONTHS[m - 1]}</b><br>${txt}`;
       t.hidden = false;
       const br = box.getBoundingClientRect(), rr = r.getBoundingClientRect();
       const x = rr.left - br.left + rr.width / 2, w = t.offsetWidth;
