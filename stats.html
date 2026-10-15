@@ -33,6 +33,13 @@
   .cnt{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
   .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;white-space:nowrap}
   .eye{display:inline-block;width:.95em;height:.95em;vertical-align:-.12em;fill:none;stroke:currentColor;stroke-width:2}
+  .lock{max-width:340px;margin:12vh auto 0;text-align:center}
+  .lock input{width:100%;padding:13px 14px;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;outline:none;text-align:center}
+  .lock input:focus{border-color:var(--accent)}
+  .lock button{margin-top:10px;width:100%;padding:12px;font:inherit;font-weight:600;color:#121214;background:var(--accent);border:0;border-radius:12px;cursor:pointer}
+  .lock .err{color:var(--accent);min-height:1.4em;margin:10px 0 0;font-size:.88rem}
+  .locked .wrap>:not(.lock){display:none}
+  html:not(.locked) .lock{display:none}
   .hrt{color:var(--accent)}.row.zero .hrt{color:#3a3a40}
   .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
@@ -44,7 +51,15 @@
 </style>
 </head>
 <body>
+<script>document.documentElement.classList.add('locked')</script>
 <div class="wrap">
+  <form class="lock" id="lock" autocomplete="off">
+    <h1><span class="acc">Statistica</span></h1>
+    <p class="lead">Questa pagina è protegida.</p>
+    <input type="password" id="pw" placeholder="Pled-clav" aria-label="Pled-clav" autocomplete="current-password" required>
+    <button type="submit">Avrir</button>
+    <p class="err" id="err" role="alert"></p>
+  </form>
   <a class="homelink" href="/">← Tools</a>
   <h1><span class="acc">Statistica</span></h1>
   <p class="lead">Tge tools vegnan duvrads il pli savens – u han gidà da simplifitgar la lavur?<br><br>
@@ -107,6 +122,23 @@
     return sum;
   }
 
+  // Passwortabfrage (nur Seitenschutz: der Hash liegt im Code, die Daten bleiben über den Worker abrufbar)
+  const SALT = 'de485fe389e9248a', HASH = 'c0e52cf63163393e54b75cd572dc6c040b4b0d5e82b226966a8d5dba7facd103';
+  async function check(pw) {
+    const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const b = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(SALT), iterations: 150000, hash: 'SHA-256' }, k, 256);
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('') === HASH;
+  }
+  let started = false;
+  function unlock() { document.documentElement.classList.remove('locked'); if (!started) { started = true; load('all'); } }
+  document.getElementById('lock').addEventListener('submit', async e => {
+    e.preventDefault();
+    const pw = document.getElementById('pw').value.trim(), err = document.getElementById('err');
+    let ok = false; try { ok = await check(pw); } catch (x) { err.textContent = 'Il browser na sustegn betg la verificaziun.'; return; }
+    if (ok) { try { localStorage.setItem('dbz-stats-ok', HASH); } catch (x) {} unlock(); }
+    else { err.textContent = 'Pled-clav sbaglià.'; document.getElementById('pw').select(); }
+  });
+
   async function load(range) {
     const list = document.getElementById('list'), meta = document.getElementById('meta');
     ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = '';
@@ -137,7 +169,8 @@
     document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b));
     load(b.dataset.r);
   });
-  load('all');
+  let saved = null; try { saved = localStorage.getItem('dbz-stats-ok'); } catch (e) {}
+  if (saved === HASH) unlock(); else document.getElementById('pw').focus();
 </script>
 <script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/stats',{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
