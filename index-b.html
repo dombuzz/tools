@@ -50,27 +50,17 @@
   .pfoot { padding: 8px 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: .75rem; }
   h1 span { color: var(--accent); }
   .sub { color: var(--muted); margin: 0 0 24px; }
-  .search { display: flex; align-items: center; gap: 10px; background: var(--field); border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; transition: border-color .15s; }
-  .search:focus-within { border-color: var(--accent); }
-  .search svg { width: 18px; height: 18px; flex: none; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; }
-  .search input { flex: 1; min-width: 0; padding: 14px 0; font: inherit; font-weight: 600; color: var(--text); background: transparent; border: 0; outline: none; }
-  .search input::placeholder { color: var(--muted); font-weight: 400; }
-  .kbd { flex: none; font-size: .72rem; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
-  @media (hover: none) { .kbd { display: none; } }
-  .grp h2 { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; font-weight: 600; }
+  .grp h2 { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 22px 0 10px; font-weight: 700; }
+  .grp.labg h2 { color: #ff9a3c; }
   .list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   .r { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); font-weight: 600; font-size: .95rem; color: inherit; text-decoration: none; }
   .r:first-child { border-top: 0; }
   .r[hidden], .grp[hidden] { display: none; }
   .r:hover { background: var(--field); }
-  .r.sel { background: rgba(255,77,100,.12); }
-  .r svg { width: 22px; height: 22px; flex: none; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .r img { width: 22px; height: 22px; flex: none; }
   .r small { margin-left: auto; color: var(--muted); font-weight: 400; font-size: .78rem; }
-  .r.lab, .r.lab svg { color: #ff9a3c; stroke: #ff9a3c; }
-  .r.lab svg { stroke: #ff9a3c; }
+  .r.lab { color: #ff9a3c; }
   .grp.labg .list { border-style: dashed; border-color: rgba(255,154,60,.4); }
-  mark { background: transparent; color: var(--accent); }
-  .none { color: var(--muted); margin-top: 18px; }
   .select { position: relative; }
   select {
     width: 100%; appearance: none; -webkit-appearance: none;
@@ -108,33 +98,22 @@
     </div>
   </div>
   <p class="sub">Tscherner in tool, el s'avra directamain.</p>
-  <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-    <input id="q" type="search" placeholder="Tschertgar …" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Tschertgar in tool"><span class="kbd" aria-hidden="true">/</span></label>
   <div id="groups"></div>
-  <p class="none" id="none" hidden>Nagins resultats.</p>
 </main>
 
 <script>
-  // Tools: Dateiname -> [Name, Symbol]. Neues Tool: hier und in GROUPS eintragen.
-  const IC = {
-    img: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>',
-    mag: '<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
-    cal: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
-    mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>',
-    sub: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 14h6M15 14h2M7 10h2M11 10h6"/></svg>',
-    chart: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>',
-    flask: '<svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3"/></svg>'
-  };
+  // Piktogramme = Favicons der Tools. Neues Tool: hier (Name + Favicon) und in GROUPS eintragen.
+  const ICONS = {"rtr-picture.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='12.5 12.5 75.0 75.0'%3E%3Crect x='20' y='28' width='60' height='44' rx='6' fill='none' stroke='%23ff4d64' stroke-width='7'/%3E%3Ccircle cx='34' cy='42' r='6' fill='%23ff4d64'/%3E%3Cpath d='M24,66 L40,50 L50,60 L62,44 L76,66 Z' fill='%23ff4d64'/%3E%3C/svg%3E", "visual.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='20' y='30' width='60' height='40' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E", "Resizer2000.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15.3 15.3 69.4 69.4'%3E%3Cpath d='M24 76V40h12M76 24v36H64M24 76l52-52' stroke='%23ff4d64' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E", "PlanOnline.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-2.9 -4.9 105.9 105.9'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='56' rx='7'/%3E%3Cpath d='M18 40h64M36 16v14M64 16v14'/%3E%3C/g%3E%3Cg fill='%23ff4d64'%3E%3Crect x='28' y='50' width='10' height='9' rx='2'/%3E%3Crect x='45' y='50' width='10' height='9' rx='2'/%3E%3Crect x='62' y='50' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='28' y='64' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='45' y='64' width='10' height='9' rx='2'/%3E%3C/g%3E%3C/svg%3E", "audio-recorder.html": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%227.2 5.7 52.6 52.6%22%3E%3Cg fill=%22%23ff4d64%22%3E%3Crect x=%2210%22 y=%2226%22 width=%226%22 height=%2212%22 rx=%223%22/%3E%3Crect x=%2220%22 y=%2216%22 width=%226%22 height=%2232%22 rx=%223%22/%3E%3Crect x=%2230%22 y=%2210%22 width=%226%22 height=%2244%22 rx=%223%22/%3E%3Crect x=%2240%22 y=%2220%22 width=%226%22 height=%2224%22 rx=%223%22/%3E%3C/g%3E%3Ccircle cx=%2252%22 cy=%2232%22 r=%225%22 fill=%22%23ff4d64%22/%3E%3C/svg%3E", "srt2ttml.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='13.6 13.6 72.8 72.8'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 38h48l-12-12M78 62H30l12 12'/%3E%3C/g%3E%3C/svg%3E", "subs.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.7 9.7 80.6 80.6'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='52' rx='8'/%3E%3Cpath d='M30 50h22M30 62h40M60 50h10'/%3E%3C/g%3E%3C/svg%3E", "data.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='8.8 8.8 82.4 82.4'%3E%3Crect x='22' y='52' width='12' height='26' fill='%23ff4d64'/%3E%3Crect x='44' y='36' width='12' height='42' fill='%23ff4d64'/%3E%3Crect x='66' y='22' width='12' height='56' fill='%23ff4d64'/%3E%3C/svg%3E", "votgr.html": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%227.4 7.4 49.2 49.2%22%3E%3Cpolygon points=%2224.18,36.09 17.10,40.17 10.03,36.09 10.03,27.91 17.10,23.83 24.18,27.91%22 fill=%22%23ff4d64%22 fill-opacity=%220.75%22/%3E%3Cpolygon points=%2239.08,36.09 32.00,40.17 24.92,36.09 24.92,27.91 32.00,23.83 39.08,27.91%22 fill=%22%23ff4d64%22/%3E%3Cpolygon points=%2253.97,36.09 46.90,40.17 39.82,36.09 39.82,27.91 46.90,23.83 53.97,27.91%22 fill=%22%23ff4d64%22 fill-opacity=%220.5%22/%3E%3Cpolygon points=%2231.63,22.93 24.55,27.01 17.48,22.93 17.48,14.76 24.55,10.67 31.63,14.76%22 fill=%22%23ff4d64%22/%3E%3Cpolygon points=%2246.52,22.93 39.45,27.01 32.37,22.93 32.37,14.76 39.45,10.67 46.52,14.76%22 fill=%22%23ff4d64%22 fill-opacity=%220.95%22/%3E%3Cpolygon points=%2231.63,49.24 24.55,53.33 17.48,49.24 17.48,41.07 24.55,36.99 31.63,41.07%22 fill=%22%23ff4d64%22 fill-opacity=%220.5%22/%3E%3Cpolygon points=%2246.52,49.24 39.45,53.33 32.37,49.24 32.37,41.07 39.45,36.99 46.52,41.07%22 fill=%22%23ff4d64%22/%3E%3C/svg%3E", "lab": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='6.3 8.8 87.4 87.4'%3E%3Cpath d='M38 18h24M42 18v24L22 78a6 6 0 0 0 5 9h46a6 6 0 0 0 5-9L58 42V18' stroke='%23ff9a3c' stroke-width='9' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"};
   const TOOLS = {
-    'rtr-picture.html':    ['RTR Picture-downloader', 'img'],
-    'visual.html':         ['Magazin / Il di', 'mag'],
-    'Resizer2000.html':    ['Resizer 2000', 'img'],
-    'PlanOnline.html':     ['Plan Squadra online', 'cal'],
-    'audio-recorder.html': ['Audio-Recorder', 'mic'],
-    'srt2ttml.html':       ['SRT → TTML', 'sub'],
-    'subs.html':           ['Suttitels RM → DE', 'sub'],
-    'data.html':           ['Memorisar grafica Datawrapper', 'chart'],
-    'votgr.html':          ['Chartas votaziuns GR', 'chart']
+    'rtr-picture.html':    'RTR Picture-downloader',
+    'visual.html':         'Magazin / Il di',
+    'Resizer2000.html':    'Resizer 2000',
+    'PlanOnline.html':     'Plan Squadra online',
+    'audio-recorder.html': 'Audio-Recorder',
+    'srt2ttml.html':       'SRT → TTML',
+    'subs.html':           'Suttitels RM → DE',
+    'data.html':           'Memorisar grafica Datawrapper',
+    'votgr.html':          'Chartas votaziuns GR'
   };
   const GROUPS = [
     ['Maletgs',           ['rtr-picture.html', 'visual.html', 'Resizer2000.html']],
@@ -142,63 +121,16 @@
     ['Audio e suttitels', ['audio-recorder.html', 'srt2ttml.html', 'subs.html']],
     ['Grafica',           ['data.html', 'votgr.html']]
   ];
-  // Lab-Tools erscheinen nur in der Suche; sonst nur die Zeile «Lab»
-  const LABT = [['CSV-Analisa', '/lab/csv'], ['Plan → GeoJSON', '/lab/plan2geo'], ['Pleds en ils idioms', '/lab/idioms'], ['Höhenprofil', '/lab/profil'], ['Hockey regiunal', '/lab/hockey']];
-
-  const norm = t => t.toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const esc = t => t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const rows = []; // {el, text, labOnly}
   const box = document.getElementById('groups');
-  const row = (name, href, icon, extra = '') => {
-    const a = document.createElement('a'); a.className = 'r' + (extra ? ' ' + extra : ''); a.href = href;
-    a.innerHTML = IC[icon] + '<span class="n">' + esc(name) + '</span>'; return a;
+  const section = (label, rows, cls = '') => {
+    const g = document.createElement('section'); g.className = 'grp ' + cls;
+    g.innerHTML = '<h2>' + esc(label) + '</h2><div class="list">' + rows.map(([name, href, ic, c]) =>
+      '<a class="r' + (c ? ' ' + c : '') + '" href="' + href + '"><img src="' + ic.replace(/"/g, '&quot;') + '" alt="" width="22" height="22"><span>' + esc(name) + '</span></a>').join('') + '</div>';
+    box.append(g);
   };
-  for (const [label, paths] of GROUPS) {
-    const g = document.createElement('section'); g.className = 'grp';
-    g.innerHTML = '<h2>' + esc(label) + '</h2><div class="list"></div>'; const list = g.querySelector('.list');
-    for (const p of paths) { const [name, ic] = TOOLS[p]; const a = row(name, '/' + p.replace(/\.html?$/i, ''), ic); list.append(a); rows.push({ el: a, name, text: norm(name + ' ' + label + ' ' + p) }); }
-    box.append(g); rows.grp = rows.grp || []; rows.grp.push({ g, label });
-  }
-  // Lab: eine Zeile, in der Suche zusätzlich die einzelnen Lab-Tools
-  const lg = document.createElement('section'); lg.className = 'grp labg';
-  lg.innerHTML = '<h2>Experimentar</h2><div class="list"></div>'; const ll = lg.querySelector('.list');
-  const labRow = row('Lab 🧪', '/lab/', 'flask', 'lab'); ll.append(labRow); rows.push({ el: labRow, name: 'Lab', text: 'lab experimentar', lab: true });
-  for (const [name, href] of LABT) { const a = row(name, href, 'flask', 'lab'); a.hidden = true; ll.append(a); rows.push({ el: a, name, text: norm(name + ' lab'), labOnly: true }); }
-  box.append(lg); rows.grp.push({ g: lg, label: 'Lab' });
-
-  const q = document.getElementById('q'), none = document.getElementById('none');
-  let sel = -1, vis = [];
-  function mark(el, name, terms) {
-    let h = esc(name);
-    for (const t of terms) { if (t) h = h.replace(new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'i'), '<mark>$1</mark>'); }
-    el.querySelector('.n').innerHTML = h;
-  }
-  function filter() {
-    const terms = norm(q.value).split(/\s+/).filter(Boolean);
-    vis = [];
-    for (const r of rows) {
-      const ok = terms.length ? terms.every(t => r.text.includes(t)) : !r.labOnly;
-      r.el.hidden = !ok; r.el.classList.remove('sel');
-      if (ok) { vis.push(r.el); mark(r.el, r.name, terms.length ? terms : []); }
-    }
-    for (const { g } of rows.grp) g.hidden = !g.querySelector('.r:not([hidden])');
-    none.hidden = vis.length > 0;
-    sel = terms.length && vis.length ? 0 : -1; paint();
-  }
-  function paint() { vis.forEach((el, i) => el.classList.toggle('sel', i === sel)); if (vis[sel]) vis[sel].scrollIntoView({ block: 'nearest' }); }
-  q.addEventListener('input', filter);
-  q.addEventListener('keydown', e => {
-    if (e.key === 'ArrowDown' && vis.length) { e.preventDefault(); sel = (sel + 1) % vis.length; paint(); }
-    else if (e.key === 'ArrowUp' && vis.length) { e.preventDefault(); sel = (sel - 1 + vis.length) % vis.length; paint(); }
-    else if (e.key === 'Enter') { const t = vis[sel] || (vis.length === 1 ? vis[0] : null); if (t) location.href = t.getAttribute('href'); }
-    else if (e.key === 'Escape') { q.value = ''; filter(); }
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === '/' && document.activeElement !== q && !e.ctrlKey && !e.metaKey) { e.preventDefault(); q.focus(); q.select(); }
-  });
-  window.addEventListener('pageshow', () => { q.value = ''; filter(); });
-  filter();
-  if (matchMedia('(hover: hover)').matches) q.focus(); // am Handy nicht, damit die Tastatur nicht aufspringt
+  for (const [label, paths] of GROUPS) section(label, paths.map(p => [TOOLS[p], '/' + p.replace(/\.html?$/i, ''), ICONS[p]]));
+  section('Experimentar', [['Lab 🧪', '/lab/', ICONS.lab, 'lab']], 'labg');
 
 // Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /top bleibt als Ausweichlink)
 (() => {
