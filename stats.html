@@ -248,7 +248,7 @@
     const u = Array(days).fill(0), v = Array(days).fill(0), h = Array(days).fill(0);
     for (const r of d.daily || []) { const i = +r.day.slice(8, 10) - 1; if (i >= 0 && i < days) { u[i] += r.uses; v[i] += r.views; h[i] += r.likes; } }
     const sum = a => a.reduce((s, x) => s + x, 0);
-    const defs = [['Visitas per di', v, '#9a9aa2', 'visitas'], ['Duvrà per di', u, '#4d9fff', 'giadas duvrà'], ['Ha gidà (♥) per di', h, '#ff4d64', 'Ha gidà']];
+    const defs = [['Visitas', v, '#9a9aa2', 'visitas'], ['Duvrà', u, '#4d9fff', 'giadas duvrà'], ['Ha gidà ♥', h, '#ff4d64', 'Ha gidà']];
     chartCache = { range, units: defs.map(x => x[3]) };
     el.innerHTML = `<div class="ctog" role="group" aria-label="Tip da diagram"><button type="button" data-t="bar" aria-pressed="${chartType === 'bar'}">Balcas</button><button type="button" data-t="line" aria-pressed="${chartType === 'line'}">Lingias</button></div>`
       + defs.map((x, ci) => `<h4>${x[0]} · <b>${fmt(sum(x[1]))}</b> en total</h4>${bars(x[1], x[2], x[0], ci, range)}`).join('')
