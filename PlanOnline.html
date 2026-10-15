@@ -235,9 +235,11 @@ let plan=null, weeks=1; const sources={};
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
 function shortNames(names){
-  const sur=n=>(n.includes(",")?n.split(",")[0]:n.split(" ")[0]).trim();
-  const first=n=>(n.includes(",")?n.split(",").slice(1).join(","):n.split(" ").slice(1).join(" ")).trim()||sur(n);
-  const ALIAS={"Wichert, Patrick Andreas":"Patrick","Flepp, Gion Gieri":"GiGi","Sauder, Ylva Mona":"Ylva","Vieli, Maria Madlaina":"Maria"};
+  // Zusätze im Plan entfernen: «(Firma) », « (RTR)», « z»
+  const clean=n=>n.replace(/^\([^)]*\)\s*/,"").replace(/\s*\(RTR\)\s*$/,"").replace(/\s+z$/,"").trim();
+  const sur=n=>(n=clean(n),(n.includes(",")?n.split(",")[0]:n.split(" ")[0]).trim());
+  const first=n=>(n=clean(n),n.includes(",")?n.split(",").slice(1).join(","):n.split(" ").slice(1).join(" ")).trim()||sur(n);
+  const ALIAS={"Wichert, Patrick Andreas":"Patrick","Flepp, Gion Gieri":"GiGi","Sauder, Ylva Mona":"Ylva","Vieli, Maria Madlaina":"Maria","(Wolf Film) Wolf Matthias":"Matthias Wolf","Galmarini, Oceana z (RTR)":"Oceana"};
   const first0=first; const firstA=n=>ALIAS[n]||first0(n);
   const cnt={}; names.forEach(n=>cnt[firstA(n)]=(cnt[firstA(n)]||0)+1);
   const out={}; names.forEach(n=>{const f=firstA(n);out[n]=cnt[f]>1?`${f} ${sur(n)[0]}.`:f}); return out;
