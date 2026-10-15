@@ -77,6 +77,13 @@
   .chart svg{display:block;width:100%;height:auto;margin-bottom:14px}
   .chart svg:last-child{margin-bottom:0}
   .chart .ax{fill:var(--muted);font-size:10px}
+  .chart{position:relative}
+  .chart .hit{cursor:pointer}.chart .hit.on{fill:rgba(255,255,255,.07)}
+  .tip{position:absolute;z-index:2;pointer-events:none;background:#26262a;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.8rem;line-height:1.35;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .tip[hidden]{display:none}
+  .ctog{display:inline-flex;margin:0 0 10px;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .ctog button{background:transparent;border:0;padding:5px 13px;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer}
+  .ctog button[aria-pressed=true]{background:var(--accent);color:#121214}
 </style>
 </head>
 <body>
@@ -214,25 +221,59 @@
       ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     }
   }
-  // Balkendiagramm pro Tag (reines SVG); vals = Werte je Tag des Monats
-  function bars(vals, color, label) {
+  // Diagramm pro Tag (reines SVG, Balken oder Linie); vals = Werte je Tag des Monats
+  let chartType = 'bar', chartCache = null;
+  function bars(vals, color, label, ci, range) {
     const W = 560, H = 120, L = 26, B = 16, n = vals.length, max = Math.max(1, ...vals), bw = (W - L) / n;
     const step = max <= 4 ? 1 : Math.ceil(max / 4), ticks = []; for (let t = 0; t <= max; t += step) ticks.push(t);
-    const y = v => H - B - v / max * (H - B - 6);
+    const y = v => H - B - v / max * (H - B - 6), cx = i => L + i * bw + bw / 2;
+    let marks;
+    if (chartType === 'line') {
+      const pts = vals.map((v, i) => `${cx(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+      marks = `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+        + vals.map((v, i) => `<circle cx="${cx(i)}" cy="${y(v)}" r="${v ? 2.6 : 1.8}" fill="${color}"/>`).join('');
+    } else {
+      marks = vals.map((v, i) => `<rect x="${L + i * bw + 1}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${H - B - y(v)}" rx="2" fill="${color}"/>`).join('');
+    }
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`
       + ticks.map(t => `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#2f2f34"/><text class="ax" x="${L - 5}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('')
-      + vals.map((v, i) => `<rect x="${L + i * bw + 1}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${H - B - y(v)}" rx="2" fill="${color}"><title>${i + 1}. ${v}</title></rect>`).join('')
-      + vals.map((v, i) => (i === 0 || (i + 1) % 5 === 0) ? `<text class="ax" x="${L + i * bw + bw / 2}" y="${H - 3}" text-anchor="middle">${i + 1}</text>` : '').join('') + '</svg>';
+      + marks
+      + vals.map((v, i) => (i === 0 || (i + 1) % 5 === 0) ? `<text class="ax" x="${cx(i)}" y="${H - 3}" text-anchor="middle">${i + 1}</text>` : '').join('')
+      + vals.map((v, i) => `<rect class="hit" x="${L + i * bw}" y="0" width="${bw}" height="${H - B}" data-c="${ci}" data-d="${i}" data-v="${v}" fill="transparent"/>`).join('') + '</svg>';
   }
   function drawChart(d, range) {
     const el = document.getElementById('achart'), [y, m] = range.split('-').map(Number), days = new Date(y, m, 0).getDate();
     const u = Array(days).fill(0), v = Array(days).fill(0), h = Array(days).fill(0);
     for (const r of d.daily || []) { const i = +r.day.slice(8, 10) - 1; if (i >= 0 && i < days) { u[i] += r.uses; v[i] += r.views; h[i] += r.likes; } }
     const sum = a => a.reduce((s, x) => s + x, 0);
-    el.innerHTML = `<h4>Visitas per di · <b>${fmt(sum(v))}</b> en total</h4>${bars(v, '#9a9aa2', 'Visitas per di')}`
-      + `<h4>Duvrà per di · <b>${fmt(sum(u))}</b> en total</h4>${bars(u, '#ff4d64', 'Duvrà per di')}`
-      + `<h4>Gea (♥) per di · <b>${fmt(sum(h))}</b> en total</h4>${bars(h, '#ff9a3c', 'Gea per di')}`;
+    const defs = [['Visitas per di', v, '#9a9aa2', 'visitas'], ['Duvrà per di', u, '#4d9fff', 'giadas duvrà'], ['Ha gidà (♥) per di', h, '#ff4d64', 'Ha gidà']];
+    chartCache = { range, units: defs.map(x => x[3]) };
+    el.innerHTML = `<div class="ctog" role="group" aria-label="Tip da diagram"><button type="button" data-t="bar" aria-pressed="${chartType === 'bar'}">Balkens</button><button type="button" data-t="line" aria-pressed="${chartType === 'line'}">Lingia</button></div>`
+      + defs.map((x, ci) => `<h4>${x[0]} · <b>${fmt(sum(x[1]))}</b> en total</h4>${bars(x[1], x[2], x[0], ci, range)}`).join('')
+      + '<div class="tip" id="ctip" hidden></div>';
   }
+  // Tooltip: Hover (Maus) oder Tippen/Klicken (Touch) zeigt die genaue Zahl pro Tag
+  (function () {
+    const box = document.getElementById('achart'), tip = () => document.getElementById('ctip');
+    const show = r => {
+      const t = tip(); if (!t || !chartCache) return;
+      const [y, m] = chartCache.range.split('-').map(Number), d = +r.dataset.d + 1;
+      t.innerHTML = `<b>${d}. ${MONTHS[m - 1]}</b><br>${fmt(+r.dataset.v)} ${chartCache.units[+r.dataset.c]}`;
+      t.hidden = false;
+      const br = box.getBoundingClientRect(), rr = r.getBoundingClientRect();
+      const x = rr.left - br.left + rr.width / 2, w = t.offsetWidth;
+      t.style.left = Math.max(4, Math.min(br.width - w - 4, x - w / 2)) + 'px';
+      t.style.top = Math.max(0, rr.top - br.top - t.offsetHeight - 4) + 'px';
+      box.querySelectorAll('.hit.on').forEach(e => e.classList.remove('on')); r.classList.add('on');
+    };
+    box.addEventListener('mouseover', e => { const r = e.target.closest('.hit'); if (r) show(r); });
+    box.addEventListener('click', e => {
+      const r = e.target.closest('.hit'); if (r) return show(r);
+      const b = e.target.closest('.ctog button');
+      if (b && b.dataset.t !== chartType) { chartType = b.dataset.t; if (archData) drawChart(archData, archRange); }
+    });
+    box.addEventListener('mouseleave', () => { const t = tip(); if (t) t.hidden = true; box.querySelectorAll('.hit.on').forEach(e => e.classList.remove('on')); });
+  })();
   function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
   function renderInto(d, range, ids) {
     const meta = document.getElementById(ids[3]);
