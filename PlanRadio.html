@@ -218,8 +218,8 @@ function parsePlan(pages, SVC){
 }
 
 
-const CFG=[["mod actual org vial 1", ["oV1"]], ["mod 1", ["m1", "m1_s"]], ["mod 2", ["m2", "m2_s", "mAcc"]], ["mod magazins", ["m_ma"]], ["planisar/manar", ["pl/m"]], ["org prod radio 1", ["oP1"]], ["prod radio 1", ["p1", "p1_s"]], ["prod radio 2", ["p2", "pV2"]], ["p_ra", ["p_ra"]], ["planisaziun", ["plan"]], ["reporterA radio", ["rRad"]], ["reporterA radio Cussegl Grond", ["rCGR"]], ["sport reporter", ["rSpo"]], ["sport hockey", ["rSph"]], ["novitads 1", ["N1"]], ["novitads 2", ["N2"]]];
-const CODE2ROW={}; CFG.forEach(([lab,cs])=>cs.forEach(c=>CODE2ROW[c.toLowerCase()]=lab));
+const CFG=[[["mod actual org vial 1", ["oV1"]], ["mod 1", ["m1", "m1_s"]], ["mod 2", ["m2", "m2_s", "mAcc"]], ["mod magazins", ["m_ma"]], ["planisar/manar", ["pl/m"]], ["org prod radio 1", ["oP1"]], ["prod radio 1", ["p1", "p1_s"]], ["prod radio 2", ["p2", "pV2"]], ["p_ra", ["p_ra"]], ["planisaziun", ["plan"]], ["reporterA radio", ["rRad"]], ["reporterA radio Cussegl Grond", ["rCGR"]], ["sport reporter", ["rSpo"]], ["sport hockey", ["rSph"]], ["novitads 1", ["N1"]], ["novitads 2", ["N2"]]]];
+const CODE2ROW={}; CFG.flat().forEach(([lab,cs])=>cs.forEach(c=>CODE2ROW[c.toLowerCase()]=lab));
 const SVC=Object.keys(CODE2ROW); const SVCL=new Set(SVC);
 let ROWS=[];
 const DAYS=["Gli","Ma","Me","Gie","Ve","So","Du"];
@@ -240,7 +240,7 @@ const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},se
 function shortNames(names){
   const sur=n=>(n.includes(",")?n.split(",")[0]:n.split(" ")[0]).trim();
   const first=n=>(n.includes(",")?n.split(",").slice(1).join(","):n.split(" ").slice(1).join(" ")).trim()||sur(n);
-  const ALIAS={"Wichert, Patrick Andreas":"Patrick","Flepp, Gion Gieri":"GiGi","Sauder, Ylva Mona":"Ylva"};
+  const ALIAS={"Wichert, Patrick Andreas":"Patrick","Flepp, Gion Gieri":"GiGi","Sauder, Ylva Mona":"Ylva","Vieli, Maria Madlaina":"Maria"};
   const first0=first; const firstA=n=>ALIAS[n]||first0(n);
   const cnt={}; names.forEach(n=>cnt[firstA(n)]=(cnt[firstA(n)]||0)+1);
   const out={}; names.forEach(n=>{const f=firstA(n);out[n]=cnt[f]>1?`${f} ${sur(n)[0]}.`:f}); return out;
@@ -254,7 +254,7 @@ function setPlan(p,save){
   }
   const dates=Object.keys(map).sort();
   const used=new Set(p.entries.map(e=>CODE2ROW[e[1].toLowerCase()]));
-  ROWS=CFG.map(r=>r[0]).filter(l=>used.has(l));
+  ROWS=CFG.map(b=>b.map(r=>r[0]).filter(l=>used.has(l))).filter(b=>b.length);
   const hasGraf=false;
   plan={...p,map,months,names:[...names].sort((a,b)=>a.localeCompare(b,"de")),short:shortNames([...names]),hasGraf,first:dates[0],last:dates[dates.length-1]};
   const sel=$("who"), keep=sel.value||store.get("who")||"";
@@ -315,34 +315,21 @@ function render(){
     const days=[...Array(7)].map((_,i)=>addDays(s,i));
     let mine=0;
     let h='<table><thead><tr><th>Servetsch</th>'+days.map((d,i)=>{const c=[i>4?'we':'',iso(d)===todayIso?'today':'',fromIso&&iso(d)<fromIso?'past':''].join(' ');return `<th class="${c}">${DAYS[i]}<small>${fmt(d)}</small></th>`}).join('')+'</tr></thead><tbody>';
-    for(const sv of ROWS){
-      h+=`<tr><th>${sv.replace(/</g,'&lt;')}</th>`;
+    const rowHtml=sv=>{
+      let r=`<tr><th>${sv.replace(/</g,'&lt;')}</th>`;
       days.forEach((d,i)=>{
         const k=iso(d), we=i>4;
         const c=[we?'we':'',k===todayIso?'today':'',fromIso&&k<fromIso?'past':''].join(' ');
-        if(!plan.months.has(k.slice(0,7))){h+=`<td class="${c} out">·</td>`;return}
+        if(!plan.months.has(k.slice(0,7))){r+=`<td class="${c} out">·</td>`;return}
         const ps=(plan.map[k]||{})[sv]||[];
-        if(!ps.length){h+=`<td class="${c} none">–</td>`;return}
-        h+=`<td class="${c}">`+ps.map(p=>{if(p===who)mine++;return `<span class="p${p===who?' hi':''}" title="${p.replace(/"/g,'&quot;')}">${plan.short[p]}</span>`}).join('')+'</td>';
+        if(!ps.length){r+=`<td class="${c} none">–</td>`;return}
+        r+=`<td class="${c}">`+ps.map(p=>{if(p===who)mine++;return `<span class="p${p===who?' hi':''}" title="${p.replace(/"/g,'&quot;')}">${plan.short[p]}</span>`}).join('')+'</td>';
       });
-      h+='</tr>';
-    }
-    h+='</tbody></table>';
-    let g='';
-    if(plan.hasGraf){
-      g='<table><tbody><tr><th>Grafica</th>';
-      days.forEach((d,i)=>{
-        const k=iso(d), we=i>4;
-        const c=[we?'we':'',k===todayIso?'today':'',fromIso&&k<fromIso?'past':''].join(' ');
-        if(!plan.months.has(k.slice(0,7))){g+=`<td class="${c} out">·</td>`;return}
-        const ps=(plan.map[k]||{}).graf||[];
-        if(!ps.length){g+=`<td class="${c} none">–</td>`;return}
-        g+=`<td class="${c}">`+ps.map(p=>{if(p===who)mine++;return `<span class="p${p===who?' hi':''}" title="${p.replace(/"/g,'&quot;')}">${plan.short[p]}</span>`}).join('')+'</td>';
-      });
-      g+='</tr></tbody></table>';
-    }
+      return r+'</tr>';
+    };
+    h=ROWS.map((blk,bi)=>`<div class="tw${bi?' graf':''}"><table>${bi?'':h.replace('<table>','').replace(/<tbody>$/,'')}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
     const sec=document.createElement('section');
-    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="tw">${h}</div>${g?`<div class="tw graf">${g}</div>`:''}`;
+    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3>${h}`;
     out.appendChild(sec); shown++;
   }
   const anyInPlan=iso(end)>=plan.first&&iso(start)<=plan.last;
