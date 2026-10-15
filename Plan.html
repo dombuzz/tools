@@ -58,6 +58,7 @@ tbody th{font-size:.8rem;white-space:nowrap;width:48px;color:var(--text)}
 tr>:first-child{width:150px}
 tbody th{white-space:normal!important;line-height:1.3}
 td.off,td.off.we{background:var(--bg)}
+.tw.nd{border-color:#5aa6ff}
 .tw.graf{margin-top:8px}
 .today{background:var(--today)}
 thead th.today{box-shadow:inset 0 3px 0 var(--accent)}
@@ -373,7 +374,7 @@ function render(){
       });
       return r+'</tr>';
     };
-    const h=ROWS.map((blk,bi)=>`<div class="tw${bi?' graf':''}"><table>${bi?'':head}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
+    const h=ROWS.map((blk,bi)=>`<div class="tw${bi?' graf':''}${sparte==='newsdesk'&&blk.includes('Online 1')?' nd':''}"><table>${bi?'':head}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
     const sec=document.createElement('section');
     sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3>${h}`;
     out.appendChild(sec);
