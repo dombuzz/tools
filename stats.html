@@ -85,8 +85,23 @@
   .ctog button{background:transparent;border:0;padding:5px 13px;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer}
   .ctog button[aria-pressed=true]{background:var(--accent);color:#121214}
   .upd{margin:-2px 0 10px;text-align:right;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
-  .upd span:first-child{color:var(--accent)}
-  .upd.busy span:first-child{display:inline-block;animation:spin 1s linear infinite}
+  .updbtn{background:none;border:0;padding:0 2px;margin:0;font:inherit;color:var(--accent);cursor:pointer;display:inline-block;line-height:1}
+  .updbtn:hover{filter:brightness(1.25)}
+  .updbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  .upd.busy .updbtn{animation:spin 1s linear infinite}
+  /* Refresh-Animation (0,5 s): A = Akzent-Puls für alle Daten-Karten, C = nur geänderte Werte */
+  @keyframes fxGlow{0%{box-shadow:0 0 0 0 rgba(255,77,100,0);border-color:var(--line)}30%{box-shadow:0 0 0 3px rgba(255,77,100,.35),0 0 22px rgba(255,77,100,.25);border-color:var(--accent)}100%{box-shadow:0 0 0 0 rgba(255,77,100,0);border-color:var(--line)}}
+  @keyframes fxTime{0%,100%{color:var(--muted)}30%{color:var(--accent)}}
+  @keyframes fxRow{0%{background:rgba(255,77,100,.16)}100%{background:transparent}}
+  @keyframes fxNum{0%{color:var(--accent);transform:scale(1.35)}100%{transform:none}}
+  .fx #list,.fx #otherlist{animation:fxGlow .5s ease-out}
+  .fx #lablist{animation:fxGlow .5s ease-out}
+  .fx .upd .updbtn{animation:spin .5s ease-in-out}
+  .fx #updt{animation:fxTime .5s}
+  .fx .row.chg{animation:fxRow .5s ease-out}
+  .fx .chg>.c,.fx .c.chg,.fx .cnt.chg{display:inline-block;animation:fxNum .5s ease-out}
+  .row.m .c.chg{display:inline-block}
+  @media (prefers-reduced-motion:reduce){.fx *,.fx #list,.fx #otherlist,.fx #lablist{animation:none!important}}
   @keyframes spin{to{transform:rotate(360deg)}}
   .archive{margin-top:64px;padding:22px 18px 20px;background:#17171a;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:16px;box-shadow:0 -28px 0 -26px var(--bg)}
   .archive .archh{margin:0 0 2px;font-size:1.25rem;color:var(--text)}
@@ -120,7 +135,7 @@
     <button class="tab" role="tab" data-r="month" aria-selected="false">mais actual</button>
   </div>
 
-  <p class="upd" id="upd" title="Actualisaziun automatica mintga 5 minutas"><span aria-hidden="true">⟳</span> <span id="updt">–</span></p>
+  <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <p class="meta" id="meta"></p>
 
@@ -193,10 +208,10 @@
     else active.sort((a, b) => (sortAsc ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey]) || base.get(a) - base.get(b));
     const mk = sortKey === 'rank' || sortKey === 'p' ? 'n' : sortKey;
     const max = Math.max(1, ...tools.map(x => x[mk]));
-    const row = x => `<div class="row m${x.n || x.h || x.v ? '' : ' zero'}"><span class="rank">${x.n || x.h ? x.r : '–'}</span>
+    const row = x => `<div class="row m${x.n || x.h || x.v ? '' : ' zero'}" data-t="${esc(x.t)}"><span class="rank">${x.n || x.h ? x.r : '–'}</span>
         <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x[mk] / max * 100}%"></div></div>
-        <span class="c n${sortKey === 'n' ? ' act' : ''}">${fmt(x.n)}</span><span class="c${sortKey === 'h' ? ' act' : ''}">${fmt(x.h)}</span>
-        <span class="c${sortKey === 'v' ? ' act' : ''}">${fmt(x.v)}</span><span class="c${sortKey === 'p' ? ' act' : ''}" title="${fmt(x.n)} giadas duvrà · ${fmt(x.v)} visitas">${x.p < 0 ? '–' : Math.round(x.p) + '%'}</span></div>`;
+        <span class="c n${sortKey === 'n' ? ' act' : ''}" data-f="n">${fmt(x.n)}</span><span class="c${sortKey === 'h' ? ' act' : ''}" data-f="h">${fmt(x.h)}</span>
+        <span class="c${sortKey === 'v' ? ' act' : ''}" data-f="v">${fmt(x.v)}</span><span class="c${sortKey === 'p' ? ' act' : ''}" title="${fmt(x.n)} giadas duvrà · ${fmt(x.v)} visitas">${x.p < 0 ? '–' : Math.round(x.p) + '%'}</span></div>`;
     const open = !!showZero[el.id];
     el.innerHTML = header() + active.map(row).join('') + (open ? zero.map(row).join('') : '')
       + (zero.length ? `<button class="zerot" data-z="${el.id}">${open ? 'Zuppar' : `${zero.length} ${zero.length === 1 ? 'tool anc betg duvrà' : 'tools anc betg duvrads'}`} ${open ? '▴' : '▾'}</button>` : '');
@@ -226,7 +241,30 @@
     const n = new Date(); lastOk = n.getTime();
     document.getElementById('updt').textContent = `${pad2(n.getHours())}:${pad2(n.getMinutes())} dals ${pad2(n.getDate())}-${pad2(n.getMonth() + 1)}`;
   }
-  // silent = Auto-Refresh im Hintergrund: keine «Chargel …»-Anzeige, bei Fehler bleiben die alten Daten stehen
+  // Momentaufnahme {tool: {n, h, v}} zum Erkennen geänderter Zahlen
+  function snap(d) {
+    const m = {}, g = t => m[t] || (m[t] = { n: 0, h: 0, v: 0 });
+    (d.uses || []).forEach(i => g(i.tool).n = i.count); (d.items || []).forEach(i => g(i.tool).h = i.count);
+    Object.entries(d.views || {}).forEach(([t, c]) => g(t).v = c);
+    return m;
+  }
+  // Refresh-Animation: A (Puls + ⟳ + Uhrzeit) immer, C (geänderte Zeilen/Zahlen) nur bei Änderungen
+  let fxTimer = null;
+  function playFx(before, after) {
+    const wrap = document.querySelector('.wrap');
+    wrap.classList.remove('fx');
+    if (before) for (const t of new Set([...Object.keys(before), ...Object.keys(after)])) {
+      const o = before[t] || { n: 0, h: 0, v: 0 }, n = after[t] || { n: 0, h: 0, v: 0 };
+      for (const f of ['n', 'h', 'v']) if (o[f] !== n[f]) {
+        document.querySelectorAll(`#list [data-t="${CSS.escape(t)}"], #otherlist [data-t="${CSS.escape(t)}"], #lablist [data-t="${CSS.escape(t)}"]`).forEach(row => {
+          row.classList.add('chg'); const c = row.querySelector(`[data-f="${f}"]`); if (c) c.classList.add('chg');
+        });
+      }
+    }
+    void wrap.offsetWidth; wrap.classList.add('fx');
+    clearTimeout(fxTimer); fxTimer = setTimeout(() => { wrap.classList.remove('fx'); document.querySelectorAll('.chg').forEach(e => e.classList.remove('chg')); }, 600);
+  }
+  // silent = Refresh im Hintergrund (automatisch oder per ⟳): keine «Chargel …»-Anzeige, bei Fehler bleiben die alten Daten stehen
   async function load(range, silent) {
     const meta = document.getElementById('meta'), upd = document.getElementById('upd');
     if (!silent) { lastRange = range; ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = ''; }
@@ -236,12 +274,16 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();
       if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
+      const before = silent && lastData ? snap(lastData) : null;
       lastData = d; lastRange = range;
       render(); stamp();
+      if (silent) playFx(before, snap(d));
     } catch (e) {
       if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     } finally { upd.classList.remove('busy'); }
   }
+  // ⟳ anklicken = sofort aktualisieren
+  document.getElementById('updbtn').onclick = () => { if (started && !document.getElementById('upd').classList.contains('busy')) load(lastRange, true); };
   // alle 5 Minuten neu laden, solange die Seite offen und sichtbar ist (holt nach dem Zurückkehren nach)
   const EVERY = 5 * 60 * 1000;
   const tick = () => { if (started && !document.hidden && Date.now() - lastOk >= EVERY - 2000) load(lastRange, true); };
@@ -315,9 +357,9 @@
       const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => '/' + t, views);
       const lab = draw(document.getElementById(ids[2]), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
       const hrefs = { index: '/', 'top-popup': '/', top: '/top', stats: '/stats', 'lab-index': '/lab/', '404': '/404' };
-      document.getElementById(ids[1]).innerHTML = Object.keys(OTHER).map(t => `<div class="row"><span class="rank">·</span>
+      document.getElementById(ids[1]).innerHTML = Object.keys(OTHER).map(t => `<div class="row" data-t="${esc(t)}"><span class="rank">·</span>
         <div class="name"><a href="${hrefs[t]}">${esc(OTHER[t])}</a></div>
-        <span class="cnt" title="${fmt(views[t] || 0)} ${t === 'top-popup' ? 'clics' : 'visitas'}">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
+        <span class="cnt" data-f="v" title="${fmt(views[t] || 0)} ${t === 'top-popup' ? 'clics' : 'visitas'}">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
       const now = new Date();
       const label = /^\d{4}-\d\d$/.test(range) ? `${MONTHS[+range.slice(5) - 1]} ${range.slice(0, 4)}` : { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
