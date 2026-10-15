@@ -165,6 +165,7 @@
   }
   const open = o => {
     pop.classList.toggle('on', o); btn.setAttribute('aria-expanded', o);
+    if (o) fetch(API + '/view/top-popup', { method: 'POST', keepalive: true }).catch(() => {}); // Klick aufs Symbol zählen
     if (o && Date.now() - loadedAt > 60000) load();
   };
   btn.addEventListener('click', e => { e.preventDefault(); open(!pop.classList.contains('on')); });
