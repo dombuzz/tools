@@ -71,6 +71,12 @@
   .subh{font-size:.95rem;margin:22px 0 8px;color:var(--muted)}.subh.lab{color:#ff9a3c}
   .dl{margin:0 0 12px;padding:9px 15px;font:inherit;font-size:.9rem;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:999px;cursor:pointer}
   .dl:hover{border-color:var(--accent);color:var(--accent)}
+  .chart{padding:14px 16px;margin-bottom:14px}
+  .chart h4{margin:0 0 6px;font-size:.85rem;font-weight:600;color:var(--muted)}
+  .chart h4 b{color:var(--text)}
+  .chart svg{display:block;width:100%;height:auto;margin-bottom:14px}
+  .chart svg:last-child{margin-bottom:0}
+  .chart .ax{fill:var(--muted);font-size:10px}
 </style>
 </head>
 <body>
@@ -114,6 +120,7 @@
   <select class="arch" id="archsel" aria-label="Mais tscherner"></select>
   <div id="archbody" hidden>
     <button class="dl" id="archdl" type="button">↓ Telechargiar (CSV)</button>
+    <div class="card chart" id="achart"></div>
     <div class="card" id="alist"></div>
     <p class="meta" id="ameta"></p>
     <h3 class="subh">Autras paginas</h3>
@@ -207,7 +214,26 @@
       ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     }
   }
-  function render() { renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
+  // Balkendiagramm pro Tag (reines SVG); vals = Werte je Tag des Monats
+  function bars(vals, color, label) {
+    const W = 560, H = 120, L = 26, B = 16, n = vals.length, max = Math.max(1, ...vals), bw = (W - L) / n;
+    const step = max <= 4 ? 1 : Math.ceil(max / 4), ticks = []; for (let t = 0; t <= max; t += step) ticks.push(t);
+    const y = v => H - B - v / max * (H - B - 6);
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`
+      + ticks.map(t => `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#2f2f34"/><text class="ax" x="${L - 5}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('')
+      + vals.map((v, i) => `<rect x="${L + i * bw + 1}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${H - B - y(v)}" rx="2" fill="${color}"><title>${i + 1}. ${v}</title></rect>`).join('')
+      + vals.map((v, i) => (i === 0 || (i + 1) % 5 === 0) ? `<text class="ax" x="${L + i * bw + bw / 2}" y="${H - 3}" text-anchor="middle">${i + 1}</text>` : '').join('') + '</svg>';
+  }
+  function drawChart(d, range) {
+    const el = document.getElementById('achart'), [y, m] = range.split('-').map(Number), days = new Date(y, m, 0).getDate();
+    const u = Array(days).fill(0), v = Array(days).fill(0), h = Array(days).fill(0);
+    for (const r of d.daily || []) { const i = +r.day.slice(8, 10) - 1; if (i >= 0 && i < days) { u[i] += r.uses; v[i] += r.views; h[i] += r.likes; } }
+    const sum = a => a.reduce((s, x) => s + x, 0);
+    el.innerHTML = `<h4>Visitas per di · <b>${fmt(sum(v))}</b> en total</h4>${bars(v, '#9a9aa2', 'Visitas per di')}`
+      + `<h4>Duvrà per di · <b>${fmt(sum(u))}</b> en total</h4>${bars(u, '#ff4d64', 'Duvrà per di')}`
+      + `<h4>Gea (♥) per di · <b>${fmt(sum(h))}</b> en total</h4>${bars(h, '#ff9a3c', 'Gea per di')}`;
+  }
+  function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
   function renderInto(d, range, ids) {
     const meta = document.getElementById(ids[3]);
     {
@@ -243,7 +269,7 @@
       body.hidden = false;
       ['alist', 'aotherlist', 'alablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>');
       try {
-        const r = await fetch(`${API}/ranking?range=${sel.value}`);
+        const r = await fetch(`${API}/ranking?range=${sel.value}&daily=1`);
         const d = await r.json();
         if (!r.ok || d.range !== sel.value) throw new Error('range');
         archData = d; archRange = sel.value; render();
@@ -262,10 +288,15 @@
     const tools = [...new Set([...Object.keys(all), ...Object.keys(uses), ...Object.keys(likes), ...Object.keys(views)])];
     const area = t => t in OTHER ? 'Autras paginas' : t.startsWith('lab-') ? 'Lab' : 'Tools';
     const q = v => '"' + String(v).replace(/"/g, '""') + '"';
-    const rows = tools.map(t => ({ a: area(t), t, name: all[t] || t, n: uses[t] || 0, h: likes[t] || 0, v: views[t] || 0 }))
+    const rowsT = tools.map(t => ({ a: area(t), t, name: all[t] || t, n: uses[t] || 0, h: likes[t] || 0, v: views[t] || 0 }))
       .filter(r => r.n || r.h || r.v).sort((x, y) => x.a.localeCompare(y.a) || y.n - x.n || y.h - x.h || y.v - x.v);
-    const csv = [['Mais', 'Secziun', 'Id', 'Num', 'Duvrà', 'Gea', 'Visitas'], ...rows.map(r => [archRange, r.a, r.t, r.name, r.n, r.h, r.v]),
-      [archRange, 'Total', '', '', d.usesTotal || 0, d.total || 0, d.viewsTotal || 0]].map(r => r.map(q).join(';')).join('\r\n');
+    const rowsD = (d.daily || []).map(r => ({ a: area(r.tool), t: r.tool, name: all[r.tool] || r.tool, n: r.uses, h: r.likes, v: r.views, day: r.day }))
+      .sort((x, y) => x.day.localeCompare(y.day) || x.a.localeCompare(y.a) || y.n - x.n || y.v - x.v);
+    // Zeilen mit Datum = Rohdaten pro Tag; Zeilen mit «Total» = Monatssumme pro Tool
+    const csv = [['Mais', 'Data', 'Secziun', 'Id', 'Num', 'Duvrà', 'Gea', 'Visitas'],
+      ...rowsD.map(r => [archRange, r.day, r.a, r.t, r.name, r.n, r.h, r.v]),
+      ...rowsT.map(r => [archRange, 'Total', r.a, r.t, r.name, r.n, r.h, r.v]),
+      [archRange, 'Total', 'Total', '', '', d.usesTotal || 0, d.total || 0, d.viewsTotal || 0]].map(r => r.map(q).join(';')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
     a.download = `dombuzz_statistica-${archRange}.csv`; document.body.appendChild(a); a.click(); a.remove();

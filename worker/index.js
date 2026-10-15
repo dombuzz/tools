@@ -18,6 +18,7 @@
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
 //                                  sortiert nach Nutzungen, dann Likes, dann Name (wie /stats)
+//                                  daily=1 -> zusätzlich daily:[{day, tool, uses, likes, views}] (Rohdaten pro Tag)
 //                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe (nur für /stats)
 
 const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
@@ -110,7 +111,20 @@ export default {
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const views = Object.fromEntries(viewRows.map(r => [r.tool, r.count]));
         const viewsTotal = viewRows.reduce((t, r) => t + r.count, 0);
-        return json({ range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal }, request);
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal };
+        // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
+        if (url.searchParams.get('daily') === '1') {
+          const from = p?.from ?? '0', to = p?.to ?? '9999';
+          const day = {};
+          for (const [tbl, key] of [['uses', 'uses'], ['clicks', 'likes'], ['views', 'views']]) {
+            const { results: rr } = await env.DB
+              .prepare(`SELECT substr(ts, 1, 10) AS day, tool, COUNT(*) AS count FROM ${tbl} WHERE ts >= ?1 AND ts < ?2 GROUP BY day, tool`)
+              .bind(from, to).all();
+            for (const r of rr) { const k = r.day + '|' + r.tool; (day[k] ||= { day: r.day, tool: r.tool, uses: 0, likes: 0, views: 0 })[key] = r.count; }
+          }
+          out.daily = Object.values(day).sort((a, b) => a.day.localeCompare(b.day) || a.tool.localeCompare(b.tool));
+        }
+        return json(out, request);
       }
 
       // Ein Like dazuzählen
