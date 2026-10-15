@@ -53,6 +53,12 @@
   .ghost-img{ opacity:.3; }
   .clip{ position:absolute; inset:0; overflow:hidden; }
   .overlay{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  /* Maske 1:1: dunkle, halbtransparente Flächen links und rechts vom mittleren Quadrat (1080 von 1920 px) */
+  .mask{ position:absolute; inset:0; pointer-events:none; }
+  .mask[hidden]{ display:none; }
+  .mask i{ position:absolute; top:0; bottom:0; width:21.875%; background:rgba(0,0,0,.55); }
+  .mask i:first-child{ left:0; border-right:1px solid rgba(255,255,255,.55); }
+  .mask i:last-child{ right:0; border-left:1px solid rgba(255,255,255,.55); }
   .frame-line{ position:absolute; inset:0; outline:1px solid rgba(255,77,100,.8); pointer-events:none; }
   .box{ position:absolute; cursor:move; }
   .handle{
@@ -104,6 +110,7 @@ h1 .acc{color:var(--accent)}
         <button type="button" data-fmt="ildi" aria-pressed="false">Il di</button>
       </div>
       <label class="check"><input type="checkbox" id="showOverlay" checked> Mussar l'overlay</label>
+      <label class="check"><input type="checkbox" id="showMask"> Mascra 1:1</label>
       <div class="spacer"></div>
       <button type="button" class="ghost" id="pickBtn">Tscherner ina foto</button>
     </div>
@@ -119,6 +126,7 @@ h1 .acc{color:var(--accent)}
         <img class="ghost-img" id="ghost" alt="">
         <div class="clip"><img id="photo" alt=""></div>
         <img class="overlay" id="overlay" alt="">
+        <div class="mask" id="mask" hidden><i></i><i></i></div>
         <div class="frame-line"></div>
         <div class="box" id="box" hidden>
           <div class="handle" data-c="nw"></div><div class="handle" data-c="ne"></div>
@@ -167,6 +175,8 @@ function setFmt(f){
   try { localStorage.setItem('visual-fmt', f); } catch(e){}
 }
 document.querySelectorAll('.seg button').forEach(b => b.onclick = () => setFmt(b.dataset.fmt));
+$('showMask').checked = false;   // Standard: aus (auch nach dem Neuladen)
+$('showMask').onchange = e => $('mask').hidden = !e.target.checked;
 $('showOverlay').onchange = e => overlay.style.visibility = e.target.checked ? 'visible' : 'hidden';
 setFmt(fmt);
 
