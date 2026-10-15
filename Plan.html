@@ -266,6 +266,7 @@ const fmt=d=>d.getDate()+"."+(d.getMonth()+1)+".";
 let plan=null, weeks=1; const sources={};
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
+let DISP={};
 function shortNames(names){
   // Zusätze im Plan entfernen: «(Firma) », « (RTR)», « z»
   const clean=n=>n.replace(/^\([^)]*\)\s*/,"").replace(/\s*\(RTR\)\s*$/,"").replace(/\s+z$/,"").trim();
@@ -274,7 +275,8 @@ function shortNames(names){
   const ALIAS={"Wichert, Patrick Andreas":"Patrick","Flepp, Gion Gieri":"GiGi","Sauder, Ylva Mona":"Ylva","Vieli, Maria Madlaina":"Maria","Galmarini, Oceana z (RTR)":"Oceana","Capaul Patrick z":"Patrick","Clalüna, Flurin":"Flurin","Juon, Flurin":"Flurin J."};
   const first0=first; const firstA=n=>ALIAS[n]||first0(n);
   const cnt={}; names.forEach(n=>cnt[firstA(n)]=(cnt[firstA(n)]||0)+1);
-  const out={}; names.forEach(n=>{const f=firstA(n);out[n]=ALIAS[n]?f:cnt[f]>1?`${f} ${sur(n)[0]}.`:f}); return out; // Namen aus ALIAS bleiben immer ohne Zusatz
+  const out={}; names.forEach(n=>{const f=firstA(n);out[n]=ALIAS[n]?f:cnt[f]>1?`${f} ${sur(n)[0]}.`:f}); DISP={}; names.forEach(n=>DISP[n]=sur(n)+", "+firstA(n).replace(/\s+[A-ZÄÖÜ]\.$/,"")); // Anzeige im Auswahlfeld
+  return out; // Namen aus ALIAS bleiben immer ohne Zusatz
 }
 function setPlan(p,save){
   const months=new Set(), names=new Set(), dates=new Set();
@@ -291,9 +293,9 @@ function setPlan(p,save){
   }
   for(const [date,,name] of p.entries){months.add(date.slice(0,7)); names.add(name); dates.add(date)}
   const ds=[...dates].sort();
-  plan={...p,maps,rows,months,names:[...names].sort((a,b)=>a.localeCompare(b,"de")),short:shortNames([...names]),first:ds[0],last:ds[ds.length-1]};
+  plan={...p,maps,rows,months,short:shortNames([...names]),names:[...names].sort((a,b)=>DISP[a].localeCompare(DISP[b],"de")),first:ds[0],last:ds[ds.length-1]};
   const sel=$("who"), keep=sel.value||store.get("who")||"";
-  sel.innerHTML='<option value="">nagina</option>'+plan.names.map(n=>`<option>${n.replace(/</g,"&lt;")}</option>`).join("");
+  sel.innerHTML='<option value="">nagina</option>'+plan.names.map(n=>`<option value="${n.replace(/"/g,"&quot;")}">${DISP[n].replace(/</g,"&lt;")}</option>`).join("");
   if(plan.names.includes(keep)) sel.value=keep;
   const mlist=[...months].sort().map(m=>{const [y,mo]=m.split("-");return MONTHS[mo-1]+" "+y});
   $("status").className="status ok";
