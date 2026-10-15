@@ -104,13 +104,14 @@
 <script>
   // Piktogramme = Favicons der Tools. Neues Tool: hier (Name + Favicon) und in GROUPS eintragen.
   const ICONS = {"rtr-picture.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='12.5 12.5 75.0 75.0'%3E%3Crect x='20' y='28' width='60' height='44' rx='6' fill='none' stroke='%23ff4d64' stroke-width='7'/%3E%3Ccircle cx='34' cy='42' r='6' fill='%23ff4d64'/%3E%3Cpath d='M24,66 L40,50 L50,60 L62,44 L76,66 Z' fill='%23ff4d64'/%3E%3C/svg%3E", "visual.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='20' y='30' width='60' height='40' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E", "Resizer2000.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15.3 15.3 69.4 69.4'%3E%3Cpath d='M24 76V40h12M76 24v36H64M24 76l52-52' stroke='%23ff4d64' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E", "PlanOnline.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-2.9 -4.9 105.9 105.9'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='56' rx='7'/%3E%3Cpath d='M18 40h64M36 16v14M64 16v14'/%3E%3C/g%3E%3Cg fill='%23ff4d64'%3E%3Crect x='28' y='50' width='10' height='9' rx='2'/%3E%3Crect x='45' y='50' width='10' height='9' rx='2'/%3E%3Crect x='62' y='50' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='28' y='64' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='45' y='64' width='10' height='9' rx='2'/%3E%3C/g%3E%3C/svg%3E", "audio-recorder.html": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%227.2 5.7 52.6 52.6%22%3E%3Cg fill=%22%23ff4d64%22%3E%3Crect x=%2210%22 y=%2226%22 width=%226%22 height=%2212%22 rx=%223%22/%3E%3Crect x=%2220%22 y=%2216%22 width=%226%22 height=%2232%22 rx=%223%22/%3E%3Crect x=%2230%22 y=%2210%22 width=%226%22 height=%2244%22 rx=%223%22/%3E%3Crect x=%2240%22 y=%2220%22 width=%226%22 height=%2224%22 rx=%223%22/%3E%3C/g%3E%3Ccircle cx=%2252%22 cy=%2232%22 r=%225%22 fill=%22%23ff4d64%22/%3E%3C/svg%3E", "srt2ttml.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='13.6 13.6 72.8 72.8'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 38h48l-12-12M78 62H30l12 12'/%3E%3C/g%3E%3C/svg%3E", "subs.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.7 9.7 80.6 80.6'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='52' rx='8'/%3E%3Cpath d='M30 50h22M30 62h40M60 50h10'/%3E%3C/g%3E%3C/svg%3E", "data.html": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='8.8 8.8 82.4 82.4'%3E%3Crect x='22' y='52' width='12' height='26' fill='%23ff4d64'/%3E%3Crect x='44' y='36' width='12' height='42' fill='%23ff4d64'/%3E%3Crect x='66' y='22' width='12' height='56' fill='%23ff4d64'/%3E%3C/svg%3E", "votgr.html": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%227.4 7.4 49.2 49.2%22%3E%3Cpolygon points=%2224.18,36.09 17.10,40.17 10.03,36.09 10.03,27.91 17.10,23.83 24.18,27.91%22 fill=%22%23ff4d64%22 fill-opacity=%220.75%22/%3E%3Cpolygon points=%2239.08,36.09 32.00,40.17 24.92,36.09 24.92,27.91 32.00,23.83 39.08,27.91%22 fill=%22%23ff4d64%22/%3E%3Cpolygon points=%2253.97,36.09 46.90,40.17 39.82,36.09 39.82,27.91 46.90,23.83 53.97,27.91%22 fill=%22%23ff4d64%22 fill-opacity=%220.5%22/%3E%3Cpolygon points=%2231.63,22.93 24.55,27.01 17.48,22.93 17.48,14.76 24.55,10.67 31.63,14.76%22 fill=%22%23ff4d64%22/%3E%3Cpolygon points=%2246.52,22.93 39.45,27.01 32.37,22.93 32.37,14.76 39.45,10.67 46.52,14.76%22 fill=%22%23ff4d64%22 fill-opacity=%220.95%22/%3E%3Cpolygon points=%2231.63,49.24 24.55,53.33 17.48,49.24 17.48,41.07 24.55,36.99 31.63,41.07%22 fill=%22%23ff4d64%22 fill-opacity=%220.5%22/%3E%3Cpolygon points=%2246.52,49.24 39.45,53.33 32.37,49.24 32.37,41.07 39.45,36.99 46.52,41.07%22 fill=%22%23ff4d64%22/%3E%3C/svg%3E", "lab": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='6.3 8.8 87.4 87.4'%3E%3Cpath d='M38 18h24M42 18v24L22 78a6 6 0 0 0 5 9h46a6 6 0 0 0 5-9L58 42V18' stroke='%23ff9a3c' stroke-width='9' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"};
-  ['PlanNewsdesk.html', 'PlanTelevisiun.html', 'PlanOnDemand.html'].forEach(p => ICONS[p] = ICONS['PlanOnline.html']);
+  ['PlanNewsdesk.html', 'PlanRadio.html', 'PlanTelevisiun.html', 'PlanOnDemand.html'].forEach(p => ICONS[p] = ICONS['PlanOnline.html']);
   const TOOLS = {
     'rtr-picture.html':    'RTR Picture-downloader',
     'visual.html':         'Magazin / Il di',
     'Resizer2000.html':    'Resizer 2000',
     'PlanOnline.html':     'Plan Squadra online',
     'PlanNewsdesk.html':   'Plan Newsdesk',
+    'PlanRadio.html':      'Plan Radio',
     'PlanTelevisiun.html': 'Plan Televisiun',
     'PlanOnDemand.html':   'Plan On demand & social media',
     'audio-recorder.html': 'Audio-Recorder',
@@ -121,7 +122,7 @@
   };
   const GROUPS = [
     ['Maletgs',           ['rtr-picture.html', 'visual.html', 'Resizer2000.html']],
-    ['Organisaziun',      ['PlanOnline.html', 'PlanNewsdesk.html', 'PlanTelevisiun.html', 'PlanOnDemand.html']],
+    ['Organisaziun',      ['PlanNewsdesk.html', 'PlanRadio.html', 'PlanTelevisiun.html', 'PlanOnDemand.html']],
     ['Audio e suttitels', ['audio-recorder.html', 'srt2ttml.html', 'subs.html']],
     ['Grafica',           ['data.html', 'votgr.html']]
   ];
@@ -139,7 +140,7 @@
 // Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /top bleibt als Ausweichlink)
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', SHOW = 5;
-  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'Resizer2000': 'Resizer 2000', 'PlanOnline': 'Survistas plans',
+  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'Resizer2000': 'Resizer 2000', 'PlanNewsdesk': 'Survistas plans',
     'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('de-CH');
