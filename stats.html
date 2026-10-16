@@ -151,9 +151,11 @@
   </div>
 
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" data-r="all" aria-selected="true">entir temp</button>
-    <button class="tab" role="tab" data-r="30d" aria-selected="false">ultims 30 dis</button>
+    <button class="tab" role="tab" data-r="today" aria-selected="false">oz</button>
+    <button class="tab" role="tab" data-r="week" aria-selected="false">quest'emna</button>
     <button class="tab" role="tab" data-r="month" aria-selected="false">mais actual</button>
+    <button class="tab" role="tab" data-r="30d" aria-selected="false">ultims 30 dis</button>
+    <button class="tab" role="tab" data-r="all" aria-selected="true">entir temp</button>
   </div>
 
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
@@ -396,7 +398,7 @@
         <div class="name"><a href="${hrefs[t]}">${esc(OTHER[t])}</a></div>
         <span class="cnt" data-f="v" title="${fmt(views[t] || 0)} ${t === 'top-popup' ? 'clics' : 'visitas'}">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
       const now = new Date();
-      const label = /^\d{4}-\d\d$/.test(range) ? `${MONTHS[+range.slice(5) - 1]} ${range.slice(0, 4)}` : { all: 'Dapi il cumenzament', '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
+      const label = /^\d{4}-\d\d$/.test(range) ? `${MONTHS[+range.slice(5) - 1]} ${range.slice(0, 4)}` : { all: 'Dapi il cumenzament', today: 'Oz', week: "Quest'emna", '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
       meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
       document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;

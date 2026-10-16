@@ -14,7 +14,7 @@
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000       -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
 //   POST /view/Resizer2000?t=light|dark -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an)
-//   GET  /ranking?range=all     -> Rangliste: all | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
+//   GET  /ranking?range=all     -> Rangliste: all | today | week | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
 //                                  sortiert nach Nutzungen, dann Likes, dann Name (wie /stats)
@@ -67,8 +67,18 @@ function json(data, request, status = 200) {
 // Datum als 'YYYY-MM-DD HH:MM:SS' (UTC), wie SQLite datetime()
 const sqlDate = d => d.toISOString().slice(0, 19).replace('T', ' ');
 
+// Beginn des heutigen Tages bzw. der laufenden Woche (Montag) in Zürcher Zeit, als UTC-Zeitpunkt
+function zurichStart(kind) {
+  const now = new Date();
+  const wall = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Zurich' })); // Zürcher Uhrzeit als UTC-Felder
+  const off = Math.round((wall - now) / 6e4) * 6e4;
+  const back = kind === 'week' ? (wall.getUTCDay() + 6) % 7 : 0;
+  return new Date(Date.UTC(wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate() - back) - off);
+}
+
 function period(range) {
   const now = new Date();
+  if (range === 'today' || range === 'week') return { from: sqlDate(zurichStart(range)), to: null };
   const y = now.getUTCFullYear(), m = now.getUTCMonth();
   if (range === '30d') return { from: sqlDate(new Date(now - 30 * 864e5)), to: null };
   if (range === 'month') return { from: sqlDate(new Date(Date.UTC(y, m, 1))), to: null };
@@ -94,7 +104,7 @@ export default {
       // Rangliste für einen Zeitraum
       if (request.method === 'GET' && parts[0] === 'ranking' && parts.length === 1) {
         const rq = url.searchParams.get('range') || '';
-        const range = ['all', '30d', 'month', 'lastmonth'].includes(rq) || /^\d{4}-(0[1-9]|1[0-2])$/.test(rq) ? rq : 'all';
+        const range = ['all', 'today', 'week', '30d', 'month', 'lastmonth'].includes(rq) || /^\d{4}-(0[1-9]|1[0-2])$/.test(rq) ? rq : 'all';
         const p = period(range);
         const { results: resultsRaw } = p
           ? await env.DB.prepare('SELECT tool, COUNT(*) AS count FROM clicks WHERE ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC')
