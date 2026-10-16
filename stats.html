@@ -66,6 +66,19 @@
   .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
   .metarow{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:0 16px}
+  .metarow .meta{flex:1 1 100%}
+  .kz-label{margin:0 0 8px}
+  .kz{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr);gap:10px}
+  .kz-hero{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:128px;color:var(--text)}
+  .kz-big{font-size:3rem;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+  .kz-sub{font-size:.9rem;margin-top:6px}
+  .kz-hrt{color:var(--accent);font-size:1rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .kz-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kz-t{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0;color:var(--text)}
+  .kz-t b{display:block;font-size:1.5rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+  .kz-t span{display:block;margin-top:2px;font-size:.78rem;color:var(--muted)}
+  .kz svg{width:15px;height:15px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px}
+  @media (max-width:520px){.kz{grid-template-columns:1fr}.kz-hero{min-height:0}}
   .thbar{margin:10px 0 0 auto;display:flex;width:150px;max-width:100%;height:34px;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
   .thbar[hidden]{display:none}
   .thbar>span{display:flex;align-items:center;gap:6px;padding:0 8px;min-width:60px;white-space:nowrap}
@@ -160,7 +173,7 @@
 
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
-  <div class="metarow"><p class="meta" id="meta"></p><div class="thbar" id="themeBar" hidden></div></div>
+  <div class="metarow"><div class="meta" id="meta"></div><div class="thbar" id="themeBar" hidden></div></div>
 
   <details class="fold" data-k="other">
     <summary class="labh other">Autras paginas</summary>
@@ -181,7 +194,7 @@
     <button class="dl" id="archdl" type="button">↓ Telechargiar (CSV)</button>
     <div class="card chart" id="achart"></div>
     <div class="card" id="alist"></div>
-    <p class="meta" id="ameta"></p>
+    <div class="meta" id="ameta"></div>
     <details class="fold" data-k="aother">
       <summary class="subh">Autras paginas</summary>
       <div class="card" id="aotherlist"></div>
@@ -403,13 +416,26 @@
       const now = new Date();
       const label = /^\d{4}-\d\d$/.test(range) ? `${MONTHS[+range.slice(5) - 1]} ${range.slice(0, 4)}` : { all: 'Dapi il cumenzament', today: 'Oz', week: "Quest'emna", '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
-      meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
+      const IC = {
+        zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+        users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+        repeat: '<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+        eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+        bars: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'
+      };
+      const ic = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+      const tile = (k, val, txt, tip) => `<div class="kz-t"${tip ? ` title="${tip}"` : ''}><b>${val}</b><span>${ic(k)}${txt}</span></div>`;
+      const tiles = [];
       if (d.clients) {
-        const extra = [`${fmt(d.clients)} ${d.clients === 1 ? 'visitader unic' : 'visitaders unics'}`];
-        if (d.returning) extra.push(`${fmt(d.returning)} ${d.returning === 1 ? 'visitader regular' : 'visitaders regulars'} (da ≥ 2 dis)`);
-        if (d.usingClients) extra.push(`Ø ${String(d.usesPerClient).replace('.', ',')} giadas duvrà per visitader activ`);
-        meta.append(document.createElement('br'), extra.join(' · '));
+        tiles.push(tile('users', fmt(d.clients), d.clients === 1 ? 'visitader unic' : 'visitaders unics'));
+        const rt = d.returning || 0;
+        tiles.push(tile('repeat', fmt(rt), rt === 1 ? 'visitader regular' : 'visitaders regulars', 'Visitaders che èn stads là a ≥ 2 dis'));
       }
+      tiles.push(tile('eye', fmt(d.viewsTotal || 0), 'visitas'));
+      if (d.usingClients) tiles.push(tile('bars', String(d.usesPerClient).replace('.', ','), 'Ø per visitader activ', 'Ø giadas duvrà per visitader che ha duvrà in tool'));
+      meta.innerHTML = `<div class="kz-label">${esc(label)}</div><div class="kz">
+        <div class="kz-hero"><div><div class="kz-big">${fmt(main.n)}</div><div class="kz-sub">${ic('zap')}${main.n === 1 ? 'giada' : 'giadas'} duvrà</div></div><div class="kz-hrt">♥ ${fmt(main.h)}</div></div>
+        <div class="kz-grid">${tiles.join('')}</div></div>`;
       document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;
       const th = d.themes || {}, tl = th.light || 0, td = th.dark || 0, tn = tl + td, bar = document.getElementById('themeBar');
       bar.hidden = !tn;
