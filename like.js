@@ -1,6 +1,6 @@
 // Like-Funktion für tools.dombuzz.ch – an einem Ort für alle Tools
 // Einbinden: <script src="/like.js" defer></script> vor </body>
-// Frage «Ha quest tool gidà da simplifitgar tia lavur?» unten im Tool und als Karte nach dem ersten Download.
+// Frage «Ha quest tool simplifitgà tia lavur?» unten im Tool und als Karte nach dem ersten Download.
 // Ein Tool kann die Karte auch selbst auslösen: dispatchEvent(new Event('dbz-success'))
 // Gezählt wird über den Cloudflare Worker (nur Tool-Name und Zeitpunkt), höchstens 5 Klicks pro Tool, Browser und Tag.
 // Aufrufe: jeder Seitenaufruf wird gezählt (nur auf /stats sichtbar).
@@ -32,13 +32,13 @@ const CSS = `.dbz-like{max-width:640px;margin:36px auto 8px;padding:0 16px;text-
 @media (prefers-reduced-motion:reduce){.dbz-like button.pop svg,.dbz-toast .pop svg{animation:none}.dbz-toast{transition:none}}`;
 
 const HTML = `<div class="dbz-like" id="dbz-like">
-  <p>Ha quest tool gidà da simplifitgar tia lavur?</p>
+  <p>Ha quest tool simplifitgà tia lavur?</p>
   <button type="button"><svg viewBox="2 3 20 19" aria-hidden="true"><path d="M12 20s-7-4.3-9-8.6C1.6 8.2 3.6 4.8 7 4.8c2 0 3.4 1.1 4.1 2.5h1.8c.7-1.4 2.1-2.5 4.1-2.5 3.4 0 5.4 3.4 4 6.6-2 4.3-9 8.6-9 8.6z"/></svg>Gea</button>
   <span class="n" aria-live="polite"></span>
 </div>
 <div class="dbz-toast" id="dbz-toast" role="dialog" aria-label="Ha quest tool gidà?">
   <button type="button" class="dbz-x" aria-label="Serrar">×</button>
-  <p>Ha quest tool gidà da simplifitgar tia lavur?</p>
+  <p>Ha quest tool simplifitgà tia lavur?</p>
   <div class="dbz-row">
     <button type="button" class="dbz-yes"><svg viewBox="2 3 20 19" aria-hidden="true"><path d="M12 20s-7-4.3-9-8.6C1.6 8.2 3.6 4.8 7 4.8c2 0 3.4 1.1 4.1 2.5h1.8c.7-1.4 2.1-2.5 4.1-2.5 3.4 0 5.4 3.4 4 6.6-2 4.3-9 8.6-9 8.6z"/></svg>Gea</button>
     <small aria-live="polite"></small>
