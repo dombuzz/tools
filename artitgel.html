@@ -38,14 +38,6 @@ input.txt:focus{border-color:var(--accent)}
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .hint{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
-.sec{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:14px}
-.sec .sl{flex:0 0 100%;font-size:.85rem;color:var(--muted)}
-.seg{display:flex;flex-wrap:wrap;gap:8px}
-.seg button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 13px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-.seg button:hover{border-color:var(--accent);color:var(--text)}
-.seg button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.sec input{width:170px;padding:7px 12px;font:inherit;font-size:.85rem;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:999px;outline:none}
-.sec input:focus,.sec input.on{border-color:var(--accent)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -55,7 +47,7 @@ input.txt:focus{border-color:var(--accent)}
   <h1>Link d'<span class="acc">artitgel</span></h1>
   <p class="sub">Integrescha in link dal CMS (prevista u elavuraziun) – il tool dat ora ils auters links, era per artitgels che n'èn anc betg publitgads.</p>
 
-  <label class="lbl" for="inp">Link u ID da l'artitgel</label>
+  <label class="lbl" for="inp">Link da prevista / d'elavuraziun</label>
   <input class="txt" id="inp" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://nora.srfdigital.ch/ui/rtr_cultura/articles/…" autofocus>
   <p class="status" id="status" aria-live="polite"></p>
 
@@ -72,15 +64,6 @@ input.txt:focus{border-color:var(--accent)}
         <a class="btn" id="open" target="_blank" rel="noopener">Avrir</a>
       </div>
       <p class="hint" id="hint"></p>
-      <div class="sec" id="secrow">
-        <span class="sl" id="portlbl">Portal en CMS</span>
-        <div class="seg" id="pills" role="group" aria-labelledby="portlbl">
-          <button type="button" data-p="rtr_novitads" aria-pressed="false">rtr_novitads</button>
-          <button type="button" data-p="rtr_cultura" aria-pressed="false">rtr_cultura</button>
-          <button type="button" data-p="rtr_sport" aria-pressed="false">rtr_sport</button>
-        </div>
-        <input id="sec" type="text" autocomplete="off" spellcheck="false" placeholder="auter portal" aria-label="Auter portal en CMS">
-      </div>
     </div>
   </div>
 </main>
@@ -101,16 +84,7 @@ input.txt:focus{border-color:var(--accent)}
 
   let tab = get('dbz-artitgel-tab', 'urn'); if (!HINT[tab]) tab = 'urn';
   let id = '';
-  const COMMON = ['rtr_novitads', 'rtr_cultura', 'rtr_sport'];
-  let portal = get('dbz-artitgel-sec', DEF);
-  function paintPortal() {
-    document.querySelectorAll('#pills button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.p === portal)));
-    const custom = !COMMON.includes(portal);
-    if (document.activeElement !== $('sec') || !custom) $('sec').value = custom ? portal : '';
-    $('sec').classList.toggle('on', custom);
-  }
-  function setPortal(p) { portal = p || DEF; put('dbz-artitgel-sec', portal); paintPortal(); paint(); }
-  paintPortal();
+  let portal = DEF;
 
   const link = k => {
     const s = encodeURIComponent(portal);
@@ -126,14 +100,14 @@ input.txt:focus{border-color:var(--accent)}
     if (!m) {
       $('result').hidden = true;
       say(/^https?:\/\/(www\.)?rtr\.ch\//i.test(t)
-        ? "In URL classic cuntegna betg l'ID da l'artitgel. Utilisescha in link dal CMS, in link URN u l'ID."
-        : "Chattà nagin ID. Cola in link dal CMS, in link URN u l'ID (UUID).", true);
+        ? "In URL classic cuntegna betg l'ID da l'artitgel. Integrescha in link dal CMS (prevista u elavuraziun)."
+        : "Chattà nagin ID. Integrescha in link dal CMS (prevista u elavuraziun).", true);
       return;
     }
     id = m[0].toLowerCase();
     const kind = /\/preview\//.test(t) ? 'preview' : /\/articles\//.test(t) ? 'edit' : /rtr\.ch\/article\//i.test(t) ? 'urn' : 'id';
     const sec = SECRE.exec(t);
-    if (sec) { portal = sec[1]; put('dbz-artitgel-sec', portal); paintPortal(); }
+    portal = sec ? sec[1] : DEF; // Portal kommt aus dem eingegebenen Link
     say(`Enconuschì: ${KIND[kind]}${sec ? ` · portal <code>${portal}</code>` : ''} · <code>${id}</code>`);
     $('result').hidden = false;
     paint();
@@ -144,14 +118,10 @@ input.txt:focus{border-color:var(--accent)}
     document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === tab)));
     const u = link(tab);
     $('url').textContent = u; $('open').href = u; $('hint').textContent = HINT[tab];
-    $('secrow').hidden = tab === 'urn';
   }
 
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.k; put('dbz-artitgel-tab', tab); paint(); }));
   $('inp').addEventListener('input', parse);
-  document.querySelectorAll('#pills button').forEach(b => b.addEventListener('click', () => setPortal(b.dataset.p)));
-  $('sec').addEventListener('input', () => setPortal($('sec').value.trim()));
-
   $('copy').addEventListener('click', async () => {
     const u = $('url').textContent, b = $('copy');
     let ok = false;
