@@ -25,8 +25,13 @@
     '{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}' +
     '.themebtn{position:fixed;top:12px;right:12px;z-index:50;width:32px;height:32px;padding:0;display:grid;place-items:center;border-radius:50%;' +
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
-    '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a);outline:none}' +
+    '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
+    /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
+    ':where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent,#ff4d64)!important;outline-offset:2px}' +
+    '.themebtn:focus-visible{outline-offset:2px}' +
+    /* Wer am Gerät «Bewegung reduzieren» eingestellt hat, bekommt keine Animationen */
+    '@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}' +
     '@media print{.themebtn{display:none}}';
   var s = d.createElement('style'); s.id = 'dbz-theme-css'; s.textContent = css; (d.head || r).appendChild(s);
 

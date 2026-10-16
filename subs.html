@@ -82,7 +82,7 @@ h1 .acc{color:var(--accent)}
 
 <section class="step">
   <h2><span class="num">1</span> Chargiar SRT</h2>
-  <div id="drop">Trair qua il file SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" hidden></div>
+  <div id="drop" tabindex="0" role="button" aria-label="Tscherner file SRT">Trair qua il file SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" hidden></div>
   <p id="loadInfo" class="muted"></p>
 </section>
 
@@ -287,7 +287,7 @@ function renderSegs(){
       r.innerHTML=`<div class="tc">#${ci+1}<br>${msToTc(c.start)}<br>${msToTc(c.end)}</div>
         <div class="srcc">${esc(c.src)}</div>
         <textarea class="out" rows="2" spellcheck="true" lang="de">${esc(c.out)}</textarea>
-        <div><div class="badges"></div><div class="row" style="margin-top:4px"><button class="rewrap" title="Rumper da nov">↻</button><span class="meta muted" style="font-size:12px"></span></div></div>`;
+        <div><div class="badges"></div><div class="row" style="margin-top:4px"><button class="rewrap" title="Rumper da nov" aria-label="Rumper da nov">↻</button><span class="meta muted" style="font-size:12px"></span></div></div>`;
       el.appendChild(r);
     });
     box.appendChild(el);
@@ -338,6 +338,7 @@ function decodeSrt(buf){
 function readFile(f){ const r=new FileReader(); r.onload=()=>loadText(decodeSrt(r.result),f.name); r.readAsArrayBuffer(f); }
 const drop=$('drop');
 drop.onclick=()=>$('file').click();
+drop.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('file').click(); } };
 $('file').onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0]); };
 drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
 drop.ondragleave=()=>drop.classList.remove('over');

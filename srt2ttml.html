@@ -41,8 +41,8 @@ h1 .acc{color:var(--accent)}
 <main>
   <a class="homelink" href="/">← Tools</a>
   <h1>SRT <span class="acc">→</span> TTML</h1>
-  <p class="sub">Converta files SRT en TTML tenor il model da RTR.<br>Plirs files a medem temp èn pussaivels.</p>
-  <div id="drop">Trair qua ils files SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
+  <p class="sub">Convertescha files SRT en TTML tenor il model da RTR.<br>Plirs files a medem temp èn pussaivels.</p>
+  <div id="drop" tabindex="0" role="button" aria-label="Tscherner files SRT">Trair qua ils files SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
   <div class="row" id="allRow" hidden><button class="primary" id="all">Telechargiar tuts</button><button id="clear">Svidar la glista</button></div>
   <div id="list"></div>
   <details>
@@ -139,6 +139,7 @@ function handle(fileList){
 
 const drop=$('drop');
 drop.onclick=()=>$('file').click();
+drop.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('file').click(); } };
 $('file').onchange=e=>{ handle(e.target.files); e.target.value=''; };
 drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
 drop.ondragleave=()=>drop.classList.remove('over');
