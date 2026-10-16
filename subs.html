@@ -319,7 +319,7 @@ function refreshChecks(){
 /* ---------- Events ---------- */
 function loadText(text,name){
   cues=parseSrt(text);
-  if (!cues.length){ $('loadInfo').textContent='Nagins suttitels chattads – è quai in file SRT?'; return; }
+  if (!cues.length){ $('loadInfo').textContent='Chattà nagins suttitels – è quai in file SRT?'; return; }
   fileName=(name||'untertitel').replace(/\.srt$/i,'');
   buildSegments();
   $('loadInfo').textContent=`${name}: ${cues.length} suttitels → ${segs.length} frasas`;
