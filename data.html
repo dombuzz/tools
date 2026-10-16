@@ -1034,8 +1034,18 @@ h1 .acc{color:var(--accent)}
   });
 
   /* ---------- Einstellungen live anwenden ---------- */
+  const OPT_KEY = 'dbz-data-opts';
+  function saveOpts(){
+    try {
+      localStorage.setItem(OPT_KEY, JSON.stringify({
+        size: sizeSel.value, bg: bgSel.value, text: textSel.value, legend: legendSel.value, pad: padRange.value, ratio: aspectVal,
+        parts: [partTitle.checked, partDesc.checked, partByline.checked, partSource.checked]
+      }));
+    } catch (e) {}
+  }
   function onOptsChange(){
     padVal.textContent = padRange.value + ' %';
+    saveOpts();
     refreshSingle();
     batchItems.forEach(function(it){ it.refresh(); });
   }
@@ -1056,6 +1066,23 @@ h1 .acc{color:var(--accent)}
     clearTimeout(padTimer);
     padTimer = setTimeout(onOptsChange, 150);
   });
+
+  // Zuletzt verwendete Einstellungen wiederherstellen
+  try {
+    const o = JSON.parse(localStorage.getItem(OPT_KEY) || 'null');
+    if (o) {
+      const setSel = function(el, v){ if (Array.from(el.options).some(function(op){ return op.value === String(v); })) el.value = v; };
+      setSel(sizeSel, o.size); setSel(bgSel, o.bg); setSel(textSel, o.text); setSel(legendSel, o.legend);
+      if (o.pad !== undefined && o.pad >= padRange.min && o.pad <= padRange.max) padRange.value = o.pad;
+      padVal.textContent = padRange.value + ' %';
+      if (Array.isArray(o.parts)) [partTitle, partDesc, partByline, partSource].forEach(function(el, i){ if (typeof o.parts[i] === 'boolean') el.checked = o.parts[i]; });
+      const rb = Array.from(ratioSeg.children).find(function(x){ return x.dataset.r === o.ratio; });
+      if (rb) {
+        aspectVal = rb.dataset.r;
+        Array.from(ratioSeg.children).forEach(function(x){ x.classList.toggle('active', x === rb); x.setAttribute('aria-checked', String(x === rb)); });
+      }
+    }
+  } catch (e) {}
 
   // Link direkt per URL-Parameter übergeben: …/data.html?url=…
   const qs = new URLSearchParams(location.search);
