@@ -127,6 +127,6 @@
   window.addEventListener('pageshow', () => { sel.selectedIndex = 0; });
   load();
 </script>
-<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/lab-index',{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/lab-index'+(window.dbzCid&&dbzCid()?'?c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>

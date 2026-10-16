@@ -98,6 +98,6 @@
   setInterval(load, 300000);
   load();
 </script>
-<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/top',{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/top'+(window.dbzCid&&dbzCid()?'?c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>
