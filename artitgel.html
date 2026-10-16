@@ -46,7 +46,6 @@ input.txt:focus{border-color:var(--accent)}
 .seg button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .sec input{width:170px;padding:7px 12px;font:inherit;font-size:.85rem;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:999px;outline:none}
 .sec input:focus,.sec input.on{border-color:var(--accent)}
-.hint.warn{color:var(--warn)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -73,7 +72,6 @@ input.txt:focus{border-color:var(--accent)}
         <a class="btn" id="open" target="_blank" rel="noopener">Avrir</a>
       </div>
       <p class="hint" id="hint"></p>
-      <p class="hint warn" id="phint" hidden>Il portal n'è betg enconuschì da l'entrada – controllescha la tscherna.</p>
       <div class="sec" id="secrow">
         <span class="sl" id="portlbl">Portal en CMS</span>
         <div class="seg" id="pills" role="group" aria-labelledby="portlbl">
@@ -104,14 +102,14 @@ input.txt:focus{border-color:var(--accent)}
   let tab = get('dbz-artitgel-tab', 'urn'); if (!HINT[tab]) tab = 'urn';
   let id = '';
   const COMMON = ['rtr_novitads', 'rtr_cultura', 'rtr_sport'];
-  let portal = get('dbz-artitgel-sec', DEF), portalOk = false;
+  let portal = get('dbz-artitgel-sec', DEF);
   function paintPortal() {
     document.querySelectorAll('#pills button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.p === portal)));
     const custom = !COMMON.includes(portal);
     if (document.activeElement !== $('sec') || !custom) $('sec').value = custom ? portal : '';
     $('sec').classList.toggle('on', custom);
   }
-  function setPortal(p, ok) { portal = p || DEF; portalOk = ok; put('dbz-artitgel-sec', portal); paintPortal(); paint(); }
+  function setPortal(p) { portal = p || DEF; put('dbz-artitgel-sec', portal); paintPortal(); paint(); }
   paintPortal();
 
   const link = k => {
@@ -136,7 +134,6 @@ input.txt:focus{border-color:var(--accent)}
     const kind = /\/preview\//.test(t) ? 'preview' : /\/articles\//.test(t) ? 'edit' : /rtr\.ch\/article\//i.test(t) ? 'urn' : 'id';
     const sec = SECRE.exec(t);
     if (sec) { portal = sec[1]; put('dbz-artitgel-sec', portal); paintPortal(); }
-    portalOk = !!sec;
     say(`Enconuschì: ${KIND[kind]}${sec ? ` · portal <code>${portal}</code>` : ''} · <code>${id}</code>`);
     $('result').hidden = false;
     paint();
@@ -148,13 +145,12 @@ input.txt:focus{border-color:var(--accent)}
     const u = link(tab);
     $('url').textContent = u; $('open').href = u; $('hint').textContent = HINT[tab];
     $('secrow').hidden = tab === 'urn';
-    $('phint').hidden = tab === 'urn' || portalOk;
   }
 
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.k; put('dbz-artitgel-tab', tab); paint(); }));
   $('inp').addEventListener('input', parse);
-  document.querySelectorAll('#pills button').forEach(b => b.addEventListener('click', () => setPortal(b.dataset.p, true)));
-  $('sec').addEventListener('input', () => setPortal($('sec').value.trim(), true));
+  document.querySelectorAll('#pills button').forEach(b => b.addEventListener('click', () => setPortal(b.dataset.p)));
+  $('sec').addEventListener('input', () => setPortal($('sec').value.trim()));
 
   $('copy').addEventListener('click', async () => {
     const u = $('url').textContent, b = $('copy');
