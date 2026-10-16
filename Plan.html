@@ -82,6 +82,8 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
 .bm{border-top:1px solid var(--border);padding-top:14px}
 .bm[open] summary{margin-bottom:14px}
 .bm .note{margin-top:14px}
+.notes{text-align:center;margin:28px auto 0}
+.notes .note{max-width:none;margin:0 auto}
 .bm summary{cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted);list-style:none;display:flex;gap:10px;align-items:center}
 .bm summary::-webkit-details-marker{display:none}
 .bm summary::after{content:"▸";margin-left:auto;color:var(--muted)}
@@ -158,8 +160,11 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
   </div>
 
   <div id="out" class="wrap" style="gap:24px;max-width:none"></div>
-  <p class="note" id="note-nd">Cotschen vul dir: in servetsch online manca en il plan. Cellas stgiras: il servetsch n'è betg planisà quel di (la fin d'emna Online 2, Online 3 e prod On).</p>
-  <p class="note">Dus nums en ina cella vul probanel dir ch'i dat in'introducziun en il servetsch. Ils dis avant la data tschernida èn pli clers.</p>
+  <div class="notes">
+    <p class="note" id="note-nd">Cotschen vul dir: in servetsch online manca en il plan.</p>
+    <p class="note">Dus nums en ina cella vul probanel dir ch'i dat in'introducziun en il servetsch.</p>
+    <p class="note">Ils dis avant la data tschernida èn pli clers.</p>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
