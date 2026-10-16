@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<meta name="robots" content="noindex">
+<title>Links d'artitgel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1.5 -1.5 27 27'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#121214; --card:#1c1c1f; --field:#26262a; --text:#ececef; --muted:#9a9aa2; --line:#2f2f34;
+  --accent:#ff4d64; --on-accent:#121214; --warn:#f0b454; --ok:#5fd29a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+p.sub{margin:0 0 18px;color:var(--muted);font-size:.9rem}
+label.lbl{display:block;margin:0 0 6px;font-size:.85rem;color:var(--muted)}
+input.txt{width:100%;padding:12px 14px;font:inherit;font-size:.95rem;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;outline:none}
+input.txt:focus{border-color:var(--accent)}
+.status{min-height:1.4em;margin:8px 0 18px;font-size:.85rem;color:var(--muted)}
+.status.warn{color:var(--warn)}
+.status code{font-size:.8rem;color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.tab{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 15px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+.tab:hover{border-color:var(--accent);color:var(--text)}
+.tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.out{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.url{word-break:break-all;user-select:all;font-size:.95rem;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.btn{font:inherit;font-weight:600;font-size:.9rem;border:1px solid var(--line);background:transparent;color:var(--text);padding:8px 16px;border-radius:999px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.hint{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
+.sec{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}
+.sec label{font-size:.85rem;color:var(--muted)}
+.sec input{width:200px;padding:8px 12px;font:inherit;font-size:.9rem;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:10px;outline:none}
+.sec input:focus{border-color:var(--accent)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <a class="homelink" href="/">← Tools</a>
+  <h1>Links <span class="acc">d'artitgel</span></h1>
+  <p class="sub">Cola in link dal CMS (prevista u elavuraziun), in link URN u l'ID – il tool dat ora ils auters links, era per artitgels che n'èn anc betg publitgads.</p>
+
+  <label class="lbl" for="inp">Link u ID da l'artitgel</label>
+  <input class="txt" id="inp" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://nora.srfdigital.ch/ui/rtr_cultura/articles/…" autofocus>
+  <p class="status" id="status" aria-live="polite"></p>
+
+  <div id="result" hidden>
+    <div class="tabs" role="tablist" aria-label="Tip da link">
+      <button class="tab" role="tab" data-k="preview" aria-selected="false">Prevista</button>
+      <button class="tab" role="tab" data-k="edit" aria-selected="false">Elavurar</button>
+      <button class="tab" role="tab" data-k="urn" aria-selected="true">Link publitgà (URN)</button>
+    </div>
+    <div class="out">
+      <div class="url" id="url"></div>
+      <div class="row">
+        <button class="btn primary" id="copy" type="button">Copiar</button>
+        <a class="btn" id="open" target="_blank" rel="noopener">Avrir</a>
+      </div>
+      <p class="hint" id="hint"></p>
+      <div class="sec" id="secrow">
+        <label for="sec">Secziun dal CMS</label>
+        <input id="sec" type="text" autocomplete="off" spellcheck="false" placeholder="rtr_cultura">
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+(() => {
+  const NORA = 'https://nora.srfdigital.ch', RTR = 'https://www.rtr.ch', DEF = 'rtr_cultura';
+  const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const SECRE = /\/ui\/([A-Za-z0-9_-]+)\/(?:articles|preview\/article)\//;
+  const $ = id => document.getElementById(id);
+  const KIND = { edit: "link d'elavuraziun (CMS)", preview: 'link da prevista (CMS)', urn: 'link URN', id: 'ID' };
+  const HINT = {
+    preview: 'Be per persunas cun login dal CMS.',
+    edit: 'Be per persunas cun login dal CMS.',
+    urn: "Funcziuna per tuts, uschespert che l'artitgel è publitgà – era per newsletters e posts da social media planisads."
+  };
+  const get = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+  const put = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+
+  let tab = get('dbz-artitgel-tab', 'urn'); if (!HINT[tab]) tab = 'urn';
+  let id = '';
+  $('sec').value = get('dbz-artitgel-sec', DEF);
+
+  const link = k => {
+    const s = encodeURIComponent($('sec').value.trim() || DEF);
+    return k === 'edit' ? `${NORA}/ui/${s}/articles/${id}` : k === 'preview' ? `${NORA}/ui/${s}/preview/article/${id}` : `${RTR}/article/${id}`;
+  };
+  function say(html, warn) { const s = $('status'); s.innerHTML = html; s.classList.toggle('warn', !!warn); }
+
+  function parse() {
+    const t = $('inp').value.trim();
+    id = '';
+    if (!t) { say(''); $('result').hidden = true; return; }
+    const m = UUID.exec(t);
+    if (!m) {
+      $('result').hidden = true;
+      say(/^https?:\/\/(www\.)?rtr\.ch\//i.test(t)
+        ? "In URL classic cuntegna betg l'ID da l'artitgel. Utilisescha in link dal CMS, in link URN u l'ID."
+        : "Chattà nagin ID. Cola in link dal CMS, in link URN u l'ID (UUID).", true);
+      return;
+    }
+    id = m[0].toLowerCase();
+    const kind = /\/preview\//.test(t) ? 'preview' : /\/articles\//.test(t) ? 'edit' : /rtr\.ch\/article\//i.test(t) ? 'urn' : 'id';
+    const sec = SECRE.exec(t);
+    if (sec) { $('sec').value = sec[1]; put('dbz-artitgel-sec', sec[1]); }
+    say(`Enconuschì: ${KIND[kind]} · <code>${id}</code>`);
+    $('result').hidden = false;
+    paint();
+  }
+
+  function paint() {
+    if (!id) return;
+    document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === tab)));
+    const u = link(tab);
+    $('url').textContent = u; $('open').href = u; $('hint').textContent = HINT[tab];
+    $('secrow').hidden = tab === 'urn';
+  }
+
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.k; put('dbz-artitgel-tab', tab); paint(); }));
+  $('inp').addEventListener('input', parse);
+  $('sec').addEventListener('input', () => { put('dbz-artitgel-sec', $('sec').value.trim() || DEF); paint(); });
+
+  $('copy').addEventListener('click', async () => {
+    const u = $('url').textContent, b = $('copy');
+    let ok = false;
+    try { await navigator.clipboard.writeText(u); ok = true; } catch (e) {
+      const r = document.createRange(); r.selectNodeContents($('url')); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      try { ok = document.execCommand('copy'); } catch (x) {}
+    }
+    b.textContent = ok ? 'Copià' : 'Betg reussì – marcar a maun';
+    setTimeout(() => { b.textContent = 'Copiar'; }, 1800);
+    if (ok) window.dispatchEvent(new Event('dbz-success'));
+  });
+  parse();
+})();
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>
