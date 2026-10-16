@@ -1,5 +1,5 @@
 // Cloudflare Worker für Likes und Nutzungen auf tools.dombuzz.ch
-// Frage auf den Tool-Seiten: «Ha quest tool gidà da simplifitgar tia lavur?»
+// Frage auf den Tool-Seiten: «Ha quest tool simplifitgà tia lavur?»
 // Jeder Klick zählt (unlimitiert). Gespeichert wird nur: Tool-Name, Zeitpunkt, Anzahl.
 //
 // Voraussetzung: D1-Datenbank als Binding «DB» mit diesen Tabellen:
