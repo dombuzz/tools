@@ -102,7 +102,7 @@
     'visual.html':         'Magazin / Il di',
     'Resizer2000.html':    'Resizer 2000',
     'Plan.html':           'Plans da teams',
-    'artitgel.html':       "Links d'artitgel",
+    'artitgel.html':       "Link d'artitgel",
     'audio-recorder.html': 'Audio-Recorder',
     'srt2ttml.html':       'SRT → TTML',
     'subs.html':           'Suttitels RM → DE',
@@ -113,8 +113,7 @@
   // Gruppen und Reihenfolge im Dropdown.
   const GROUPS = [
     ['Maletgs',           ['rtr-picture.html', 'visual.html', 'Resizer2000.html']],
-    ['Organisaziun',      ['Plan.html']],
-    ['Online',            ['artitgel.html']],
+    ['Organisaziun',      ['Plan.html', 'artitgel.html']],
     ['Audio e suttitels', ['audio-recorder.html', 'srt2ttml.html', 'subs.html']],
     ['Grafica',           ['data.html', 'votgr.html']]
   ];
@@ -140,7 +139,7 @@
 // Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /top bleibt als Ausweichlink)
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', SHOW = 5;
-  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgel",
+  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Link d'artitgel",
     'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('de-CH');
