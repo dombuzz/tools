@@ -65,6 +65,13 @@
   .hrt{color:var(--accent)}.row.zero .hrt{color:var(--line)}
   .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
+  .metarow{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:0 16px}
+  .thbar{margin:10px 0 0 auto;display:flex;width:200px;max-width:100%;height:34px;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .thbar[hidden]{display:none}
+  .thbar>span{display:flex;align-items:center;gap:8px;padding:0 10px;min-width:64px;white-space:nowrap}
+  .thbar svg{width:16px;height:16px;flex:none;fill:none;stroke:#8a8a94;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .thbar .tl{background:#ececf1;color:#1c1c20;justify-content:flex-start}
+  .thbar .td{background:#26262a;color:#ececef;justify-content:flex-end}
   .msg{padding:22px 18px;color:var(--muted);text-align:center;font-size:.9rem}
   .labh.other{color:var(--text)}
   .labh{font-size:1.05rem;margin:34px 0 10px;color:var(--lab)}
@@ -151,8 +158,7 @@
 
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
-  <p class="meta" id="meta"></p>
-  <p class="meta" id="themeMeta"></p>
+  <div class="metarow"><p class="meta" id="meta"></p><div class="thbar" id="themeBar" hidden></div></div>
 
   <details class="fold" data-k="other">
     <summary class="labh other">Autras paginas</summary>
@@ -394,8 +400,13 @@
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
       meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
       document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;
-      const th = d.themes || {}, tn = (th.light || 0) + (th.dark || 0), pc = x => tn ? ` (${Math.round(x / tn * 100)} %)` : '';
-      document.getElementById('themeMeta').textContent = tn ? `Visualisaziun: ${fmt(th.dark || 0)}× stgir${pc(th.dark || 0)} · ${fmt(th.light || 0)}× cler${pc(th.light || 0)}` : '';
+      const th = d.themes || {}, tl = th.light || 0, td = th.dark || 0, tn = tl + td, bar = document.getElementById('themeBar');
+      bar.hidden = !tn;
+      if (tn) {
+        const pl = Math.round(tl / tn * 100), SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+        bar.title = `Visualisaziun: ${fmt(tl)}× cler · ${fmt(td)}× stgir`;
+        bar.innerHTML = `<span class="tl" style="flex:${tl} 1 0" title="${fmt(tl)}× cler">${SUN}${pl} %</span><span class="td" style="flex:${td} 1 0" title="${fmt(td)}× stgir">${100 - pl} %${MOON}</span>`;
+      }
     }
   }
   // Archiv: ein Eintrag pro Monat, beginnend mit Oktober 2026
