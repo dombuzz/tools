@@ -283,7 +283,7 @@ function shortNames(names){
   const sur=n=>(n=clean(n),(n.includes(",")?n.split(",")[0]:n.split(" ")[0]).trim());
   const first=n=>(n=clean(n),n.includes(",")?n.split(",").slice(1).join(","):n.split(" ").slice(1).join(" ")).trim()||sur(n);
   const ALIAS={"Wichert, Patrick Andreas":"Patrick","Flepp, Gion Gieri":"GiGi","Sauder, Ylva Mona":"Ylva","Vieli, Maria Madlaina":"Maria","Galmarini, Oceana z (RTR)":"Oceana","Capaul Patrick z":"Patrick","Clalüna, Flurin":"Flurin","Juon, Flurin":"Flurin J.","Gaudenz, Martina Cecilia":"Martina","Werro, Martina":"Martina","Bundi, Prisca":"Prisca","Bigliel Foffa, Prisca":"Prisca","Cantieni, Giana Maria":"Giana"};
-  const al=n=>ALIAS[n]||(/^Degonda,\s*Gabriela\b/.test(clean(n))?"Gaby":undefined); // Gabriela Degonda immer «Gaby» (auch mit zweitem Vornamen)
+  const al=n=>ALIAS[n]||(/^Degonda(-Gaudiza)?,\s*Gabriela\b/.test(clean(n))?"Gaby":undefined); // Gabriela Degonda immer «Gaby» (auch mit zweitem Vornamen)
   const first0=first; const firstA=n=>al(n)||first0(n);
   const cnt={}; names.forEach(n=>cnt[firstA(n)]=(cnt[firstA(n)]||0)+1);
   const out={}; names.forEach(n=>{const f=firstA(n);out[n]=al(n)?f:cnt[f]>1?`${f} ${sur(n)[0]}.`:f}); DISP={}; names.forEach(n=>DISP[n]=sur(n)+", "+firstA(n).replace(/\s+[A-ZÄÖÜ]\.$/,"")); // Anzeige im Auswahlfeld
