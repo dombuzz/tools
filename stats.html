@@ -406,7 +406,7 @@
       meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
       if (d.clients) {
         const extra = [`${fmt(d.clients)} ${d.clients === 1 ? 'visitader unic' : 'visitaders unics'}`];
-        if (d.returning) extra.push(`${fmt(d.returning)} ${d.returning === 1 ? 'returnant' : 'returnants'} (da ≥ 2 dis)`);
+        if (d.returning) extra.push(`${fmt(d.returning)} ${d.returning === 1 ? 'visitader regular' : 'visitaders regulars'} (da ≥ 2 dis)`);
         if (d.usingClients) extra.push(`Ø ${String(d.usesPerClient).replace('.', ',')} giadas duvrà per visitader activ`);
         meta.append(document.createElement('br'), extra.join(' · '));
       }
