@@ -30,6 +30,8 @@ a.btn,button{font:inherit;border:1px solid var(--line);background:var(--panel);c
 .primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important;font-weight:600}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
 details{margin-top:18px;color:var(--muted);font-size:14px}
+details h3{font-size:13px;font-weight:600;margin:14px 0 4px;color:var(--ink)}
+.hint{margin:10px 0 0}
 pre{background:var(--code);padding:10px;border-radius:8px;overflow:auto;font-size:12px;color:var(--ink)}
 h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
 h1 .acc{color:var(--accent)}
@@ -47,11 +49,27 @@ h1 .acc{color:var(--accent)}
   <div id="list"></div>
   <details>
     <summary>Model RTR (Subtitle Edit Custom Format)</summary>
-    <pre>Format dal temp: hh:mm:ss.zzz
-&lt;p begin="{start}" xml:id="p{number}" end="{end}"&gt;
+    <p class="hint">Indicaziuns cumplettas per Subtitle Edit (Custom Format). Integrar mintga part en la rubrica correspundenta.</p>
+    <h3>Header</h3>
+    <pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:tts="http://www.w3.org/ns/ttml#styling"&gt;
+    &lt;head&gt;
+        &lt;styling&gt;&lt;/styling&gt;
+        &lt;layout&gt;&lt;/layout&gt;
+    &lt;/head&gt;
+    &lt;body&gt;&lt;div&gt;</pre>
+    <h3>Lingia da text</h3>
+    <pre>&lt;p begin="{start}" xml:id="p{number}" end="{end}"&gt;
     &lt;span tts:color="#ffffff"&gt;{text}&lt;/span&gt;
-&lt;/p&gt;
-Nova lingia: &lt;/span&gt;&lt;br&gt;&lt;/br&gt;&lt;span tts:color="#ffffff"&gt;</pre>
+&lt;/p&gt;</pre>
+    <h3>Format dal temp</h3>
+    <pre>hh:mm:ss.zzz</pre>
+    <h3>Nova lingia</h3>
+    <pre>&lt;/span&gt;&lt;br&gt;&lt;/br&gt;&lt;span tts:color="#ffffff"&gt;</pre>
+    <h3>Footer</h3>
+    <pre>        &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/tt&gt;</pre>
   </details>
 </main>
 <script>
