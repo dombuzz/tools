@@ -111,6 +111,7 @@ input.txt:focus{border-color:var(--accent)}
     say(`Enconuschì: ${KIND[kind]}${sec ? ` · portal <code>${portal}</code>` : ''} · <code>${id}</code>`);
     $('result').hidden = false;
     paint();
+    window.dispatchEvent(new Event('dbz-success')); // Link erkannt + neue Links erzeugt = Nutzung
   }
 
   function paint() {
@@ -122,6 +123,7 @@ input.txt:focus{border-color:var(--accent)}
 
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.k; put('dbz-artitgel-tab', tab); paint(); }));
   $('inp').addEventListener('input', parse);
+  $('open').addEventListener('click', () => window.dispatchEvent(new Event('dbz-success')));
   $('copy').addEventListener('click', async () => {
     const u = $('url').textContent, b = $('copy');
     let ok = false;
