@@ -166,7 +166,7 @@
   }
   const open = o => {
     pop.classList.toggle('on', o); btn.setAttribute('aria-expanded', o);
-    if (o) fetch(API + '/view/top-popup', { method: 'POST', keepalive: true }).catch(() => {}); // Klick aufs Symbol zählen
+    if (o) fetch(API + '/view/top-popup?t=' + (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'), { method: 'POST', keepalive: true }).catch(() => {}); // Klick aufs Symbol zählen
     if (o && Date.now() - loadedAt > 60000) load();
   };
   btn.addEventListener('click', e => { e.preventDefault(); open(!pop.classList.contains('on')); });
@@ -179,6 +179,6 @@
   });
 })();
 </script>
-<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/index',{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/index?t='+(document.documentElement.dataset.theme==='light'?'light':'dark'),{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>

@@ -13,13 +13,13 @@
 //   GET  /likes                 -> {"Resizer2000": 14, ...}            (Total pro Tool)
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000       -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
-//   POST /view/Resizer2000      -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an)
+//   POST /view/Resizer2000?t=light|dark -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an)
 //   GET  /ranking?range=all     -> Rangliste: all | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
 //                                  sortiert nach Nutzungen, dann Likes, dann Name (wie /stats)
 //                                  daily=1 -> zusätzlich daily:[{day, tool, uses, likes, views}] (Rohdaten pro Tag)
-//                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe (nur für /stats)
+//                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe, themes = {light, dark, unknown} Aufrufe nach Darstellung (nur für /stats)
 
 const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
@@ -46,7 +46,8 @@ let viewsReady;
 const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS views (tool TEXT NOT NULL, ts TEXT NOT NULL)'),
   env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
-]).catch(e => { viewsReady = null; throw e; });
+]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
+  .catch(e => { viewsReady = null; throw e; });
 
 function cors(request) {
   const origin = request.headers.get('Origin') || '';
@@ -121,7 +122,12 @@ export default {
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const views = Object.fromEntries(merge(viewRows).map(r => [r.tool, r.count]));
         const viewsTotal = viewRows.reduce((t, r) => t + r.count, 0);
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal };
+        const { results: themeRows } = await env.DB
+          .prepare('SELECT theme, COUNT(*) AS count FROM views WHERE ts >= ?1 AND ts < ?2 GROUP BY theme')
+          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const themes = { light: 0, dark: 0, unknown: 0 };
+        for (const r of themeRows) themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count;
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';
@@ -170,7 +176,8 @@ export default {
         const tool = decodeURIComponent(parts[1]);
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
         await ensureViews(env);
-        await env.DB.prepare("INSERT INTO views (tool, ts) VALUES (?1, datetime('now'))").bind(tool).run();
+        const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
+        await env.DB.prepare("INSERT INTO views (tool, ts, theme) VALUES (?1, datetime('now'), ?2)").bind(tool, theme).run();
         return json({ ok: true }, request);
       }
 

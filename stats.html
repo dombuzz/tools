@@ -152,6 +152,7 @@
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <p class="meta" id="meta"></p>
+  <p class="meta" id="themeMeta"></p>
 
   <details class="fold" data-k="other">
     <summary class="labh other">Autras paginas</summary>
@@ -393,6 +394,8 @@
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
       meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
       document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;
+      const th = d.themes || {}, tn = (th.light || 0) + (th.dark || 0), pc = x => tn ? ` (${Math.round(x / tn * 100)} %)` : '';
+      document.getElementById('themeMeta').textContent = tn ? `Visualisaziun: ${fmt(th.dark || 0)}× stgir${pc(th.dark || 0)} · ${fmt(th.light || 0)}× cler${pc(th.light || 0)}` : '';
     }
   }
   // Archiv: ein Eintrag pro Monat, beginnend mit Oktober 2026

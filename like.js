@@ -53,7 +53,7 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   const segs = location.pathname.replace(/\.html?$/i, '').split('/').filter(Boolean);
   const tool = (segs[0] === 'lab' && segs.length > 1 ? 'lab-' : '') + (segs.at(-1) || 'index');
   // Seitenaufruf zählen (einmal pro Aufruf; nur Tool-Name und Zeitpunkt)
-  fetch(API + '/view/' + encodeURIComponent(tool), { method: 'POST', keepalive: true }).catch(() => {});
+  fetch(API + '/view/' + encodeURIComponent(tool) + '?t=' + (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'), { method: 'POST', keepalive: true }).catch(() => {});
   const box = document.getElementById('dbz-like'), btn = box.querySelector('button'), out = box.querySelector('.n');
   const toast = document.getElementById('dbz-toast'), tBtn = toast.querySelector('.dbz-yes'), tOut = toast.querySelector('small');
   // in den Hauptbereich der Seite verschieben, damit der Block unter dem Tool steht
