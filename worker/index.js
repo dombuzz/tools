@@ -13,13 +13,14 @@
 //   GET  /likes                 -> {"Resizer2000": 14, ...}            (Total pro Tool)
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000       -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
-//   POST /view/Resizer2000?t=light|dark -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an)
+//   POST /view/Resizer2000?t=light|dark&c=<Zufalls-ID> -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an; c = anonyme Kennung pro Browser)
 //   GET  /ranking?range=all     -> Rangliste: all | today | week | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
 //                                  sortiert nach Nutzungen, dann Likes, dann Name (wie /stats)
 //                                  daily=1 -> zusätzlich daily:[{day, tool, uses, likes, views}] (Rohdaten pro Tag)
-//                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe, themes = {light, dark, unknown} Aufrufe nach Darstellung (nur für /stats)
+//                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe, themes = {light, dark, unknown} Aufrufe nach Darstellung (nur für /stats),
+//                                  clients = Anzahl verschiedener Besucher (Kennungen) im Zeitraum, gesamt über alle Tools (nur für /stats; erst ab Einführung der Kennung)
 
 const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
@@ -47,6 +48,7 @@ const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS views (tool TEXT NOT NULL, ts TEXT NOT NULL)'),
   env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
 ]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
+  .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
   .catch(e => { viewsReady = null; throw e; });
 
 function cors(request) {
@@ -140,7 +142,11 @@ export default {
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const themes = { light: 0, dark: 0, unknown: 0 };
         for (const r of themeRows) themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count;
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes };
+        const { results: clientRows } = await env.DB
+          .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
+          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const clients = clientRows[0]?.n || 0;
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';
@@ -190,7 +196,8 @@ export default {
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
         await ensureViews(env);
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
-        await env.DB.prepare("INSERT INTO views (tool, ts, theme) VALUES (?1, datetime('now'), ?2)").bind(tool, theme).run();
+        const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
+        await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid) VALUES (?1, datetime('now'), ?2, ?3)").bind(tool, theme, cid).run();
         return json({ ok: true }, request);
       }
 
