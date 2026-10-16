@@ -52,22 +52,27 @@
   h1 span { color: var(--accent); }
   .sub { color: var(--muted); margin: 0 0 24px; }
   .select { position: relative; }
-  select {
-    width: 100%; appearance: none; -webkit-appearance: none;
-    padding: 14px 44px 14px 16px; font: inherit; font-weight: 600; color: var(--text);
-    background: var(--field); border: 1px solid var(--line); border-radius: 12px;
-    cursor: pointer; outline: none;
+  .sel-btn {
+    width: 100%; text-align: left; padding: 14px 44px 14px 16px; font: inherit; font-weight: 600; color: var(--text);
+    background: var(--field); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; outline: none;
   }
-  select:hover, select:focus { border-color: var(--accent); }
-  select:disabled { cursor: default; color: var(--muted); }
+  .sel-btn:hover, .sel-btn:focus-visible, .sel-btn[aria-expanded=true] { border-color: var(--accent); }
   .select::after {
-    content: ""; position: absolute; right: 18px; top: 50%; width: 8px; height: 8px;
+    content: ""; position: absolute; right: 18px; top: 24px; width: 8px; height: 8px;
     border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
-    transform: translateY(-70%) rotate(45deg); pointer-events: none;
+    transform: translateY(-70%) rotate(45deg); pointer-events: none; transition: transform .15s;
   }
-  option { background: var(--card); color: var(--text); font-weight: 400; }
-  option.lab { color: var(--lab); font-weight: 700; } /* gleiche Farbe wie im Lab */
-  optgroup { background: var(--card); color: var(--accent); font-weight: 700; font-style: normal; }
+  .select.open::after { transform: translateY(-20%) rotate(225deg); }
+  .menu {
+    position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 8px); display: none;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 6px 8px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.35); max-height: calc(100vh - 260px); max-height: calc(100dvh - 260px); overflow-y: auto;
+  }
+  .select.open .menu { display: block; }
+  .mg { margin: 10px 10px 2px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .mi { display: block; padding: 8px 12px; border-radius: 9px; color: var(--text); text-decoration: none; font-weight: 500; }
+  .mi:hover, .mi:focus-visible { background: var(--field); outline: none; }
+  .mi.lab { color: var(--lab); font-weight: 700; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; padding-top: 12px; }
   .msg { color: var(--muted); margin-top: 16px; }
   .msg a, footer a { color: var(--link); }
   footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
@@ -88,10 +93,9 @@
     </div>
   </div>
   <p class="sub">Tscherner in tool, el s'avra directamain.</p>
-  <div class="select">
-    <select id="tools" aria-label="Tscherner in tool">
-      <option value="">Tscherner in tool …</option>
-    </select>
+  <div class="select" id="selwrap">
+    <button type="button" class="sel-btn" id="selbtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu">Tscherner in tool …</button>
+    <div class="menu" id="menu" role="menu"></div>
   </div>
 </main>
 
@@ -118,23 +122,29 @@
     ['Grafica',           ['data.html', 'votgr.html']]
   ];
 
-  const sel = document.getElementById('tools');
-  // Liste direkt aus GROUPS aufbauen (kein Laden über GitHub nötig).
+  const wrap = document.getElementById('selwrap'), btn0 = document.getElementById('selbtn'), menu = document.getElementById('menu');
+  // Menü direkt aus GROUPS aufbauen (kein Laden über GitHub nötig).
   // Neues Tool: Dateiname in NAMES und in einer Gruppe eintragen.
+  const mk = (txt, href, cls) => { const a = document.createElement('a'); a.className = 'mi' + (cls ? ' ' + cls : ''); a.href = href; a.textContent = txt; a.setAttribute('role', 'menuitem'); return a; };
   for (const [label, paths] of GROUPS) {
-    const og = document.createElement('optgroup');
-    og.label = label;
-    for (const p of paths) og.append(new Option(NAMES[p] || p, '/' + p.replace(/\.html?$/i, '')));
-    sel.append(og);
+    const h = document.createElement('div'); h.className = 'mg'; h.textContent = label; menu.append(h);
+    for (const p of paths) menu.append(mk(NAMES[p] || p, '/' + p.replace(/\.html?$/i, '')));
   }
   // ganz unten: Link ins Lab (Experimente)
-  const lab = new Option('Lab 🧪', '/lab/');
-  lab.className = 'lab';
-  sel.append(lab);
+  menu.append(mk('Lab 🧪', '/lab/', 'lab'));
 
-  sel.addEventListener('change', () => { if (sel.value) location.href = sel.value; });
-  // Beim Zurückkehren mit dem Zurück-Button wieder auf "Tool wählen" stellen
-  window.addEventListener('pageshow', () => { sel.selectedIndex = 0; });
+  const items = () => [...menu.querySelectorAll('.mi')];
+  const setOpen = o => { wrap.classList.toggle('open', o); btn0.setAttribute('aria-expanded', o); };
+  btn0.addEventListener('click', () => setOpen(!wrap.classList.contains('open')));
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) setOpen(false); });
+  wrap.addEventListener('keydown', e => {
+    const open = wrap.classList.contains('open'), list = items(), i = list.indexOf(document.activeElement);
+    if (e.key === 'Escape' && open) { setOpen(false); btn0.focus(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); if (!open) setOpen(true); list[(i + 1) % list.length].focus(); }
+    else if (e.key === 'ArrowUp' && open) { e.preventDefault(); list[(i <= 0 ? list.length : i) - 1].focus(); }
+  });
+  // Beim Zurückkehren mit dem Zurück-Button Menü wieder schliessen
+  window.addEventListener('pageshow', () => setOpen(false));
 
 // Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /top bleibt als Ausweichlink)
 (() => {
