@@ -479,6 +479,6 @@
   let saved = null; try { saved = localStorage.getItem('dbz-stats-ok'); } catch (e) {}
   if (saved === HASH) unlock(); else document.getElementById('pw').focus();
 </script>
-<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/stats',{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/stats'+(window.dbzCid&&dbzCid()?'?c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>

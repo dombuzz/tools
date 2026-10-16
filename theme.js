@@ -70,3 +70,12 @@
   var onChange = function (e) { if (!saved()) set(e.matches ? 'light' : 'dark', false); };
   if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
 })();
+
+// Anonyme Zufalls-Kennung pro Browser (nur zum Zählen verschiedener Besucher; gilt für alle Seiten gemeinsam)
+window.dbzCid = function () {
+  var c = ''; try {
+    c = localStorage.getItem('dbz-cid') || '';
+    if (!/^[A-Za-z0-9-]{8,40}$/.test(c)) { c = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('dbz-cid', c); }
+  } catch (e) { c = ''; }
+  return c;
+};
