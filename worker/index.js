@@ -70,10 +70,13 @@ const sqlDate = d => d.toISOString().slice(0, 19).replace('T', ' ');
 // Beginn des heutigen Tages bzw. der laufenden Woche (Montag) in Zürcher Zeit, als UTC-Zeitpunkt
 function zurichStart(kind) {
   const now = new Date();
-  const wall = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Zurich' })); // Zürcher Uhrzeit als UTC-Felder
+  const f = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Zurich', hourCycle: 'h23',
+    year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' })
+    .formatToParts(now).map(x => [x.type, +x.value]));
+  const wall = Date.UTC(f.year, f.month - 1, f.day, f.hour, f.minute, f.second); // Zürcher Uhrzeit als UTC-Wert
   const off = Math.round((wall - now) / 6e4) * 6e4;
-  const back = kind === 'week' ? (wall.getUTCDay() + 6) % 7 : 0;
-  return new Date(Date.UTC(wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate() - back) - off);
+  const back = kind === 'week' ? (new Date(wall).getUTCDay() + 6) % 7 : 0;
+  return new Date(Date.UTC(f.year, f.month - 1, f.day - back) - off);
 }
 
 function period(range) {
