@@ -57,6 +57,16 @@
     d.body.appendChild(btn); paint();
   }
   if (d.body) mount(); else d.addEventListener('DOMContentLoaded', mount);
+  // Pfeiltasten in Tab-Leisten und Auswahlgruppen (role=tablist / radiogroup): links/rechts wechselt und wählt, Pos1/Ende springen
+  d.addEventListener('keydown', function (e) {
+    var k = e.key; if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].indexOf(k) < 0) return;
+    var t = e.target; if (!t || !t.closest) return;
+    var grp = t.closest('[role="tablist"],[role="radiogroup"]'); if (!grp) return;
+    var items = [].slice.call(grp.querySelectorAll('button,[role="tab"],[role="radio"]')).filter(function (x) { return !x.disabled && x.offsetParent !== null; });
+    var i = items.indexOf(t); if (i < 0) return;
+    var n = k === 'Home' ? 0 : k === 'End' ? items.length - 1 : (i + (k === 'ArrowLeft' || k === 'ArrowUp' ? -1 : 1) + items.length) % items.length;
+    e.preventDefault(); items[n].focus(); items[n].click();
+  });
   var onChange = function (e) { if (!saved()) set(e.matches ? 'light' : 'dark', false); };
   if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
 })();
