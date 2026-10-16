@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
 <meta name="robots" content="noindex">
 <title>Pleds en ils idioms</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.1 8.4 81.8 81.8'%3E%3Ctext x='50' y='66' font-family='system-ui,sans-serif' font-size='46' font-weight='700' text-anchor='middle' fill='%23ff4d64'%3ERM%3C/text%3E%3C/svg%3E">
@@ -38,19 +39,19 @@
   .grid dd{margin:0}
   .grid dd .main{font-weight:400}
   .grid dd .alt{color:var(--muted)}
-  .grid dd.empty{color:#55555c}
+  .grid dd.empty{color:var(--dim)}
   
-  .grid a{color:var(--text);text-decoration:none;border-bottom:1px dashed #6a6a72;font-size:.9rem}
+  .grid a{color:var(--text);text-decoration:none;border-bottom:1px dashed var(--dim);font-size:.9rem}
   .grid a:hover{color:var(--accent);border-color:var(--accent)}
   .grid a::after{content:" ↗";color:var(--muted)}
   mark{background:rgba(255,77,100,.25);color:inherit;border-radius:3px;padding:0 1px}
   .empty-state{color:var(--muted);text-align:center;padding:28px 10px;font-size:.92rem}
   footer{margin-top:28px;color:var(--muted);font-size:.78rem;line-height:1.55}
   footer b{color:var(--text);font-weight:600}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:#121214;font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--on-accent);font-size:.85rem;font-weight:600;padding:8px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
   .toast.on{opacity:1}
-.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
-.homelink:hover,.homelink:focus-visible{color:#ff4d64}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
 </style>
 </head>
 <body>
