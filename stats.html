@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
+<script src="/theme.js"></script>
+<meta name="color-scheme" content="dark light">
 <meta name="robots" content="noindex">
 <title>Stats</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='12 14 76 76'%3E%3Cg fill='%23ff4d64'%3E%3Crect x='18' y='52' width='18' height='32' rx='3' fill-opacity='.55'/%3E%3Crect x='41' y='22' width='18' height='62' rx='3'/%3E%3Crect x='64' y='40' width='18' height='44' rx='3' fill-opacity='.75'/%3E%3C/g%3E%3C/svg%3E">
@@ -13,15 +14,15 @@
   *{box-sizing:border-box}
   body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   .wrap{max-width:640px;margin:0 auto}
-  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
-  .homelink:hover,.homelink:focus-visible{color:#ff4d64}
+  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+  .homelink:hover,.homelink:focus-visible{color:var(--accent)}
   h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
   h1 .acc{color:var(--accent)}
   .lead{color:var(--muted);margin:0 0 20px;font-size:.9rem}
   .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
   .tab{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 15px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
   .tab:hover{color:var(--text)}
-  .tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#121214}
+  .tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 0}
   .row{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:11px 18px;border-top:1px solid var(--line)}
   .row:first-child{border-top:0}
@@ -29,14 +30,14 @@
   .name{font-weight:600;font-size:.95rem;min-width:0}
   .name a{color:inherit;text-decoration:none}.name a:hover{color:var(--accent)}
   .bar{height:6px;border-radius:3px;background:var(--accent);margin-top:6px;min-width:3px;transition:width .3s}
-  .row.zero .bar{background:#3a3a40}.row.zero .name{color:var(--muted)}
+  .row.zero .bar{background:var(--line)}.row.zero .name{color:var(--muted)}
   .cnt{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
   .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;white-space:nowrap}
   .eye{display:inline-block;width:.95em;height:.95em;vertical-align:-.12em;fill:none;stroke:currentColor;stroke-width:2}
   .lock{max-width:340px;margin:12vh auto 0;text-align:center}
   .lock input{width:100%;padding:13px 14px;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;outline:none;text-align:center}
   .lock input:focus{border-color:var(--accent)}
-  .lock button{margin-top:10px;width:100%;padding:12px;font:inherit;font-weight:600;color:#121214;background:var(--accent);border:0;border-radius:12px;cursor:pointer}
+  .lock button{margin-top:10px;width:100%;padding:12px;font:inherit;font-weight:600;color:var(--on-accent);background:var(--accent);border:0;border-radius:12px;cursor:pointer}
   .lock .err{color:var(--accent);min-height:1.4em;margin:10px 0 0;font-size:.88rem}
   .locked .wrap>:not(.lock){display:none}
   html:not(.locked) .lock{display:none}
@@ -46,7 +47,7 @@
   .row.m .c{text-align:right;font-variant-numeric:tabular-nums;font-size:.88rem;color:var(--muted)}
   .row.m .c.n{color:var(--text);font-weight:600;font-size:.95rem}
   .row.m .c.act{color:var(--text)}
-  .row.zero .c{color:#5a5a62}
+  .row.zero .c{color:var(--dim)}
   .hdrow{padding-top:6px;padding-bottom:6px}
   .hd{background:none;border:0;padding:6px 0;font:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:right;white-space:nowrap}
   .hd:hover{color:var(--text)}
@@ -61,16 +62,16 @@
   .help:hover,.help[aria-expanded=true]{color:var(--text);border-color:var(--accent)}
   .legend{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 18px;color:var(--muted);font-size:.85rem}
   .legend[hidden]{display:none}
-  .hrt{color:var(--accent)}.row.zero .hrt{color:#3a3a40}
+  .hrt{color:var(--accent)}.row.zero .hrt{color:var(--line)}
   .lead b{color:var(--text);font-weight:600}
   .meta{color:var(--muted);font-size:.82rem;margin-top:12px}
   .msg{padding:22px 18px;color:var(--muted);text-align:center;font-size:.9rem}
   .labh.other{color:var(--text)}
-  .labh{font-size:1.05rem;margin:34px 0 10px;color:#ff9a3c}
+  .labh{font-size:1.05rem;margin:34px 0 10px;color:var(--lab)}
   .card.lab{border-style:dashed;border-color:rgba(255,154,60,.35)}
-  .card.lab .bar{background:#ff9a3c}.card.lab .name a:hover{color:#ff9a3c}
+  .card.lab .bar{background:var(--lab)}.card.lab .name a:hover{color:var(--lab)}
   .arch{width:100%;padding:12px 14px;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;margin-bottom:14px}
-  .subh{font-size:.95rem;margin:22px 0 8px;color:var(--muted)}.subh.lab{color:#ff9a3c}
+  .subh{font-size:.95rem;margin:22px 0 8px;color:var(--muted)}.subh.lab{color:var(--lab)}
   .dl{margin:0 0 12px;padding:9px 15px;font:inherit;font-size:.9rem;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:999px;cursor:pointer}
   .dl:hover{border-color:var(--accent);color:var(--accent)}
   .chart{padding:14px 16px;margin-bottom:14px}
@@ -80,12 +81,12 @@
   .chart svg:last-child{margin-bottom:0}
   .chart .ax{fill:var(--muted);font-size:10px}
   .chart{position:relative}
-  .chart .hit{cursor:pointer}.chart .hit.on{fill:rgba(255,255,255,.07)}
-  .tip{position:absolute;z-index:2;pointer-events:none;background:#26262a;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.8rem;line-height:1.35;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .chart .hit{cursor:pointer}.chart .hit.on{fill:rgba(127,127,140,.14)}
+  .tip{position:absolute;z-index:2;pointer-events:none;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.8rem;line-height:1.35;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4)}
   .tip[hidden]{display:none}
   .ctog{display:inline-flex;margin:0 0 10px;border:1px solid var(--line);border-radius:999px;overflow:hidden}
   .ctog button{background:transparent;border:0;padding:5px 13px;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer}
-  .ctog button[aria-pressed=true]{background:var(--accent);color:#121214}
+  .ctog button[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
   .upd{margin:-2px 0 10px;text-align:right;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
   .updbtn{background:none;border:0;padding:0 2px;margin:0;font:inherit;color:var(--accent);cursor:pointer;display:inline-block;line-height:1}
   .updbtn:hover{filter:brightness(1.25)}
@@ -105,7 +106,7 @@
   .row.m .c.chg{display:inline-block}
   @media (prefers-reduced-motion:reduce){.fx *,.fx #list,.fx #otherlist,.fx #lablist{animation:none!important}}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .archive{margin-top:64px;padding:22px 18px 20px;background:#17171a;border:2px solid var(--accent);border-radius:16px}
+  .archive{margin-top:64px;padding:22px 18px 20px;background:var(--surface2);border:2px solid var(--accent);border-radius:16px}
   .archive .archh{margin:0 0 2px;font-size:1.25rem;color:var(--accent)}
   .archive .archh span{color:var(--text)}
   .archive .archsub{margin:0 0 16px;color:var(--muted);font-size:.82rem}
@@ -333,7 +334,7 @@
       marks = vals.map((v, i) => `<rect x="${L + i * bw + 1}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${H - B - y(v)}" rx="2" fill="${v > 0 && v === max ? light : base}"/>`).join('');
     }
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`
-      + ticks.map(t => `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#2f2f34"/><text class="ax" x="${L - 5}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('')
+      + ticks.map(t => `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" style="stroke:var(--line)"/><text class="ax" x="${L - 5}" y="${y(t) + 3}" text-anchor="end">${t}</text>`).join('')
       + marks
       + vals.map((v, i) => (i === 0 || (i + 1) % 5 === 0) ? `<text class="ax" x="${cx(i)}" y="${H - 3}" text-anchor="middle">${i + 1}</text>` : '').join('')
       + vals.map((v, i) => `<rect class="hit" x="${L + i * bw}" y="0" width="${bw}" height="${H - B}" data-c="${ci}" data-d="${i}" data-v="${v}" fill="transparent"/>`).join('') + '</svg>';

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
 <meta name="robots" content="noindex">
 <title>Magazin / Il di</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='20' y='30' width='60' height='40' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E">
@@ -28,10 +29,10 @@
   .toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
   .seg{ display:inline-flex; background:var(--mono); border:1px solid var(--border); border-radius:10px; padding:3px; }
   .seg button{ background:transparent; color:var(--muted); border:none; padding:8px 16px; border-radius:7px; font-weight:600; }
-  .seg button[aria-pressed="true"]{ background:var(--accent); color:#121214; }
+  .seg button[aria-pressed="true"]{ background:var(--accent); color:var(--on-accent); }
   .spacer{ flex:1; }
   button{
-    background:var(--accent); color:#121214; border:none; border-radius:8px; padding:10px 16px;
+    background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:10px 16px;
     font-size:0.9rem; font-weight:600; cursor:pointer; font-family:inherit;
   }
   button:hover{ background:var(--accent-dark); }
@@ -69,7 +70,7 @@
   .handle[data-c="ne"], .handle[data-c="sw"]{ cursor:nesw-resize; }
   .empty{
     position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:6px; text-align:center; cursor:pointer; color:#121214; z-index:2;
+    gap:6px; text-align:center; cursor:pointer; color:var(--on-accent); z-index:2;
   }
   .empty strong{ font-size:1.05rem; }
   .empty span{ font-size:0.85rem; color:#555; }
@@ -89,12 +90,12 @@
     background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
   }
   .urlrow input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
-  .msg.err{ color:#ff6b7d; }
+  .msg.err{ color:var(--err); }
   .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
 h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
 h1 .acc{color:var(--accent)}
-.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
-.homelink:hover,.homelink:focus-visible{color:#ff4d64}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
 </style>
 </head>
 <body>

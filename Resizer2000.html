@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
 <meta name="robots" content="noindex">
 <title>Resizer 2000</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15.3 15.3 69.4 69.4'%3E%3Cpath d='M24 76V40h12M76 24v36H64M24 76l52-52' stroke='%23ff4d64' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -41,7 +42,7 @@
   .check{ display:flex; align-items:center; gap:8px; font-size:0.9rem; margin-top:14px; color:var(--text); }
   .check input{ accent-color:var(--accent); width:16px; height:16px; }
   button{
-    background:var(--accent); color:#121214; border:none; border-radius:8px; padding:10px 16px;
+    background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:10px 16px;
     font-size:0.9rem; font-weight:600; cursor:pointer; font-family:inherit;
   }
   button:hover{ background:var(--accent-dark); }
@@ -60,8 +61,8 @@
   @media (max-width:480px){ .item{ flex-wrap:wrap; } .item button{ width:100%; } }
 h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
 h1 .acc{color:var(--accent)}
-.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:#9a9aa2;text-decoration:none}
-.homelink:hover,.homelink:focus-visible{color:#ff4d64}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
 </style>
 </head>
 <body>
