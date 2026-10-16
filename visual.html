@@ -70,7 +70,7 @@
   .handle[data-c="ne"], .handle[data-c="sw"]{ cursor:nesw-resize; }
   .empty{
     position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:6px; text-align:center; cursor:pointer; color:var(--on-accent); z-index:2;
+    gap:6px; text-align:center; cursor:pointer; color:#121214; z-index:2;
   }
   .empty strong{ font-size:1.05rem; }
   .empty span{ font-size:0.85rem; color:#555; }
@@ -429,9 +429,7 @@ $('dlBtn').onclick = () => {
   cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
   cx.fillStyle = '#fff'; cx.fillRect(0, 0, W, H);
   cx.drawImage(scaled(img, iw * s, ih * s), x, y, iw * s, ih * s);
-  const ov = new Image();
-  ov.onload = () => {
-    cx.drawImage(ov, 0, 0, W, H);
+  const finish = () => {
     c.toBlob(b => {
       const d = new Date(), z = n => String(n).padStart(2, '0');
       const name = `${NAMES[fmt]}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
@@ -442,6 +440,10 @@ $('dlBtn').onclick = () => {
       setMsg('Memorisà: ' + name);
     }, 'image/png');
   };
+  // Overlay nur exportieren, wenn «Mussar l'overlay» aktiv ist
+  if (!$('showOverlay').checked) return finish();
+  const ov = new Image();
+  ov.onload = () => { cx.drawImage(ov, 0, 0, W, H); finish(); };
   ov.src = OVERLAYS[fmt];
 };
 </script>
