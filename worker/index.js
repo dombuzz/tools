@@ -12,7 +12,7 @@
 // Schnittstelle:
 //   GET  /likes                 -> {"Resizer2000": 14, ...}            (Total pro Tool)
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
-//   POST /use/Resizer2000       -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
+//   POST /use/Resizer2000?c=<Zufalls-ID> -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
 //   POST /view/Resizer2000?t=light|dark&c=<Zufalls-ID> -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an; c = anonyme Kennung pro Browser)
 //   GET  /ranking?range=all     -> Rangliste: all | today | week | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
@@ -21,6 +21,8 @@
 //                                  daily=1 -> zusätzlich daily:[{day, tool, uses, likes, views}] (Rohdaten pro Tag)
 //                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe, themes = {light, dark, unknown} Aufrufe nach Darstellung (nur für /stats),
 //                                  clients = Anzahl verschiedener Besucher (Kennungen) im Zeitraum, gesamt über alle Tools (nur für /stats; erst ab Einführung der Kennung)
+//                                  returning = davon an mindestens zwei verschiedenen Tagen (UTC) da; usingClients = Besucher mit mindestens einer Nutzung;
+//                                  usesPerClient = Nutzungen pro nutzendem Besucher (Durchschnitt)
 
 const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
@@ -49,6 +51,7 @@ const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
 ]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
   .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
+  .then(() => env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {})) // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
   .catch(e => { viewsReady = null; throw e; });
 
 function cors(request) {
@@ -146,7 +149,18 @@ export default {
           .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const clients = clientRows[0]?.n || 0;
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients };
+        // wiederkehrend = Besucher, die im Zeitraum an mindestens zwei verschiedenen Tagen (UTC) da waren
+        const { results: retRows } = await env.DB
+          .prepare('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)')
+          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const returning = retRows[0]?.n || 0;
+        // Nutzungen pro Besucher: Durchschnitt unter den Besuchern, die mindestens eine Nutzung ausgelöst haben (nur Nutzungen mit Kennung)
+        const { results: ucRows } = await env.DB
+          .prepare('SELECT COUNT(*) AS n, COUNT(DISTINCT cid) AS c FROM uses WHERE cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
+          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const usingClients = ucRows[0]?.c || 0;
+        const usesPerClient = usingClients ? Math.round((ucRows[0].n / usingClients) * 10) / 10 : 0;
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';
@@ -184,7 +198,9 @@ export default {
         if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
         const tool = decodeURIComponent(parts[1]);
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
-        await env.DB.prepare("INSERT INTO uses (tool, ts) VALUES (?1, datetime('now'))").bind(tool).run();
+        await ensureViews(env); // legt auch die Spalte uses.cid an
+        const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
+        await env.DB.prepare("INSERT INTO uses (tool, ts, cid) VALUES (?1, datetime('now'), ?2)").bind(tool, cid).run();
         return json({ ok: true }, request);
       }
 

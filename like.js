@@ -103,7 +103,7 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   // Nutzung zählen: einmal pro Seitenaufruf
   let counted = false;
   function done() {
-    if (!counted) { counted = true; fetch(API + '/use/' + encodeURIComponent(tool), { method: 'POST', keepalive: true }).catch(() => {}); }
+    if (!counted) { counted = true; fetch(API + '/use/' + encodeURIComponent(tool) + (cid ? '?c=' + cid : ''), { method: 'POST', keepalive: true }).catch(() => {}); }
     ask();
   }
   // Downloads erkennen: Klick auf einen Download-Link oder a.click() im Skript

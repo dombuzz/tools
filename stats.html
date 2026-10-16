@@ -403,7 +403,13 @@
       const now = new Date();
       const label = /^\d{4}-\d\d$/.test(range) ? `${MONTHS[+range.slice(5) - 1]} ${range.slice(0, 4)}` : { all: 'Dapi il cumenzament', today: 'Oz', week: "Quest'emna", '30d': 'Ils ultims 30 dis', month: `${MONTHS[now.getMonth()]} ${now.getFullYear()}` }[range];
       const sum = x => `${fmt(x.n)} ${x.n === 1 ? 'giada' : 'giadas'} duvrà · ${fmt(x.h)} ♥`;
-      meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas${d.clients ? ` · ${fmt(d.clients)} ${d.clients === 1 ? 'visitader unic' : 'visitaders unics'}` : ''}`;
+      meta.textContent = `${label} · ${sum(main)} en total · ${fmt(d.viewsTotal || 0)} visitas da paginas`;
+      if (d.clients) {
+        const extra = [`${fmt(d.clients)} ${d.clients === 1 ? 'visitader unic' : 'visitaders unics'}`];
+        if (d.returning) extra.push(`${fmt(d.returning)} ${d.returning === 1 ? 'returnant' : 'returnants'} (da ≥ 2 dis)`);
+        if (d.usingClients) extra.push(`Ø ${String(d.usesPerClient).replace('.', ',')} giadas duvrà per visitader activ`);
+        meta.append(document.createElement('br'), extra.join(' · '));
+      }
       document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;
       const th = d.themes || {}, tl = th.light || 0, td = th.dark || 0, tn = tl + td, bar = document.getElementById('themeBar');
       bar.hidden = !tn;
