@@ -737,7 +737,7 @@ h1 .acc{color:var(--accent)}
     if (!looksLikeSingleUrl) {
       batchResultsEl.innerHTML = '';
       batchDownloadAllBtn.hidden = true;
-      batchStatusEl.textContent = 'Nagins links da maletgs adattads chattads.';
+      batchStatusEl.textContent = 'Chattà nagins links da maletgs adattads.';
       batchStatusEl.className = 'hint err';
       return;
     }
@@ -752,7 +752,7 @@ h1 .acc{color:var(--accent)}
       const html = await resp.text();
       const found = extractCandidates(html);
       if (!found.length) {
-        batchStatusEl.textContent = 'Pagina chargiada, ma nagins links da maletgs adattads chattads.';
+        batchStatusEl.textContent = 'Pagina chargiada, ma chattà nagins links da maletgs adattads.';
         batchStatusEl.className = 'hint err';
         return;
       }

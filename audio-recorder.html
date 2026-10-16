@@ -162,7 +162,7 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
         if (/blackhole|loopback|soundflower|vb-?cable|stereo ?mix/i.test(d.label)) o.selected = true;
         sel.appendChild(o);
       });
-      setStatus(devs.length + ' apparats chattads');
+      setStatus('Chattà ' + devs.length + (devs.length === 1 ? ' apparat' : ' apparats'));
     } catch (e) { setStatus('Access a l\'apparat audio refusà', 'bad'); }
   });
 
