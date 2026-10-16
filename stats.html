@@ -257,7 +257,10 @@
     return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('') === HASH;
   }
   let started = false;
-  function unlock() { document.documentElement.classList.remove('locked'); if (!started) { started = true; load('all'); } }
+  function unlock() { document.documentElement.classList.remove('locked'); if (!started) { started = true;
+    let r = 'all'; try { const v = localStorage.getItem('dbz-stats-range'); if (['today', 'week', 'month', '30d', 'all'].includes(v)) r = v; } catch (e) {}
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x.dataset.r === r));
+    load(r); } }
   document.getElementById('lock').addEventListener('submit', async e => {
     e.preventDefault();
     const pw = document.getElementById('pw').value.trim(), err = document.getElementById('err');
@@ -470,6 +473,7 @@
   };
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
     document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === b));
+    try { localStorage.setItem('dbz-stats-range', b.dataset.r); } catch (e) {}
     load(b.dataset.r);
   });
   let saved = null; try { saved = localStorage.getItem('dbz-stats-ok'); } catch (e) {}
