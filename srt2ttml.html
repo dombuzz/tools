@@ -131,7 +131,7 @@ function addResult(fileName, text){
   const name=fileName.replace(/\.srt$/i,'')+'.ttml';
   if (!cues.length){
     el.classList.add('err');
-    el.innerHTML=`<div><div class="name"></div><div class="info">Nagins suttitels chattads – è quai in file SRT?</div></div>`;
+    el.innerHTML=`<div><div class="name"></div><div class="info">Chattà nagins suttitels – è quai in file SRT?</div></div>`;
     el.querySelector('.name').textContent=fileName;
   } else {
     const url=URL.createObjectURL(new Blob([buildTtml(cues)],{type:'application/ttml+xml;charset=utf-8'}));
