@@ -67,6 +67,8 @@
     var n = k === 'Home' ? 0 : k === 'End' ? items.length - 1 : (i + (k === 'ArrowLeft' || k === 'ArrowUp' ? -1 : 1) + items.length) % items.length;
     e.preventDefault(); items[n].focus(); items[n].click();
   });
+  // Installierbar + offline: Service Worker (sw.js) anmelden
+  if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
   var onChange = function (e) { if (!saved()) set(e.matches ? 'light' : 'dark', false); };
   if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
 })();
