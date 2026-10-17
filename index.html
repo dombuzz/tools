@@ -76,6 +76,12 @@
   .msg { color: var(--muted); margin-top: 16px; }
   .msg a, footer a { color: var(--link); }
   footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+  /* top-Tools-Knopf neben dem Hell/Dunkel-Umschalter (oben rechts, fixiert) */
+  .toplink { position: fixed; top: 12px; right: 52px; z-index: 50; width: 32px; height: 32px; padding: 0; border-radius: 50%; background: var(--card); opacity: .7; transition: opacity .15s, border-color .15s, background .15s; }
+  .toplink svg { width: 16px; height: 16px; }
+  @media (max-width: 600px) { .toplink { width: 32px; height: 32px; border-radius: 50%; } .toplink svg { width: 16px; height: 16px; } }
+  .toplink:hover, .toplink:focus-visible, .toplink[aria-expanded="true"] { opacity: 1; border-color: var(--accent); background: var(--field); }
+  .pop { position: fixed; z-index: 60; right: 12px; top: 52px; }
 </style>
 </head>
 <body>
