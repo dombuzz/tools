@@ -136,22 +136,22 @@ export default {
         const usesTotal = uses.reduce((t, r) => t + r.count, 0);
         await ensureViews(env);
         const { results: viewRows } = await env.DB
-          .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE ts >= ?1 AND ts < ?2 GROUP BY tool')
+          .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE tool != \'stats\' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const views = Object.fromEntries(merge(viewRows).map(r => [r.tool, r.count]));
         const viewsTotal = viewRows.reduce((t, r) => t + r.count, 0);
         const { results: themeRows } = await env.DB
-          .prepare('SELECT theme, COUNT(*) AS count FROM views WHERE ts >= ?1 AND ts < ?2 GROUP BY theme')
+          .prepare('SELECT theme, COUNT(*) AS count FROM views WHERE tool != \'stats\' AND ts >= ?1 AND ts < ?2 GROUP BY theme')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const themes = { light: 0, dark: 0, unknown: 0 };
         for (const r of themeRows) themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count;
         const { results: clientRows } = await env.DB
-          .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
+          .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE tool != \'stats\' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const clients = clientRows[0]?.n || 0;
         // wiederkehrend = Besucher, die im Zeitraum an mindestens zwei verschiedenen Tagen (UTC) da waren
         const { results: retRows } = await env.DB
-          .prepare('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)')
+          .prepare('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE tool != \'stats\' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const returning = retRows[0]?.n || 0;
         // Nutzungen pro Besucher: Durchschnitt unter den Besuchern, die mindestens eine Nutzung ausgelöst haben (nur Nutzungen mit Kennung)
@@ -167,7 +167,7 @@ export default {
           const day = {};
           for (const [tbl, key] of [['uses', 'uses'], ['clicks', 'likes'], ['views', 'views']]) {
             const { results: rr } = await env.DB
-              .prepare(`SELECT substr(ts, 1, 10) AS day, tool, COUNT(*) AS count FROM ${tbl} WHERE ts >= ?1 AND ts < ?2 GROUP BY day, tool`)
+              .prepare(`SELECT substr(ts, 1, 10) AS day, tool, COUNT(*) AS count FROM ${tbl} WHERE ts >= ?1 AND ts < ?2${tbl === 'views' ? " AND tool != 'stats'" : ''} GROUP BY day, tool`)
               .bind(from, to).all();
             for (const r of merge(rr)) { const k = r.day + '|' + r.tool; (day[k] ||= { day: r.day, tool: r.tool, uses: 0, likes: 0, views: 0 })[key] = r.count; }
           }
@@ -210,6 +210,7 @@ export default {
         if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
         const tool = decodeURIComponent(parts[1]);
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
+        if (tool === 'stats') return json({ ok: true }, request); // Aufrufe der Statistik-Seite werden nicht gezählt
         await ensureViews(env);
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
