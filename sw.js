@@ -2,7 +2,7 @@
 // Strategie: zuerst Netz (damit Änderungen sofort da sind), bei Fehler oder langsamem Netz die gemerkte Version.
 // Nur Seiten und Dateien von tools.dombuzz.ch; Anfragen an den Worker (Likes, Statistik) laufen nie darüber.
 const CACHE = 'dbz-v1';
-const CORE = ['/', '/theme.js', '/like.js', '/apple-touch-icon.png', '/audio-recorder', '/Resizer2000', '/srt2ttml'];
+const CORE = ['/', '/theme.js', '/motion.js', '/like.js', '/apple-touch-icon.png', '/audio-recorder', '/Resizer2000', '/srt2ttml'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
