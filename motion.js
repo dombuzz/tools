@@ -5,6 +5,7 @@
 //  2. Gleitende Auswahl: eine Pille gleitet zwischen Tabs und Umschaltern (.tabs, .seg, .ctog, .wseg, .ptabs)
 //  3. Drop-Zone: hebt sich beim Darüberziehen leicht an und färbt sich ein
 //  4. Aufklappbereiche (<details>): weiches Auf- und Zuklappen mit leichter Feder
+//  5. Gedrückt halten zum Bestätigen: Knöpfe mit Attribut data-dbz-hold lösen erst nach ca. 0,9 s Halten aus
 // Wer am Gerät «Bewegung reduzieren» eingestellt hat, bekommt das Verhalten ohne Animation.
 (function () {
   'use strict';
@@ -27,6 +28,12 @@
     '.dbz-slide>.dbz-sel.dbz-sel{background:transparent!important;border-color:transparent!important;box-shadow:none!important}' +
     /* 3 Drop-Zone */
     '.drop[role="button"],#drop[role="button"]{transition:border-color .2s,transform .25s cubic-bezier(.3,1.4,.5,1),box-shadow .2s}' +
+    /* 5 Gedrückt halten */
+    '[data-dbz-hold]{position:relative;overflow:hidden;isolation:isolate;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}' +
+    '[data-dbz-hold]::after{content:"";position:absolute;inset:0;z-index:-1;background:var(--err,var(--accent,#ff4d64));opacity:.5;transform:scaleX(0);transform-origin:left;transition:transform .25s ease-out}' +
+    '[data-dbz-hold].dbz-holding::after{transform:scaleX(1);transition:transform var(--dbz-hold,900ms) linear}' +
+    '[data-dbz-hold].dbz-hint::after{animation:dbz-hint .6s ease-out}' +
+    '@keyframes dbz-hint{0%{transform:scaleX(0)}35%{transform:scaleX(.3)}100%{transform:scaleX(0)}}' +
     '.drop[role="button"].over,#drop[role="button"].over{transform:scale(1.015);box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--accent,var(--acc,#ff4d64)) 9%,transparent)}';
   var st = d.createElement('style'); st.id = 'dbz-motion-css'; st.textContent = css; (d.head || d.documentElement).appendChild(st);
 
@@ -162,4 +169,39 @@
     e.preventDefault();
     toggle(sum.parentNode, sum);
   });
+
+  /* ---------- 5 Gedrückt halten zum Bestätigen ---------- */
+  var HOLD = 900, holdT = 0, holdB = null;
+  function holdEnd() { clearTimeout(holdT); if (holdB) { holdB.classList.remove('dbz-holding'); holdB = null; } }
+  function holdStart(b) {
+    if (holdB || b.disabled) return;
+    holdB = b; b._swallow = 0;
+    b.style.setProperty('--dbz-hold', HOLD + 'ms');
+    b.classList.add('dbz-holding');
+    holdT = setTimeout(function () {
+      var x = holdB; holdEnd();
+      x._ok = 1; x._swallow = 1; x.click();   // das Loslassen danach löst noch einen Klick aus: der wird verschluckt
+    }, HOLD);
+  }
+  function holdable(t) { return t && t.closest ? t.closest('[data-dbz-hold]') : null; }
+  d.addEventListener('pointerdown', function (e) { var b = holdable(e.target); if (b && e.button === 0) holdStart(b); }, true);
+  ['pointerup', 'pointercancel'].forEach(function (n) { d.addEventListener(n, holdEnd, true); });
+  d.addEventListener('pointerleave', function (e) { if (holdB && e.target === holdB) holdEnd(); }, true);
+  d.addEventListener('keydown', function (e) {
+    var b = holdable(e.target);
+    if (!b || (e.key !== ' ' && e.key !== 'Enter')) return;
+    e.preventDefault();
+    if (!e.repeat) holdStart(b);
+  }, true);
+  d.addEventListener('keyup', function (e) { if (holdable(e.target) && (e.key === ' ' || e.key === 'Enter')) holdEnd(); }, true);
+  d.addEventListener('contextmenu', function (e) { if (holdable(e.target)) e.preventDefault(); }, true);
+  d.addEventListener('click', function (e) {
+    var b = holdable(e.target);
+    if (!b) return;
+    if (b._ok) { b._ok = 0; return; }
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (b._swallow) { b._swallow = 0; return; }
+    b.classList.remove('dbz-hint'); void b.offsetWidth; b.classList.add('dbz-hint');
+    setTimeout(function () { b.classList.remove('dbz-hint'); }, 650);
+  }, true);
 })();
