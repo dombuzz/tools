@@ -34,6 +34,8 @@
     '[data-dbz-hold].dbz-holding::after{transform:scaleX(1);transition:transform var(--dbz-hold,900ms) linear}' +
     '[data-dbz-hold].dbz-hint::after{animation:dbz-hint .6s ease-out}' +
     '@keyframes dbz-hint{0%{transform:scaleX(0)}35%{transform:scaleX(.3)}100%{transform:scaleX(0)}}' +
+    '.dbz-tip{position:fixed;z-index:60;pointer-events:none;background:var(--card,#1c1c1f);color:var(--text,#ececef);border:1px solid var(--line,#2f2f34);border-radius:8px;padding:5px 10px;font:600 .8rem/1.3 system-ui,sans-serif;box-shadow:0 4px 14px var(--shadow,rgba(0,0,0,.4));opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}' +
+    '.dbz-tip.on{opacity:1;transform:none}' +
     '.drop[role="button"].over,#drop[role="button"].over{transform:scale(1.015);box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--accent,var(--acc,#ff4d64)) 9%,transparent)}';
   var st = d.createElement('style'); st.id = 'dbz-motion-css'; st.textContent = css; (d.head || d.documentElement).appendChild(st);
 
@@ -183,6 +185,16 @@
       x._ok = 1; x._swallow = 1; x.click();   // das Loslassen danach löst noch einen Klick aus: der wird verschluckt
     }, HOLD);
   }
+  var tipEl = null, tipT = 0;
+  function tip(b) {
+    if (!tipEl) { tipEl = d.createElement('div'); tipEl.className = 'dbz-tip'; tipEl.setAttribute('role', 'status'); tipEl.textContent = 'Tegnair smatgà'; d.body.appendChild(tipEl); }
+    var r = b.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    var x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+    var y = r.top - h - 8 < 8 ? r.bottom + 8 : r.top - h - 8;
+    tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+    tipEl.classList.remove('on'); void tipEl.offsetWidth; tipEl.classList.add('on');
+    clearTimeout(tipT); tipT = setTimeout(function () { tipEl.classList.remove('on'); }, 1500);
+  }
   function holdable(t) { return t && t.closest ? t.closest('[data-dbz-hold]') : null; }
   d.addEventListener('pointerdown', function (e) { var b = holdable(e.target); if (b && e.button === 0) holdStart(b); }, true);
   ['pointerup', 'pointercancel'].forEach(function (n) { d.addEventListener(n, holdEnd, true); });
@@ -203,5 +215,6 @@
     if (b._swallow) { b._swallow = 0; return; }
     b.classList.remove('dbz-hint'); void b.offsetWidth; b.classList.add('dbz-hint');
     setTimeout(function () { b.classList.remove('dbz-hint'); }, 650);
+    tip(b);
   }, true);
 })();
