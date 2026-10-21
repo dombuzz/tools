@@ -307,7 +307,7 @@ select{background:var(--field);color:var(--fg);border:1px solid var(--line);bord
     const li = document.createElement('li'); li.className = 'take';
     li.innerHTML = `<div class="meta"><input aria-label="Num da la datoteca" value="${name}"><small>${fmt(secs)} · ${(blob.size / 1048576).toFixed(1)} MB · ${channels === 1 ? 'Mono' : 'Stereo'}</small></div>
       <audio controls preload="metadata" src="${url}"></audio>
-      <div class="row"><a class="btn primary" href="${url}" download="${name}.wav">Arcunar WAV</a><button class="btn del">Stizzar</button></div>`;
+      <div class="row"><a class="btn primary" href="${url}" download="${name}.wav">Arcunar WAV</a><button class="btn del" data-dbz-hold>Stizzar</button></div>`;
     const input = li.querySelector('input'), a = li.querySelector('a');
     input.addEventListener('input', () => { a.download = (input.value.trim() || name).replace(/[\\/:*?"<>|]/g, '-') + '.wav'; });
     const take = { saved: false };

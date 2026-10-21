@@ -41,6 +41,7 @@ p.sub{margin:0 0 16px;color:var(--muted)}
 .item.err{border-color:var(--err);background:var(--err-bg)}
 a.btn,button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer;text-decoration:none}
 .primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important;font-weight:600}
+[hidden]{display:none!important}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
 details{margin-top:18px;color:var(--muted);font-size:14px}
 details h3{font-size:13px;font-weight:600;margin:14px 0 4px;color:var(--ink)}
@@ -59,7 +60,7 @@ h1 .acc{color:var(--accent)}
   <h1>SRT <span class="acc">→</span> TTML</h1>
   <p class="sub">Convertescha files SRT en TTML tenor il model da RTR.<br>Plirs files a medem temp èn pussaivels.</p>
   <div id="drop" tabindex="0" role="button" aria-label="Tscherner files SRT">Trair qua ils files SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
-  <div class="row" id="allRow" hidden><button class="primary" id="all">Telechargiar tuts</button><button id="clear">Svidar la glista</button></div>
+  <div class="row" id="allRow" hidden><button class="primary" id="all">Telechargiar tuts</button><button id="clear" data-dbz-hold>Svidar la glista</button></div>
   <div id="list"></div>
   <details>
     <summary>Model RTR (Subtitle Edit Custom Format)</summary>
