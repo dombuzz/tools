@@ -127,7 +127,7 @@
             <div class="grid" id="grid"></div>
           </div>
         </div>
-        <p class="hint">Tar il drizzar vegn il maletg taglià automaticamain, uschia che nagins chantuns vids na restan. Las linias d'agid gidan d'orientar l'orizont.</p>
+        <p class="hint">Tar il drizzar vegn il maletg taglià automaticamain, uschia che nagins chantuns vids na restan. Cun in retagl (16:9, 4:3 …) vegn tschernì il pli grond rom pussaivel en il center dal maletg. Las linias d'agid gidan d'orientar l'orizont.</p>
       </div>
 
       <div class="panel">
@@ -150,6 +150,18 @@
             </div>
           </div>
           <label class="check"><input type="checkbox" id="showGrid" checked> Linias d'agid</label>
+        </div>
+
+        <div class="sec">
+          <h2>Retagl</h2>
+          <div class="ratios" role="group" aria-label="Retagl" id="ratioGroup">
+            <button type="button" data-r="0" aria-pressed="true">Original</button>
+            <button type="button" data-r="16/9" aria-pressed="false">16:9</button>
+            <button type="button" data-r="4/3" aria-pressed="false">4:3</button>
+            <button type="button" data-r="4/5" aria-pressed="false">4:5</button>
+            <button type="button" data-r="1/1" aria-pressed="false">1:1</button>
+            <button type="button" data-r="9/16" aria-pressed="false">9:16</button>
+          </div>
         </div>
 
         <div class="sec">
@@ -192,8 +204,10 @@ function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', 
 function geometry(w0, h0){
   const w = quarter % 2 ? h0 : w0, h = quarter % 2 ? w0 : h0;
   const a = Math.abs(angle) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
-  const k = Math.min(w / (w * c + h * s), h / (w * s + h * c));
-  return { w, h, ow: Math.max(1, Math.round(w * k)), oh: Math.max(1, Math.round(h * k)) };
+  // grösster zentrierter Ausschnitt im gewählten Seitenverhältnis (oder dem des Bildes), ohne leere Ecken
+  const R = ratio || w / h;
+  const t = Math.min(w / (R * c + s), h / (R * s + c));
+  return { w, h, ow: Math.max(1, Math.round(t * R)), oh: Math.max(1, Math.round(t)) };
 }
 function draw(cx, src, sw, sh, ow, oh){
   cx.save();
@@ -247,6 +261,19 @@ document.addEventListener('keydown', e => {
   if (e.key === '[') setAngle(angle - (e.shiftKey ? 1 : 0.1));
   if (e.key === ']') setAngle(angle + (e.shiftKey ? 1 : 0.1));
 });
+
+/* ---------- Seitenverhältnis ---------- */
+const ratioBtns = [...document.querySelectorAll('#ratioGroup button')];
+const parseR = s => { const [a, b] = s.split('/').map(Number); return b ? a / b : 0; };
+let ratio = 0, ratioKey = '0';
+function setRatio(key){
+  ratioKey = key; ratio = parseR(key);
+  ratioBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.r === key));
+  try { localStorage.setItem('rotar-ratio', key); } catch(e){}
+  redraw();
+}
+ratioBtns.forEach(b => b.onclick = () => setRatio(b.dataset.r));
+try { const r = localStorage.getItem('rotar-ratio'); if (r && ratioBtns.some(b => b.dataset.r === r)) setRatio(r); } catch(e){}
 
 /* ---------- Dateiformat ---------- */
 const fmtBtns = [...document.querySelectorAll('#fmtGroup button')];
@@ -307,7 +334,7 @@ $('dlBtn').onclick = () => {
       draw(cx, img, img.naturalWidth, img.naturalHeight, g.ow, g.oh);
       c.toBlob(b => {
         if (!b) { setMsg('Il maletg è memia grond per quest browser.', true); return; }
-        const name = `${fileName}_drizza.${type === 'image/png' ? 'png' : 'jpg'}`;
+        const name = `${fileName}_drizza${ratio ? '_' + ratioKey.replace('/', 'x') : ''}.${type === 'image/png' ? 'png' : 'jpg'}`;
         const a = document.createElement('a');
         a.href = URL.createObjectURL(b); a.download = name;
         document.body.appendChild(a); a.click(); a.remove();
