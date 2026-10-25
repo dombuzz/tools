@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Fin a 5 layers cun agens maletgs ed overlays, successiun adattabla. Export sco PNG.">
+<meta name="description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar e corregir colurs per layer. Export sco PNG.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
-<meta property="og:title" content="Layers">
-<meta property="og:description" content="Fin a 5 layers cun agens maletgs ed overlays, successiun adattabla. Export sco PNG.">
+<meta property="og:title" content="Layers + colurs">
+<meta property="og:description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar e corregir colurs per layer. Export sco PNG.">
 <meta property="og:url" content="https://tools.dombuzz.ch/layers">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#121214">
-<title>Layers</title>
+<title>Layers + colurs</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='16' y='38' width='52' height='36' rx='4' stroke='%23ff4d64' stroke-width='8' fill='none'/%3E%3Cpath d='M32 26h52v36' stroke='%23ff4d64' stroke-width='8' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
@@ -77,7 +77,7 @@
   }
   .frame{ position:relative; width:100%; margin:0 auto; }
   .frame-bg{ position:absolute; inset:0; background:#fff; }
-  .frame img{ position:absolute; max-width:none; pointer-events:none; }
+  .frame img, .frame canvas.lay, .frame canvas.ghost-img{ position:absolute; max-width:none; pointer-events:none; }
   .blurbg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   .ghost-img{ opacity:.3; }
   .clip{ position:absolute; inset:0; overflow:hidden; z-index:1; }
@@ -132,6 +132,26 @@
   .btns .del{ margin-left:auto; }
   .layers .add{ width:100%; }
   .nolayers{ font-size:0.85rem; color:var(--muted); margin:0 0 10px; }
+  h1 .acc{ color:var(--accent); }
+  .edit{ margin-top:20px; border-top:1px solid var(--border); padding-top:14px; }
+  .edit.off{ opacity:.45; pointer-events:none; }
+  .edit h2{ font-size:0.95rem; margin:0 0 2px; }
+  .edit h3{ font-size:0.85rem; margin:16px 0 8px; }
+  .edit .who{ font-size:0.8rem; color:var(--muted); margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rot{ display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+  .rot button{ padding:7px 4px; font-size:0.8rem; }
+  .rot button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
+  .ctl{ margin-bottom:10px; }
+  .ctl .top{ display:flex; justify-content:space-between; align-items:baseline; font-size:0.82rem; margin-bottom:2px; }
+  .ctl .val{ color:var(--muted); font-variant-numeric:tabular-nums; cursor:pointer; }
+  .ctl .val:hover{ color:var(--accent); }
+  .ctl .wbhint{ margin-left:auto; margin-right:10px; font-size:0.72rem; color:var(--muted); }
+  .ctl input[type=range]{ width:100%; accent-color:var(--accent); }
+  .sizeseg{ display:inline-flex; gap:3px; background:var(--mono); border:1px solid var(--border); border-radius:10px; padding:3px; }
+  .sizeseg button{ background:transparent; color:var(--muted); padding:6px 10px; font-size:0.82rem; border-radius:7px; line-height:1.25; }
+  .sizeseg button:hover{ background:transparent; color:var(--text); }
+  .sizeseg button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); }
+  .sizeseg small{ display:block; font-weight:400; font-size:0.72rem; opacity:.85; }
 
   .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
@@ -149,13 +169,14 @@
 <body>
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
-  <h1>Layers</h1>
-  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, export sco PNG.</p>
+  <h1>Layers <span class="acc">+</span> colurs</h1>
+  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar e corregir colurs per layer. Export sco PNG en grondezza standard u en resoluziun originala.</p>
 
   <div class="card">
     <div class="toolbar">
       <label class="field">Format
         <select id="fmtSel">
+          <option value="orig">Original (sco il layer giudim)</option>
           <option value="1920x1080">16:9 · 1920 × 1080</option>
           <option value="1440x1080">4:3 · 1440 × 1080</option>
           <option value="1080x1350">4:5 · 1080 × 1350</option>
@@ -163,6 +184,12 @@
           <option value="1080x1920">9:16 · 1080 × 1920</option>
         </select>
       </label>
+      <div class="field">Grondezza
+        <div class="sizeseg" role="group" aria-label="Grondezza" id="sizeGroup">
+          <button type="button" data-s="std" aria-pressed="true">Standard<small id="sStd"></small></button>
+          <button type="button" data-s="orig" aria-pressed="false">Resoluziun originala<small id="sOrig"></small></button>
+        </div>
+      </div>
       <div class="spacer"></div>
       <button type="button" class="ghost" id="pickBtn">Agiuntar in layer</button>
     </div>
@@ -177,7 +204,7 @@
         <div class="stage" id="stage" tabindex="0" aria-label="Surfatscha da lavur">
           <div class="frame" id="frame">
             <div class="frame-bg"></div>
-            <img class="ghost-img" id="ghost" alt="" hidden>
+            <canvas class="ghost-img" id="ghost" hidden></canvas>
             <div class="clip" id="clip"></div>
             <div class="frame-line"></div>
             <div class="box" id="box" hidden>
@@ -190,7 +217,7 @@
             </div>
           </div>
         </div>
-        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Quai che surpassa vegn taglià giu tar l'export.</p>
+        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Quai che surpassa vegn taglià giu tar l'export.</p>
       </div>
 
       <div class="layers">
@@ -199,6 +226,29 @@
         <p class="nolayers" id="nolayers">Anc nagins layers.</p>
         <div class="list" id="list"></div>
         <button type="button" class="ghost add" id="addBtn">+ Agiuntar in layer</button>
+
+        <div class="edit off" id="edit">
+          <h2>Layer tschernì</h2>
+          <p class="who" id="who">–</p>
+          <h3>Rotar e drizzar</h3>
+          <div class="rot">
+            <button type="button" class="ghost" id="rotL" title="90° a sanestra">⟲ 90°</button>
+            <button type="button" class="ghost" id="rotR" title="90° a dretga">⟳ 90°</button>
+            <button type="button" class="ghost" id="flipH" aria-pressed="false" title="Spievlar orizontal">⇋</button>
+            <button type="button" class="ghost" id="flipV" aria-pressed="false" title="Spievlar vertical">⇵</button>
+          </div>
+          <div class="ctl"><div class="top"><label for="c_ang">Drizzar</label><span class="val" data-for="ang" title="Reset">0.0°</span></div><input type="range" id="c_ang" data-c="ang" min="-10" max="10" step="0.1" value="0"></div>
+          <h3>Clerezza</h3>
+          <div class="ctl"><div class="top"><label for="c_bri">Clerezza</label><span class="val" data-for="bri" title="Reset">0</span></div><input type="range" id="c_bri" data-c="bri" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_con">Contrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="c_con" data-c="con" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_hil">Clers</label><span class="val" data-for="hil" title="Reset">0</span></div><input type="range" id="c_hil" data-c="hil" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_sha">Stgirs</label><span class="val" data-for="sha" title="Reset">0</span></div><input type="range" id="c_sha" data-c="sha" min="-100" max="100" step="1" value="0"></div>
+          <h3>Colurs</h3>
+          <div class="ctl"><div class="top"><label for="c_sat">Saturaziun</label><span class="val" data-for="sat" title="Reset">0</span></div><input type="range" id="c_sat" data-c="sat" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_wb">WB Balantscha da l'alv</label><span class="wbhint">fraid ↔ chaud</span><span class="val" data-for="wb" title="Reset">0</span></div><input type="range" id="c_wb" data-c="wb" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_hue">Nianza da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="c_hue" data-c="hue" min="-180" max="180" step="1" value="0"></div>
+          <button type="button" class="ghost" id="resetCol">Reset colurs</button>
+        </div>
       </div>
     </div>
 
@@ -224,11 +274,108 @@ let nextId = 1;
 
 function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
 
+/* ---------- Farben (wie «Clerezza + colurs», pro Layer) ---------- */
+const CIDS = ['bri','con','hil','sha','sat','wb','hue'];
+const PREVIEW_MAX = 1600;
+const newCol = () => ({ bri:0, con:0, hil:0, sha:0, sat:0, wb:0, hue:0 });
+const isNeutral = col => CIDS.every(id => !col[id]);
+function mul(a, b){
+  const r = [];
+  for (let i = 0; i < 3; i++){
+    for (let j = 0; j < 3; j++) r[i*4+j] = a[i*4]*b[j] + a[i*4+1]*b[4+j] + a[i*4+2]*b[8+j];
+    r[i*4+3] = a[i*4]*b[3] + a[i*4+1]*b[7] + a[i*4+2]*b[11] + a[i*4+3];
+  }
+  return r;
+}
+// Helligkeit/Kontrast (linear) → Clers/Stgirs (Tonkurve) → Weissabgleich, Sättigung, Farbton (linear)
+function params(col){
+  const b = 1 + col.bri / 100, c = 1 + col.con / 100;
+  const A = mul([c,0,0,127.5*(1-c), 0,c,0,127.5*(1-c), 0,0,c,127.5*(1-c)], [b,0,0,0, 0,b,0,0, 0,0,b,0]);
+  const w = col.wb / 100 * 0.25;
+  let B = [1+w,0,0,0, 0,1+w*0.1,0,0, 0,0,1-w,0];
+  const s = 1 + col.sat / 100;
+  B = mul([.213+.787*s, .715-.715*s, .072-.072*s, 0, .213-.213*s, .715+.285*s, .072-.072*s, 0, .213-.213*s, .715-.715*s, .072+.928*s, 0], B);
+  const h = col.hue * Math.PI / 180, co = Math.cos(h), si = Math.sin(h);
+  B = mul([.213+co*.787-si*.213, .715-co*.715-si*.715, .072-co*.072+si*.928, 0,
+           .213-co*.213+si*.143, .715+co*.285+si*.140, .072-co*.072-si*.283, 0,
+           .213-co*.213-si*.787, .715-co*.715+si*.715, .072+co*.928+si*.072, 0], B);
+  const hl = col.hil / 100, sh = col.sha / 100;
+  let T = null;
+  if (hl || sh){
+    T = new Float32Array(256);
+    for (let i = 0; i < 256; i++){
+      const L = i / 255, wS = Math.pow(1 - L, 2), wH = Math.pow(L, 2);
+      T[i] = 110 * (sh * wS * (1 - L * 0.3) + hl * wH * (1 - (1 - L) * 0.3));
+    }
+  }
+  return { A, B, T };
+}
+function applyColor(src, dst, P){
+  const s = src.data, d = dst.data, A = P.A, B = P.B, T = P.T;
+  for (let i = 0; i < s.length; i += 4){
+    let r = A[0]*s[i] + A[1]*s[i+1] + A[2]*s[i+2] + A[3];
+    let g = A[4]*s[i] + A[5]*s[i+1] + A[6]*s[i+2] + A[7];
+    let b = A[8]*s[i] + A[9]*s[i+1] + A[10]*s[i+2] + A[11];
+    if (T){
+      let L = (0.2126*r + 0.7152*g + 0.0722*b) | 0;
+      L = L < 0 ? 0 : L > 255 ? 255 : L;
+      const dl = T[L]; r += dl; g += dl; b += dl;
+    }
+    d[i]   = B[0]*r + B[1]*g + B[2]*b + B[3];
+    d[i+1] = B[4]*r + B[5]*g + B[6]*b + B[7];
+    d[i+2] = B[8]*r + B[9]*g + B[10]*b + B[11];
+    d[i+3] = s[i+3];
+  }
+}
+const dimsOf = im => [im.naturalWidth || im.width, im.naturalHeight || im.height];
+
+/* Ausrichtung: 90°-Schritte und Spiegeln ergeben eine neue Quelle (volle Auflösung) */
+function orient(L){
+  const [w0, h0] = dimsOf(L.img);
+  if (!L.q && !L.fh && !L.fv) L.src = L.img;
+  else {
+    const w = L.q % 2 ? h0 : w0, h = L.q % 2 ? w0 : h0;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const cx = c.getContext('2d');
+    cx.translate(w / 2, h / 2);
+    cx.scale(L.fh ? -1 : 1, L.fv ? -1 : 1);
+    cx.rotate(L.q * Math.PI / 2);
+    cx.drawImage(L.img, -w0 / 2, -h0 / 2);
+    L.src = c;
+  }
+  [L.iw, L.ih] = dimsOf(L.src);
+  // verkleinerte, unbearbeitete Vorschau-Daten
+  const k = Math.min(1, PREVIEW_MAX / Math.max(L.iw, L.ih));
+  const pw = Math.max(1, Math.round(L.iw * k)), ph = Math.max(1, Math.round(L.ih * k));
+  const pc = document.createElement('canvas'); pc.width = pw; pc.height = ph;
+  const px = pc.getContext('2d', { willReadFrequently:true }); px.imageSmoothingQuality = 'high';
+  px.drawImage(scaled(L.src, pw, ph), 0, 0, pw, ph);
+  L.base = px.getImageData(0, 0, pw, ph);
+  recolor(L);
+}
+function recolor(L){
+  const el = L.el;
+  if (el.width !== L.base.width || el.height !== L.base.height){ el.width = L.base.width; el.height = L.base.height; }
+  if (isNeutral(L.col)) el.getContext('2d').putImageData(L.base, 0, 0);
+  else { const out = new ImageData(L.base.width, L.base.height); applyColor(L.base, out, params(L.col)); el.getContext('2d').putImageData(out, 0, 0); }
+  L.ver = (L.ver || 0) + 1;
+  if (L.blur) makeBlur(L);
+}
+
 /* ---------- Format ---------- */
 const fmtSel = $('fmtSel');
 try { const f = localStorage.getItem('layers-fmt'); if (f && [...fmtSel.options].some(o => o.value === f)) fmtSel.value = f; } catch(e){}
+function fmtDims(){
+  if (fmtSel.value !== 'orig') return fmtSel.value.split('x').map(Number);
+  // Seitenverhältnis des untersten Layers, kurze Seite 1080 px
+  const B = layers[0]; if (!B) return [1920, 1080];
+  const r = B.iw / B.ih;
+  return r >= 1 ? [Math.round(1080 * r), 1080] : [1080, Math.round(1080 / r)];
+}
+// nur neu einpassen, wenn sich die Fläche wirklich ändert
+function refreshOrigFmt(){ if (fmtSel.value === 'orig'){ const [w, h] = fmtDims(); if (w !== W || h !== H) applyFmt(); } }
 function applyFmt(){
-  [W, H] = fmtSel.value.split('x').map(Number);
+  [W, H] = fmtDims();
   frame.style.aspectRatio = W + '/' + H;
   // Hochformate nicht höher als ca. 70 % des Fensters
   frame.style.maxWidth = `min(100%, calc(70vh * ${W / H}))`;
@@ -238,14 +385,24 @@ function applyFmt(){
 fmtSel.onchange = () => { try { localStorage.setItem('layers-fmt', fmtSel.value); } catch(e){} applyFmt(); };
 
 /* ---------- Geometrie (Export-Koordinaten) ---------- */
-const coverS = L => Math.max(W / L.iw, H / L.ih);
+const rad = L => (L.ang || 0) * Math.PI / 180;
+// Emplenir: auch gedreht darf keine leere Ecke entstehen
+const coverS = L => { const a = Math.abs(rad(L)), c = Math.cos(a), s = Math.sin(a); return Math.max((W * c + H * s) / L.iw, (W * s + H * c) / L.ih); };
 const containS = L => Math.min(W / L.iw, H / L.ih);
 const minS = L => L.mode === 'cover' ? coverS(L) : containS(L) * 0.05;
 function clamp(L){
   L.s = Math.max(L.s, minS(L));
   if (L.mode === 'cover'){
-    L.x = Math.min(0, Math.max(W - L.iw * L.s, L.x));
-    L.y = Math.min(0, Math.max(H - L.ih * L.s, L.y));
+    // Mittelpunkt so begrenzen, dass alle vier Ecken der Fläche im (gedrehten) Bild liegen
+    const w = L.iw * L.s, h = L.ih * L.s, a = rad(L), c = Math.cos(a), s = Math.sin(a);
+    const cs = [[0,0],[W,0],[0,H],[W,H]].map(([X, Y]) => [c * X + s * Y, -s * X + c * Y]);
+    const lx = Math.max(...cs.map(p => p[0])) - w / 2, hx = Math.min(...cs.map(p => p[0])) + w / 2;
+    const ly = Math.max(...cs.map(p => p[1])) - h / 2, hy = Math.min(...cs.map(p => p[1])) + h / 2;
+    const Px = L.x + w / 2, Py = L.y + h / 2;
+    let qx = c * Px + s * Py, qy = -s * Px + c * Py;
+    qx = lx > hx ? (lx + hx) / 2 : Math.min(hx, Math.max(lx, qx));
+    qy = ly > hy ? (ly + hy) / 2 : Math.min(hy, Math.max(ly, qy));
+    L.x = c * qx - s * qy - w / 2; L.y = s * qx + c * qy - h / 2;
   } else {
     // frei: mindestens ein Stück der Ebene bleibt in der Fläche
     const w = L.iw * L.s, h = L.ih * L.s, m = 20;
@@ -260,7 +417,7 @@ function makeBlur(L){
   const s = Math.max(sw / L.iw, sh / L.ih);
   let src = document.createElement('canvas'); src.width = sw; src.height = sh;
   const tx = src.getContext('2d'); tx.imageSmoothingQuality = 'high';
-  tx.drawImage(scaled(L.img, L.iw * s * 4, L.ih * s * 4), (sw - L.iw * s) / 2, (sh - L.ih * s) / 2, L.iw * s, L.ih * s);
+  tx.drawImage(scaled(L.el, L.iw * s * 4, L.ih * s * 4), (sw - L.iw * s) / 2, (sh - L.ih * s) / 2, L.iw * s, L.ih * s);
   let w = sw, h = sh;
   while (w < W){
     w = Math.min(W, w * 2); h = Math.min(H, h * 2);
@@ -290,6 +447,7 @@ function render(){
     el.style.left = L.x * f + 'px'; el.style.top = L.y * f + 'px';
     el.style.width = L.iw * L.s * f + 'px'; el.style.height = L.ih * L.s * f + 'px';
     el.style.zIndex = 2 * i + 2;
+    el.style.transform = L.ang ? `rotate(${L.ang}deg)` : '';
     el.style.visibility = L.visible && L.blur !== 'only' ? 'visible' : 'hidden';
     if (L.bg){
       L.bg.hidden = !L.blur;
@@ -299,12 +457,16 @@ function render(){
   });
   empty.hidden = layers.length > 0;
   const A = active;
+  syncEdit();
   box.hidden = ghost.hidden = !A || !A.visible || !!A.locked || A.blur === 'only';
   $('fitBtn').disabled = !A || !!A.locked;
   $('dlBtn').disabled = !layers.some(L => L.visible);
   if (!A || !A.visible || A.locked || A.blur === 'only') return;
-  ghost.src = A.url;
-  for (const p of ['left','top','width','height']) ghost.style[p] = A.el.style[p];
+  if (ghost.dataset.v !== A.id + ':' + A.ver){
+    ghost.width = A.el.width; ghost.height = A.el.height;
+    ghost.getContext('2d').drawImage(A.el, 0, 0); ghost.dataset.v = A.id + ':' + A.ver;
+  }
+  for (const p of ['left','top','width','height','transform']) ghost.style[p] = A.el.style[p];
   // Griffbox = Kante der aktiven Ebene, Griffe innerhalb der sichtbaren Bühne halten
   const sr = stage.getBoundingClientRect(), fr = frame.getBoundingClientRect();
   const minX = sr.left - fr.left + 12, minY = sr.top - fr.top + 12;
@@ -334,7 +496,7 @@ function renderList(){
     row.className = 'row' + (L === active ? ' active' : '') + (L.visible ? '' : ' off') + (L.locked ? ' locked' : '');
     row.dataset.id = L.id;
     row.innerHTML = `<div class="grip" title="Trair per midar la successiun" aria-hidden="true">⠿</div>
-      <img class="thumb" alt=""><div class="meta"><div class="name"></div><div class="info"></div></div>
+      <canvas class="thumb" width="88" height="88"></canvas><div class="meta"><div class="name"></div><div class="info"></div></div>
       <div class="btns">
         <button type="button" data-a="up" title="Pli ensi" aria-label="Pli ensi">↑</button>
         <button type="button" data-a="down" title="Pli engiu" aria-label="Pli engiu">↓</button>
@@ -345,7 +507,9 @@ function renderList(){
         <button type="button" data-a="dup" title="Duplitgar il layer" aria-label="Duplitgar il layer">⧉</button>
         <button type="button" data-a="del" class="del" title="Stizzar il layer" aria-label="Stizzar il layer">✕</button>
       </div>`;
-    row.querySelector('.thumb').src = L.url;
+    // Vorschaubild zeigt den aktuellen Stand (gedreht, gespiegelt, Farben)
+    const th = row.querySelector('.thumb'), tk = Math.min(88 / L.el.width, 88 / L.el.height);
+    th.getContext('2d').drawImage(L.el, (88 - L.el.width * tk) / 2, (88 - L.el.height * tk) / 2, L.el.width * tk, L.el.height * tk);
     row.querySelector('.name').textContent = L.name;
     row.querySelector('.info').textContent = `${L.iw} × ${L.ih} px` + (L.locked ? ' · bloccà' : '');
     row.querySelector('[data-a="up"]').disabled = i === layers.length - 1;
@@ -357,8 +521,8 @@ function renderList(){
     row.onclick = e => {
       if (suppressClick) { suppressClick = false; return; }
       const a = e.target.closest('button')?.dataset.a;
-      if (a === 'up') move(L, +1);
-      else if (a === 'down') move(L, -1);
+      if (a === 'up') { move(L, +1); refreshOrigFmt(); }
+      else if (a === 'down') { move(L, -1); refreshOrigFmt(); }
       else if (a === 'vis') { L.visible = !L.visible; }
       else if (a === 'lock') { L.locked = !L.locked; }
       else if (a === 'mode') { if (!L.locked){ L.mode = L.mode === 'cover' ? 'free' : 'cover'; fitLayer(L); } }
@@ -415,7 +579,7 @@ function endRowDrag(e){
   const shown = [...layers].reverse().filter(l => l !== D.L);
   shown.splice(D.target, 0, D.L);
   layers = shown.reverse();
-  active = D.L; renderList(); render();
+  active = D.L; refreshOrigFmt(); renderList(); render();
 }
 list.addEventListener('pointerup', endRowDrag);
 list.addEventListener('pointercancel', e => { if (rowDrag && rowDrag.id === e.pointerId){ rowDrag = null; renderList(); } });
@@ -424,10 +588,11 @@ list.addEventListener('pointercancel', e => { if (rowDrag && rowDrag.id === e.po
 function duplicate(L){
   if (layers.length >= MAX) { setMsg(`Maximalmain ${MAX} layers.`, true); return; }
   const C = { id: nextId++, name: L.name.replace(/ \(copia( \d+)?\)$/, '') + ' (copia)', url: L.url, img: L.img,
+    src: L.src, base: L.base, q: L.q, fh: L.fh, fv: L.fv, ang: L.ang, col: { ...L.col },
     iw: L.iw, ih: L.ih, s: L.s, x: L.x, y: L.y, mode: L.mode, blur: L.blur, visible: L.visible, locked: false };
-  C.el = document.createElement('img'); C.el.src = C.url; C.el.alt = '';
+  C.el = document.createElement('canvas'); C.el.className = 'lay';
   clip.appendChild(C.el);
-  if (C.blur) makeBlur(C);
+  recolor(C);
   layers.splice(layers.indexOf(L) + 1, 0, C);
   active = C; renderList(); render();
   setMsg(`Duplitgà: ${L.name}`);
@@ -443,6 +608,7 @@ function remove(L){
   // Bilddaten nur freigeben, wenn keine Kopie sie noch braucht
   if (!layers.some(o => o.url === L.url)) URL.revokeObjectURL(L.url);
   if (active === L) active = layers[layers.length - 1] || null;
+  refreshOrigFmt();
   renderList(); render();
   setMsg('');
 }
@@ -467,14 +633,17 @@ function addFile(file, label){
     const im = new Image();
     im.onload = () => {
       if (layers.length >= MAX) { URL.revokeObjectURL(url); setMsg(`Maximalmain ${MAX} layers.`, true); return res(false); }
-      const L = { id: nextId++, name: label || file.name || 'Maletg', url, img: im, iw: im.naturalWidth, ih: im.naturalHeight, visible: true };
+      const L = { id: nextId++, name: label || file.name || 'Maletg', url, img: im, iw: im.naturalWidth, ih: im.naturalHeight, visible: true,
+        q: 0, fh: false, fv: false, ang: 0, col: newCol() };
       // Bilder mit Transparenz in anderem Seitenverhältnis (z. B. Logos) frei platzieren, sonst Fläche füllen
       const sameRatio = Math.abs(L.iw / L.ih - W / H) < 0.01;
       L.mode = hasAlpha(im) && !sameRatio ? 'free' : 'cover';
-      L.el = document.createElement('img'); L.el.src = url; L.el.alt = '';
+      L.el = document.createElement('canvas'); L.el.className = 'lay';
       clip.appendChild(L.el);
-      fitLayer(L);
+      orient(L);
       layers.push(L); active = L;
+      refreshOrigFmt();
+      fitLayer(L);
       renderList(); render();
       setMsg(`${L.name}: ${L.iw} × ${L.ih} px` + (L.mode === 'cover' && coverS(L) > 1 ? ', vegn engrondì' : ''));
       res(true);
@@ -661,7 +830,7 @@ stage.addEventListener('keydown', e => {
 
 /* ---------- Export ---------- */
 function scaled(im, tw, th){
-  let src = im, w = im.naturalWidth, h = im.naturalHeight;
+  let src = im, [w, h] = dimsOf(im);
   while (w / 2 > tw && h / 2 > th){
     w = Math.round(w / 2); h = Math.round(h / 2);
     const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -670,28 +839,116 @@ function scaled(im, tw, th){
   }
   return src;
 }
+/* Exportgrösse: Standard (Format) oder Auflösung des untersten Fotos, ohne es zu verkleinern */
+const sizeBtns = [...document.querySelectorAll('#sizeGroup button')];
+let sizeMode = 'std';
+try { const s = localStorage.getItem('layers-size'); if (s === 'std' || s === 'orig') sizeMode = s; } catch(e){}
+function setSize(m){
+  sizeMode = m;
+  sizeBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.s === m));
+  try { localStorage.setItem('layers-size', m); } catch(e){}
+  updateSizes();
+}
+sizeBtns.forEach(b => b.onclick = () => setSize(b.dataset.s));
+function origFactor(){
+  const B = layers.find(L => L.visible && L.blur !== 'only');
+  if (!B) return 1;
+  clamp(B);
+  return Math.max(1, Math.min(1 / B.s, 8192 / Math.max(W, H)));
+}
+function outDims(){ const f = sizeMode === 'orig' ? origFactor() : 1; return [Math.round(W * f), Math.round(H * f), f]; }
+function updateSizes(){
+  $('sStd').textContent = `${W} × ${H}`;
+  const f = origFactor();
+  $('sOrig').textContent = layers.length ? `${Math.round(W * f)} × ${Math.round(H * f)}` : '–';
+}
 $('dlBtn').onclick = () => {
-  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const [OW, OH, F] = outDims();
+  setMsg('Elavurel…');
+  setTimeout(() => { try {
+  const c = document.createElement('canvas'); c.width = OW; c.height = OH;
   const cx = c.getContext('2d');
   cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
-  cx.fillStyle = '#fff'; cx.fillRect(0, 0, W, H);
+  cx.fillStyle = '#fff'; cx.fillRect(0, 0, OW, OH);
   for (const L of layers){
     if (!L.visible) continue;
     clamp(L);
-    if (L.blur && L.bg) cx.drawImage(L.bg, 0, 0, W, H);
-    if (L.blur !== 'only') cx.drawImage(scaled(L.img, L.iw * L.s, L.ih * L.s), L.x, L.y, L.iw * L.s, L.ih * L.s);
+    if (L.blur && L.bg) cx.drawImage(L.bg, 0, 0, OW, OH);
+    if (L.blur === 'only') continue;
+    const w = L.iw * L.s * F, h = L.ih * L.s * F;
+    let src = scaled(L.src, w, h);
+    if (!isNeutral(L.col)){
+      const [sw, sh] = dimsOf(src);
+      const t2 = document.createElement('canvas'); t2.width = sw; t2.height = sh;
+      const tx = t2.getContext('2d', { willReadFrequently:true }); tx.drawImage(src, 0, 0);
+      const d = tx.getImageData(0, 0, sw, sh); applyColor(d, d, params(L.col)); tx.putImageData(d, 0, 0);
+      src = t2;
+    }
+    cx.save();
+    cx.translate((L.x + L.iw * L.s / 2) * F, (L.y + L.ih * L.s / 2) * F);
+    cx.rotate(rad(L));
+    cx.drawImage(src, -w / 2, -h / 2, w, h);
+    cx.restore();
   }
   c.toBlob(b => {
+    if (!b) { setMsg('Il maletg è memia grond per quest browser.', true); return; }
     const d = new Date(), z = n => String(n).padStart(2, '0');
-    const name = `visual_${W}x${H}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
+    const name = `visual_${OW}x${OH}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(b); a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    setMsg('Memorisà: ' + name);
+    setMsg(`Memorisà: ${name} (${OW} × ${OH} px)`);
   }, 'image/png');
+  } catch(e){ setMsg('Export betg reussì: il maletg è forsa memia grond.', true); } }, 30);
 };
 
+/* ---------- Bearbeitung des aktiven Layers ---------- */
+const edit = $('edit');
+function syncEdit(){
+  const A = active, on = !!A && !A.locked;
+  edit.classList.toggle('off', !on);
+  $('who').textContent = A ? A.name + (A.locked ? ' · bloccà' : '') : '–';
+  if (A){
+    $('flipH').setAttribute('aria-pressed', !!A.fh); $('flipV').setAttribute('aria-pressed', !!A.fv);
+    const vals = { ...A.col, ang: A.ang || 0 };
+    for (const id of [...CIDS, 'ang']){
+      const el = $('c_' + id); if (+el.value !== vals[id]) el.value = vals[id];
+      document.querySelector(`.val[data-for="${id}"]`).textContent = id === 'ang' ? (vals.ang > 0 ? '+' : '') + vals.ang.toFixed(1) + '°' : vals[id] + (id === 'hue' ? '°' : '');
+    }
+  }
+  updateSizes();
+}
+let colRaf = 0;
+document.querySelectorAll('.edit input[type=range]').forEach(inp => inp.addEventListener('input', () => {
+  const A = active; if (!A || A.locked) return;
+  const id = inp.dataset.c;
+  if (id === 'ang'){ A.ang = Math.round(+inp.value * 10) / 10; render(); return; }
+  A.col[id] = +inp.value;
+  syncEdit();
+  cancelAnimationFrame(colRaf);
+  colRaf = requestAnimationFrame(() => { recolor(A); render(); updateThumb(A); });
+}));
+document.querySelectorAll('.edit .val').forEach(v => v.onclick = () => {
+  const inp = $('c_' + v.dataset.for); inp.value = 0; inp.dispatchEvent(new Event('input'));
+});
+$('resetCol').onclick = () => { const A = active; if (!A || A.locked) return; A.col = newCol(); recolor(A); render(); updateThumb(A); };
+function updateThumb(L){
+  const th = list.querySelector(`.row[data-id="${L.id}"] .thumb`); if (!th) return;
+  const cx = th.getContext('2d'), tk = Math.min(88 / L.el.width, 88 / L.el.height);
+  cx.clearRect(0, 0, 88, 88);
+  cx.drawImage(L.el, (88 - L.el.width * tk) / 2, (88 - L.el.height * tk) / 2, L.el.width * tk, L.el.height * tk);
+}
+function reorient(fn){
+  const A = active; if (!A || A.locked) return;
+  fn(A); orient(A); refreshOrigFmt(); fitLayer(A); renderList(); render();
+}
+$('rotL').onclick = () => reorient(A => { A.q = (A.q + 3) % 4; });
+$('rotR').onclick = () => reorient(A => { A.q = (A.q + 1) % 4; });
+$('flipH').onclick = () => reorient(A => { A.fh = !A.fh; });
+$('flipV').onclick = () => reorient(A => { A.fv = !A.fv; });
+
+sizeBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.s === sizeMode));
 applyFmt();
 renderList();
 </script>
