@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Adattar clerezza, contrast, saturaziun e tun da colur. Export en la grondezza da l'original u taglià en 16:9, 4:5, 1:1 u 9:16.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Colurs">
+<meta property="og:description" content="Adattar clerezza, contrast, saturaziun e tun da colur. Export en la grondezza da l'original u taglià en 16:9, 4:5, 1:1 u 9:16.">
+<meta property="og:url" content="https://tools.dombuzz.ch/colurs">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>Colurs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Ccircle cx='50' cy='50' r='30' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3Cpath d='M50 20a30 30 0 0 1 0 60z' fill='%23ff4d64'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+    --accent:#ff4d64; --accent-dark:#d93a50; --border:#2f2f34;
+    --mono:#26262a; color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  body{
+    margin:0; padding:32px 16px; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+  }
+  .container{ width:100%; max-width:1100px; min-width:0; margin:0 auto; }
+  h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+  .homelink:hover,.homelink:focus-visible{color:var(--accent)}
+  .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px; }
+
+  button{
+    background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:10px 16px;
+    font-size:0.9rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  button:hover{ background:var(--accent-dark); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  button.ghost{ background:transparent; color:var(--text); border:1px solid var(--border); }
+  button.ghost:hover{ border-color:var(--muted); }
+  button:focus-visible, .stage:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .work{ display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:16px; align-items:start; }
+  @media (max-width:860px){ .work{ grid-template-columns:minmax(0,1fr); } }
+
+  /* Bühne: ganzes Bild, darüber der Zuschnitt-Rahmen */
+  .stage{
+    position:relative; background:var(--mono); border-radius:12px; padding:24px;
+    display:flex; justify-content:center; align-items:center; min-height:300px;
+    touch-action:none; user-select:none; -webkit-user-select:none;
+  }
+  .stage.over{ outline:2px dashed var(--accent); outline-offset:-2px; }
+  .pic{ position:relative; line-height:0; }
+  #view{ display:block; max-width:100%; max-height:70vh; }
+  .crop{ position:absolute; cursor:move; outline:1px solid #fff; touch-action:none; }
+  .clipwrap{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .shade{ position:absolute; box-shadow:0 0 0 9999px rgba(0,0,0,.55); }
+  .crop::before, .crop::after{ content:""; position:absolute; pointer-events:none; border:0 solid rgba(255,255,255,.35); }
+  .crop::before{ left:33.333%; right:33.333%; top:0; bottom:0; border-left-width:1px; border-right-width:1px; }
+  .crop::after{ top:33.333%; bottom:33.333%; left:0; right:0; border-top-width:1px; border-bottom-width:1px; }
+  .handle{
+    position:absolute; width:22px; height:22px; margin:-11px 0 0 -11px; z-index:2;
+    background:#fff; border:3px solid var(--accent); border-radius:50%; touch-action:none;
+  }
+  .handle[data-c="nw"]{ left:0; top:0; cursor:nwse-resize; }
+  .handle[data-c="ne"]{ left:100%; top:0; cursor:nesw-resize; }
+  .handle[data-c="sw"]{ left:0; top:100%; cursor:nesw-resize; }
+  .handle[data-c="se"]{ left:100%; top:100%; cursor:nwse-resize; }
+  .empty{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    text-align:center; cursor:pointer; color:var(--muted); min-height:260px; width:100%;
+    border:2px dashed var(--border); border-radius:10px; padding:0 16px;
+  }
+  .empty:hover{ border-color:var(--accent); }
+  .empty strong{ font-size:1.05rem; color:var(--text); }
+  .empty span{ font-size:0.85rem; }
+
+  /* Regler */
+  .panel h2{ font-size:0.95rem; margin:0 0 10px; }
+  .sec{ margin-top:22px; }
+  .ctl{ margin-bottom:14px; }
+  .ctl .top{ display:flex; justify-content:space-between; align-items:baseline; font-size:0.85rem; margin-bottom:4px; }
+  .ctl .val{ color:var(--muted); font-variant-numeric:tabular-nums; cursor:pointer; }
+  .ctl .val:hover{ color:var(--accent); }
+  input[type=range]{ width:100%; accent-color:var(--accent); }
+  .ratios{ display:flex; flex-wrap:wrap; gap:4px; background:var(--mono); border:1px solid var(--border); border-radius:10px; padding:3px; }
+  .ratios button{ flex:1; background:transparent; color:var(--muted); padding:7px 8px; font-size:0.85rem; border-radius:7px; }
+  .ratios button:hover{ background:transparent; color:var(--text); }
+  .ratios button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); }
+  .size{ font-size:0.8rem; color:var(--muted); margin:8px 0 0; }
+
+  .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
+  .msg.err{ color:var(--err,#ff6b7d); }
+  @media (max-width:600px){
+    body{ padding:20px 12px; }
+    .card{ padding:14px; }
+    .stage{ padding:16px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="homelink" href="/">← Tools</a>
+  <h1>Colurs</h1>
+  <p class="subtitle">Adattar clerezza, contrast, saturaziun e tun da colur. Export en la grondezza da l'original u taglià en 16:9, 4:5, 1:1 u 9:16.</p>
+
+  <div class="card">
+    <div class="work">
+      <div>
+        <div class="stage" id="stage" tabindex="0" aria-label="Maletg">
+          <div class="empty" id="empty">
+            <strong>Trair qua il maletg</strong>
+            <span>u tutgar per tscherner, integrar cun Ctrl/Cmd+V</span>
+          </div>
+          <div class="pic" id="pic" hidden>
+            <canvas id="view"></canvas>
+            <div class="clipwrap"><div class="shade" id="shade" hidden></div></div>
+            <div class="crop" id="crop" hidden>
+              <div class="handle" data-c="nw"></div><div class="handle" data-c="ne"></div>
+              <div class="handle" data-c="sw"></div><div class="handle" data-c="se"></div>
+            </div>
+          </div>
+        </div>
+        <p class="hint" id="cropHint" hidden>Trair il retagl per al spustar, trair vi dals chantuns per al scalar. Quai che stat ordaifer vegn taglià giu tar l'export.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Colurs</h2>
+        <div class="ctl"><div class="top"><label for="bri">Clerezza</label><span class="val" data-for="bri" title="Reset">0</span></div><input type="range" id="bri" min="-100" max="100" value="0"></div>
+        <div class="ctl"><div class="top"><label for="con">Contrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="con" min="-100" max="100" value="0"></div>
+        <div class="ctl"><div class="top"><label for="sat">Saturaziun</label><span class="val" data-for="sat" title="Reset">0</span></div><input type="range" id="sat" min="-100" max="100" value="0"></div>
+        <div class="ctl"><div class="top"><label for="hue">Tun da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="hue" min="-180" max="180" value="0"></div>
+        <button type="button" class="ghost" id="resetBtn" disabled>Reset colurs</button>
+
+        <div class="sec">
+          <h2>Retagl</h2>
+          <div class="ratios" role="group" aria-label="Retagl">
+            <button type="button" data-r="0" aria-pressed="true">Original</button>
+            <button type="button" data-r="16/9" aria-pressed="false">16:9</button>
+            <button type="button" data-r="4/5" aria-pressed="false">4:5</button>
+            <button type="button" data-r="1/1" aria-pressed="false">1:1</button>
+            <button type="button" data-r="9/16" aria-pressed="false">9:16</button>
+          </div>
+          <p class="size" id="size"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="dlBtn" disabled>Telechargiar</button>
+      <button type="button" class="ghost" id="pickBtn">Tscherner in auter maletg</button>
+      <span class="msg" id="msg"></span>
+    </div>
+  </div>
+  <input type="file" id="file" accept="image/*" hidden>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const stage = $('stage'), view = $('view'), pic = $('pic'), crop = $('crop'), shade = $('shade'), msg = $('msg');
+const PREVIEW_MAX = 1600;            // Vorschau verkleinert, Export in voller Grösse
+
+let img = null, iw = 0, ih = 0, fileName = 'maletg', fileType = 'image/jpeg';
+let base = null;                     // ImageData der verkleinerten Vorschau (unbearbeitet)
+let ratio = 0;                       // 0 = Original (kein Zuschnitt)
+let cr = null;                       // Zuschnitt in Originalpixeln {x, y, w, h}
+
+function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
+
+/* ---------- Farbmatrix (gleich für Vorschau und Export) ---------- */
+// Reihenfolge wie bei CSS-Filtern: Helligkeit, Kontrast, Sättigung, Farbton
+function mul(a, b){ // 3x4-Matrizen (affin), a nach b
+  const r = [];
+  for (let i = 0; i < 3; i++){
+    for (let j = 0; j < 3; j++) r[i*4+j] = a[i*4]*b[j] + a[i*4+1]*b[4+j] + a[i*4+2]*b[8+j];
+    r[i*4+3] = a[i*4]*b[3] + a[i*4+1]*b[7] + a[i*4+2]*b[11] + a[i*4+3];
+  }
+  return r;
+}
+function matrix(){
+  const b = 1 + $('bri').value / 100;
+  const c = 1 + $('con').value / 100;
+  const s = 1 + $('sat').value / 100;
+  const h = $('hue').value * Math.PI / 180;
+  let m = [b,0,0,0, 0,b,0,0, 0,0,b,0];
+  m = mul([c,0,0,127.5*(1-c), 0,c,0,127.5*(1-c), 0,0,c,127.5*(1-c)], m);
+  const S = [
+    .213+.787*s, .715-.715*s, .072-.072*s, 0,
+    .213-.213*s, .715+.285*s, .072-.072*s, 0,
+    .213-.213*s, .715-.715*s, .072+.928*s, 0];
+  m = mul(S, m);
+  const co = Math.cos(h), si = Math.sin(h);
+  const Hm = [
+    .213+co*.787-si*.213, .715-co*.715-si*.715, .072-co*.072+si*.928, 0,
+    .213-co*.213+si*.143, .715+co*.285+si*.140, .072-co*.072-si*.283, 0,
+    .213-co*.213-si*.787, .715-co*.715+si*.715, .072+co*.928+si*.072, 0];
+  return mul(Hm, m);
+}
+function apply(src, dst, m){
+  const s = src.data, d = dst.data;
+  for (let i = 0; i < s.length; i += 4){
+    const r = s[i], g = s[i+1], b = s[i+2];
+    d[i]   = m[0]*r + m[1]*g + m[2]*b + m[3];
+    d[i+1] = m[4]*r + m[5]*g + m[6]*b + m[7];
+    d[i+2] = m[8]*r + m[9]*g + m[10]*b + m[11];
+    d[i+3] = s[i+3];
+  }
+}
+const isNeutral = () => ['bri','con','sat','hue'].every(id => +$(id).value === 0);
+
+/* ---------- Vorschau ---------- */
+let raf = 0;
+function redraw(){
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(() => {
+    if (!base) return;
+    const out = new ImageData(base.width, base.height);
+    apply(base, out, matrix());
+    view.getContext('2d').putImageData(out, 0, 0);
+  });
+}
+for (const id of ['bri','con','sat','hue']){
+  $(id).addEventListener('input', () => {
+    document.querySelector(`.val[data-for="${id}"]`).textContent = $(id).value + (id === 'hue' ? '°' : '');
+    $('resetBtn').disabled = isNeutral();
+    redraw();
+  });
+}
+document.querySelectorAll('.val').forEach(v => v.onclick = () => {
+  const el = $(v.dataset.for); el.value = 0; el.dispatchEvent(new Event('input'));
+});
+$('resetBtn').onclick = () => { for (const id of ['bri','con','sat','hue']){ $(id).value = 0; $(id).dispatchEvent(new Event('input')); } };
+
+/* ---------- Laden ---------- */
+function load(file){
+  if (!file || !file.type.startsWith('image/')) { setMsg('Quai n\'è nagin file da maletg.', true); return; }
+  const url = URL.createObjectURL(file);
+  const im = new Image();
+  im.onload = () => {
+    img = im; iw = im.naturalWidth; ih = im.naturalHeight;
+    fileName = (file.name || 'maletg').replace(/\.[^.]+$/, '') || 'maletg';
+    fileType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const k = Math.min(1, PREVIEW_MAX / Math.max(iw, ih));
+    view.width = Math.round(iw * k); view.height = Math.round(ih * k);
+    const cx = view.getContext('2d', { willReadFrequently:true });
+    cx.drawImage(im, 0, 0, view.width, view.height);
+    base = cx.getImageData(0, 0, view.width, view.height);
+    $('empty').hidden = true; pic.hidden = false;
+    $('dlBtn').disabled = false;
+    setRatio(ratio);
+    redraw();
+    setMsg(`${file.name || 'Maletg'}: ${iw} × ${ih} px`);
+  };
+  im.onerror = () => setMsg('Il maletg n\'ha betg pudì vegnir legì.', true);
+  im.src = url;
+}
+const pick = () => $('file').click();
+$('pickBtn').onclick = pick; $('empty').onclick = pick;
+$('file').onchange = e => { load(e.target.files[0]); e.target.value = ''; };
+stage.addEventListener('dragover', e => { e.preventDefault(); stage.classList.add('over'); });
+stage.addEventListener('dragleave', () => stage.classList.remove('over'));
+stage.addEventListener('drop', e => { e.preventDefault(); stage.classList.remove('over'); load(e.dataTransfer.files[0]); });
+document.addEventListener('paste', e => {
+  const it = [...e.clipboardData.items].find(i => i.type.startsWith('image/'));
+  if (it) load(it.getAsFile());
+});
+
+/* ---------- Zuschnitt ---------- */
+const ratioBtns = [...document.querySelectorAll('.ratios button')];
+const parseR = s => { const [a, b] = s.split('/').map(Number); return b ? a / b : 0; };
+try { const r = localStorage.getItem('colurs-ratio'); if (r && ratioBtns.some(b => b.dataset.r === r)) ratio = parseR(r); } catch(e){}
+function ratioKey(r){ return r ? ratioBtns.find(b => Math.abs(parseR(b.dataset.r) - r) < 1e-9)?.dataset.r : '0'; }
+function setRatio(r){
+  ratio = r;
+  ratioBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.r === ratioKey(r)));
+  try { localStorage.setItem('colurs-ratio', ratioKey(r)); } catch(e){}
+  if (!img) return;
+  if (!r) { cr = null; }
+  else {
+    // grösster zentrierter Ausschnitt im gewünschten Seitenverhältnis
+    let w = iw, h = w / r;
+    if (h > ih) { h = ih; w = h * r; }
+    cr = { x:(iw - w) / 2, y:(ih - h) / 2, w, h };
+  }
+  renderCrop();
+}
+ratioBtns.forEach(b => b.onclick = () => setRatio(parseR(b.dataset.r)));
+setRatio(ratio);   // gespeicherte Wahl anzeigen
+
+function scale(){ return view.clientWidth / iw; }   // Bildschirm-px pro Originalpixel
+function renderCrop(){
+  crop.hidden = shade.hidden = !cr; $('cropHint').hidden = !cr;
+  const W = cr ? Math.round(cr.w) : iw, H = cr ? Math.round(cr.h) : ih;
+  $('size').textContent = img ? `Export: ${W} × ${H} px` : '';
+  if (!cr) return;
+  const f = scale();
+  crop.style.left = cr.x * f + 'px'; crop.style.top = cr.y * f + 'px';
+  crop.style.width = cr.w * f + 'px'; crop.style.height = cr.h * f + 'px';
+  for (const p of ['left','top','width','height']) shade.style[p] = crop.style[p];
+}
+window.addEventListener('resize', renderCrop);
+new ResizeObserver(renderCrop).observe(view);
+
+function clampCrop(){
+  const minW = Math.min(iw, ih * ratio) * 0.05;
+  cr.w = Math.max(minW, Math.min(cr.w, iw, ih * ratio)); cr.h = cr.w / ratio;
+  cr.x = Math.max(0, Math.min(iw - cr.w, cr.x));
+  cr.y = Math.max(0, Math.min(ih - cr.h, cr.y));
+}
+function toImg(e){
+  const r = view.getBoundingClientRect(), f = scale();
+  return [(e.clientX - r.left) / f, (e.clientY - r.top) / f];
+}
+let drag = null;
+crop.addEventListener('pointerdown', e => {
+  e.preventDefault(); crop.setPointerCapture(e.pointerId);
+  const p = toImg(e), h = e.target.closest('.handle');
+  if (h){
+    const c = h.dataset.c;
+    // Ankerpunkt = gegenüberliegende Ecke
+    drag = { mode:'corner', c, ax: c.includes('w') ? cr.x + cr.w : cr.x, ay: c.includes('n') ? cr.y + cr.h : cr.y };
+  } else drag = { mode:'move', p, x:cr.x, y:cr.y };
+});
+crop.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const p = toImg(e);
+  if (drag.mode === 'move'){
+    cr.x = drag.x + p[0] - drag.p[0]; cr.y = drag.y + p[1] - drag.p[1];
+  } else {
+    const { ax, ay, c } = drag;
+    // Breite aus Zeigerposition, begrenzt auf den Platz zwischen Anker und Bildrand
+    let w = Math.max(Math.abs(p[0] - ax), Math.abs(p[1] - ay) * ratio);
+    const maxW = Math.min(c.includes('w') ? ax : iw - ax, (c.includes('n') ? ay : ih - ay) * ratio);
+    w = Math.min(w, maxW);
+    w = Math.max(w, Math.min(iw, ih * ratio) * 0.05);
+    cr.w = w; cr.h = w / ratio;
+    cr.x = c.includes('w') ? ax - w : ax;
+    cr.y = c.includes('n') ? ay - cr.h : ay;
+  }
+  clampCrop(); renderCrop();
+});
+const endDrag = () => { drag = null; };
+crop.addEventListener('pointerup', endDrag);
+crop.addEventListener('pointercancel', endDrag);
+crop.addEventListener('wheel', e => {
+  e.preventDefault();
+  const k = Math.exp(e.deltaY * 0.0015), cx = cr.x + cr.w / 2, cy = cr.y + cr.h / 2;
+  cr.w *= k; cr.h = cr.w / ratio; clampCrop();
+  cr.x = cx - cr.w / 2; cr.y = cy - cr.h / 2; clampCrop(); renderCrop();
+}, { passive:false });
+
+/* ---------- Export in Originalgrösse ---------- */
+$('dlBtn').onclick = () => {
+  if (!img) return;
+  const r = cr ? { x:Math.round(cr.x), y:Math.round(cr.y), w:Math.round(cr.w), h:Math.round(cr.h) } : { x:0, y:0, w:iw, h:ih };
+  r.w = Math.min(r.w, iw - r.x); r.h = Math.min(r.h, ih - r.y);
+  setMsg('Elavurel…');
+  setTimeout(() => {
+    try {
+      const c = document.createElement('canvas'); c.width = r.w; c.height = r.h;
+      const cx = c.getContext('2d', { willReadFrequently:true });
+      if (fileType === 'image/jpeg') { cx.fillStyle = '#fff'; cx.fillRect(0, 0, r.w, r.h); }
+      cx.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+      if (!isNeutral()){
+        const d = cx.getImageData(0, 0, r.w, r.h);
+        apply(d, d, matrix());
+        cx.putImageData(d, 0, 0);
+      }
+      c.toBlob(b => {
+        if (!b) { setMsg('Il maletg è memia grond per quest browser.', true); return; }
+        const suffix = ratio ? '_' + ratioKey(ratio).replace('/', 'x') : '';
+        const name = `${fileName}_colurs${suffix}.${fileType === 'image/png' ? 'png' : 'jpg'}`;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(b); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        setMsg(`Memorisà: ${name} (${r.w} × ${r.h} px)`);
+      }, fileType, 0.92);
+    } catch(e){ setMsg('Export betg reussì: il maletg è forsa memia grond.', true); }
+  }, 30);
+};
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>
