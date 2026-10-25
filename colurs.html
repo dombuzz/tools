@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Adattar clerezza, contrast, saturaziun e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.">
+<meta name="description" content="Adattar clerezza, contrast, clers e stgirs, saturaziun, balantscha da l'alv e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
-<meta property="og:title" content="Colurs">
-<meta property="og:description" content="Adattar clerezza, contrast, saturaziun e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.">
+<meta property="og:title" content="Clerezza + colurs">
+<meta property="og:description" content="Adattar clerezza, contrast, clers e stgirs, saturaziun, balantscha da l'alv e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.">
 <meta property="og:url" content="https://tools.dombuzz.ch/colurs">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#121214">
-<title>Colurs</title>
+<title>Clerezza + colurs</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Ccircle cx='50' cy='50' r='30' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3Cpath d='M50 20a30 30 0 0 1 0 60z' fill='%23ff4d64'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
@@ -36,6 +36,7 @@
   }
   .container{ width:100%; max-width:1100px; min-width:0; margin:0 auto; }
   h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+  h1 .acc{color:var(--accent)}
   .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
   .homelink:hover,.homelink:focus-visible{color:var(--accent)}
   .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
@@ -90,6 +91,8 @@
   .panel h2{ font-size:0.95rem; margin:0 0 10px; }
   .sec{ margin-top:22px; }
   .ctl{ margin-bottom:14px; }
+  .panel .sub2{ margin-top:20px; }
+  .wbhint{ margin-left:auto; margin-right:10px; font-size:0.75rem; color:var(--muted); }
   .ctl .top{ display:flex; justify-content:space-between; align-items:baseline; font-size:0.85rem; margin-bottom:4px; }
   .ctl .val{ color:var(--muted); font-variant-numeric:tabular-nums; cursor:pointer; }
   .ctl .val:hover{ color:var(--accent); }
@@ -117,8 +120,8 @@
 <body>
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
-  <h1>Colurs</h1>
-  <p class="subtitle">Adattar clerezza, contrast, saturaziun e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.</p>
+  <h1>Clerezza <span class="acc">+</span> colurs</h1>
+  <p class="subtitle">Adattar clerezza, contrast, clers e stgirs, saturaziun, balantscha da l'alv e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.</p>
 
   <div class="card">
     <div class="work">
@@ -141,12 +144,16 @@
       </div>
 
       <div class="panel">
-        <h2>Colurs</h2>
+        <h2>Clerezza</h2>
         <div class="ctl"><div class="top"><label for="bri">Clerezza</label><span class="val" data-for="bri" title="Reset">0</span></div><input type="range" id="bri" min="-100" max="100" value="0"></div>
         <div class="ctl"><div class="top"><label for="con">Contrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="con" min="-100" max="100" value="0"></div>
+        <div class="ctl"><div class="top"><label for="hil">Clers</label><span class="val" data-for="hil" title="Reset">0</span></div><input type="range" id="hil" min="-100" max="100" value="0"></div>
+        <div class="ctl"><div class="top"><label for="sha">Stgirs</label><span class="val" data-for="sha" title="Reset">0</span></div><input type="range" id="sha" min="-100" max="100" value="0"></div>
+        <h2 class="sub2">Colurs</h2>
         <div class="ctl"><div class="top"><label for="sat">Saturaziun</label><span class="val" data-for="sat" title="Reset">0</span></div><input type="range" id="sat" min="-100" max="100" value="0"></div>
+        <div class="ctl"><div class="top"><label for="wb">WB Balantscha da l'alv</label><span class="wbhint">fraid ↔ chaud</span><span class="val" data-for="wb" title="Reset">0</span></div><input type="range" id="wb" min="-100" max="100" value="0"></div>
         <div class="ctl"><div class="top"><label for="hue">Nianza da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="hue" min="-180" max="180" value="0"></div>
-        <button type="button" class="ghost" id="resetBtn" disabled>Reset colurs</button>
+        <button type="button" class="ghost" id="resetBtn" disabled>Reset</button>
 
         <div class="sec">
           <h2>Retagl</h2>
@@ -201,7 +208,6 @@ let cr = null;                       // Zuschnitt in Originalpixeln {x, y, w, h}
 function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
 
 /* ---------- Farbmatrix (gleich für Vorschau und Export) ---------- */
-// Reihenfolge wie bei CSS-Filtern: Helligkeit, Kontrast, Sättigung, Farbton
 function mul(a, b){ // 3x4-Matrizen (affin), a nach b
   const r = [];
   for (let i = 0; i < 3; i++){
@@ -210,36 +216,56 @@ function mul(a, b){ // 3x4-Matrizen (affin), a nach b
   }
   return r;
 }
-function matrix(){
-  const b = 1 + $('bri').value / 100;
-  const c = 1 + $('con').value / 100;
-  const s = 1 + $('sat').value / 100;
-  const h = $('hue').value * Math.PI / 180;
-  let m = [b,0,0,0, 0,b,0,0, 0,0,b,0];
-  m = mul([c,0,0,127.5*(1-c), 0,c,0,127.5*(1-c), 0,0,c,127.5*(1-c)], m);
-  const S = [
+const IDS = ['bri','con','hil','sha','sat','wb','hue'];
+const v = id => +$(id).value;
+// Verarbeitung: Helligkeit/Kontrast (linear) → Clers/Stgirs (Tonkurve über Luminanz) → Weissabgleich, Sättigung, Farbton (linear)
+function params(){
+  const b = 1 + v('bri') / 100, c = 1 + v('con') / 100;
+  const A = mul([c,0,0,127.5*(1-c), 0,c,0,127.5*(1-c), 0,0,c,127.5*(1-c)], [b,0,0,0, 0,b,0,0, 0,0,b,0]);
+  // Weissabgleich: positiv = wärmer (mehr Rot, weniger Blau)
+  const w = v('wb') / 100 * 0.25;
+  let B = [1+w,0,0,0, 0,1+w*0.1,0,0, 0,0,1-w,0];
+  const s = 1 + v('sat') / 100;
+  B = mul([
     .213+.787*s, .715-.715*s, .072-.072*s, 0,
     .213-.213*s, .715+.285*s, .072-.072*s, 0,
-    .213-.213*s, .715-.715*s, .072+.928*s, 0];
-  m = mul(S, m);
-  const co = Math.cos(h), si = Math.sin(h);
-  const Hm = [
+    .213-.213*s, .715-.715*s, .072+.928*s, 0], B);
+  const h = v('hue') * Math.PI / 180, co = Math.cos(h), si = Math.sin(h);
+  B = mul([
     .213+co*.787-si*.213, .715-co*.715-si*.715, .072-co*.072+si*.928, 0,
     .213-co*.213+si*.143, .715+co*.285+si*.140, .072-co*.072-si*.283, 0,
-    .213-co*.213-si*.787, .715-co*.715+si*.715, .072+co*.928+si*.072, 0];
-  return mul(Hm, m);
+    .213-co*.213-si*.787, .715-co*.715+si*.715, .072+co*.928+si*.072, 0], B);
+  // Clers/Stgirs als Tabelle: Verschiebung je nach Luminanz (0–255), weich auslaufend
+  const hl = v('hil') / 100, sh = v('sha') / 100;
+  let T = null;
+  if (hl || sh){
+    T = new Float32Array(256);
+    for (let i = 0; i < 256; i++){
+      const L = i / 255;
+      const wS = Math.pow(1 - L, 2), wH = Math.pow(L, 2);
+      T[i] = 110 * (sh * wS * (1 - L * 0.3) + hl * wH * (1 - (1 - L) * 0.3));
+    }
+  }
+  return { A, B, T };
 }
-function apply(src, dst, m){
-  const s = src.data, d = dst.data;
+function apply(src, dst, P){
+  const s = src.data, d = dst.data, A = P.A, B = P.B, T = P.T;
   for (let i = 0; i < s.length; i += 4){
-    const r = s[i], g = s[i+1], b = s[i+2];
-    d[i]   = m[0]*r + m[1]*g + m[2]*b + m[3];
-    d[i+1] = m[4]*r + m[5]*g + m[6]*b + m[7];
-    d[i+2] = m[8]*r + m[9]*g + m[10]*b + m[11];
+    let r = A[0]*s[i] + A[1]*s[i+1] + A[2]*s[i+2] + A[3];
+    let g = A[4]*s[i] + A[5]*s[i+1] + A[6]*s[i+2] + A[7];
+    let b = A[8]*s[i] + A[9]*s[i+1] + A[10]*s[i+2] + A[11];
+    if (T){
+      let L = (0.2126*r + 0.7152*g + 0.0722*b) | 0;
+      L = L < 0 ? 0 : L > 255 ? 255 : L;
+      const dl = T[L]; r += dl; g += dl; b += dl;
+    }
+    d[i]   = B[0]*r + B[1]*g + B[2]*b + B[3];
+    d[i+1] = B[4]*r + B[5]*g + B[6]*b + B[7];
+    d[i+2] = B[8]*r + B[9]*g + B[10]*b + B[11];
     d[i+3] = s[i+3];
   }
 }
-const isNeutral = () => ['bri','con','sat','hue'].every(id => +$(id).value === 0);
+const isNeutral = () => IDS.every(id => v(id) === 0);
 
 /* ---------- Vorschau ---------- */
 let raf = 0;
@@ -248,11 +274,11 @@ function redraw(){
   raf = requestAnimationFrame(() => {
     if (!base) return;
     const out = new ImageData(base.width, base.height);
-    apply(base, out, matrix());
+    apply(base, out, params());
     view.getContext('2d').putImageData(out, 0, 0);
   });
 }
-for (const id of ['bri','con','sat','hue']){
+for (const id of IDS){
   $(id).addEventListener('input', () => {
     document.querySelector(`.val[data-for="${id}"]`).textContent = $(id).value + (id === 'hue' ? '°' : '');
     $('resetBtn').disabled = isNeutral();
@@ -262,7 +288,7 @@ for (const id of ['bri','con','sat','hue']){
 document.querySelectorAll('.val').forEach(v => v.onclick = () => {
   const el = $(v.dataset.for); el.value = 0; el.dispatchEvent(new Event('input'));
 });
-$('resetBtn').onclick = () => { for (const id of ['bri','con','sat','hue']){ $(id).value = 0; $(id).dispatchEvent(new Event('input')); } };
+$('resetBtn').onclick = () => { for (const id of IDS){ $(id).value = 0; $(id).dispatchEvent(new Event('input')); } };
 
 /* ---------- Laden ---------- */
 function load(file){
@@ -458,7 +484,7 @@ $('dlBtn').onclick = () => {
       else cx.drawImage(scaledRegion(r, ow, oh), 0, 0, ow, oh);
       if (!isNeutral()){
         const d = cx.getImageData(0, 0, ow, oh);
-        apply(d, d, matrix());
+        apply(d, d, params());
         cx.putImageData(d, 0, 0);
       }
       c.toBlob(b => {
