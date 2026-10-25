@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Fin a 5 ebenas cun agens maletgs ed overlays, urden adattabel. Export sco PNG.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Visual cun ebenas">
+<meta property="og:description" content="Fin a 5 ebenas cun agens maletgs ed overlays, urden adattabel. Export sco PNG.">
+<meta property="og:url" content="https://tools.dombuzz.ch/ebenas">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>Visual cun ebenas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='16' y='38' width='52' height='36' rx='4' stroke='%23ff4d64' stroke-width='8' fill='none'/%3E%3Cpath d='M32 26h52v36' stroke='%23ff4d64' stroke-width='8' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+    --accent:#ff4d64; --accent-dark:#d93a50; --border:#2f2f34;
+    --mono:#26262a; color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  body{
+    margin:0; padding:32px 16px; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+  }
+  .container{ width:100%; max-width:1100px; min-width:0; margin:0 auto; }
+  h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+  h1 .acc{color:var(--accent)}
+  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+  .homelink:hover,.homelink:focus-visible{color:var(--accent)}
+  .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px; }
+
+  .toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .spacer{ flex:1; }
+  button{
+    background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:10px 16px;
+    font-size:0.9rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  button:hover{ background:var(--accent-dark); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  button.ghost{ background:transparent; color:var(--text); border:1px solid var(--border); }
+  button.ghost:hover{ border-color:var(--muted); }
+  button:focus-visible, .stage:focus-visible, select:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .field{ display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--muted); }
+  select{
+    padding:9px 10px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.9rem; font-family:inherit;
+  }
+
+  .urlrow{ display:flex; gap:8px; margin-bottom:16px; }
+  .urlrow input{
+    flex:1; min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
+  }
+  .urlrow input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  /* Arbeitsfläche + Ebenen nebeneinander, auf dem Handy untereinander */
+  .work{ display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:16px; align-items:start; }
+  @media (max-width:860px){ .work{ grid-template-columns:minmax(0,1fr); } }
+
+  /* Bühne: Rahmen in der Mitte, Überstand der aktiven Ebene halbtransparent sichtbar */
+  .stage{
+    position:relative; overflow:hidden; background:var(--mono);
+    border-radius:12px; padding:48px 9%; touch-action:none; user-select:none;
+  }
+  .frame{ position:relative; width:100%; margin:0 auto; }
+  .frame-bg{ position:absolute; inset:0; background:#fff; }
+  .frame img{ position:absolute; max-width:none; pointer-events:none; }
+  .ghost-img{ opacity:.3; }
+  .clip{ position:absolute; inset:0; overflow:hidden; z-index:1; }
+  .frame-line{ position:absolute; inset:0; z-index:2; outline:1px solid rgba(255,77,100,.8); pointer-events:none; }
+  .box{ position:absolute; z-index:3; cursor:move; outline:1px dashed rgba(255,77,100,.7); }
+  .handle{
+    position:absolute; width:22px; height:22px; margin:-11px 0 0 -11px;
+    background:#fff; border:3px solid var(--accent); border-radius:50%; touch-action:none;
+  }
+  .handle[data-c="nw"], .handle[data-c="se"]{ cursor:nwse-resize; }
+  .handle[data-c="ne"], .handle[data-c="sw"]{ cursor:nesw-resize; }
+  .empty{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:6px; text-align:center; cursor:pointer; color:#121214; z-index:4; padding:0 12px;
+  }
+  .empty strong{ font-size:1.05rem; }
+  .empty span{ font-size:0.85rem; color:#555; }
+  .stage.over{ outline:2px dashed var(--accent); outline-offset:-2px; }
+
+  /* Ebenen-Liste */
+  .layers h2{ font-size:0.95rem; margin:0 0 2px; }
+  .layers .note{ font-size:0.8rem; color:var(--muted); margin:0 0 10px; }
+  .list{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .row{
+    display:grid; grid-template-columns:44px minmax(0,1fr); gap:6px 10px; align-items:center;
+    padding:8px; border:1px solid var(--border); border-radius:10px; background:var(--mono); cursor:pointer;
+  }
+  .row.active{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  .row.off .thumb, .row.off .name{ opacity:.45; }
+  .row.drag{ opacity:.5; }
+  .row.dropto{ border-style:dashed; border-color:var(--accent); }
+  .thumb{
+    width:44px; height:44px; border-radius:6px; object-fit:contain;
+    background:repeating-conic-gradient(#888 0 25%, #bbb 0 50%) 0 0/10px 10px;
+  }
+  .meta{ min-width:0; }
+  .name{ font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .info{ font-size:0.75rem; color:var(--muted); }
+  .btns{ grid-column:1 / -1; display:flex; gap:4px; flex-wrap:wrap; }
+  .btns button{
+    background:transparent; color:var(--text); border:1px solid var(--border);
+    padding:5px 9px; font-size:0.8rem; border-radius:7px; line-height:1.2;
+  }
+  .btns button:hover:not(:disabled){ border-color:var(--muted); background:transparent; }
+  .btns button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
+  .btns .del{ margin-left:auto; }
+  .layers .add{ width:100%; }
+  .nolayers{ font-size:0.85rem; color:var(--muted); margin:0 0 10px; }
+
+  .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
+  .msg.err{ color:var(--err,#ff6b7d); }
+  @media (max-width:600px){
+    body{ padding:20px 12px; }
+    .card{ padding:14px; }
+    .stage{ padding:36px 6%; }
+    .empty strong{ font-size:.9rem; }
+    .empty span{ font-size:.75rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="homelink" href="/">← Tools</a>
+  <h1>Visual <span class="acc">+</span> ebenas</h1>
+  <p class="subtitle">Fin a 5 ebenas cun agens maletgs ed overlays. Urden adattabel, export sco PNG.</p>
+
+  <div class="card">
+    <div class="toolbar">
+      <label class="field">Format
+        <select id="fmtSel">
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+        </select>
+      </label>
+      <div class="spacer"></div>
+      <button type="button" class="ghost" id="pickBtn">Agiuntar ina ebena</button>
+    </div>
+
+    <div class="urlrow">
+      <input type="url" id="urlInput" placeholder="Integrar il link d'in maletg RTR u l'URL d'in artitgel" spellcheck="false" autocomplete="off">
+      <button type="button" class="ghost" id="urlBtn">Chargiar</button>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="stage" id="stage" tabindex="0" aria-label="Surfatscha da lavur">
+          <div class="frame" id="frame">
+            <div class="frame-bg"></div>
+            <img class="ghost-img" id="ghost" alt="" hidden>
+            <div class="clip" id="clip"></div>
+            <div class="frame-line"></div>
+            <div class="box" id="box" hidden>
+              <div class="handle" data-c="nw"></div><div class="handle" data-c="ne"></div>
+              <div class="handle" data-c="sw"></div><div class="handle" data-c="se"></div>
+            </div>
+            <div class="empty" id="empty">
+              <strong>Trair qua ils maletgs</strong>
+              <span>u tutgar per tscherner, integrar cun Ctrl/Cmd+V u inditgar survart in link RTR</span>
+            </div>
+          </div>
+        </div>
+        <p class="hint">Tscherna ina ebena en la glista, lura la pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. Quai che surpassa vegn taglià giu tar l'export.</p>
+      </div>
+
+      <div class="layers">
+        <h2>Ebenas <span id="count" class="info"></span></h2>
+        <p class="note">L'ebena survart en la glista stat davant.</p>
+        <p class="nolayers" id="nolayers">Anc naginas ebenas.</p>
+        <div class="list" id="list"></div>
+        <button type="button" class="ghost add" id="addBtn">+ Agiuntar ina ebena</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="dlBtn" disabled>Telechargiar il PNG</button>
+      <button type="button" class="ghost" id="fitBtn" disabled>Reset ebena</button>
+      <span class="msg" id="msg"></span>
+    </div>
+  </div>
+  <input type="file" id="file" accept="image/*" multiple hidden>
+</div>
+
+<script>
+const MAX = 5;
+const $ = id => document.getElementById(id);
+const stage = $('stage'), frame = $('frame'), clip = $('clip'), ghost = $('ghost');
+const box = $('box'), empty = $('empty'), msg = $('msg'), list = $('list');
+
+let W = 1920, H = 1080;
+let layers = [];        // Reihenfolge: Index 0 = unterste Ebene
+let active = null;      // aktive Ebene (Objekt)
+let nextId = 1;
+
+function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
+
+/* ---------- Format ---------- */
+const fmtSel = $('fmtSel');
+try { const f = localStorage.getItem('ebenas-fmt'); if (f && [...fmtSel.options].some(o => o.value === f)) fmtSel.value = f; } catch(e){}
+function applyFmt(){
+  [W, H] = fmtSel.value.split('x').map(Number);
+  frame.style.aspectRatio = W + '/' + H;
+  // Hochformate nicht höher als ca. 70 % des Fensters
+  frame.style.maxWidth = `min(100%, calc(70vh * ${W / H}))`;
+  layers.forEach(fitLayer);
+  render();
+}
+fmtSel.onchange = () => { try { localStorage.setItem('ebenas-fmt', fmtSel.value); } catch(e){} applyFmt(); };
+
+/* ---------- Geometrie (Export-Koordinaten) ---------- */
+const coverS = L => Math.max(W / L.iw, H / L.ih);
+const containS = L => Math.min(W / L.iw, H / L.ih);
+const minS = L => L.mode === 'cover' ? coverS(L) : containS(L) * 0.05;
+function clamp(L){
+  L.s = Math.max(L.s, minS(L));
+  if (L.mode === 'cover'){
+    L.x = Math.min(0, Math.max(W - L.iw * L.s, L.x));
+    L.y = Math.min(0, Math.max(H - L.ih * L.s, L.y));
+  } else {
+    // frei: mindestens ein Stück der Ebene bleibt in der Fläche
+    const w = L.iw * L.s, h = L.ih * L.s, m = 20;
+    L.x = Math.min(W - m, Math.max(m - w, L.x));
+    L.y = Math.min(H - m, Math.max(m - h, L.y));
+  }
+}
+function fitLayer(L){
+  // frei: Originalgrösse, höchstens so gross, dass die Ebene ganz in die Fläche passt
+  L.s = L.mode === 'cover' ? coverS(L) : Math.min(1, containS(L));
+  L.x = (W - L.iw * L.s) / 2; L.y = (H - L.ih * L.s) / 2;
+}
+function k(){ return frame.clientWidth / W; }
+
+function render(){
+  const f = k();
+  layers.forEach((L, i) => {
+    clamp(L);
+    const el = L.el;
+    el.style.left = L.x * f + 'px'; el.style.top = L.y * f + 'px';
+    el.style.width = L.iw * L.s * f + 'px'; el.style.height = L.ih * L.s * f + 'px';
+    el.style.zIndex = i + 1;
+    el.style.visibility = L.visible ? 'visible' : 'hidden';
+  });
+  empty.hidden = layers.length > 0;
+  const A = active;
+  box.hidden = ghost.hidden = !A || !A.visible;
+  $('fitBtn').disabled = !A;
+  $('dlBtn').disabled = !layers.some(L => L.visible);
+  if (!A || !A.visible) return;
+  ghost.src = A.url;
+  for (const p of ['left','top','width','height']) ghost.style[p] = A.el.style[p];
+  // Griffbox = Kante der aktiven Ebene, Griffe innerhalb der sichtbaren Bühne halten
+  const sr = stage.getBoundingClientRect(), fr = frame.getBoundingClientRect();
+  const minX = sr.left - fr.left + 12, minY = sr.top - fr.top + 12;
+  const maxX = sr.right - fr.left - 12, maxY = sr.bottom - fr.top - 12;
+  const L0 = Math.max(minX, A.x * f), T0 = Math.max(minY, A.y * f);
+  const R0 = Math.min(maxX, (A.x + A.iw * A.s) * f), B0 = Math.min(maxY, (A.y + A.ih * A.s) * f);
+  box.style.left = L0 + 'px'; box.style.top = T0 + 'px';
+  box.style.width = Math.max(0, R0 - L0) + 'px'; box.style.height = Math.max(0, B0 - T0) + 'px';
+  const pos = { nw:[0,0], ne:[1,0], sw:[0,1], se:[1,1] };
+  box.querySelectorAll('.handle').forEach(h => {
+    const [a, b] = pos[h.dataset.c];
+    h.style.left = a * 100 + '%'; h.style.top = b * 100 + '%';
+  });
+}
+window.addEventListener('resize', render);
+
+/* ---------- Ebenen-Liste ---------- */
+function renderList(){
+  list.innerHTML = '';
+  $('nolayers').hidden = layers.length > 0;
+  $('count').textContent = layers.length ? `(${layers.length}/${MAX})` : '';
+  $('addBtn').disabled = $('pickBtn').disabled = layers.length >= MAX;
+  // oberste Ebene zuerst anzeigen
+  [...layers].reverse().forEach(L => {
+    const i = layers.indexOf(L);
+    const row = document.createElement('div');
+    row.className = 'row' + (L === active ? ' active' : '') + (L.visible ? '' : ' off');
+    row.draggable = true; row.dataset.id = L.id;
+    row.innerHTML = `<img class="thumb" alt=""><div class="meta"><div class="name"></div><div class="info"></div></div>
+      <div class="btns">
+        <button type="button" data-a="up" title="Pli ensi" aria-label="Pli ensi">↑</button>
+        <button type="button" data-a="down" title="Pli engiu" aria-label="Pli engiu">↓</button>
+        <button type="button" data-a="vis" aria-pressed="${!L.visible}" title="${L.visible ? 'Zuppentar' : 'Mussar'}">${L.visible ? 'Zuppentar' : 'Mussar'}</button>
+        <button type="button" data-a="mode" title="Emplenir u liber">${L.mode === 'cover' ? 'Emplenir' : 'Liber'}</button>
+        <button type="button" data-a="del" class="del" title="Stizzar l'ebena" aria-label="Stizzar l'ebena">✕</button>
+      </div>`;
+    row.querySelector('.thumb').src = L.url;
+    row.querySelector('.name').textContent = L.name;
+    row.querySelector('.info').textContent = `${L.iw} × ${L.ih} px`;
+    row.querySelector('[data-a="up"]').disabled = i === layers.length - 1;
+    row.querySelector('[data-a="down"]').disabled = i === 0;
+    row.onclick = e => {
+      const a = e.target.closest('button')?.dataset.a;
+      if (a === 'up') move(L, +1);
+      else if (a === 'down') move(L, -1);
+      else if (a === 'vis') { L.visible = !L.visible; }
+      else if (a === 'mode') { L.mode = L.mode === 'cover' ? 'free' : 'cover'; fitLayer(L); }
+      else if (a === 'del') { remove(L); return; }
+      active = L; renderList(); render();
+    };
+    // Ziehen zum Umsortieren (Desktop)
+    row.addEventListener('dragstart', e => { row.classList.add('drag'); e.dataTransfer.setData('text/x-ebena', L.id); e.dataTransfer.effectAllowed = 'move'; });
+    row.addEventListener('dragend', () => row.classList.remove('drag'));
+    row.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('text/x-ebena')) { e.preventDefault(); row.classList.add('dropto'); } });
+    row.addEventListener('dragleave', () => row.classList.remove('dropto'));
+    row.addEventListener('drop', e => {
+      const id = e.dataTransfer.getData('text/x-ebena'); row.classList.remove('dropto');
+      if (!id) return; e.preventDefault();
+      const src = layers.find(l => String(l.id) === id); if (!src || src === L) return;
+      // gezogene Ebene übernimmt die Position der Zielzeile
+      layers.splice(layers.indexOf(src), 1); layers.splice(i, 0, src);
+      active = src; renderList(); render();
+    });
+    list.appendChild(row);
+  });
+}
+function move(L, d){
+  const i = layers.indexOf(L), j = i + d;
+  if (j < 0 || j >= layers.length) return;
+  [layers[i], layers[j]] = [layers[j], layers[i]];
+}
+function remove(L){
+  layers.splice(layers.indexOf(L), 1);
+  L.el.remove(); URL.revokeObjectURL(L.url);
+  if (active === L) active = layers[layers.length - 1] || null;
+  renderList(); render();
+  setMsg('');
+}
+$('fitBtn').onclick = () => { if (active){ fitLayer(active); render(); } };
+
+/* ---------- Laden ---------- */
+// Prüft, ob ein Bild transparente Bereiche hat (für die Wahl Emplenir/Liber)
+function hasAlpha(im){
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const cx = c.getContext('2d', { willReadFrequently:true }); cx.drawImage(im, 0, 0, 64, 64);
+    const d = cx.getImageData(0, 0, 64, 64).data;
+    for (let i = 3; i < d.length; i += 4) if (d[i] < 250) return true;
+  } catch(e){}
+  return false;
+}
+function addFile(file, label){
+  return new Promise(res => {
+    if (layers.length >= MAX) { setMsg(`Maximalmain ${MAX} ebenas.`, true); return res(false); }
+    if (!file || !file.type.startsWith('image/')) { setMsg('Quai n\'è nagin file da maletg.', true); return res(false); }
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+      if (layers.length >= MAX) { URL.revokeObjectURL(url); setMsg(`Maximalmain ${MAX} ebenas.`, true); return res(false); }
+      const L = { id: nextId++, name: label || file.name || 'Maletg', url, img: im, iw: im.naturalWidth, ih: im.naturalHeight, visible: true };
+      // Bilder mit Transparenz in anderem Seitenverhältnis (z. B. Logos) frei platzieren, sonst Fläche füllen
+      const sameRatio = Math.abs(L.iw / L.ih - W / H) < 0.01;
+      L.mode = hasAlpha(im) && !sameRatio ? 'free' : 'cover';
+      L.el = document.createElement('img'); L.el.src = url; L.el.alt = '';
+      clip.appendChild(L.el);
+      fitLayer(L);
+      layers.push(L); active = L;
+      renderList(); render();
+      setMsg(`${L.name}: ${L.iw} × ${L.ih} px` + (L.mode === 'cover' && coverS(L) > 1 ? ', vegn engrondì' : ''));
+      res(true);
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); setMsg('Il maletg n\'ha betg pudì vegnir legì.', true); res(false); };
+    im.src = url;
+  });
+}
+async function addFiles(files){
+  const imgs = [...files].filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) { setMsg('Quai n\'è nagin file da maletg.', true); return; }
+  for (const f of imgs){ if (!(await addFile(f))) break; }
+}
+const pick = () => { if (layers.length < MAX) $('file').click(); else setMsg(`Maximalmain ${MAX} ebenas.`, true); };
+$('pickBtn').onclick = pick; $('addBtn').onclick = pick; empty.onclick = pick;
+$('file').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+stage.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); stage.classList.add('over'); } });
+stage.addEventListener('dragleave', () => stage.classList.remove('over'));
+stage.addEventListener('drop', e => { if (!e.dataTransfer.files.length) return; e.preventDefault(); stage.classList.remove('over'); addFiles(e.dataTransfer.files); });
+document.addEventListener('paste', e => {
+  if (e.target === urlInput) return;          // Einfügen ins Linkfeld normal behandeln
+  const files = [...e.clipboardData.items].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile());
+  if (files.length) { addFiles(files); return; }
+  const txt = (e.clipboardData.getData('text') || '').trim();
+  if (/^https?:\/\//i.test(txt) || /^\/.*\/cms\/images\//i.test(txt)){ urlInput.value = txt; loadFromUrl(txt); }
+});
+
+/* ---------- RTR-Bildlink (Logik wie RTR Picture-downloader) ---------- */
+const urlInput = $('urlInput');
+const DEFAULT_BASE = 'https://www.rtr.ch/static/cms/images/dynamic/noop/';
+function convertOne(raw){
+  const v = (raw || '').trim();
+  if (!v) return { error:'Vid.' };
+  if (!/^[a-z]+:\/\//i.test(v) && /^[\w-]+\.\w+$/i.test(v)) return { url: DEFAULT_BASE + v, filename: v };
+  let toParse = /^\/.*\/cms\/images\//i.test(v) ? 'https://www.rtr.ch' + v : v;
+  let u;
+  try { u = new URL(toParse); } catch(e){ return { error:'Nagina URL valida.' }; }
+  if (u.searchParams.has('imageUrl')){
+    u.searchParams.set('width', '1920');
+    return { url: u.toString(), filename:'maletg' };
+  }
+  const marker = '/cms/images/', idx = u.pathname.indexOf(marker);
+  if (idx === -1) return { error:'Nagin format da maletg enconuschent identifitgà.' };
+  const filename = u.pathname.slice(u.pathname.lastIndexOf('/') + 1);
+  if (!filename) return { error:'Nagin num da file en il link.' };
+  return { url: u.origin + u.pathname.slice(0, idx + marker.length) + 'dynamic/noop/' + filename, filename };
+}
+function decodeHtml(s){
+  return s.replace(/&quot;/g,'"').replace(/&#0?39;|&apos;/g,"'").replace(/&amp;/g,'&')
+          .replace(/\\u002[fF]/g,'/').replace(/\\\//g,'/');
+}
+function firstCandidate(html){
+  const d = decodeHtml(html);
+  const pats = [
+    /data-image-id="([a-z0-9]+)"/i,
+    /https?:\/\/[^\s"'<>\\]+\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif)/i,
+    /(?:^|["'\s,])(\/[a-z0-9/_-]*\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif))/i,
+    /https?:\/\/il\.[a-z0-9-]+\.ch\/images\/\?[^\s"'<>\\]+/i
+  ];
+  const og = /<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i.exec(d);
+  for (let i = 0; i < pats.length; i++){
+    const m = pats[i].exec(d);
+    if (!m) continue;
+    if (i === 0) return DEFAULT_BASE + m[1] + '.webp';
+    return (m[1] || m[0]).replace(/[)\].,;:'"]+$/, '');
+  }
+  return og ? og[1] : null;
+}
+async function fetchOk(url){
+  const r = await fetch(url, { mode:'cors', cache:'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r;
+}
+let urlToken = 0;
+async function loadFromUrl(raw){
+  const my = ++urlToken;
+  const v = (raw || '').trim();
+  if (!v) return;
+  if (layers.length >= MAX) { setMsg(`Maximalmain ${MAX} ebenas.`, true); return; }
+  let res = convertOne(v);
+  setMsg('Chargel il maletg…');
+  try {
+    if (res.error){
+      if (!/^https?:\/\//i.test(v)) { setMsg(res.error, true); return; }
+      setMsg('Tschertg il maletg en l\'artitgel…');
+      const html = await (await fetchOk(v)).text();
+      if (my !== urlToken) return;
+      const c = firstCandidate(html);
+      if (!c) { setMsg('Chattà nagin maletg sin questa pagina.', true); return; }
+      res = convertOne(c);
+      if (res.error) { setMsg(res.error, true); return; }
+    }
+    let blob = await (await fetchOk(res.url)).blob();
+    if (my !== urlToken) return;
+    if (!blob.type.startsWith('image/')) blob = new Blob([blob], { type:'image/webp' });
+    if (await addFile(blob, 'Maletg RTR')) urlInput.value = '';
+  } catch(e){
+    if (my !== urlToken) return;
+    setMsg('Il maletg n\'ha betg pudì vegnir chargià directamain. Al telechargiar cun «RTR Picture-downloader» e trair qua.', true);
+  }
+}
+$('urlBtn').onclick = () => loadFromUrl(urlInput.value);
+urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadFromUrl(urlInput.value); });
+urlInput.addEventListener('paste', () => setTimeout(() => loadFromUrl(urlInput.value), 0));
+
+/* ---------- Zoom um einen Punkt ---------- */
+function zoomAt(factor, px, py){
+  const A = active; if (!A) return;
+  const ns = Math.max(minS(A), A.s * factor), r = ns / A.s;
+  A.x = px - (px - A.x) * r; A.y = py - (py - A.y) * r; A.s = ns; render();
+}
+function toCanvas(e){
+  const fr = frame.getBoundingClientRect(), f = k();
+  return [(e.clientX - fr.left) / f, (e.clientY - fr.top) / f];
+}
+stage.addEventListener('wheel', e => {
+  if (!active || !active.visible) return; e.preventDefault();
+  const [px, py] = toCanvas(e); zoomAt(Math.exp(-e.deltaY * 0.0015), px, py);
+}, { passive:false });
+
+/* ---------- Ziehen, Ecken, Pinch (wirkt auf die aktive Ebene) ---------- */
+const pointers = new Map();
+let mode = null, start = null;
+stage.addEventListener('pointerdown', e => {
+  const A = active;
+  if (!A || !A.visible) return;
+  stage.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, toCanvas(e));
+  const h = e.target.closest('.handle');
+  if (pointers.size === 2){
+    const [a, b] = [...pointers.values()];
+    mode = 'pinch';
+    start = { d: Math.hypot(a[0]-b[0], a[1]-b[1]), s:A.s, x:A.x, y:A.y, m:[(a[0]+b[0])/2, (a[1]+b[1])/2] };
+  } else if (h){
+    const c = h.dataset.c;
+    const ax = c.includes('w') ? A.x + A.iw * A.s : A.x, ay = c.includes('n') ? A.y + A.ih * A.s : A.y;
+    const p = pointers.get(e.pointerId);
+    mode = 'corner';
+    start = { ax, ay, s:A.s, d: Math.max(1, Math.hypot(p[0]-ax, p[1]-ay)), fx: (ax - A.x) / A.s, fy: (ay - A.y) / A.s };
+  } else {
+    mode = 'move';
+    start = { p: pointers.get(e.pointerId), x:A.x, y:A.y };
+  }
+});
+stage.addEventListener('pointermove', e => {
+  const A = active;
+  if (!A || !pointers.has(e.pointerId)) return;
+  const p = toCanvas(e); pointers.set(e.pointerId, p);
+  if (mode === 'move'){
+    A.x = start.x + p[0] - start.p[0]; A.y = start.y + p[1] - start.p[1]; render();
+  } else if (mode === 'corner'){
+    A.s = Math.max(minS(A), start.s * Math.hypot(p[0]-start.ax, p[1]-start.ay) / start.d);
+    A.x = start.ax - start.fx * A.s; A.y = start.ay - start.fy * A.s; render();
+  } else if (mode === 'pinch' && pointers.size === 2){
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a[0]-b[0], a[1]-b[1]);
+    const m = [(a[0]+b[0])/2, (a[1]+b[1])/2];
+    const ns = Math.max(minS(A), start.s * d / start.d), r = ns / start.s;
+    A.s = ns;
+    A.x = m[0] - (start.m[0] - start.x) * r;
+    A.y = m[1] - (start.m[1] - start.y) * r;
+    render();
+  }
+});
+function up(e){
+  pointers.delete(e.pointerId);
+  if (pointers.size === 1 && active){
+    const p = [...pointers.values()][0]; mode = 'move'; start = { p, x:active.x, y:active.y };
+  } else if (!pointers.size) mode = null;
+}
+stage.addEventListener('pointerup', up);
+stage.addEventListener('pointercancel', up);
+
+/* Pfeiltasten verschieben, +/- zoomen */
+stage.addEventListener('keydown', e => {
+  const A = active; if (!A) return;
+  const st = e.shiftKey ? 50 : 10;
+  const keys = { ArrowLeft:[-st,0], ArrowRight:[st,0], ArrowUp:[0,-st], ArrowDown:[0,st] };
+  if (keys[e.key]){ A.x += keys[e.key][0]; A.y += keys[e.key][1]; render(); e.preventDefault(); }
+  if (e.key === '+' || e.key === '=') zoomAt(1.05, W/2, H/2);
+  if (e.key === '-') zoomAt(1/1.05, W/2, H/2);
+});
+
+/* ---------- Export ---------- */
+function scaled(im, tw, th){
+  let src = im, w = im.naturalWidth, h = im.naturalHeight;
+  while (w / 2 > tw && h / 2 > th){
+    w = Math.round(w / 2); h = Math.round(h / 2);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const cx = c.getContext('2d'); cx.imageSmoothingQuality = 'high';
+    cx.drawImage(src, 0, 0, w, h); src = c;
+  }
+  return src;
+}
+$('dlBtn').onclick = () => {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const cx = c.getContext('2d');
+  cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+  cx.fillStyle = '#fff'; cx.fillRect(0, 0, W, H);
+  for (const L of layers){
+    if (!L.visible) continue;
+    clamp(L);
+    cx.drawImage(scaled(L.img, L.iw * L.s, L.ih * L.s), L.x, L.y, L.iw * L.s, L.ih * L.s);
+  }
+  c.toBlob(b => {
+    const d = new Date(), z = n => String(n).padStart(2, '0');
+    const name = `visual_${W}x${H}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    setMsg('Memorisà: ' + name);
+  }, 'image/png');
+};
+
+applyFmt();
+renderList();
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>
