@@ -342,6 +342,7 @@ function renderList(){
         <button type="button" data-a="mode" title="Emplenir u liber">${L.mode === 'cover' ? 'Emplenir' : 'Liber'}</button>
         <button type="button" data-a="blur" aria-pressed="${!!L.blur}" title="Fund blur davostiers il layer">Blur</button>
         <button type="button" data-a="lock" aria-pressed="${!!L.locked}" title="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}" aria-label="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}">${L.locked ? '🔒' : '🔓'}</button>
+        <button type="button" data-a="dup" title="Duplitgar il layer" aria-label="Duplitgar il layer">⧉</button>
         <button type="button" data-a="del" class="del" title="Stizzar il layer" aria-label="Stizzar il layer">✕</button>
       </div>`;
     row.querySelector('.thumb').src = L.url;
@@ -352,6 +353,7 @@ function renderList(){
     row.querySelector('[data-a="mode"]').disabled = !!L.locked;
     row.querySelector('[data-a="blur"]').disabled = !!L.locked;
     row.querySelector('[data-a="del"]').disabled = !!L.locked;
+    row.querySelector('[data-a="dup"]').disabled = layers.length >= MAX;
     row.onclick = e => {
       if (suppressClick) { suppressClick = false; return; }
       const a = e.target.closest('button')?.dataset.a;
@@ -366,6 +368,7 @@ function renderList(){
         if (L.blur){ makeBlur(L); if (L.mode === 'cover') L.mode = 'free'; fitLayer(L); }
       } }
       else if (a === 'del') { if (!L.locked) remove(L); return; }
+      else if (a === 'dup') { duplicate(L); return; }
       active = L; renderList(); render();
     };
     row.addEventListener('pointerdown', e => startRowDrag(e, L, row));
@@ -417,6 +420,18 @@ function endRowDrag(e){
 list.addEventListener('pointerup', endRowDrag);
 list.addEventListener('pointercancel', e => { if (rowDrag && rowDrag.id === e.pointerId){ rowDrag = null; renderList(); } });
 
+// Kopie mit gleicher Position, Grösse und gleichen Einstellungen direkt über dem Original
+function duplicate(L){
+  if (layers.length >= MAX) { setMsg(`Maximalmain ${MAX} layers.`, true); return; }
+  const C = { id: nextId++, name: L.name.replace(/ \(copia( \d+)?\)$/, '') + ' (copia)', url: L.url, img: L.img,
+    iw: L.iw, ih: L.ih, s: L.s, x: L.x, y: L.y, mode: L.mode, blur: L.blur, visible: L.visible, locked: false };
+  C.el = document.createElement('img'); C.el.src = C.url; C.el.alt = '';
+  clip.appendChild(C.el);
+  if (C.blur) makeBlur(C);
+  layers.splice(layers.indexOf(L) + 1, 0, C);
+  active = C; renderList(); render();
+  setMsg(`Duplitgà: ${L.name}`);
+}
 function move(L, d){
   const i = layers.indexOf(L), j = i + d;
   if (j < 0 || j >= layers.length) return;
@@ -424,7 +439,9 @@ function move(L, d){
 }
 function remove(L){
   layers.splice(layers.indexOf(L), 1);
-  L.el.remove(); if (L.bg) L.bg.remove(); URL.revokeObjectURL(L.url);
+  L.el.remove(); if (L.bg) L.bg.remove();
+  // Bilddaten nur freigeben, wenn keine Kopie sie noch braucht
+  if (!layers.some(o => o.url === L.url)) URL.revokeObjectURL(L.url);
   if (active === L) active = layers[layers.length - 1] || null;
   renderList(); render();
   setMsg('');
