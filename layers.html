@@ -145,6 +145,12 @@
   .tabs button:hover{ background:transparent; color:var(--text); }
   .tabs button[aria-selected="true"]{ color:var(--text); border-bottom-color:var(--accent); }
   .tabs em{ font-style:normal; color:var(--accent); }
+  .tabs button[aria-selected="true"] em{ color:inherit; }
+  .edit .ctl label{ cursor:pointer; }
+  .edit .ctl label:hover{ color:var(--accent); }
+  .secreset{ background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:6px;
+    padding:0 7px; font-size:0.85rem; line-height:1.5; margin-left:6px; vertical-align:1px; }
+  .secreset:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
   .tabs .tcount{ font-size:0.75rem; color:inherit; opacity:.9; font-weight:400; }
   @media (max-width:600px){ .tabs button{ padding:9px 9px; font-size:0.85rem; } }
   .side h3:first-of-type{ margin-top:4px; }
@@ -247,12 +253,12 @@
         <div class="pane" data-pane="0">
           <p class="who"><span>Layer:</span> <b class="whoName">–</b> <button type="button" class="link" data-goto="2">midar</button></p>
           <div class="edit off" data-edit>
-            <h3>Clerezza</h3>
+            <h3>Clerezza <button type="button" class="secreset" data-reset="bri,con,hil,sha" title="Reset clerezza, cuntrast, clers e stgirs" aria-label="Reset clerezza, cuntrast, clers e stgirs">↺</button></h3>
           <div class="ctl"><div class="top"><label for="c_bri">Clerezza</label><span class="val" data-for="bri" title="Reset">0</span></div><input type="range" id="c_bri" data-c="bri" min="-100" max="100" step="1" value="0"></div>
-          <div class="ctl"><div class="top"><label for="c_con">Contrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="c_con" data-c="con" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_con">Cuntrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="c_con" data-c="con" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_hil">Clers</label><span class="val" data-for="hil" title="Reset">0</span></div><input type="range" id="c_hil" data-c="hil" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_sha">Stgirs</label><span class="val" data-for="sha" title="Reset">0</span></div><input type="range" id="c_sha" data-c="sha" min="-100" max="100" step="1" value="0"></div>
-            <h3>Colurs</h3>
+            <h3>Colurs <button type="button" class="secreset" data-reset="sat,wb,hue" title="Reset saturaziun, balantscha da l'alv e nianza" aria-label="Reset saturaziun, balantscha da l'alv e nianza">↺</button></h3>
           <div class="ctl"><div class="top"><label for="c_sat">Saturaziun</label><span class="val" data-for="sat" title="Reset">0</span></div><input type="range" id="c_sat" data-c="sat" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_wb">WB Balantscha da l'alv</label><span class="wbhint">fraid ↔ chaud</span><span class="val" data-for="wb" title="Reset">0</span></div><input type="range" id="c_wb" data-c="wb" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_hue">Nianza da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="c_hue" data-c="hue" min="-180" max="180" step="1" value="0"></div>
@@ -285,11 +291,11 @@
       </div>
     </div>
 
-    <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Quai che surpassa vegn taglià giu tar l'export.</p>
+    <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Tutgar il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
 
     <div class="actions">
       <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
-      <button type="button" class="ghost" id="fitBtn" disabled>Reset layer</button>
+      <button type="button" class="ghost" id="fitBtn" disabled>Reposiziunar</button>
       <span class="msg" id="msg"></span>
     </div>
   </div>
@@ -1001,6 +1007,17 @@ document.querySelectorAll('.edit input[type=range]').forEach(inp => inp.addEvent
   cancelAnimationFrame(colRaf);
   colRaf = requestAnimationFrame(() => { recolor(A); render(); updateThumb(A); });
 }));
+// Klick auf den Namen eines Reglers setzt ihn zurück
+document.querySelectorAll('.edit .ctl label').forEach(l => l.addEventListener('click', e => {
+  e.preventDefault();
+  const inp = $(l.htmlFor); inp.value = 0; inp.dispatchEvent(new Event('input'));
+}));
+// ↺ neben «Clerezza» bzw. «Colurs» setzt die ganze Gruppe zurück
+document.querySelectorAll('.secreset').forEach(b => b.onclick = () => {
+  const A = active; if (!A || A.locked) return;
+  b.dataset.reset.split(',').forEach(id => { A.col[id] = 0; });
+  recolor(A); render(); updateThumb(A);
+});
 document.querySelectorAll('.edit .val').forEach(v => v.onclick = () => {
   const inp = $('c_' + v.dataset.for); inp.value = 0; inp.dispatchEvent(new Event('input'));
 });
