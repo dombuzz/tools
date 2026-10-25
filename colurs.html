@@ -98,6 +98,7 @@
   .ratios button{ flex:1; background:transparent; color:var(--muted); padding:7px 8px; font-size:0.85rem; border-radius:7px; }
   .ratios button:hover{ background:transparent; color:var(--text); }
   .ratios button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); }
+  #fmtGroup button{ white-space:nowrap; }
   .size{ font-size:0.8rem; color:var(--muted); margin:8px 0 0; }
 
   .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
@@ -147,7 +148,7 @@
 
         <div class="sec">
           <h2>Retagl</h2>
-          <div class="ratios" role="group" aria-label="Retagl">
+          <div class="ratios" role="group" aria-label="Retagl" id="ratioGroup">
             <button type="button" data-r="0" aria-pressed="true">Original</button>
             <button type="button" data-r="16/9" aria-pressed="false">16:9</button>
             <button type="button" data-r="4/5" aria-pressed="false">4:5</button>
@@ -155,6 +156,15 @@
             <button type="button" data-r="9/16" aria-pressed="false">9:16</button>
           </div>
           <p class="size" id="size"></p>
+        </div>
+
+        <div class="sec">
+          <h2>Format dal file</h2>
+          <div class="ratios" role="group" aria-label="Format dal file" id="fmtGroup">
+            <button type="button" data-f="auto" aria-pressed="true">Sco l'original</button>
+            <button type="button" data-f="image/jpeg" aria-pressed="false">JPG</button>
+            <button type="button" data-f="image/png" aria-pressed="false">PNG</button>
+          </div>
         </div>
       </div>
     </div>
@@ -279,8 +289,21 @@ document.addEventListener('paste', e => {
 });
 
 /* ---------- Zuschnitt ---------- */
-const ratioBtns = [...document.querySelectorAll('.ratios button')];
+const ratioBtns = [...document.querySelectorAll('#ratioGroup button')];
 const parseR = s => { const [a, b] = s.split('/').map(Number); return b ? a / b : 0; };
+/* ---------- Dateiformat ---------- */
+const fmtBtns = [...document.querySelectorAll('#fmtGroup button')];
+let outFmt = 'auto';
+try { const f = localStorage.getItem('colurs-fmt'); if (f && fmtBtns.some(b => b.dataset.f === f)) outFmt = f; } catch(e){}
+function setOutFmt(f){
+  outFmt = f;
+  fmtBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.f === f));
+  try { localStorage.setItem('colurs-fmt', f); } catch(e){}
+}
+fmtBtns.forEach(b => b.onclick = () => setOutFmt(b.dataset.f));
+setOutFmt(outFmt);
+const exportType = () => outFmt === 'auto' ? fileType : outFmt;
+
 try { const r = localStorage.getItem('colurs-ratio'); if (r && ratioBtns.some(b => b.dataset.r === r)) ratio = parseR(r); } catch(e){}
 function ratioKey(r){ return r ? ratioBtns.find(b => Math.abs(parseR(b.dataset.r) - r) < 1e-9)?.dataset.r : '0'; }
 function setRatio(r){
@@ -368,11 +391,12 @@ $('dlBtn').onclick = () => {
   const r = cr ? { x:Math.round(cr.x), y:Math.round(cr.y), w:Math.round(cr.w), h:Math.round(cr.h) } : { x:0, y:0, w:iw, h:ih };
   r.w = Math.min(r.w, iw - r.x); r.h = Math.min(r.h, ih - r.y);
   setMsg('Elavurel…');
+  const type = exportType();
   setTimeout(() => {
     try {
       const c = document.createElement('canvas'); c.width = r.w; c.height = r.h;
       const cx = c.getContext('2d', { willReadFrequently:true });
-      if (fileType === 'image/jpeg') { cx.fillStyle = '#fff'; cx.fillRect(0, 0, r.w, r.h); }
+      if (type === 'image/jpeg') { cx.fillStyle = '#fff'; cx.fillRect(0, 0, r.w, r.h); }
       cx.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
       if (!isNeutral()){
         const d = cx.getImageData(0, 0, r.w, r.h);
@@ -382,13 +406,13 @@ $('dlBtn').onclick = () => {
       c.toBlob(b => {
         if (!b) { setMsg('Il maletg è memia grond per quest browser.', true); return; }
         const suffix = ratio ? '_' + ratioKey(ratio).replace('/', 'x') : '';
-        const name = `${fileName}_colurs${suffix}.${fileType === 'image/png' ? 'png' : 'jpg'}`;
+        const name = `${fileName}_colurs${suffix}.${type === 'image/png' ? 'png' : 'jpg'}`;
         const a = document.createElement('a');
         a.href = URL.createObjectURL(b); a.download = name;
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
         setMsg(`Memorisà: ${name} (${r.w} × ${r.h} px)`);
-      }, fileType, 0.92);
+      }, type, 0.92);
     } catch(e){ setMsg('Export betg reussì: il maletg è forsa memia grond.', true); }
   }, 30);
 };
