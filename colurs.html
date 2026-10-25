@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Adattar clerezza, contrast, saturaziun e tun da colur. Export en la grondezza da l'original u taglià en 16:9, 4:5, 1:1 u 9:16.">
+<meta name="description" content="Adattar clerezza, contrast, saturaziun e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Colurs">
-<meta property="og:description" content="Adattar clerezza, contrast, saturaziun e tun da colur. Export en la grondezza da l'original u taglià en 16:9, 4:5, 1:1 u 9:16.">
+<meta property="og:description" content="Adattar clerezza, contrast, saturaziun e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.">
 <meta property="og:url" content="https://tools.dombuzz.ch/colurs">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -99,6 +99,8 @@
   .ratios button:hover{ background:transparent; color:var(--text); }
   .ratios button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); }
   #fmtGroup button{ white-space:nowrap; }
+  #sizeGroup button{ line-height:1.3; }
+  #sizeGroup small{ font-weight:400; font-size:0.75rem; opacity:.85; }
   .size{ font-size:0.8rem; color:var(--muted); margin:8px 0 0; }
 
   .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
@@ -116,7 +118,7 @@
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
   <h1>Colurs</h1>
-  <p class="subtitle">Adattar clerezza, contrast, saturaziun e tun da colur. Export en la grondezza da l'original u taglià en 16:9, 4:5, 1:1 u 9:16.</p>
+  <p class="subtitle">Adattar clerezza, contrast, saturaziun e nianza da colur. Export en la grondezza/relaziun da l'original e sin giavisch taglià en 16:9, 4:5, 1:1 u 9:16.</p>
 
   <div class="card">
     <div class="work">
@@ -143,7 +145,7 @@
         <div class="ctl"><div class="top"><label for="bri">Clerezza</label><span class="val" data-for="bri" title="Reset">0</span></div><input type="range" id="bri" min="-100" max="100" value="0"></div>
         <div class="ctl"><div class="top"><label for="con">Contrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="con" min="-100" max="100" value="0"></div>
         <div class="ctl"><div class="top"><label for="sat">Saturaziun</label><span class="val" data-for="sat" title="Reset">0</span></div><input type="range" id="sat" min="-100" max="100" value="0"></div>
-        <div class="ctl"><div class="top"><label for="hue">Tun da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="hue" min="-180" max="180" value="0"></div>
+        <div class="ctl"><div class="top"><label for="hue">Nianza da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="hue" min="-180" max="180" value="0"></div>
         <button type="button" class="ghost" id="resetBtn" disabled>Reset colurs</button>
 
         <div class="sec">
@@ -154,6 +156,14 @@
             <button type="button" data-r="4/5" aria-pressed="false">4:5</button>
             <button type="button" data-r="1/1" aria-pressed="false">1:1</button>
             <button type="button" data-r="9/16" aria-pressed="false">9:16</button>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2>Grondezza</h2>
+          <div class="ratios" role="group" aria-label="Grondezza" id="sizeGroup">
+            <button type="button" data-s="orig" aria-pressed="true">Original<br><small id="sOrig"></small></button>
+            <button type="button" data-s="1080" aria-pressed="false">1080 px vart curta<br><small id="s1080"></small></button>
           </div>
           <p class="size" id="size"></p>
         </div>
@@ -321,13 +331,46 @@ function setRatio(r){
   renderCrop();
 }
 ratioBtns.forEach(b => b.onclick = () => setRatio(parseR(b.dataset.r)));
-setRatio(ratio);   // gespeicherte Wahl anzeigen
 
 function scale(){ return view.clientWidth / iw; }   // Bildschirm-px pro Originalpixel
+/* Exportgrösse: Original (Pixel des Ausschnitts) oder kurze Seite 1080 px */
+const sizeBtns = [...document.querySelectorAll('#sizeGroup button')];
+let sizeMode = 'orig';
+try { const s = localStorage.getItem('colurs-size'); if (s === 'orig' || s === '1080') sizeMode = s; } catch(e){}
+function setSize(m){
+  sizeMode = m;
+  sizeBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.s === m));
+  try { localStorage.setItem('colurs-size', m); } catch(e){}
+  renderCrop();
+}
+sizeBtns.forEach(b => b.onclick = () => setSize(b.dataset.s));
+sizeBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.s === sizeMode));
+setRatio(ratio);   // gespeicherte Wahl anzeigen
+function srcRect(){
+  if (!cr) return { x:0, y:0, w:iw, h:ih };
+  const r = { x:Math.round(cr.x), y:Math.round(cr.y), w:Math.round(cr.w), h:Math.round(cr.h) };
+  r.w = Math.min(r.w, iw - r.x); r.h = Math.min(r.h, ih - r.y);
+  return r;
+}
+function dims1080(r){
+  // bei festem Seitenverhältnis exakte Standardmasse (z. B. 16:9 → 1920 × 1080)
+  const q = cr ? ratio : r.w / r.h;
+  return q >= 1 ? [Math.round(1080 * q), 1080] : [1080, Math.round(1080 / q)];
+}
+function outDims(){
+  const r = srcRect();
+  return sizeMode === '1080' ? dims1080(r) : [r.w, r.h];
+}
 function renderCrop(){
   crop.hidden = shade.hidden = !cr; $('cropHint').hidden = !cr;
-  const W = cr ? Math.round(cr.w) : iw, H = cr ? Math.round(cr.h) : ih;
-  $('size').textContent = img ? `Export: ${W} × ${H} px` : '';
+  if (img){
+    const r = srcRect(), d = dims1080(r);
+    $('sOrig').textContent = `${r.w} × ${r.h}`;
+    $('s1080').textContent = `${d[0]} × ${d[1]}`;
+    const [W, H] = outDims();
+    const up = sizeMode === '1080' && W > r.w;
+    $('size').textContent = `Export: ${W} × ${H} px` + (up ? ' (vegn engrondì)' : '');
+  } else { $('size').textContent = ''; $('sOrig').textContent = $('s1080').textContent = ''; }
   if (!cr) return;
   const f = scale();
   crop.style.left = cr.x * f + 'px'; crop.style.top = cr.y * f + 'px';
@@ -385,33 +428,48 @@ crop.addEventListener('wheel', e => {
   cr.x = cx - cr.w / 2; cr.y = cy - cr.h / 2; clampCrop(); renderCrop();
 }, { passive:false });
 
-/* ---------- Export in Originalgrösse ---------- */
+/* ---------- Export ---------- */
+// stufenweise verkleinern für saubere Kanten
+function scaledRegion(r, tw, th){
+  let src = document.createElement('canvas'); src.width = r.w; src.height = r.h;
+  src.getContext('2d').drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+  let w = r.w, h = r.h;
+  while (w / 2 > tw && h / 2 > th){
+    w = Math.round(w / 2); h = Math.round(h / 2);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const cx = c.getContext('2d'); cx.imageSmoothingQuality = 'high';
+    cx.drawImage(src, 0, 0, w, h); src = c;
+  }
+  return src;
+}
 $('dlBtn').onclick = () => {
   if (!img) return;
-  const r = cr ? { x:Math.round(cr.x), y:Math.round(cr.y), w:Math.round(cr.w), h:Math.round(cr.h) } : { x:0, y:0, w:iw, h:ih };
-  r.w = Math.min(r.w, iw - r.x); r.h = Math.min(r.h, ih - r.y);
+  const r = srcRect();
+  const [ow, oh] = outDims();
   setMsg('Elavurel…');
   const type = exportType();
   setTimeout(() => {
     try {
-      const c = document.createElement('canvas'); c.width = r.w; c.height = r.h;
+      const c = document.createElement('canvas'); c.width = ow; c.height = oh;
       const cx = c.getContext('2d', { willReadFrequently:true });
-      if (type === 'image/jpeg') { cx.fillStyle = '#fff'; cx.fillRect(0, 0, r.w, r.h); }
-      cx.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+      cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+      if (type === 'image/jpeg') { cx.fillStyle = '#fff'; cx.fillRect(0, 0, ow, oh); }
+      if (ow === r.w && oh === r.h) cx.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, ow, oh);
+      else cx.drawImage(scaledRegion(r, ow, oh), 0, 0, ow, oh);
       if (!isNeutral()){
-        const d = cx.getImageData(0, 0, r.w, r.h);
+        const d = cx.getImageData(0, 0, ow, oh);
         apply(d, d, matrix());
         cx.putImageData(d, 0, 0);
       }
       c.toBlob(b => {
         if (!b) { setMsg('Il maletg è memia grond per quest browser.', true); return; }
-        const suffix = ratio ? '_' + ratioKey(ratio).replace('/', 'x') : '';
+        const suffix = (ratio ? '_' + ratioKey(ratio).replace('/', 'x') : '') + (sizeMode === '1080' ? '_1080' : '');
         const name = `${fileName}_colurs${suffix}.${type === 'image/png' ? 'png' : 'jpg'}`;
         const a = document.createElement('a');
         a.href = URL.createObjectURL(b); a.download = name;
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-        setMsg(`Memorisà: ${name} (${r.w} × ${r.h} px)`);
+        setMsg(`Memorisà: ${name} (${ow} × ${oh} px)`);
       }, type, 0.92);
     } catch(e){ setMsg('Export betg reussì: il maletg è forsa memia grond.', true); }
   }, 30);
