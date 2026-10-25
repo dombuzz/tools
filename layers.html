@@ -190,7 +190,7 @@
             </div>
           </div>
         </div>
-        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. Quai che surpassa vegn taglià giu tar l'export.</p>
+        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Quai che surpassa vegn taglià giu tar l'export.</p>
       </div>
 
       <div class="layers">
@@ -290,19 +290,19 @@ function render(){
     el.style.left = L.x * f + 'px'; el.style.top = L.y * f + 'px';
     el.style.width = L.iw * L.s * f + 'px'; el.style.height = L.ih * L.s * f + 'px';
     el.style.zIndex = 2 * i + 2;
-    el.style.visibility = L.visible ? 'visible' : 'hidden';
+    el.style.visibility = L.visible && L.blur !== 'only' ? 'visible' : 'hidden';
     if (L.bg){
       L.bg.hidden = !L.blur;
       L.bg.style.zIndex = 2 * i + 1;
-      L.bg.style.visibility = el.style.visibility;
+      L.bg.style.visibility = L.visible ? 'visible' : 'hidden';
     }
   });
   empty.hidden = layers.length > 0;
   const A = active;
-  box.hidden = ghost.hidden = !A || !A.visible || !!A.locked;
+  box.hidden = ghost.hidden = !A || !A.visible || !!A.locked || A.blur === 'only';
   $('fitBtn').disabled = !A || !!A.locked;
   $('dlBtn').disabled = !layers.some(L => L.visible);
-  if (!A || !A.visible || A.locked) return;
+  if (!A || !A.visible || A.locked || A.blur === 'only') return;
   ghost.src = A.url;
   for (const p of ['left','top','width','height']) ghost.style[p] = A.el.style[p];
   // Griffbox = Kante der aktiven Ebene, Griffe innerhalb der sichtbaren Bühne halten
@@ -340,7 +340,7 @@ function renderList(){
         <button type="button" data-a="down" title="Pli engiu" aria-label="Pli engiu">↓</button>
         <button type="button" data-a="vis" aria-pressed="${!L.visible}" title="${L.visible ? 'Zuppentar' : 'Mussar'}">${L.visible ? 'Zuppentar' : 'Mussar'}</button>
         <button type="button" data-a="mode" title="Emplenir u liber">${L.mode === 'cover' ? 'Emplenir' : 'Liber'}</button>
-        <button type="button" data-a="blur" aria-pressed="${!!L.blur}" title="Fund blur davostiers il layer">Blur</button>
+        <button type="button" data-a="blur" aria-pressed="${!!L.blur}" title="Midar: nagin blur → Blur (cun maletg) → Mo blur">${L.blur === 'only' ? 'Mo blur' : 'Blur'}</button>
         <button type="button" data-a="lock" aria-pressed="${!!L.locked}" title="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}" aria-label="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}">${L.locked ? '🔒' : '🔓'}</button>
         <button type="button" data-a="dup" title="Duplitgar il layer" aria-label="Duplitgar il layer">⧉</button>
         <button type="button" data-a="del" class="del" title="Stizzar il layer" aria-label="Stizzar il layer">✕</button>
@@ -363,9 +363,9 @@ function renderList(){
       else if (a === 'lock') { L.locked = !L.locked; }
       else if (a === 'mode') { if (!L.locked){ L.mode = L.mode === 'cover' ? 'free' : 'cover'; fitLayer(L); } }
       else if (a === 'blur') { if (!L.locked){
-        L.blur = !L.blur;
+        L.blur = !L.blur ? 'with' : L.blur === 'with' ? 'only' : false;   // aus → Blur mit Bild → nur Blur → aus
         // Blur ergibt nur Sinn, wenn das Bild nicht schon alles bedeckt: dann auf «Liber» und ganz einpassen
-        if (L.blur){ makeBlur(L); if (L.mode === 'cover') L.mode = 'free'; fitLayer(L); }
+        if (L.blur === 'with'){ makeBlur(L); if (L.mode === 'cover') L.mode = 'free'; fitLayer(L); }
       } }
       else if (a === 'del') { if (!L.locked) remove(L); return; }
       else if (a === 'dup') { duplicate(L); return; }
@@ -679,7 +679,7 @@ $('dlBtn').onclick = () => {
     if (!L.visible) continue;
     clamp(L);
     if (L.blur && L.bg) cx.drawImage(L.bg, 0, 0, W, H);
-    cx.drawImage(scaled(L.img, L.iw * L.s, L.ih * L.s), L.x, L.y, L.iw * L.s, L.ih * L.s);
+    if (L.blur !== 'only') cx.drawImage(scaled(L.img, L.iw * L.s, L.ih * L.s), L.x, L.y, L.iw * L.s, L.ih * L.s);
   }
   c.toBlob(b => {
     const d = new Date(), z = n => String(n).padStart(2, '0');
