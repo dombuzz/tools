@@ -250,7 +250,10 @@ function convertOne(raw){
   // SRG-Bildproxy (il.srf.ch/images/?imageUrl=...&width=...)
   if (u.searchParams.has('imageUrl')){
     u.searchParams.set('width', '2000');
-    return { url: u.toString(), filename:'bild' };
+    // Dateiname aus der eigentlichen Bildadresse im Parameter imageUrl
+    let fn = 'maletg';
+    try { fn = new URL(u.searchParams.get('imageUrl')).pathname.split('/').pop() || fn; } catch(e){}
+    return { url: u.toString(), filename: fn };
   }
   const marker = '/cms/images/', idx = u.pathname.indexOf(marker);
   if (idx === -1) return { error:'Nagin format da maletg enconuschent identifitgà.' };
@@ -310,7 +313,7 @@ async function loadFromUrl(raw){
     let blob = await r.blob();
     if (my !== urlToken) return;
     if (!blob.type.startsWith('image/')) blob = new Blob([blob], { type:'image/webp' });
-    load(blob, 'Maletg RTR');
+    load(blob, res.filename || 'Maletg RTR');
   } catch(e){
     if (my !== urlToken) return;
     setMsg('Il maletg n\'ha betg pudì vegnir chargià directamain. Al telechargiar cun «RTR Picture-downloader» e trair qua.', true);
