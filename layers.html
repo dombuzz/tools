@@ -121,6 +121,11 @@
   }
   .meta{ min-width:0; }
   .name{ font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row.active .name{ cursor:text; }
+  .row.active .name::after{ content:" ✎"; color:var(--muted); font-weight:400; }
+  .row.locked .name::after{ content:" 🔒"; }
+  .rename{ width:100%; font:inherit; font-size:0.85rem; font-weight:600; padding:3px 6px; border:1px solid var(--accent);
+    border-radius:6px; background:var(--card); color:var(--text); }
   .info{ font-size:0.75rem; color:var(--muted); }
   .btns{ grid-column:1 / -1; display:flex; gap:4px; flex-wrap:wrap; }
   .btns button{
@@ -272,7 +277,7 @@
 
         <div class="pane layers" data-pane="2" hidden>
           <h2>Layers <span id="count" class="info"></span></h2>
-          <p class="note">Il layer survart en la glista stat davant. Successiun: ↑ ↓ u trair cun il mieur.</p>
+          <p class="note">Il layer survart en la glista stat davant. Successiun: ↑ ↓ u trair cun il mieur. Tutgar il num dal layer tschernì (✎) per al renumnar.</p>
           <p class="nolayers" id="nolayers">Anc nagins layers.</p>
           <div class="list" id="list"></div>
           <button type="button" class="ghost add" id="addBtn">+ Agiuntar in layer</button>
@@ -541,6 +546,7 @@ function renderList(){
     const th = row.querySelector('.thumb'), tk = Math.min(88 / L.el.width, 88 / L.el.height);
     th.getContext('2d').drawImage(L.el, (88 - L.el.width * tk) / 2, (88 - L.el.height * tk) / 2, L.el.width * tk, L.el.height * tk);
     row.querySelector('.name').textContent = L.name;
+    row.querySelector('.name').title = L === active ? 'Tutgar per renumnar' : '';
     row.querySelector('.info').textContent = `${L.iw} × ${L.ih} px` + (L.locked ? ' · bloccà' : '');
     row.querySelector('[data-a="up"]').disabled = i === layers.length - 1;
     row.querySelector('[data-a="down"]').disabled = i === 0;
@@ -550,6 +556,10 @@ function renderList(){
     row.querySelector('[data-a="dup"]').disabled = layers.length >= MAX;
     row.onclick = e => {
       if (suppressClick) { suppressClick = false; return; }
+      if (e.target.closest('.rename')) return;
+      // Name des bereits ausgewählten Layers antippen = umbenennen
+      if ((e.target.closest('.name') || downOnName === L.id) && L === active) { downOnName = null; startRename(L, row); return; }
+      downOnName = null;
       const a = e.target.closest('button')?.dataset.a;
       if (a === 'up') { move(L, +1); refreshOrigFmt(); }
       else if (a === 'down') { move(L, -1); refreshOrigFmt(); }
@@ -566,14 +576,16 @@ function renderList(){
       active = L; renderList(); render();
     };
     row.addEventListener('pointerdown', e => startRowDrag(e, L, row));
+    row.querySelector('.name').addEventListener('dblclick', () => { active = L; startRename(L, row); });
     list.appendChild(row);
   });
 }
 
 /* Umsortieren durch Ziehen: mit der Maus an der ganzen Zeile, auf dem Handy am Griff ⠿ */
-let rowDrag = null, suppressClick = false;
+let rowDrag = null, suppressClick = false, downOnName = null;
 function startRowDrag(e, L, row){
-  if (e.button > 0 || e.target.closest('button')) return;
+  if (e.button > 0 || e.target.closest('button, input')) return;
+  downOnName = e.target.closest('.name') ? L.id : null;   // Klick landet wegen Zeiger-Erfassung auf der Zeile
   const onGrip = !!e.target.closest('.grip');
   if (e.pointerType === 'touch' && !onGrip) return;   // Touch: sonst normal scrollen
   if (onGrip) e.preventDefault();
@@ -626,6 +638,22 @@ function duplicate(L){
   layers.splice(layers.indexOf(L) + 1, 0, C);
   active = C; renderList(); render();
   setMsg(`Duplitgà: ${L.name}`);
+}
+function startRename(L, row){
+  const nameEl = row.querySelector('.name');
+  const inp = document.createElement('input');
+  inp.className = 'rename'; inp.value = L.name; inp.setAttribute('aria-label', 'Num dal layer');
+  nameEl.replaceWith(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = save => {
+    if (done) return; done = true;
+    const v = inp.value.trim();
+    if (save && v) L.name = v.slice(0, 80);
+    renderList(); render();
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+  inp.addEventListener('pointerdown', e => e.stopPropagation());
 }
 function move(L, d){
   const i = layers.indexOf(L), j = i + d;
