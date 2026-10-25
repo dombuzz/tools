@@ -189,7 +189,7 @@
             </div>
           </div>
         </div>
-        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Fund blur» mussa il maletg entir ed emplenescha las parts vidas cun ina versiun blur dal medem maletg, p.ex. per fotos en format autezza. Quai che surpassa vegn taglià giu tar l'export.</p>
+        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» mussa il maletg entir ed emplenescha las parts vidas cun ina versiun blur dal medem maletg, p.ex. per fotos en format autezza. Quai che surpassa vegn taglià giu tar l'export.</p>
       </div>
 
       <div class="layers">
@@ -337,7 +337,7 @@ function renderList(){
         <button type="button" data-a="up" title="Pli ensi" aria-label="Pli ensi">↑</button>
         <button type="button" data-a="down" title="Pli engiu" aria-label="Pli engiu">↓</button>
         <button type="button" data-a="vis" aria-pressed="${!L.visible}" title="${L.visible ? 'Zuppentar' : 'Mussar'}">${L.visible ? 'Zuppentar' : 'Mussar'}</button>
-        <button type="button" data-a="mode" title="Midar: Emplenir → Liber → Fund blur">${{ cover:'Emplenir', free:'Liber', blur:'Fund blur' }[L.mode]}</button>
+        <button type="button" data-a="mode" title="Midar: Emplenir → Liber → Blur">${{ cover:'Emplenir', free:'Liber', blur:'Blur' }[L.mode]}</button>
         <button type="button" data-a="lock" aria-pressed="${!!L.locked}" title="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}" aria-label="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}">${L.locked ? '🔒' : '🔓'}</button>
         <button type="button" data-a="del" class="del" title="Stizzar il layer" aria-label="Stizzar il layer">✕</button>
       </div>`;
