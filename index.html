@@ -87,6 +87,7 @@
   .mi:hover, .mi:focus-visible { background: var(--field); outline: none; }
   /* aufklappbare Untergruppe innerhalb einer Gruppe */
   .ms { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 12px; border: 0; border-radius: 9px; background: transparent; color: var(--text); font: inherit; font-weight: 500; text-align: left; cursor: pointer; }
+  .ms { text-decoration: underline dashed 1px var(--muted); text-underline-offset: 5px; }
   .ms:hover, .ms:focus-visible { background: var(--field); outline: none; }
   .ms::after { content: ""; width: 7px; height: 7px; margin-right: 4px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; }
   .ms[aria-expanded=true]::after { transform: rotate(45deg); }
