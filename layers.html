@@ -78,6 +78,7 @@
   .frame{ position:relative; width:100%; margin:0 auto; }
   .frame-bg{ position:absolute; inset:0; background:#fff; }
   .frame img{ position:absolute; max-width:none; pointer-events:none; }
+  .blurbg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   .ghost-img{ opacity:.3; }
   .clip{ position:absolute; inset:0; overflow:hidden; z-index:1; }
   .frame-line{ position:absolute; inset:0; z-index:2; outline:1px solid rgba(255,77,100,.8); pointer-events:none; }
@@ -188,7 +189,7 @@
             </div>
           </div>
         </div>
-        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. Quai che surpassa vegn taglià giu tar l'export.</p>
+        <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Fund blur» mussa il maletg entir ed emplenescha las parts vidas cun ina versiun blur dal medem maletg, p.ex. per fotos en format autezza. Quai che surpassa vegn taglià giu tar l'export.</p>
       </div>
 
       <div class="layers">
@@ -230,7 +231,7 @@ function applyFmt(){
   frame.style.aspectRatio = W + '/' + H;
   // Hochformate nicht höher als ca. 70 % des Fensters
   frame.style.maxWidth = `min(100%, calc(70vh * ${W / H}))`;
-  layers.forEach(fitLayer);   // bei neuem Format alle Layer neu einpassen
+  layers.forEach(L => { fitLayer(L); if (L.mode === 'blur') makeBlur(L); });   // bei neuem Format alle Layer neu einpassen
   render();
 }
 fmtSel.onchange = () => { try { localStorage.setItem('layers-fmt', fmtSel.value); } catch(e){} applyFmt(); };
@@ -251,9 +252,30 @@ function clamp(L){
     L.y = Math.min(H - m, Math.max(m - h, L.y));
   }
 }
+/* Unscharfer Hintergrund: Bild füllt die Fläche, stark weichgezeichnet (verkleinern + wieder vergrössern, funktioniert in allen Browsern) */
+function makeBlur(L){
+  // sehr klein zeichnen und in Zweierschritten wieder vergrössern = weicher, starker Weichzeichner
+  const sw = Math.max(6, Math.round(W / 90)), sh = Math.max(6, Math.round(H / 90));
+  const s = Math.max(sw / L.iw, sh / L.ih);
+  let src = document.createElement('canvas'); src.width = sw; src.height = sh;
+  const tx = src.getContext('2d'); tx.imageSmoothingQuality = 'high';
+  tx.drawImage(scaled(L.img, L.iw * s * 4, L.ih * s * 4), (sw - L.iw * s) / 2, (sh - L.ih * s) / 2, L.iw * s, L.ih * s);
+  let w = sw, h = sh;
+  while (w < W){
+    w = Math.min(W, w * 2); h = Math.min(H, h * 2);
+    const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+    const x2 = c2.getContext('2d'); x2.imageSmoothingQuality = 'high'; x2.drawImage(src, 0, 0, w, h); src = c2;
+  }
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const cx = c.getContext('2d'); cx.imageSmoothingQuality = 'high';
+  cx.drawImage(src, 0, 0, W, H);
+  cx.fillStyle = 'rgba(0,0,0,.12)'; cx.fillRect(0, 0, W, H);   // leicht abgedunkelt, damit das Bild davor hervortritt
+  if (!L.bg){ L.bg = document.createElement('canvas'); L.bg.className = 'blurbg'; clip.insertBefore(L.bg, L.el); }
+  L.bg.width = W; L.bg.height = H; L.bg.getContext('2d').drawImage(c, 0, 0);
+}
 function fitLayer(L){
   // frei: Originalgrösse, höchstens so gross, dass die Ebene ganz in die Fläche passt
-  L.s = L.mode === 'cover' ? coverS(L) : Math.min(1, containS(L));
+  L.s = L.mode === 'cover' ? coverS(L) : L.mode === 'blur' ? containS(L) : Math.min(1, containS(L));
   L.x = (W - L.iw * L.s) / 2; L.y = (H - L.ih * L.s) / 2;
 }
 function k(){ return frame.clientWidth / W; }
@@ -265,8 +287,13 @@ function render(){
     const el = L.el;
     el.style.left = L.x * f + 'px'; el.style.top = L.y * f + 'px';
     el.style.width = L.iw * L.s * f + 'px'; el.style.height = L.ih * L.s * f + 'px';
-    el.style.zIndex = i + 1;
+    el.style.zIndex = 2 * i + 2;
     el.style.visibility = L.visible ? 'visible' : 'hidden';
+    if (L.bg){
+      L.bg.hidden = L.mode !== 'blur';
+      L.bg.style.zIndex = 2 * i + 1;
+      L.bg.style.visibility = el.style.visibility;
+    }
   });
   empty.hidden = layers.length > 0;
   const A = active;
@@ -310,7 +337,7 @@ function renderList(){
         <button type="button" data-a="up" title="Pli ensi" aria-label="Pli ensi">↑</button>
         <button type="button" data-a="down" title="Pli engiu" aria-label="Pli engiu">↓</button>
         <button type="button" data-a="vis" aria-pressed="${!L.visible}" title="${L.visible ? 'Zuppentar' : 'Mussar'}">${L.visible ? 'Zuppentar' : 'Mussar'}</button>
-        <button type="button" data-a="mode" title="Emplenir u liber">${L.mode === 'cover' ? 'Emplenir' : 'Liber'}</button>
+        <button type="button" data-a="mode" title="Midar: Emplenir → Liber → Fund blur">${{ cover:'Emplenir', free:'Liber', blur:'Fund blur' }[L.mode]}</button>
         <button type="button" data-a="lock" aria-pressed="${!!L.locked}" title="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}" aria-label="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}">${L.locked ? '🔒' : '🔓'}</button>
         <button type="button" data-a="del" class="del" title="Stizzar il layer" aria-label="Stizzar il layer">✕</button>
       </div>`;
@@ -328,7 +355,7 @@ function renderList(){
       else if (a === 'down') move(L, -1);
       else if (a === 'vis') { L.visible = !L.visible; }
       else if (a === 'lock') { L.locked = !L.locked; }
-      else if (a === 'mode') { if (!L.locked){ L.mode = L.mode === 'cover' ? 'free' : 'cover'; fitLayer(L); } }
+      else if (a === 'mode') { if (!L.locked){ L.mode = { cover:'free', free:'blur', blur:'cover' }[L.mode]; if (L.mode === 'blur') makeBlur(L); fitLayer(L); } }
       else if (a === 'del') { if (!L.locked) remove(L); return; }
       active = L; renderList(); render();
     };
@@ -388,7 +415,7 @@ function move(L, d){
 }
 function remove(L){
   layers.splice(layers.indexOf(L), 1);
-  L.el.remove(); URL.revokeObjectURL(L.url);
+  L.el.remove(); if (L.bg) L.bg.remove(); URL.revokeObjectURL(L.url);
   if (active === L) active = layers[layers.length - 1] || null;
   renderList(); render();
   setMsg('');
@@ -625,6 +652,7 @@ $('dlBtn').onclick = () => {
   for (const L of layers){
     if (!L.visible) continue;
     clamp(L);
+    if (L.mode === 'blur' && L.bg) cx.drawImage(L.bg, 0, 0, W, H);
     cx.drawImage(scaled(L.img, L.iw * L.s, L.ih * L.s), L.x, L.y, L.iw * L.s, L.ih * L.s);
   }
   c.toBlob(b => {
