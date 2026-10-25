@@ -28,7 +28,7 @@ const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = {
-  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'Resizer2000': 'Resizer 2000',
+  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'layers': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
   'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
@@ -39,7 +39,10 @@ const NAMES = {
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan' };
 const grp = t => GROUP[t] || t;
-const merge = rows => Object.values(rows.reduce((m, r) => {
+// Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst und Tools im Hintergrund)
+const NO_STATS = new Set(['stats', 'colurs', 'ebenas', 'rotar']);
+const NO_STATS_SQL = `tool NOT IN (${[...NO_STATS].map(t => `'${t}'`).join(', ')})`;
+const merge = rows => Object.values(rows.filter(r => !NO_STATS.has(r.tool)).reduce((m, r) => {
   const k = grp(r.tool) + (r.day ? '|' + r.day : '');
   (m[k] ||= { ...r, tool: grp(r.tool), count: 0 }).count += r.count; return m;
 }, {}));
@@ -106,7 +109,7 @@ export default {
       // Total pro Tool
       if (request.method === 'GET' && parts[0] === 'likes' && parts.length === 1) {
         const { results } = await env.DB.prepare('SELECT tool, count FROM likes').all();
-        return json(Object.fromEntries(results.map(r => [r.tool, r.count])), request);
+        return json(Object.fromEntries(results.filter(r => !NO_STATS.has(r.tool)).map(r => [r.tool, r.count])), request);
       }
 
       // Rangliste für einen Zeitraum
@@ -136,27 +139,27 @@ export default {
         const usesTotal = uses.reduce((t, r) => t + r.count, 0);
         await ensureViews(env);
         const { results: viewRows } = await env.DB
-          .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE tool != \'stats\' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
+          .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE ' + NO_STATS_SQL + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const views = Object.fromEntries(merge(viewRows).map(r => [r.tool, r.count]));
-        const viewsTotal = viewRows.reduce((t, r) => t + r.count, 0);
+        const viewsTotal = merge(viewRows).reduce((t, r) => t + r.count, 0);
         const { results: themeRows } = await env.DB
-          .prepare('SELECT theme, COUNT(*) AS count FROM views WHERE tool != \'stats\' AND ts >= ?1 AND ts < ?2 GROUP BY theme')
+          .prepare('SELECT theme, COUNT(*) AS count FROM views WHERE ' + NO_STATS_SQL + ' AND ts >= ?1 AND ts < ?2 GROUP BY theme')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const themes = { light: 0, dark: 0, unknown: 0 };
         for (const r of themeRows) themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count;
         const { results: clientRows } = await env.DB
-          .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE tool != \'stats\' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
+          .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE ' + NO_STATS_SQL + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const clients = clientRows[0]?.n || 0;
         // wiederkehrend = Besucher, die im Zeitraum an mindestens zwei verschiedenen Tagen (UTC) da waren
         const { results: retRows } = await env.DB
-          .prepare('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE tool != \'stats\' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)')
+          .prepare('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE ' + NO_STATS_SQL + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const returning = retRows[0]?.n || 0;
         // Nutzungen pro Besucher: Durchschnitt unter den Besuchern, die mindestens eine Nutzung ausgelöst haben (nur Nutzungen mit Kennung)
         const { results: ucRows } = await env.DB
-          .prepare('SELECT COUNT(*) AS n, COUNT(DISTINCT cid) AS c FROM uses WHERE cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
+          .prepare('SELECT COUNT(*) AS n, COUNT(DISTINCT cid) AS c FROM uses WHERE ' + NO_STATS_SQL + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const usingClients = ucRows[0]?.c || 0;
         const usesPerClient = usingClients ? Math.round((ucRows[0].n / usingClients) * 10) / 10 : 0;
@@ -167,7 +170,7 @@ export default {
           const day = {};
           for (const [tbl, key] of [['uses', 'uses'], ['clicks', 'likes'], ['views', 'views']]) {
             const { results: rr } = await env.DB
-              .prepare(`SELECT substr(ts, 1, 10) AS day, tool, COUNT(*) AS count FROM ${tbl} WHERE ts >= ?1 AND ts < ?2${tbl === 'views' ? " AND tool != 'stats'" : ''} GROUP BY day, tool`)
+              .prepare(`SELECT substr(ts, 1, 10) AS day, tool, COUNT(*) AS count FROM ${tbl} WHERE ts >= ?1 AND ts < ?2${' AND ' + NO_STATS_SQL} GROUP BY day, tool`)
               .bind(from, to).all();
             for (const r of merge(rr)) { const k = r.day + '|' + r.tool; (day[k] ||= { day: r.day, tool: r.tool, uses: 0, likes: 0, views: 0 })[key] = r.count; }
           }
@@ -182,6 +185,7 @@ export default {
         if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
         const tool = decodeURIComponent(parts[1]);
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
+        if (NO_STATS.has(tool)) return json({ ok: true }, request); // nicht erfassen
         const [, upd] = await env.DB.batch([
           env.DB.prepare("INSERT INTO clicks (tool, ts) VALUES (?1, datetime('now'))").bind(tool),
           env.DB.prepare(
@@ -198,6 +202,7 @@ export default {
         if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
         const tool = decodeURIComponent(parts[1]);
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
+        if (NO_STATS.has(tool)) return json({ ok: true }, request); // nicht erfassen
         await ensureViews(env); // legt auch die Spalte uses.cid an
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
         await env.DB.prepare("INSERT INTO uses (tool, ts, cid) VALUES (?1, datetime('now'), ?2)").bind(tool, cid).run();
@@ -210,7 +215,7 @@ export default {
         if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
         const tool = decodeURIComponent(parts[1]);
         if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
-        if (tool === 'stats') return json({ ok: true }, request); // Aufrufe der Statistik-Seite werden nicht gezählt
+        if (NO_STATS.has(tool)) return json({ ok: true }, request); // Statistikseite und Tools im Hintergrund werden nicht gezählt
         await ensureViews(env);
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
