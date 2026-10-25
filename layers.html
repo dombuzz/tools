@@ -140,7 +140,7 @@
   .tabs button:hover{ background:transparent; color:var(--text); }
   .tabs button[aria-selected="true"]{ color:var(--text); border-bottom-color:var(--accent); }
   .tabs em{ font-style:normal; color:var(--accent); }
-  .tabs .tcount{ font-size:0.75rem; color:var(--muted); font-weight:400; }
+  .tabs .tcount{ font-size:0.75rem; color:inherit; opacity:.9; font-weight:400; }
   @media (max-width:600px){ .tabs button{ padding:9px 9px; font-size:0.85rem; } }
   .side h3:first-of-type{ margin-top:4px; }
   .who{ font-size:0.82rem; color:var(--muted); margin:0 0 4px; display:flex; gap:6px; align-items:baseline; min-width:0; }
@@ -283,7 +283,7 @@
     <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Quai che surpassa vegn taglià giu tar l'export.</p>
 
     <div class="actions">
-      <button type="button" id="dlBtn" disabled>Telechargiar il PNG</button>
+      <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
       <button type="button" class="ghost" id="fitBtn" disabled>Reset layer</button>
       <span class="msg" id="msg"></span>
     </div>
