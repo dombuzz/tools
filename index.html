@@ -107,7 +107,7 @@
   .mchatta { margin: 4px 2px 2px; border: 0.5px dashed var(--accent); border-radius: 10px; }
   .mchatta-r { display: flex; align-items: center; }
   .mchatta .mi { flex: 1; }
-  .chatta-i { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; margin-right: 4px; padding: 0; border: 0; background: none; color: var(--muted); cursor: help; border-radius: 50%; }
+  .chatta-i { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; margin-right: 0; padding: 0; border: 0; background: none; color: var(--muted); cursor: help; border-radius: 50%; }
   .chatta-i svg { width: 16px; height: 16px; }
   .chatta-i:hover, .chatta-i:focus-visible, .mchatta.tip .chatta-i { color: var(--accent); outline: none; }
   .chatta-tip { display: none; margin: 0; padding: 0 12px 10px; color: var(--muted); font-size: 13px; line-height: 1.45; }
@@ -115,7 +115,7 @@
   /* Favurits: Stern im Dropdown, Kacheln unter dem Dropdown (pro Browser gespeichert) */
   .mi.fv { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .star { flex: none; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; margin: -4px -6px -4px 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 17px; line-height: 1; cursor: pointer; }
-  .mchatta .star { margin: 0; }
+  .mchatta .star { margin: 0 6px 0 0; }
   .star:hover, .star:focus-visible { color: var(--accent); outline: none; }
   .star.on { color: var(--accent); }
   .favs { margin-top: 20px; }
@@ -275,7 +275,7 @@
       const el = info[k].el, s = document.createElement('button');
       s.type = 'button'; s.className = 'star'; s.setAttribute('aria-label', 'Favurit');
       s.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); fav = fav.includes(k) ? fav.filter(x => x !== k) : [...fav, k]; save(); });
-      if (k === 'chatta') el.parentElement.insertBefore(s, el.nextSibling);
+      if (k === 'chatta') el.parentElement.append(s); // nach dem ⓘ, ganz rechts wie bei den übrigen Tools
       else { const t = document.createElement('span'); t.textContent = el.textContent; el.textContent = ''; el.classList.add('fv'); el.append(t, s); }
       info[k].star = s;
     }
