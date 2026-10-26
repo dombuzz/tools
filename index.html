@@ -103,14 +103,15 @@
   @media (max-width: 600px) { .toplink { width: 32px; height: 32px; border-radius: 50%; } .toplink svg { width: 16px; height: 16px; } }
   .toplink:hover, .toplink:focus-visible, .toplink[aria-expanded="true"] { opacity: 1; border-color: var(--accent); background: var(--field); }
   .pop { position: fixed; z-index: 60; right: 12px; top: 52px; }
-  .chatta-row { position: relative; display: flex; align-items: center; gap: 6px; margin-top: 40px; }
-  .chatta-i { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; background: none; color: var(--muted); cursor: help; border-radius: 50%; }
+  /* «Chattas sbagls?» im Dropdown: gestrichelter Rahmen, Hinweis per ⓘ */
+  .mchatta { margin: 4px 2px 2px; border: 0.5px dashed var(--accent); border-radius: 10px; }
+  .mchatta-r { display: flex; align-items: center; }
+  .mchatta .mi { flex: 1; color: var(--accent); font-weight: 600; }
+  .chatta-i { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; margin-right: 4px; padding: 0; border: 0; background: none; color: var(--muted); cursor: help; border-radius: 50%; }
   .chatta-i svg { width: 16px; height: 16px; }
-  .chatta-i:hover, .chatta-i:focus-visible { color: var(--accent); outline: none; }
-  .chatta-tip { position: absolute; left: 0; bottom: calc(100% + 8px); width: min(300px, calc(100vw - 32px)); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--text, inherit); font-size: 13px; line-height: 1.45; font-weight: 400; text-align: left; box-shadow: 0 6px 20px rgba(0,0,0,.25); opacity: 0; visibility: hidden; transition: opacity .15s; pointer-events: none; z-index: 40; }
-  .chatta-i:hover .chatta-tip, .chatta-i:focus .chatta-tip { opacity: 1; visibility: visible; }
-  .chatta { display: inline-block; color: var(--accent); font-weight: 600; text-decoration: none; }
-  .chatta:hover, .chatta:focus-visible { text-decoration: underline; text-underline-offset: 4px; outline: none; }
+  .chatta-i:hover, .chatta-i:focus-visible, .mchatta.tip .chatta-i { color: var(--accent); outline: none; }
+  .chatta-tip { display: none; margin: 0; padding: 0 12px 10px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .mchatta.tip .chatta-tip, .mchatta:has(.chatta-i:hover) .chatta-tip { display: block; }
 </style>
 </head>
 <body>
@@ -132,29 +133,7 @@
     <button type="button" class="sel-btn" id="selbtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu">Tscherner in tool …</button>
     <div class="menu" id="menu" role="menu"></div>
   </div>
-  <div class="chatta-row">
-    <a class="chatta" id="chatta" href="https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta" target="_blank" rel="noopener">Chattas sbagls?</a>
-    <button type="button" class="chatta-i" aria-describedby="chatta-tip" aria-label="Info">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="11" y="10.5" width="2" height="7" rx="1" fill="currentColor"/><circle cx="12" cy="7.3" r="1.25" fill="currentColor"/></svg>
-      <span class="chatta-tip" id="chatta-tip" role="tooltip">Qua s'avra in artitgel che è vegnì publitgà durant ils ultims 30 dis. Per plaschair leger attentamain e controllar sch'i dat sbagls u passaschas nunchapiblas.</span>
-    </button>
-  </div>
 </main>
-<script>
-  // «Chatta Schweiz»: bei jedem Klick ein anderer rtr.ch-Artikel der letzten 30 Tage
-  (function () {
-    const a = document.getElementById('chatta');
-    let items = [], last = null;
-    function next() {
-      if (!items.length) return;
-      let u; do { u = items[Math.floor(Math.random() * items.length)]; } while (items.length > 1 && u === last);
-      a.href = u;
-    }
-    fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta?list=1')
-      .then(r => r.json()).then(d => { items = d.items || []; next(); }).catch(function () {});
-    a.addEventListener('click', function () { last = a.href; setTimeout(next, 0); });
-  })();
-</script>
 
 <script>
   // Anzeigenamen im Dropdown (Dateiname -> Name).
@@ -192,7 +171,27 @@
   let subOpen = {};
   try { subOpen = JSON.parse(localStorage.getItem('dbz-subgroups') || '{}') || {}; } catch (e) {}
   const saveSub = () => { try { localStorage.setItem('dbz-subgroups', JSON.stringify(subOpen)); } catch (e) {} };
-  let subN = 0;
+  let subN = 0, chattaBox = null;
+  // ganz unten in «Redacziun»: «Chattas sbagls?» – bei jedem Klick ein anderer rtr.ch-Artikel der letzten 30 Tage
+  {
+    const CHATTA_API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta';
+    const box = document.createElement('div'); box.className = 'mchatta';
+    const row = document.createElement('div'); row.className = 'mchatta-r';
+    const a = mk('Chattas sbagls? – La artitgel-challenge', CHATTA_API);
+    a.target = '_blank'; a.rel = 'noopener';
+    const i = document.createElement('button');
+    i.type = 'button'; i.className = 'chatta-i'; i.setAttribute('aria-label', 'Info'); i.setAttribute('aria-controls', 'chatta-tip');
+    i.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="11" y="10.5" width="2" height="7" rx="1" fill="currentColor"/><circle cx="12" cy="7.3" r="1.25" fill="currentColor"/></svg>';
+    const tip = document.createElement('p'); tip.className = 'chatta-tip'; tip.id = 'chatta-tip';
+    tip.textContent = "Cun cliccar qua s'avra in artitgel che è vegnì publitgà durant ils ultims 30 dis. Per plaschair leger attentamain e controllar sch'i dat sbagls u passaschas nunchapiblas.";
+    i.addEventListener('click', e => { e.stopPropagation(); box.classList.toggle('tip'); });
+    row.append(a, i); box.append(row, tip);
+    chattaBox = box;
+    let list = [], last = null;
+    const next = () => { if (!list.length) return; let u; do { u = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && u === last); a.href = u; };
+    fetch(CHATTA_API + '?list=1').then(r => r.json()).then(d => { list = d.items || []; next(); }).catch(() => {});
+    a.addEventListener('click', () => { last = a.href; setTimeout(next, 0); });
+  }
   for (const [label, paths] of GROUPS) {
     const h = document.createElement('div'); h.className = 'mg'; h.textContent = label; menu.append(h);
     for (const p of paths) {
@@ -207,6 +206,7 @@
       t.addEventListener('click', e => { e.stopPropagation(); const o = !box.classList.contains('on'); set(o); subOpen[sub] = o; saveSub(); });
       menu.append(t, box);
     }
+    if (label === 'Redacziun') menu.append(chattaBox);
   }
   // ganz unten: Link ins Lab (Experimente)
   menu.append(mk('Lab 🧪', '/lab/', 'lab'));
