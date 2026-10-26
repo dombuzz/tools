@@ -103,7 +103,13 @@
   @media (max-width: 600px) { .toplink { width: 32px; height: 32px; border-radius: 50%; } .toplink svg { width: 16px; height: 16px; } }
   .toplink:hover, .toplink:focus-visible, .toplink[aria-expanded="true"] { opacity: 1; border-color: var(--accent); background: var(--field); }
   .pop { position: fixed; z-index: 60; right: 12px; top: 52px; }
-  .chatta { display: inline-block; margin-top: 40px; color: var(--accent); font-weight: 600; text-decoration: none; }
+  .chatta-row { position: relative; display: flex; align-items: center; gap: 6px; margin-top: 40px; }
+  .chatta-i { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; background: none; color: var(--muted); cursor: help; border-radius: 50%; }
+  .chatta-i svg { width: 16px; height: 16px; }
+  .chatta-i:hover, .chatta-i:focus-visible { color: var(--accent); outline: none; }
+  .chatta-tip { position: absolute; left: 0; bottom: calc(100% + 8px); width: min(300px, calc(100vw - 32px)); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--text, inherit); font-size: 13px; line-height: 1.45; font-weight: 400; text-align: left; box-shadow: 0 6px 20px rgba(0,0,0,.25); opacity: 0; visibility: hidden; transition: opacity .15s; pointer-events: none; z-index: 40; }
+  .chatta-i:hover .chatta-tip, .chatta-i:focus .chatta-tip { opacity: 1; visibility: visible; }
+  .chatta { display: inline-block; color: var(--accent); font-weight: 600; text-decoration: none; }
   .chatta:hover, .chatta:focus-visible { text-decoration: underline; text-underline-offset: 4px; outline: none; }
 </style>
 </head>
@@ -126,7 +132,13 @@
     <button type="button" class="sel-btn" id="selbtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu">Tscherner in tool …</button>
     <div class="menu" id="menu" role="menu"></div>
   </div>
-  <a class="chatta" id="chatta" href="https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta" target="_blank" rel="noopener">Chatta Schweiz</a>
+  <div class="chatta-row">
+    <a class="chatta" id="chatta" href="https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta" target="_blank" rel="noopener">Chattas sbagls?</a>
+    <button type="button" class="chatta-i" aria-describedby="chatta-tip" aria-label="Info">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="11" y="10.5" width="2" height="7" rx="1" fill="currentColor"/><circle cx="12" cy="7.3" r="1.25" fill="currentColor"/></svg>
+      <span class="chatta-tip" id="chatta-tip" role="tooltip">Qua s'avra in artitgel che è vegnì publitgà durant ils ultims 30 dis. Per plaschair leger attentamain e controllar sch'i dat sbagls u passaschas nunchapaivlas.</span>
+    </button>
+  </div>
 </main>
 <script>
   // «Chatta Schweiz»: bei jedem Klick ein anderer rtr.ch-Artikel der letzten 30 Tage
