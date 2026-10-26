@@ -103,6 +103,8 @@
   @media (max-width: 600px) { .toplink { width: 32px; height: 32px; border-radius: 50%; } .toplink svg { width: 16px; height: 16px; } }
   .toplink:hover, .toplink:focus-visible, .toplink[aria-expanded="true"] { opacity: 1; border-color: var(--accent); background: var(--field); }
   .pop { position: fixed; z-index: 60; right: 12px; top: 52px; }
+  .chatta { display: inline-block; margin-top: 40px; color: var(--accent); font-weight: 600; text-decoration: none; }
+  .chatta:hover, .chatta:focus-visible { text-decoration: underline; text-underline-offset: 4px; outline: none; }
 </style>
 </head>
 <body>
@@ -124,7 +126,23 @@
     <button type="button" class="sel-btn" id="selbtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu">Tscherner in tool …</button>
     <div class="menu" id="menu" role="menu"></div>
   </div>
+  <a class="chatta" id="chatta" href="https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta" target="_blank" rel="noopener">Chatta Schweiz</a>
 </main>
+<script>
+  // «Chatta Schweiz»: bei jedem Klick ein anderer rtr.ch-Artikel der letzten 30 Tage
+  (function () {
+    const a = document.getElementById('chatta');
+    let items = [], last = null;
+    function next() {
+      if (!items.length) return;
+      let u; do { u = items[Math.floor(Math.random() * items.length)]; } while (items.length > 1 && u === last);
+      a.href = u;
+    }
+    fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta?list=1')
+      .then(r => r.json()).then(d => { items = d.items || []; next(); }).catch(function () {});
+    a.addEventListener('click', function () { last = a.href; setTimeout(next, 0); });
+  })();
+</script>
 
 <script>
   // Anzeigenamen im Dropdown (Dateiname -> Name).
