@@ -418,7 +418,7 @@
       const views = d.views || {};
       const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
       const isLab = t => t.startsWith('lab-');
-      const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => '/' + t, views);
+      const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => t === 'artitgel-challenge' ? '/' : '/' + t, views);
       const lab = draw(document.getElementById(ids[2]), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
       const hrefs = { index: '/', 'top-popup': '/', top: '/top', 'lab-index': '/lab/', '404': '/404' };
       document.getElementById(ids[1]).innerHTML = Object.keys(OTHER).map(t => `<div class="row" data-t="${esc(t)}"><span class="rank">·</span>
