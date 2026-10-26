@@ -177,7 +177,7 @@
     const CHATTA_API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta';
     const box = document.createElement('div'); box.className = 'mchatta';
     const row = document.createElement('div'); row.className = 'mchatta-r';
-    const a = mk("Chattas sbagls? – L'artitgel-challenge", CHATTA_API);
+    const a = mk('Artitgel-challenge', CHATTA_API);
     a.target = '_blank'; a.rel = 'noopener';
     const i = document.createElement('button');
     i.type = 'button'; i.className = 'chatta-i'; i.setAttribute('aria-label', 'Info'); i.setAttribute('aria-controls', 'chatta-tip');
@@ -194,7 +194,14 @@
     let list = [], last = null;
     const next = () => { if (!list.length) return; let u; do { u = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && u === last); a.href = u; };
     fetch(CHATTA_API + '?list=1').then(r => r.json()).then(d => { list = d.items || []; next(); }).catch(() => {});
-    a.addEventListener('click', () => { last = a.href; setTimeout(next, 0); });
+    a.addEventListener('click', () => {
+      last = a.href; setTimeout(next, 0);
+      // für /stats: Klick zählt als Aufruf und als Nutzung der «Artitgel-challenge»
+      const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', cid = window.dbzCid && dbzCid() ? '&c=' + dbzCid() : '';
+      const th = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      fetch(API + '/view/artitgel-challenge?t=' + th + cid, { method: 'POST', keepalive: true }).catch(() => {});
+      fetch(API + '/use/artitgel-challenge?' + cid.slice(1), { method: 'POST', keepalive: true }).catch(() => {});
+    });
   }
   for (const [label, paths] of GROUPS) {
     const h = document.createElement('div'); h.className = 'mg'; h.textContent = label; menu.append(h);
@@ -234,7 +241,7 @@
 // Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /top bleibt als Ausweichlink)
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', SHOW = 5;
-  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'layers': 'Elavurar maletgs', 'colurs': 'Clerezza + colurs', 'rotar': 'Rotar + drizzar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels",
+  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'layers': 'Elavurar maletgs', 'colurs': 'Clerezza + colurs', 'rotar': 'Rotar + drizzar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge',
     'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('de-CH');
