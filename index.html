@@ -106,12 +106,12 @@
   /* «Chattas sbagls?» im Dropdown: gestrichelter Rahmen, Hinweis per ⓘ */
   .mchatta { margin: 4px 2px 2px; border: 0.5px dashed var(--accent); border-radius: 10px; }
   .mchatta-r { display: flex; align-items: center; }
-  .mchatta .mi { flex: 1; color: var(--accent); font-weight: 600; }
+  .mchatta .mi { flex: 1; }
   .chatta-i { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; margin-right: 4px; padding: 0; border: 0; background: none; color: var(--muted); cursor: help; border-radius: 50%; }
   .chatta-i svg { width: 16px; height: 16px; }
   .chatta-i:hover, .chatta-i:focus-visible, .mchatta.tip .chatta-i { color: var(--accent); outline: none; }
   .chatta-tip { display: none; margin: 0; padding: 0 12px 10px; color: var(--muted); font-size: 13px; line-height: 1.45; }
-  .mchatta.tip .chatta-tip, .mchatta:has(.chatta-i:hover) .chatta-tip { display: block; }
+  .mchatta.tip .chatta-tip { display: block; }
 </style>
 </head>
 <body>
@@ -177,14 +177,18 @@
     const CHATTA_API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta';
     const box = document.createElement('div'); box.className = 'mchatta';
     const row = document.createElement('div'); row.className = 'mchatta-r';
-    const a = mk('Chattas sbagls? – La artitgel-challenge', CHATTA_API);
+    const a = mk("Chattas sbagls? – L'artitgel-challenge", CHATTA_API);
     a.target = '_blank'; a.rel = 'noopener';
     const i = document.createElement('button');
     i.type = 'button'; i.className = 'chatta-i'; i.setAttribute('aria-label', 'Info'); i.setAttribute('aria-controls', 'chatta-tip');
     i.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="11" y="10.5" width="2" height="7" rx="1" fill="currentColor"/><circle cx="12" cy="7.3" r="1.25" fill="currentColor"/></svg>';
     const tip = document.createElement('p'); tip.className = 'chatta-tip'; tip.id = 'chatta-tip';
     tip.textContent = "Cun cliccar qua s'avra in artitgel che è vegnì publitgà durant ils ultims 30 dis. Per plaschair leger attentamain e controllar sch'i dat sbagls u passaschas nunchapiblas.";
-    i.addEventListener('click', e => { e.stopPropagation(); box.classList.toggle('tip'); });
+    // Maus: Hinweis beim Darüberfahren auf, beim Verlassen zu; Klick/Antippen klappt ihn auf und wieder zu
+    i.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') box.classList.add('tip'); });
+    box.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') box.classList.remove('tip'); });
+    i.setAttribute('aria-expanded', 'false');
+    i.addEventListener('click', e => { e.stopPropagation(); i.setAttribute('aria-expanded', box.classList.toggle('tip')); });
     row.append(a, i); box.append(row, tip);
     chattaBox = box;
     let list = [], last = null;
