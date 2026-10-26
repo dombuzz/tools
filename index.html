@@ -112,6 +112,22 @@
   .chatta-i:hover, .chatta-i:focus-visible, .mchatta.tip .chatta-i { color: var(--accent); outline: none; }
   .chatta-tip { display: none; margin: 0; padding: 0 12px 10px; color: var(--muted); font-size: 13px; line-height: 1.45; }
   .mchatta.tip .chatta-tip { display: block; }
+  /* Favurits: Stern im Dropdown, Kacheln unter dem Dropdown (pro Browser gespeichert) */
+  .mi.fv { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .star { flex: none; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; margin: -4px -6px -4px 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 17px; line-height: 1; cursor: pointer; }
+  .mchatta .star { margin: 0; }
+  .star:hover, .star:focus-visible { color: var(--accent); outline: none; }
+  .star.on { color: var(--accent); }
+  .favs { margin-top: 20px; }
+  .favh { margin: 0 0 10px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .favgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .favcard { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); text-decoration: none; transition: border-color .15s; }
+  .favcard:hover, .favcard:focus-visible { border-color: var(--accent); outline: none; }
+  .favcard img { flex: none; width: 22px; height: 22px; }
+  .favcard span { min-width: 0; display: flex; flex-direction: column; }
+  .favcard b { font-size: 14px; font-weight: 600; line-height: 1.25; }
+  .favcard small { color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+  .favhint { color: var(--muted); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -171,7 +187,7 @@
   let subOpen = {};
   try { subOpen = JSON.parse(localStorage.getItem('dbz-subgroups') || '{}') || {}; } catch (e) {}
   const saveSub = () => { try { localStorage.setItem('dbz-subgroups', JSON.stringify(subOpen)); } catch (e) {} };
-  let subN = 0, chattaBox = null;
+  let subN = 0, chattaBox = null, chattaPick = () => '', chattaClicked = () => {};
   // ganz unten in «Redacziun»: «Chattas sbagls?» – bei jedem Klick ein anderer rtr.ch-Artikel der letzten 30 Tage
   {
     const CHATTA_API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev/chatta';
@@ -189,19 +205,21 @@
     box.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') box.classList.remove('tip'); });
     i.setAttribute('aria-expanded', 'false');
     i.addEventListener('click', e => { e.stopPropagation(); i.setAttribute('aria-expanded', box.classList.toggle('tip')); });
-    row.append(a, i); box.append(row, tip);
+    row.append(a, i); box.append(row, tip); a.dataset.fav = 'chatta';
     chattaBox = box;
     let list = [], last = null;
     const next = () => { if (!list.length) return; let u; do { u = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && u === last); a.href = u; };
     fetch(CHATTA_API + '?list=1').then(r => r.json()).then(d => { list = d.items || []; next(); }).catch(() => {});
-    a.addEventListener('click', () => {
+    chattaPick = () => a.href;
+    a.addEventListener('click', () => chattaClicked());
+    chattaClicked = () => {
       last = a.href; setTimeout(next, 0);
       // für /stats: Klick zählt als Aufruf und als Nutzung der «Artitgel-challenge»
       const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', cid = window.dbzCid && dbzCid() ? '&c=' + dbzCid() : '';
       const th = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
       fetch(API + '/view/artitgel-challenge?t=' + th + cid, { method: 'POST', keepalive: true }).catch(() => {});
       fetch(API + '/use/artitgel-challenge?' + cid.slice(1), { method: 'POST', keepalive: true }).catch(() => {});
-    });
+    };
   }
   for (const [label, paths] of GROUPS) {
     const h = document.createElement('div'); h.className = 'mg'; h.textContent = label; menu.append(h);
@@ -221,6 +239,48 @@
   }
   // ganz unten: Link ins Lab (Experimente)
   menu.append(mk('Lab 🧪', '/lab/', 'lab'));
+
+  // Favurits: ☆ bei jedem Tool im Dropdown, «★ Mes favurits» als Kacheln unter dem Dropdown (nur in diesem Browser gespeichert)
+  {
+    const ICONS = {"/rtr-picture": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='12.5 12.5 75.0 75.0'%3E%3Crect x='20' y='28' width='60' height='44' rx='6' fill='none' stroke='%23ff4d64' stroke-width='7'/%3E%3Ccircle cx='34' cy='42' r='6' fill='%23ff4d64'/%3E%3Cpath d='M24,66 L40,50 L50,60 L62,44 L76,66 Z' fill='%23ff4d64'/%3E%3C/svg%3E", "/visual": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='20' y='30' width='60' height='40' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E", "/layers": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='16' y='38' width='52' height='36' rx='4' stroke='%23ff4d64' stroke-width='8' fill='none'/%3E%3Cpath d='M32 26h52v36' stroke='%23ff4d64' stroke-width='8' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E", "/Resizer2000": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15.3 15.3 69.4 69.4'%3E%3Cpath d='M24 76V40h12M76 24v36H64M24 76l52-52' stroke='%23ff4d64' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E", "/Plan": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-2.9 -4.9 105.9 105.9'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='56' rx='7'/%3E%3Cpath d='M18 40h64M36 16v14M64 16v14'/%3E%3C/g%3E%3Cg fill='%23ff4d64'%3E%3Crect x='28' y='50' width='10' height='9' rx='2'/%3E%3Crect x='45' y='50' width='10' height='9' rx='2'/%3E%3Crect x='62' y='50' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='28' y='64' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='45' y='64' width='10' height='9' rx='2'/%3E%3C/g%3E%3C/svg%3E", "/artitgel": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1.5 -1.5 27 27'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/g%3E%3C/svg%3E", "/audio-recorder": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%227.2 5.7 52.6 52.6%22%3E%3Cg fill=%22%23ff4d64%22%3E%3Crect x=%2210%22 y=%2226%22 width=%226%22 height=%2212%22 rx=%223%22/%3E%3Crect x=%2220%22 y=%2216%22 width=%226%22 height=%2232%22 rx=%223%22/%3E%3Crect x=%2230%22 y=%2210%22 width=%226%22 height=%2244%22 rx=%223%22/%3E%3Crect x=%2240%22 y=%2220%22 width=%226%22 height=%2224%22 rx=%223%22/%3E%3C/g%3E%3Ccircle cx=%2252%22 cy=%2232%22 r=%225%22 fill=%22%23ff4d64%22/%3E%3C/svg%3E", "/srt2ttml": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='13.6 13.6 72.8 72.8'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 38h48l-12-12M78 62H30l12 12'/%3E%3C/g%3E%3C/svg%3E", "/subs": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.7 9.7 80.6 80.6'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='52' rx='8'/%3E%3Cpath d='M30 50h22M30 62h40M60 50h10'/%3E%3C/g%3E%3C/svg%3E", "/data": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='8.8 8.8 82.4 82.4'%3E%3Crect x='22' y='52' width='12' height='26' fill='%23ff4d64'/%3E%3Crect x='44' y='36' width='12' height='42' fill='%23ff4d64'/%3E%3Crect x='66' y='22' width='12' height='56' fill='%23ff4d64'/%3E%3C/svg%3E", "/votgr": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%227.4 7.4 49.2 49.2%22%3E%3Cpolygon points=%2224.18,36.09 17.10,40.17 10.03,36.09 10.03,27.91 17.10,23.83 24.18,27.91%22 fill=%22%23ff4d64%22 fill-opacity=%220.75%22/%3E%3Cpolygon points=%2239.08,36.09 32.00,40.17 24.92,36.09 24.92,27.91 32.00,23.83 39.08,27.91%22 fill=%22%23ff4d64%22/%3E%3Cpolygon points=%2253.97,36.09 46.90,40.17 39.82,36.09 39.82,27.91 46.90,23.83 53.97,27.91%22 fill=%22%23ff4d64%22 fill-opacity=%220.5%22/%3E%3Cpolygon points=%2231.63,22.93 24.55,27.01 17.48,22.93 17.48,14.76 24.55,10.67 31.63,14.76%22 fill=%22%23ff4d64%22/%3E%3Cpolygon points=%2246.52,22.93 39.45,27.01 32.37,22.93 32.37,14.76 39.45,10.67 46.52,14.76%22 fill=%22%23ff4d64%22 fill-opacity=%220.95%22/%3E%3Cpolygon points=%2231.63,49.24 24.55,53.33 17.48,49.24 17.48,41.07 24.55,36.99 31.63,41.07%22 fill=%22%23ff4d64%22 fill-opacity=%220.5%22/%3E%3Cpolygon points=%2246.52,49.24 39.45,53.33 32.37,49.24 32.37,41.07 39.45,36.99 46.52,41.07%22 fill=%22%23ff4d64%22/%3E%3C/svg%3E", "chatta": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/g%3E%3C/svg%3E"};
+    const info = {};
+    let group = '';
+    for (const el of menu.querySelectorAll('.mg, a.mi')) {
+      if (el.classList.contains('mg')) { group = el.textContent; continue; }
+      if (el.classList.contains('lab')) continue;
+      const key = el.dataset.fav || el.getAttribute('href');
+      info[key] = { name: el.textContent, group: group.charAt(0) + group.slice(1).toLowerCase(), el };
+    }
+    let fav = [];
+    try { fav = (JSON.parse(localStorage.getItem('dbz-favs') || '[]') || []).filter(k => k in info); } catch (e) {}
+    const favs = document.createElement('section'); favs.className = 'favs';
+    wrap.after(favs);
+    const render = () => {
+      for (const k in info) { const s = info[k].star; s.classList.toggle('on', fav.includes(k)); s.textContent = fav.includes(k) ? '★' : '☆'; s.setAttribute('aria-pressed', fav.includes(k)); }
+      favs.innerHTML = '<div class="favh">★ Mes favurits</div>';
+      if (!fav.length) { favs.insertAdjacentHTML('beforeend', '<div class="favhint">Marca tes tools preferids cun ☆ en la glista.</div>'); return; }
+      const g = document.createElement('div'); g.className = 'favgrid';
+      for (const k of fav) {
+        const c = document.createElement('a'); c.className = 'favcard'; c.href = k === 'chatta' ? (chattaPick() || info[k].el.href) : k;
+        if (k === 'chatta') { c.target = '_blank'; c.rel = 'noopener'; c.addEventListener('click', () => { c.href = chattaPick() || c.href; chattaClicked(); setTimeout(() => { c.href = chattaPick() || c.href; }, 0); }); }
+        const img = document.createElement('img'); img.src = ICONS[k] || ''; img.alt = '';
+        const t = document.createElement('span'); t.innerHTML = '<b></b><small></small>';
+        t.firstChild.textContent = info[k].name; t.lastChild.textContent = info[k].group;
+        c.append(img, t); g.append(c);
+      }
+      favs.append(g);
+    };
+    const save = () => { try { localStorage.setItem('dbz-favs', JSON.stringify(fav)); } catch (e) {} render(); };
+    for (const k in info) {
+      const el = info[k].el, s = document.createElement('button');
+      s.type = 'button'; s.className = 'star'; s.setAttribute('aria-label', 'Favurit');
+      s.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); fav = fav.includes(k) ? fav.filter(x => x !== k) : [...fav, k]; save(); });
+      if (k === 'chatta') el.parentElement.insertBefore(s, el.nextSibling);
+      else { const t = document.createElement('span'); t.textContent = el.textContent; el.textContent = ''; el.classList.add('fv'); el.append(t, s); }
+      info[k].star = s;
+    }
+    render();
+  }
 
   // nur sichtbare Einträge (Links und Untergruppen-Knöpfe) für die Pfeiltasten
   const items = () => [...menu.querySelectorAll('.mi, .ms')].filter(el => el.offsetParent !== null);
