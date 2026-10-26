@@ -99,6 +99,38 @@ function period(range) {
   return null; // all
 }
 
+
+// «Chatta Schweiz»: zufälliger rtr.ch-Artikel der letzten 30 Tage.
+// Quelle: monatliche Artikel-Sitemaps von rtr.ch (nur Links, ohne Datum, in Publikationsreihenfolge).
+// Die täglichen «Il di»-Artikel (…/novitads-dals-TT-MM-JJJJ-…) dienen als Datumsmarken.
+async function rtrSitemap(ym) {
+  const u = 'https://www.rtr.ch/sitemaps/aron/articles/' + ym + '.xml';
+  const r = await fetch(u, { cf: { cacheTtl: 1800, cacheEverything: true } });
+  if (!r.ok) return [];
+  const xml = await r.text();
+  const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1].trim());
+  // Zuoberst stehen ältere, nachträglich bearbeitete Seiten (Rezepte, Porträts …): erst ab dem ersten «Il di» des Monats zählen
+  const first = urls.findIndex(u => /novitads-dals-\d{2}-\d{2}-\d{4}/.test(u));
+  return first > 0 ? urls.slice(first) : urls;
+}
+async function rtrRecent(days = 30) {
+  const now = new Date();
+  const ym = d => d.getUTCFullYear() + '_' + String(d.getUTCMonth() + 1).padStart(2, '0');
+  const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+  const all = [...await rtrSitemap(ym(prev)), ...await rtrSitemap(ym(now))];
+  const cutoff = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - days);
+  let start = -1, seen = false;
+  all.forEach((u, i) => {
+    const m = u.match(/novitads-dals-(\d{2})-(\d{2})-(\d{4})/);
+    if (!m) return;
+    seen = true;
+    if (Date.UTC(+m[3], +m[2] - 1, +m[1]) < cutoff) start = i;
+  });
+  const items = (seen ? all.slice(start + 1) : all)
+    .filter(u => !/\/interpresa\/organisaziun\//.test(u));
+  return [...new Set(items)];
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -106,6 +138,15 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(request) });
 
     try {
+      // «Chatta Schweiz»: Liste (?list=1) oder direkt Weiterleitung auf einen Zufallsartikel
+      if (request.method === 'GET' && parts[0] === 'chatta' && parts.length === 1) {
+        const items = await rtrRecent(30);
+        if (url.searchParams.get('list') === '1') return json({ count: items.length, items }, request);
+        if (!items.length) return Response.redirect('https://www.rtr.ch/novitads', 302);
+        const pick = items[Math.floor(Math.random() * items.length)];
+        return new Response(null, { status: 302, headers: { Location: pick, 'Cache-Control': 'no-store' } });
+      }
+
       // Total pro Tool
       if (request.method === 'GET' && parts[0] === 'likes' && parts.length === 1) {
         const { results } = await env.DB.prepare('SELECT tool, count FROM likes').all();
