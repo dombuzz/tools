@@ -70,7 +70,6 @@ input.txt:focus{border-color:var(--accent)}
     <div class="tabs" role="tablist" aria-label="Tip da link">
       <button class="tab" role="tab" data-k="preview" aria-selected="false">Prevista</button>
       <button class="tab" role="tab" data-k="edit" aria-selected="false">Elavurar</button>
-      <button class="tab" role="tab" data-k="urn" aria-selected="true">Link publitgà (URN)</button>
       <button class="tab" role="tab" data-k="text" aria-selected="false">Link cun text</button>
     </div>
     <div class="out">
@@ -100,7 +99,7 @@ input.txt:focus{border-color:var(--accent)}
   const get = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
-  let tab = get('dbz-artitgel-tab', 'urn'); if (!HINT[tab]) tab = 'urn';
+  let tab = get('dbz-artitgel-tab', 'text'); if (!HINT[tab] || tab === 'urn') tab = 'text';
   let id = '', portal = DEF, text = '', textState = '', title = '', kind = '', seq = 0, lastErr = '';
 
   const link = k => {
@@ -163,8 +162,8 @@ input.txt:focus{border-color:var(--accent)}
     status(); paint();
   }
 
-  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> alle vier
-  const shown = () => kind === 'text' ? ['preview', 'edit'] : ['preview', 'edit', 'urn', 'text'];
+  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> dazu der Link cun text
+  const shown = () => kind === 'text' ? ['preview', 'edit'] : ['preview', 'edit', 'text'];
   function paint() {
     if (!id) return;
     const vis = shown(), cur = vis.includes(tab) ? tab : vis[0];
