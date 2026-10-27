@@ -52,6 +52,7 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   // Tool-Kennung aus der Adresse: /Resizer2000 → Resizer2000, /lab/csv → lab-csv
   const segs = location.pathname.replace(/\.html?$/i, '').split('/').filter(Boolean);
   const tool = (segs[0] === 'lab' && segs.length > 1 ? 'lab-' : '') + (segs.at(-1) || 'index');
+  try { localStorage.setItem('dbz-visit-' + tool, Date.now()); } catch (e) {} // für «nov» auf der Startseite
   // Seitenaufruf zählen (einmal pro Aufruf; nur Tool-Name und Zeitpunkt)
   // Anonyme Zufalls-Kennung pro Browser (nur zum Zählen verschiedener Besucher, gilt für alle Tools gemeinsam)
   let cid = ''; try { cid = localStorage.getItem('dbz-cid') || ''; if (!/^[A-Za-z0-9-]{8,40}$/.test(cid)) { cid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)); localStorage.setItem('dbz-cid', cid); } } catch (e) { cid = ''; }

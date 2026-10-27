@@ -19,6 +19,7 @@
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
 //                                  sortiert nach Nutzungen, dann Likes, dann Name (wie /stats)
 //                                  daily=1 -> zusätzlich daily:[{day, tool, uses, likes, views}] (Rohdaten pro Tag)
+//                                  favs = {tool: ☆ gesetzt im Zeitraum}, favsNow = {tool: aktuell markiert}, favsTotal
 //                                  views = {tool: Seitenaufrufe}, viewsTotal = Summe, themes = {light, dark, unknown} Aufrufe nach Darstellung (nur für /stats),
 //                                  clients = Anzahl verschiedener Besucher (Kennungen) im Zeitraum, gesamt über alle Tools (nur für /stats; erst ab Einführung der Kennung)
 //                                  returning = davon an mindestens zwei verschiedenen Tagen (UTC) da; usingClients = Besucher mit mindestens einer Nutzung;
@@ -52,6 +53,7 @@ let viewsReady;
 const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS views (tool TEXT NOT NULL, ts TEXT NOT NULL)'),
   env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS favs (tool TEXT NOT NULL, ts TEXT NOT NULL, cid TEXT, added INTEGER NOT NULL)'), // ☆ gesetzt (1) / entfernt (0)
 ]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
   .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
   .then(() => env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {})) // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
@@ -243,7 +245,15 @@ export default {
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const usingClients = ucRows[0]?.c || 0;
         const usesPerClient = usingClients ? Math.round((ucRows[0].n / usingClients) * 10) / 10 : 0;
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient };
+        // Favurits: wie oft ☆ im Zeitraum gesetzt wurde (favs) und wie viele aktuell markiert sind (favsNow = gesetzt − entfernt, gesamthaft)
+        const { results: favRows } = await env.DB
+          .prepare('SELECT tool, SUM(added) AS adds FROM favs WHERE ts >= ?1 AND ts < ?2 GROUP BY tool')
+          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const { results: favNowRows } = await env.DB.prepare('SELECT tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS n FROM favs GROUP BY tool').all();
+        const favs = Object.fromEntries(favRows.filter(r => r.adds).map(r => [r.tool, r.adds]));
+        const favsNow = Object.fromEntries(favNowRows.map(r => [r.tool, Math.max(0, r.n)]));
+        const favsTotal = Object.values(favs).reduce((t, n) => t + n, 0);
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';
@@ -274,6 +284,18 @@ export default {
              RETURNING count`).bind(tool),
         ]);
         return json({ tool, count: upd.results[0].count }, request);
+      }
+
+      // ☆ auf der Startseite gesetzt (?a=1) oder entfernt (?a=0)
+      if (request.method === 'POST' && parts[0] === 'fav' && parts.length === 2) {
+        const origin = request.headers.get('Origin') || '';
+        if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
+        const tool = decodeURIComponent(parts[1]);
+        if (!TOOL_NAME.test(tool)) return json({ error: 'tool' }, request, 400);
+        await ensureViews(env);
+        const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null;
+        await env.DB.prepare("INSERT INTO favs (tool, ts, cid, added) VALUES (?1, datetime('now'), ?2, ?3)").bind(tool, cid, url.searchParams.get('a') === '0' ? 0 : 1).run();
+        return json({ ok: true }, request);
       }
 
       // Eine Nutzung zählen (like.js schickt das höchstens einmal pro Seitenaufruf)
