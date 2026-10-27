@@ -186,6 +186,12 @@
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <div class="metarow"><div class="meta" id="meta"></div><div class="thbar" id="themeBar" hidden></div></div>
 
+  <details class="fold" data-k="favs">
+    <summary class="labh other">Favurits <span>★</span></summary>
+    <div class="card" id="favlist"><div class="msg">Chargel …</div></div>
+    <p class="meta" id="favmeta"></p>
+  </details>
+
   <details class="fold" data-k="other">
     <summary class="labh other">Autras paginas</summary>
     <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
@@ -421,6 +427,16 @@
       const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => t === 'artitgel-challenge' ? '/' : '/' + t, views);
       const lab = draw(document.getElementById(ids[2]), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
       const hrefs = { index: '/', 'top-popup': '/', top: '/top', 'lab-index': '/lab/', '404': '/404' };
+      if (ids[0] === 'list') { // Favurits: ★ gesetzt im Zeitraum, darunter wie viele es aktuell markiert haben
+        const fv = d.favs || {}, now = d.favsNow || {};
+        const ft = [...new Set([...Object.keys(fv), ...Object.keys(now)])].filter(t => fv[t] || now[t])
+          .sort((a, b) => (fv[b] || 0) - (fv[a] || 0) || (now[b] || 0) - (now[a] || 0) || (NAMES[a] || a).localeCompare(NAMES[b] || b, 'de'));
+        document.getElementById('favlist').innerHTML = ft.length ? ft.map((t, i) => `<div class="row" data-t="${esc(t)}"><span class="rank">${i + 1}</span>
+          <div class="name"><a href="${t === 'artitgel-challenge' ? '/' : '/' + esc(t)}">${esc(NAMES[t] || t)}</a></div>
+          <span class="cnt" title="${fmt(fv[t] || 0)} giadas marcà en quest temp · actualmain tar ${fmt(now[t] || 0)}">★ ${fmt(fv[t] || 0)}<small>actualmain ${fmt(now[t] || 0)}</small></span></div>`).join('')
+          : '<div class="msg">Anc nagins favurits en quest temp.</div>';
+        document.getElementById('favmeta').textContent = `${fmt(d.favsTotal || 0)} giadas marcà sco favurit`;
+      }
       document.getElementById(ids[1]).innerHTML = Object.keys(OTHER).map(t => `<div class="row" data-t="${esc(t)}"><span class="rank">·</span>
         <div class="name"><a href="${hrefs[t]}">${esc(OTHER[t])}</a></div>
         <span class="cnt" data-f="v" title="${fmt(views[t] || 0)} ${t === 'top-popup' ? 'clics' : 'visitas'}">${EYE} ${fmt(views[t] || 0)}</span></div>`).join('');
