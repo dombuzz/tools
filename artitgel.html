@@ -90,7 +90,7 @@ input.txt:focus{border-color:var(--accent)}
   const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
   const SECRE = /\/ui\/([A-Za-z0-9_-]+)\/(?:articles|preview\/article)\//;
   const $ = id => document.getElementById(id);
-  const KIND = { edit: "link d'elavuraziun (CMS)", preview: 'link da prevista (CMS)', urn: 'link URN', id: 'ID', text: 'URL da l\'artitgel' };
+  const KIND = { edit: "link d'elavuraziun (CMS)", preview: 'link da prevista (CMS)', urn: 'link URN', id: 'ID', text: 'ID da l\'artitgel' };
   const HINT = {
     preview: 'Be per persunas cun login dal CMS.',
     edit: 'Be per persunas cun login dal CMS.',
@@ -140,7 +140,10 @@ input.txt:focus{border-color:var(--accent)}
         const d = await lookup(t, my);
         if (my !== seq) return;
         if (!d || !d.id) { say("Chattà nagin artitgel sin questa URL. È l'artitgel gia publitgà?" + (lastErr ? ` <code>(${esc(lastErr)})</code>` : ''), true); return; }
-        id = d.id; kind = 'text'; if (d.portal) portal = d.portal; if (!text) { text = t.split(/[?#]/)[0]; textState = 'ok'; }
+        id = d.id; kind = 'text';
+        // Portal fürs CMS: aus dem Artikel, sonst aus dem ersten Pfadteil (rtr.ch/novitads/… -> rtr_novitads)
+        const seg = (t.match(/rtr\.ch\/([a-z]+)\//i) || [])[1];
+        portal = d.portal || (seg && ['novitads', 'cultura', 'sport'].includes(seg.toLowerCase()) ? 'rtr_' + seg.toLowerCase() : DEF); if (!text) { text = t.split(/[?#]/)[0]; textState = 'ok'; }
         status(); $('result').hidden = false; paint();
         window.dispatchEvent(new Event('dbz-success'));
         return;
