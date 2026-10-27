@@ -98,7 +98,7 @@ input.txt:focus{border-color:var(--accent)}
         <dt>Link URN</dt><dd>«Copiar link URN» sut il resultat: link permanent cun l'ID (rtr.ch/article/…). Funcziuna per tuts, uschespert che l'artitgel è publitgà – era gia ordavant per newsletters e posts planisads.</dd>
         <dt>Link</dt><dd>La URL cun il titel da l'artitgel. Datti be, sche l'artitgel è gia publitgà.</dd>
       </dl>
-      <p>Cun ina URL publica sco input mussa il tool be «Prevista» ed «Elavurar».</p>
+      <p>Cun ina URL publica sco input mussa il tool be «Prevista» ed «Elavurar» – ed il link URN da copiar.</p>
     </details>
   </div>
 </main>
@@ -182,7 +182,7 @@ input.txt:focus{border-color:var(--accent)}
     status(); paint();
   }
 
-  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> dazu «Link». Link URN separat und dezent darunter (nur bei Link mit ID).
+  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> dazu «Link». «Copiar link URN» dezent darunter, nur bei URL cun text.
   const shown = () => kind === 'text' ? ['preview', 'edit'] : ['preview', 'edit', 'text'];
   function paint() {
     if (!id) return;
@@ -196,7 +196,7 @@ input.txt:focus{border-color:var(--accent)}
     $('open').href = waiting ? '#' : u;
     $('open').setAttribute('aria-disabled', waiting); $('copy').setAttribute('aria-disabled', waiting);
     $('hint').textContent = HINT[tab];
-    $('urncopy').hidden = kind === 'text';
+    $('urncopy').hidden = kind !== 'text'; // nur bei eingegebener URL cun text
     tab = tab0; // gespeicherte Wahl nicht überschreiben
   }
 
