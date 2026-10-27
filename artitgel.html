@@ -53,6 +53,13 @@ input.txt:focus{border-color:var(--accent)}
 .hint{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
 .url.wait{color:var(--muted);user-select:none}
 .btn[aria-disabled=true]{opacity:.4;pointer-events:none}
+.legend{margin:16px 0 0;font-size:.85rem;color:var(--muted)}
+.legend summary{cursor:pointer;font-weight:600;color:var(--muted)}
+.legend summary:hover{color:var(--accent)}
+.legend dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:10px 0 0}
+.legend dt{font-weight:600;color:var(--text)}
+.legend dd{margin:0}
+.legend p{margin:10px 0 0}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -70,7 +77,8 @@ input.txt:focus{border-color:var(--accent)}
     <div class="tabs" role="tablist" aria-label="Tip da link">
       <button class="tab" role="tab" data-k="preview" aria-selected="false">Prevista</button>
       <button class="tab" role="tab" data-k="edit" aria-selected="false">Elavurar</button>
-      <button class="tab" role="tab" data-k="text" aria-selected="false">Link cun text</button>
+      <button class="tab" role="tab" data-k="urn" aria-selected="true">Link URN</button>
+      <button class="tab" role="tab" data-k="text" aria-selected="false">Link</button>
     </div>
     <div class="out">
       <div class="url" id="url"></div>
@@ -80,6 +88,16 @@ input.txt:focus{border-color:var(--accent)}
       </div>
       <p class="hint" id="hint"></p>
     </div>
+    <details class="legend">
+      <summary>Legenda</summary>
+      <dl>
+        <dt>Prevista</dt><dd>Prevista da l'artitgel en il CMS – be cun login dal CMS.</dd>
+        <dt>Elavurar</dt><dd>L'artitgel en il CMS per elavurar – be cun login dal CMS.</dd>
+        <dt>Link URN</dt><dd>Link permanent cun l'ID (rtr.ch/article/…). Funcziuna per tuts, uschespert che l'artitgel è publitgà – era gia ordavant per newsletters e posts planisads.</dd>
+        <dt>Link</dt><dd>La URL publica cun il titel da l'artitgel. Datti pir suenter la publicaziun.</dd>
+      </dl>
+      <p>Cun ina URL publica sco input mussa il tool be «Prevista» ed «Elavurar».</p>
+    </details>
   </div>
 </main>
 <script>
@@ -91,15 +109,15 @@ input.txt:focus{border-color:var(--accent)}
   const $ = id => document.getElementById(id);
   const KIND = { edit: "link d'elavuraziun (CMS)", preview: 'link da prevista (CMS)', urn: 'link URN', id: 'ID', text: 'ID da l\'artitgel' };
   const HINT = {
-    preview: 'Be per persunas cun login dal CMS.',
-    edit: 'Be per persunas cun login dal CMS.',
-    urn: "Funcziuna per tuts, uschespert che l'artitgel è publitgà – era per newsletters e posts da social media planisads.",
-    text: "La URL cun il titel da l'artitgel. Datti be, sch'l'artitgel è gia publitgà."
+    preview: "Prevista da l'artitgel en il CMS. Be per persunas cun login dal CMS.",
+    edit: "L'artitgel en il CMS per elavurar. Be per persunas cun login dal CMS.",
+    urn: "Link permanent cun l'ID. Funcziuna per tuts, uschespert che l'artitgel è publitgà – era gia ordavant per newsletters e posts da social media planisads.",
+    text: "La URL publica cun il titel da l'artitgel. Datti pir suenter la publicaziun."
   };
   const get = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
-  let tab = get('dbz-artitgel-tab', 'text'); if (!HINT[tab] || tab === 'urn') tab = 'text';
+  let tab = get('dbz-artitgel-tab', 'urn'); if (!HINT[tab]) tab = 'urn';
   let id = '', portal = DEF, text = '', textState = '', title = '', kind = '', seq = 0, lastErr = '';
 
   const link = k => {
@@ -162,8 +180,8 @@ input.txt:focus{border-color:var(--accent)}
     status(); paint();
   }
 
-  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> dazu der Link cun text
-  const shown = () => kind === 'text' ? ['preview', 'edit'] : ['preview', 'edit', 'text'];
+  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> alle vier
+  const shown = () => kind === 'text' ? ['preview', 'edit'] : ['preview', 'edit', 'urn', 'text'];
   function paint() {
     if (!id) return;
     const vis = shown(), cur = vis.includes(tab) ? tab : vis[0];
