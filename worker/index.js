@@ -30,7 +30,7 @@ const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = {
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'layers': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
-  'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-beta': "Links d'artitgels (beta)", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
+  'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
   'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
@@ -38,7 +38,8 @@ const NAMES = {
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan' };
+// «Links d'artitgels»: die frühere Beta-Seite /artitgel-beta zählt zu /artitgel
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel' };
 const grp = t => GROUP[t] || t;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst und Tools im Hintergrund)
 const NO_STATS = new Set(['stats', 'colurs', 'ebenas', 'rotar']);
@@ -200,7 +201,7 @@ export default {
       // Total pro Tool
       if (request.method === 'GET' && parts[0] === 'likes' && parts.length === 1) {
         const { results } = await env.DB.prepare('SELECT tool, count FROM likes').all();
-        return json(Object.fromEntries(results.filter(r => !NO_STATS.has(r.tool)).map(r => [r.tool, r.count])), request);
+        return json(Object.fromEntries(merge(results).map(r => [r.tool, r.count])), request);
       }
 
       // Rangliste für einen Zeitraum
