@@ -152,16 +152,25 @@ async function rtrArticle(input) {
     if (!/^(www\.)?rtr\.ch$/i.test(u.hostname)) return { error: 'host' };
     src = 'https://www.rtr.ch' + u.pathname;
   }
-  const r = await fetch(src, { redirect: 'follow', headers: { 'User-Agent': 'dombuzz-tools (artitgel)' }, cf: { cacheTtl: 600 } });
+  const r = await fetch(src, {
+    redirect: 'follow',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36 dombuzz-tools',
+      'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'rm,de;q=0.8',
+    },
+  });
   if (!r.ok) return { error: 'notfound', status: r.status };
   const html = await r.text();
+  // ID: meta «meta-srf:urn» / «meta-srf:content:id», sonst irgendwo im Quelltext «urn:rtr:article:<ID>»
   const urn = metaContent(html, 'meta-srf:urn'), cid = metaContent(html, 'meta-srf:content:id');
-  const idm = ART_UUID.exec(/article/i.test(urn) ? urn : cid) || (idIn && [idIn[0]]);
-  if (!idm) return { error: 'noid' };
-  const canon = (html.match(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i) || [])[1] || metaContent(html, 'og:url');
+  const any = html.match(/urn:rtr:article:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+  const idm = ART_UUID.exec(/article/i.test(urn) ? urn : cid) || (any && [any[1]]) || (idIn && [idIn[0]]);
+  if (!idm) return { error: 'noid', status: r.status, len: html.length };
+  const canon = (html.match(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i) || html.match(/<link[^>]+href=["']([^"']+)["'][^>]*rel=["']canonical["']/i) || [])[1] || metaContent(html, 'og:url');
   let url = canon ? unesc(canon) : r.url;
   if (/\/article\//.test(url)) url = /\/article\//.test(r.url) ? '' : r.url; // nur eine Adresse mit Text zurückgeben
-  return { id: idm[0].toLowerCase(), url, title: unesc(metaContent(html, 'og:title') || '') };
+  const portal = (metaContent(html, 'meta-srf:portal:urn').match(/portal:([A-Za-z0-9_-]+)/) || [])[1] || '';
+  return { id: idm[0].toLowerCase(), url, title: unesc(metaContent(html, 'og:title') || ''), portal };
 }
 
 export default {

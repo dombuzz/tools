@@ -105,7 +105,7 @@ input.txt:focus{border-color:var(--accent)}
   const put = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
   let tab = get('dbz-artitgel-beta-tab', 'urn'); if (!HINT[tab]) tab = 'urn';
-  let id = '', portal = DEF, text = '', textState = '', title = '', kind = '', seq = 0;
+  let id = '', portal = DEF, text = '', textState = '', title = '', kind = '', seq = 0, lastErr = '';
 
   const link = k => {
     const s = encodeURIComponent(portal);
@@ -123,8 +123,9 @@ input.txt:focus{border-color:var(--accent)}
       const r = await fetch(API + '?u=' + encodeURIComponent(q));
       const d = await r.json();
       if (my !== seq) return null;
-      if (!r.ok || d.error) { textState = 'none'; paint(); return null; }
+      if (!r.ok || d.error) { textState = 'none'; lastErr = d.error ? d.error + (d.status ? ' · HTTP ' + d.status : '') : 'HTTP ' + r.status; paint(); return null; }
       text = d.url || ''; title = d.title || ''; textState = text ? 'ok' : 'none';
+      if (d.portal && portal === DEF && kind === 'text') portal = d.portal; // Portal aus dem Artikel (für CMS-Links)
       return d;
     } catch (e) { if (my === seq) { textState = 'err'; paint(); } return null; }
   }
@@ -139,10 +140,11 @@ input.txt:focus{border-color:var(--accent)}
       if (/^https?:\/\/(www\.)?rtr\.ch\/./i.test(t)) { // URL cun text: ID via Worker aus dem Quelltext holen
         $('result').hidden = true;
         say('Tschertg l\'ID da l\'artitgel …');
+        kind = 'text'; lastErr = '';
         const d = await lookup(t, my);
         if (my !== seq) return;
-        if (!d || !d.id) { say("Chattà nagin artitgel sin questa URL. È l'artitgel gia publitgà?", true); return; }
-        id = d.id; kind = 'text'; if (!text) { text = t.split(/[?#]/)[0]; textState = 'ok'; }
+        if (!d || !d.id) { say("Chattà nagin artitgel sin questa URL. È l'artitgel gia publitgà?" + (lastErr ? ` <code>(${esc(lastErr)})</code>` : ''), true); return; }
+        id = d.id; kind = 'text'; if (d.portal) portal = d.portal; if (!text) { text = t.split(/[?#]/)[0]; textState = 'ok'; }
         status(); $('result').hidden = false; paint();
         window.dispatchEvent(new Event('dbz-success'));
         return;
