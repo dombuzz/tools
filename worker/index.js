@@ -29,7 +29,7 @@ const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = {
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'layers': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
-  'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
+  'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-beta': "Links d'artitgels (beta)", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
   'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
@@ -131,6 +131,37 @@ async function rtrRecent(days = 30) {
   return [...new Set(items)];
 }
 
+// «Links d'artitgels» (beta): ID <-> URL cun text eines publizierten rtr.ch-Artikels.
+// Die ID steht im Quelltext jedes Artikels (meta «meta-srf:urn» = urn:rtr:article:<ID>).
+const ART_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+function metaContent(html, key) {
+  const k = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = html.match(new RegExp('<meta[^>]+(?:name|property)=["\']' + k + '["\'][^>]*content=["\']([^"\']*)["\']', 'i'))
+    || html.match(new RegExp('<meta[^>]+content=["\']([^"\']*)["\'][^>]*(?:name|property)=["\']' + k + '["\']', 'i'));
+  return m ? m[1] : '';
+}
+const unesc = s => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;|&#x27;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+async function rtrArticle(input) {
+  let src;
+  const idIn = ART_UUID.exec(input);
+  if (idIn && !/^https?:\/\/(www\.)?rtr\.ch\/(?!article\/)/i.test(input)) src = 'https://www.rtr.ch/article/' + idIn[0].toLowerCase();
+  else {
+    let u; try { u = new URL(input); } catch (e) { return { error: 'url' }; }
+    if (!/^(www\.)?rtr\.ch$/i.test(u.hostname)) return { error: 'host' };
+    src = 'https://www.rtr.ch' + u.pathname;
+  }
+  const r = await fetch(src, { redirect: 'follow', headers: { 'User-Agent': 'dombuzz-tools (artitgel)' }, cf: { cacheTtl: 600 } });
+  if (!r.ok) return { error: 'notfound', status: r.status };
+  const html = await r.text();
+  const urn = metaContent(html, 'meta-srf:urn'), cid = metaContent(html, 'meta-srf:content:id');
+  const idm = ART_UUID.exec(/article/i.test(urn) ? urn : cid) || (idIn && [idIn[0]]);
+  if (!idm) return { error: 'noid' };
+  const canon = (html.match(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i) || [])[1] || metaContent(html, 'og:url');
+  let url = canon ? unesc(canon) : r.url;
+  if (/\/article\//.test(url)) url = /\/article\//.test(r.url) ? '' : r.url; // nur eine Adresse mit Text zurückgeben
+  return { id: idm[0].toLowerCase(), url, title: unesc(metaContent(html, 'og:title') || '') };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -145,6 +176,14 @@ export default {
         if (!items.length) return Response.redirect('https://www.rtr.ch/novitads', 302);
         const pick = items[Math.floor(Math.random() * items.length)];
         return new Response(null, { status: 302, headers: { Location: pick, 'Cache-Control': 'no-store' } });
+      }
+
+      // «Links d'artitgels» (beta): /artitgel?u=<ID, URN-Link oder URL cun text>
+      if (request.method === 'GET' && parts[0] === 'artitgel' && parts.length === 1) {
+        const u = (url.searchParams.get('u') || '').trim().slice(0, 500);
+        if (!u) return json({ error: 'input' }, request, 400);
+        const res = await rtrArticle(u);
+        return json(res, request, res.error ? (res.error === 'notfound' || res.error === 'noid' ? 404 : 400) : 200);
       }
 
       // Total pro Tool
