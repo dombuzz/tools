@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Integrescha in link dal CMS (prevista u elavuraziun) – il tool dat ora ils auters links, era per artitgels che n&#x27;èn anc betg publitgads.">
+<meta name="description" content="Integrescha in link dal CMS, in link URN u la URL d&#x27;in artitgel publitgà – il tool dat ora ils auters links, era per artitgels che n&#x27;èn anc betg publitgads.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Links d&#x27;artitgels">
-<meta property="og:description" content="Integrescha in link dal CMS (prevista u elavuraziun) – il tool dat ora ils auters links, era per artitgels che n&#x27;èn anc betg publitgads.">
+<meta property="og:description" content="Integrescha in link dal CMS, in link URN u la URL d&#x27;in artitgel publitgà – il tool dat ora ils auters links, era per artitgels che n&#x27;èn anc betg publitgads.">
 <meta property="og:url" content="https://tools.dombuzz.ch/artitgel">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -51,9 +51,8 @@ input.txt:focus{border-color:var(--accent)}
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .hint{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
-.betalink{margin:28px 0 0;padding:10px 14px;border:0.5px dashed var(--accent);border-radius:12px;font-size:.85rem;color:var(--muted)}
-.betalink a{color:var(--accent);text-decoration:none;font-weight:600}
-.betalink a:hover{text-decoration:underline}
+.url.wait{color:var(--muted);user-select:none}
+.btn[aria-disabled=true]{opacity:.4;pointer-events:none}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -61,9 +60,9 @@ input.txt:focus{border-color:var(--accent)}
 <main>
   <a class="homelink" href="/">← Tools</a>
   <h1>Links d'<span class="acc">artitgels</span></h1>
-  <p class="sub">Integrescha in link dal CMS (prevista u elavuraziun) – il tool dat ora ils auters links, era per artitgels che n'èn anc betg publitgads.</p>
+  <p class="sub">Integrescha in link dal CMS, in link URN u la URL d'in artitgel publitgà – il tool dat ora ils auters links, era per artitgels che n'èn anc betg publitgads.</p>
 
-  <label class="lbl" for="inp">Link da prevista / d'elavuraziun</label>
+  <label class="lbl" for="inp">Link dal CMS, link URN u URL da l'artitgel</label>
   <input class="txt" id="inp" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://nora.srfdigital.ch/ui/rtr_cultura/articles/…" autofocus>
   <p class="status" id="status" aria-live="polite"></p>
 
@@ -72,6 +71,7 @@ input.txt:focus{border-color:var(--accent)}
       <button class="tab" role="tab" data-k="preview" aria-selected="false">Prevista</button>
       <button class="tab" role="tab" data-k="edit" aria-selected="false">Elavurar</button>
       <button class="tab" role="tab" data-k="urn" aria-selected="true">Link publitgà (URN)</button>
+      <button class="tab" role="tab" data-k="text" aria-selected="false">Link cun text</button>
     </div>
     <div class="out">
       <div class="url" id="url"></div>
@@ -82,60 +82,99 @@ input.txt:focus{border-color:var(--accent)}
       <p class="hint" id="hint"></p>
     </div>
   </div>
-  <p class="betalink">Nov e experimental: <a href="/artitgel-beta">era cun la URL d'in artitgel publitgà →</a></p>
 </main>
 <script>
 (() => {
   const NORA = 'https://nora.srfdigital.ch', RTR = 'https://www.rtr.ch', DEF = 'rtr_cultura';
+  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev/artitgel';
   const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
   const SECRE = /\/ui\/([A-Za-z0-9_-]+)\/(?:articles|preview\/article)\//;
   const $ = id => document.getElementById(id);
-  const KIND = { edit: "link d'elavuraziun (CMS)", preview: 'link da prevista (CMS)', urn: 'link URN', id: 'ID' };
+  const KIND = { edit: "link d'elavuraziun (CMS)", preview: 'link da prevista (CMS)', urn: 'link URN', id: 'ID', text: 'URL da l\'artitgel' };
   const HINT = {
     preview: 'Be per persunas cun login dal CMS.',
     edit: 'Be per persunas cun login dal CMS.',
-    urn: "Funcziuna per tuts, uschespert che l'artitgel è publitgà – era per newsletters e posts da social media planisads."
+    urn: "Funcziuna per tuts, uschespert che l'artitgel è publitgà – era per newsletters e posts da social media planisads.",
+    text: "La URL cun il titel da l'artitgel. Datti be, sch'l'artitgel è gia publitgà."
   };
   const get = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
   let tab = get('dbz-artitgel-tab', 'urn'); if (!HINT[tab]) tab = 'urn';
-  let id = '';
-  let portal = DEF;
+  let id = '', portal = DEF, text = '', textState = '', title = '', kind = '', seq = 0, lastErr = '';
 
   const link = k => {
     const s = encodeURIComponent(portal);
-    return k === 'edit' ? `${NORA}/ui/${s}/articles/${id}` : k === 'preview' ? `${NORA}/ui/${s}/preview/article/${id}` : `${RTR}/article/${id}`;
+    return k === 'edit' ? `${NORA}/ui/${s}/articles/${id}` : k === 'preview' ? `${NORA}/ui/${s}/preview/article/${id}` : k === 'text' ? text : `${RTR}/article/${id}`;
   };
+  const esc = v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function say(html, warn) { const s = $('status'); s.innerHTML = html; s.classList.toggle('warn', !!warn); }
+  function status() {
+    say(`Enconuschì: ${KIND[kind]}${kind !== 'text' && portal !== DEF ? ` · portal <code>${esc(portal)}</code>` : ''} · <code>${id}</code>` + (title ? `<br>«${esc(title)}»` : ''));
+  }
 
-  function parse() {
+  async function lookup(q, my) {
+    textState = 'wait'; paint();
+    try {
+      const r = await fetch(API + '?u=' + encodeURIComponent(q));
+      const d = await r.json();
+      if (my !== seq) return null;
+      if (!r.ok || d.error) { textState = 'none'; lastErr = d.error ? d.error + (d.status ? ' · HTTP ' + d.status : '') : 'HTTP ' + r.status; paint(); return null; }
+      text = d.url || ''; title = d.title || ''; textState = text ? 'ok' : 'none';
+      if (d.portal && portal === DEF && kind === 'text') portal = d.portal; // Portal aus dem Artikel (für CMS-Links)
+      return d;
+    } catch (e) { if (my === seq) { textState = 'err'; paint(); } return null; }
+  }
+
+  async function parse() {
+    const my = ++seq;
     const t = $('inp').value.trim();
-    id = '';
+    id = ''; text = ''; title = ''; textState = ''; portal = DEF;
     if (!t) { say(''); $('result').hidden = true; return; }
     const m = UUID.exec(t);
     if (!m) {
+      if (/^https?:\/\/(www\.)?rtr\.ch\/./i.test(t)) { // URL cun text: ID via Worker aus dem Quelltext holen
+        $('result').hidden = true;
+        say('Tschertg l\'ID da l\'artitgel …');
+        kind = 'text'; lastErr = '';
+        const d = await lookup(t, my);
+        if (my !== seq) return;
+        if (!d || !d.id) { say("Chattà nagin artitgel sin questa URL. È l'artitgel gia publitgà?" + (lastErr ? ` <code>(${esc(lastErr)})</code>` : ''), true); return; }
+        id = d.id; kind = 'text'; if (d.portal) portal = d.portal; if (!text) { text = t.split(/[?#]/)[0]; textState = 'ok'; }
+        status(); $('result').hidden = false; paint();
+        window.dispatchEvent(new Event('dbz-success'));
+        return;
+      }
       $('result').hidden = true;
-      say(/^https?:\/\/(www\.)?rtr\.ch\//i.test(t)
-        ? "In URL classic cuntegna betg l'ID da l'artitgel. Integrescha in link dal CMS (prevista u elavuraziun)."
-        : "Chattà nagin ID. Integrescha in link dal CMS (prevista u elavuraziun).", true);
+      say("Chattà nagin ID. Integrescha in link dal CMS, in link URN u la URL d'in artitgel publitgà.", true);
       return;
     }
     id = m[0].toLowerCase();
-    const kind = /\/preview\//.test(t) ? 'preview' : /\/articles\//.test(t) ? 'edit' : /rtr\.ch\/article\//i.test(t) ? 'urn' : 'id';
+    kind = /\/preview\//.test(t) ? 'preview' : /\/articles\//.test(t) ? 'edit' : /rtr\.ch\/article\//i.test(t) ? 'urn' : 'id';
     const sec = SECRE.exec(t);
-    portal = sec ? sec[1] : DEF; // Portal kommt aus dem eingegebenen Link
-    say(`Enconuschì: ${KIND[kind]}${sec ? ` · portal <code>${portal}</code>` : ''} · <code>${id}</code>`);
-    $('result').hidden = false;
-    paint();
-    window.dispatchEvent(new Event('dbz-success')); // Link erkannt + neue Links erzeugt = Nutzung
+    portal = sec ? sec[1] : DEF;
+    status(); $('result').hidden = false; paint();
+    window.dispatchEvent(new Event('dbz-success'));
+    await lookup(id, my); // URL cun text nachladen (nur wenn publiziert)
+    if (my !== seq) return;
+    status(); paint();
   }
 
+  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> alle vier
+  const shown = () => kind === 'text' ? ['preview', 'edit'] : ['preview', 'edit', 'urn', 'text'];
   function paint() {
     if (!id) return;
-    document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === tab)));
-    const u = link(tab);
-    $('url').textContent = u; $('open').href = u; $('hint').textContent = HINT[tab];
+    const vis = shown(), cur = vis.includes(tab) ? tab : vis[0];
+    document.querySelectorAll('.tab').forEach(b => { b.hidden = !vis.includes(b.dataset.k); b.setAttribute('aria-selected', String(b.dataset.k === cur)); });
+    const tab0 = tab; tab = cur;
+    const u = link(tab), box = $('url');
+    const waiting = tab === 'text' && textState !== 'ok';
+    box.classList.toggle('wait', waiting);
+    box.textContent = !waiting ? u : textState === 'wait' ? 'Chargel …' : textState === 'err' ? "Il server n'ha betg respundì. Emprova pli tard." : "Anc nagina URL cun text – l'artitgel n'è probablamain anc betg publitgà.";
+    $('open').href = waiting ? '#' : u;
+    $('open').setAttribute('aria-disabled', waiting); $('copy').setAttribute('aria-disabled', waiting);
+    $('hint').textContent = HINT[tab];
+    tab = tab0; // gespeicherte Wahl nicht überschreiben
   }
 
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.k; put('dbz-artitgel-tab', tab); paint(); }));
