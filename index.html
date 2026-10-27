@@ -207,13 +207,27 @@
     i.addEventListener('click', e => { e.stopPropagation(); i.setAttribute('aria-expanded', box.classList.toggle('tip')); });
     row.append(a, i); box.append(row, tip); a.dataset.fav = 'chatta';
     chattaBox = box;
-    let list = [], last = null;
-    const next = () => { if (!list.length) return; let u; do { u = list[Math.floor(Math.random() * list.length)]; } while (list.length > 1 && u === last); a.href = u; };
-    fetch(CHATTA_API + '?list=1').then(r => r.json()).then(d => { list = d.items || []; next(); }).catch(() => {});
+    // bereits geöffnete Artikel merken (nur in diesem Browser) und überspringen; sind alle durch, beginnt die Runde von vorne
+    let list = [], last = null, seen = [];
+    try { seen = JSON.parse(localStorage.getItem('dbz-chatta-seen') || '[]') || []; } catch (e) {}
+    const saveSeen = () => { try { localStorage.setItem('dbz-chatta-seen', JSON.stringify(seen)); } catch (e) {} };
+    const next = () => {
+      if (!list.length) return;
+      let pool = list.filter(u => !seen.includes(u) && u !== last);
+      if (!pool.length) { seen = []; saveSeen(); pool = list.length > 1 ? list.filter(u => u !== last) : list; }
+      a.href = pool[Math.floor(Math.random() * pool.length)];
+    };
+    fetch(CHATTA_API + '?list=1').then(r => r.json()).then(d => {
+      list = d.items || [];
+      seen = seen.filter(u => list.includes(u)); saveSeen(); // ältere als 30 Tage vergessen
+      next();
+    }).catch(() => {});
     chattaPick = () => a.href;
     a.addEventListener('click', () => chattaClicked());
     chattaClicked = () => {
-      last = a.href; setTimeout(next, 0);
+      last = a.href;
+      if (list.includes(last) && !seen.includes(last)) { seen.push(last); saveSeen(); }
+      setTimeout(next, 0);
       // für /stats: Klick zählt als Aufruf und als Nutzung der «Artitgel-challenge»
       const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', cid = window.dbzCid && dbzCid() ? '&c=' + dbzCid() : '';
       const th = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
