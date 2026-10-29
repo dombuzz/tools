@@ -210,6 +210,29 @@
   .hm .sc{display:inline-flex;align-items:center;gap:3px}
   .hm .sc i{width:10px;height:10px;border-radius:2px;display:inline-block}
   .archive{margin-top:40px}
+
+  /* Kachel «Cloudflare oz»: Verbrauch des Gratis-Kontingents (grün < 50 %, orange ab 50 %, rot ab 80 %) */
+  :root{--cf-ok:#5fd29a;--cf-wa:#ffb86b;--cf-cr:#ff4d64}
+  :root[data-theme="light"]{--cf-ok:#1f9d63;--cf-wa:#c77a12;--cf-cr:#d22e47}
+  .cf{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:9px;min-width:0;margin-top:16px}
+  .cf[hidden]{display:none}
+  .cf.wa{border-color:var(--cf-wa)}.cf.cr{border-color:var(--cf-cr);box-shadow:0 0 0 3px rgba(255,77,100,.15)}
+  .cf-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .cf-h b{font-size:.85rem;font-weight:600}
+  .cf-h b svg{width:15px;height:15px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px}
+  .cf-h small{font-size:.75rem;color:var(--muted)}
+  .cf-m{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
+  .cf-m .l{font-size:.78rem;color:var(--muted)}
+  .cf-m .v{font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .cf-m .v em{font-style:normal;color:var(--muted);font-weight:400}
+  .cf-t{grid-column:1/-1;height:7px;border-radius:4px;background:var(--field);overflow:hidden;position:relative}
+  .cf-t i{display:block;height:100%;border-radius:4px;background:var(--cf-ok)}
+  .cf-t::before,.cf-t::after{content:"";position:absolute;top:0;bottom:0;width:1px;background:var(--muted);opacity:.35}
+  .cf-t::before{left:50%}.cf-t::after{left:80%}
+  .cf-m.wa i{background:var(--cf-wa)}.cf-m.cr i{background:var(--cf-cr)}
+  .cf-p{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:999px;color:var(--cf-ok);background:color-mix(in srgb,var(--cf-ok) 15%,transparent)}
+  .cf-p.wa{color:var(--cf-wa);background:color-mix(in srgb,var(--cf-wa) 15%,transparent)}
+  .cf-p.cr{color:var(--cf-cr);background:color-mix(in srgb,var(--cf-cr) 18%,transparent)}
 </style>
 </head>
 <body>
@@ -244,6 +267,7 @@
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
   <div class="ticker" id="ticker" hidden aria-live="off"><span id="tickt"></span></div>
   <div class="metarow"><div class="meta" id="meta"></div><div class="thbar" id="themeBar" hidden></div></div>
+  <div class="cf" id="cfu" hidden></div>
 
   <div class="grid2">
   <div class="col">
@@ -409,7 +433,7 @@
       if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
       const before = silent && lastData ? snap(lastData) : null;
       lastData = d; lastRange = range;
-      render(); stamp(); loadHourly(range);
+      render(); stamp(); loadHourly(range); loadUsage();
       if (silent) playFx(before, snap(d));
     } catch (e) {
       if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
@@ -617,6 +641,25 @@
     el.hidden = !items.length;
     const t = document.getElementById('tickt'), txt = items.join('   ·   ');
     if (t.textContent !== txt) { t.textContent = txt; el.style.setProperty('--dur', Math.max(25, txt.length / 5) + 's'); }
+  }
+
+  // Kachel «Cloudflare oz»: gelesene/geschriebene Zeilen von heute gegenüber dem Gratis-Kontingent
+  async function loadUsage() {
+    const el = document.getElementById('cfu');
+    try {
+      const r = await fetch(`${API}/usage`); if (!r.ok) throw new Error(r.status);
+      const u = await r.json();
+      const lvl = p => p >= 80 ? 'cr' : p >= 50 ? 'wa' : 'ok';
+      const big = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : fmt(n);
+      const pr = u.read / u.limitRead * 100, pw = u.written / u.limitWritten * 100, c = lvl(Math.max(pr, pw));
+      const meter = (lab, n, max, p) => `<div class="cf-m ${lvl(p)}"><span class="l">${lab}</span><span class="v">${big(n)} <em>/ ${big(max)} · ${p < 1 && n ? '<1' : Math.round(p)} %</em></span><div class="cf-t"><i style="width:${Math.min(100, p)}%"></i></div></div>`;
+      const d = new Date(); const reset = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1));
+      el.className = 'cf' + (c === 'ok' ? '' : ' ' + c);
+      el.innerHTML = `<div class="cf-h"><b><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Cloudflare oz</b><span class="cf-p ${c}">${{ ok: 'tut en urden', wa: 'attenziun', cr: 'stretg' }[c]}</span></div>
+        ${meter('lingias legidas', u.read, u.limitRead, pr)}${meter('lingias scrittas', u.written, u.limitWritten, pw)}
+        <div class="cf-h"><small>Nov contingent a las ${pad2(reset.getHours())}:${pad2(reset.getMinutes())}</small><small>Plan gratuit</small></div>`;
+      el.hidden = false;
+    } catch (e) { /* Kachel bleibt verborgen */ }
   }
   function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
   function renderInto(d, range, ids) {

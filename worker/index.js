@@ -63,6 +63,12 @@ const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
   env.DB.prepare('CREATE TABLE IF NOT EXISTS favs (tool TEXT NOT NULL, ts TEXT NOT NULL, cid TEXT, added INTEGER NOT NULL)'), // ☆ gesetzt (1) / entfernt (0)
   env.DB.prepare('CREATE TABLE IF NOT EXISTS excl (cid TEXT PRIMARY KEY, ts TEXT NOT NULL)'), // Modus test: Geräte, deren Einträge bis ts nicht zählen
+  // Indizes auf dem Zeitstempel: Abfragen für «oz», «quest'emna», «mais actual» lesen nur noch die Zeilen aus dem Zeitraum
+  env.DB.prepare('CREATE INDEX IF NOT EXISTS uses_ts ON uses (ts)'),
+  env.DB.prepare('CREATE INDEX IF NOT EXISTS clicks_ts ON clicks (ts)'),
+  env.DB.prepare('CREATE INDEX IF NOT EXISTS favs_ts ON favs (ts)'),
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS usage (day TEXT PRIMARY KEY, r INTEGER NOT NULL DEFAULT 0, w INTEGER NOT NULL DEFAULT 0)'), // gelesene/geschriebene Zeilen pro Tag (UTC)
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, ts INTEGER NOT NULL, body TEXT NOT NULL)'), // Zwischenspeicher für /ranking und /hourly
 ]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
   .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
   .then(() => env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {})) // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
@@ -182,8 +188,58 @@ async function rtrArticle(input) {
   return { id: idm[0].toLowerCase(), url, title: unesc(metaContent(html, 'og:title') || ''), portal };
 }
 
+
+// ===== Cloudflare-Gratis-Kontingent im Blick behalten =====
+// Jede D1-Abfrage meldet in meta, wie viele Zeilen sie gelesen/geschrieben hat. meterDB summiert das pro Anfrage,
+// recordUsage schreibt die Summe in die Tabelle «usage» (ein Eintrag pro UTC-Tag; das Kontingent beginnt um 00:00 UTC neu).
+const LIMIT_READ = 5e6, LIMIT_WRITE = 1e5;
+const meterDB = (db, m) => {
+  const add = res => { for (const x of [].concat(res)) { const mt = x && x.meta; if (mt) { m.r += mt.rows_read || 0; m.w += mt.rows_written || 0; } } return res; };
+  const wrap = st => ({ _s: st, bind: (...a) => wrap(st.bind(...a)), all: () => st.all().then(add), run: () => st.run().then(add), first: c => st.first(c), raw: o => st.raw(o) });
+  return { prepare: q => wrap(db.prepare(q)), batch: list => db.batch(list.map(x => x._s || x)).then(add), exec: q => db.exec(q), dump: () => db.dump() };
+};
+const recordUsage = (db, m) => db.prepare("INSERT INTO usage (day, r, w) VALUES (date('now'), ?1, ?2) ON CONFLICT(day) DO UPDATE SET r = r + ?1, w = w + ?2")
+  .bind(m.r, m.w + 1).run().catch(() => {});
+// Zwischenspeicher (2 Minuten) für die Statistik-Abfragen: zuerst im Speicher des Workers, sonst eine Zeile in der Tabelle «cache»
+const CACHE_MS = 2 * 60 * 1000, mem = new Map();
+async function cached(request, env, parts, url, compute) {
+  const k = parts[0] + url.search;
+  const now = Date.now(), hit = mem.get(k);
+  if (hit && now - hit.ts < CACHE_MS) return new Response(hit.body, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(request) } });
+  await ensureViews(env);
+  const { results: [row] } = await env.DB.prepare('SELECT body, ts FROM cache WHERE k = ?1').bind(k).all();
+  if (row && now - row.ts < CACHE_MS) { mem.set(k, row); return new Response(row.body, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(request) } }); }
+  const res = await compute();
+  if (res.status === 200) {
+    const body = await res.clone().text(), e = { ts: now, body };
+    mem.set(k, e); if (mem.size > 100) mem.delete(mem.keys().next().value);
+    await env.DB.prepare('INSERT INTO cache (k, ts, body) VALUES (?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET ts = ?2, body = ?3').bind(k, now, body).run().catch(() => {});
+  }
+  return res;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
+    const m = { r: 0, w: 0 }, raw = env.DB;
+    env = { ...env, DB: meterDB(raw, m) };
+    const url = new URL(request.url), parts = url.pathname.split('/').filter(Boolean);
+    let res;
+    try {
+      // Verbrauch von heute (nicht zwischengespeichert, damit /stats immer den aktuellen Stand zeigt)
+      if (request.method === 'GET' && parts[0] === 'usage' && parts.length === 1) {
+        await ensureViews(env);
+        const { results: [u] } = await env.DB.prepare("SELECT day, r, w FROM usage WHERE day = date('now')").all();
+        res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE }, request);
+      } else if (request.method === 'GET' && (parts[0] === 'ranking' || parts[0] === 'hourly') && parts.length === 1) {
+        res = await cached(request, env, parts, url, () => handle(request, env));
+      } else res = await handle(request, env);
+    } catch (e) { res = json({ error: 'server' }, request, 500); }
+    if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m));
+    return res;
+  },
+};
+
+async function handle(request, env) {
     const url = new URL(request.url);
     const parts = url.pathname.split('/').filter(Boolean);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(request) });
@@ -380,5 +436,4 @@ export default {
     } catch (e) {
       return json({ error: 'server' }, request, 500);
     }
-  },
-};
+}
