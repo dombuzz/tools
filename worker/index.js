@@ -226,7 +226,9 @@ let fbReady;
 const ensureFeedback = env => fbReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tool TEXT NOT NULL, name TEXT, text TEXT NOT NULL, iph TEXT)'),
   env.DB.prepare('CREATE INDEX IF NOT EXISTS feedback_ts ON feedback (ts)'),
-]).catch(e => { fbReady = null; throw e; });
+]).then(() => env.DB.prepare("ALTER TABLE feedback ADD COLUMN status TEXT NOT NULL DEFAULT 'nov'").run().catch(() => {})) // Status: nov | lavur | liquida | stizza
+  .catch(e => { fbReady = null; throw e; });
+const FB_STATUS = ['nov', 'lavur', 'liquida', 'stizza'];
 async function sha256(s) {
   const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
@@ -487,10 +489,20 @@ async function handle(request, env, ctx) {
         const a = await fbAuth(request, env);
         if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
         await ensureFeedback(env);
-        const { results } = await env.DB.prepare('SELECT id, ts, tool, name, text FROM feedback ORDER BY id DESC LIMIT 500').all();
+        const { results } = await env.DB.prepare('SELECT id, ts, tool, name, text, status FROM feedback ORDER BY id DESC LIMIT 1000').all();
         return json({ items: results.map(r => ({ ...r, toolName: NAMES[r.tool] || r.tool })) }, request);
       }
-      // Feedback löschen (Passwort)
+      // Status ändern (Passwort): nov, lavur (En lavur), liquida (Liquidà), stizza (Stizzà, im Papierkorb)
+      if (request.method === 'POST' && parts[0] === 'feedback' && parts.length === 3 && parts[2] === 'status') {
+        const a = await fbAuth(request, env);
+        if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
+        let d; try { d = await request.json(); } catch (e) { return json({ error: 'json' }, request, 400); }
+        if (!FB_STATUS.includes(d.status)) return json({ error: 'status' }, request, 400);
+        await ensureFeedback(env);
+        await env.DB.prepare('UPDATE feedback SET status = ?1 WHERE id = ?2').bind(d.status, +parts[1] || 0).run();
+        return json({ ok: true }, request);
+      }
+      // Feedback endgültig löschen (Passwort; die Seite bietet das nur im Papierkorb an)
       if (request.method === 'DELETE' && parts[0] === 'feedback' && parts.length === 2) {
         const a = await fbAuth(request, env);
         if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
