@@ -279,7 +279,7 @@ const SUB = (() => {
 'use strict';
 const $ = id => document.getElementById(id);
 const KEY = 'dbz-cumparegliar';
-let st = { tol: '40', filter: 'diff', out: 'same' };
+let st = { tol: '40', filter: 'diff', out: null };
 try { st = Object.assign(st, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
 $('tol').value = st.tol; $('filter').value = st.filter;
@@ -342,9 +342,10 @@ function run() {
   const same = A.cues.length === B.cues.length;
   $('fix').hidden = !(same && nTime);
   if (same && nTime) {
+    showOut();
     $('fixNote').innerHTML = `A e B han omadus <b>${A.cues.length}</b> suttitels. Il text da B vegn surpiglià, ils temps vegnan da A – lingia per lingia.`;
     const fin = B.cues.map((c, k) => ({ start: A.cues[k].start, end: A.cues[k].end, lines: c.lines }));
-    const key = st.out === 'same' ? SUB.SAME[B.format] : st.out, w = SUB.write(fin, key);
+    const key = st.out || (B.format === 'ttml' ? 'ttml' : 'srt'), w = SUB.write(fin, key);
     if (url) URL.revokeObjectURL(url);
     url = URL.createObjectURL(new Blob([w.text], { type: w.mime }));
     const name = SUB.base(B.name) + '_temps-A' + w.ext;
@@ -352,10 +353,10 @@ function run() {
   }
 }
 
-const OUTS = [['same', "Sco l'original"], ['srt', 'SRT'], ['vtt', 'VTT'], ['ttml', 'TTML (RTR)']];
+const OUTS = [['srt', 'SRT'], ['ttml', 'TTML (RTR)']];
 $('out').innerHTML = OUTS.map(([k, l]) => `<button type="button" data-k="${k}">${l}</button>`).join('');
-if (!OUTS.some(o => o[0] === st.out)) st.out = 'same';
-const showOut = () => $('out').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === st.out));
+if (!OUTS.some(o => o[0] === st.out)) st.out = null;
+const showOut = () => $('out').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === (st.out || (F.B && F.B.format === 'ttml' ? 'ttml' : 'srt'))));
 $('out').querySelectorAll('button').forEach(b => b.onclick = () => { st.out = b.dataset.k; save(); showOut(); run(); });
 showOut();
 $('tol').onchange = () => { st.tol = $('tol').value; save(); run(); };
