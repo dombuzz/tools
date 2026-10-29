@@ -82,6 +82,23 @@ a.fb:hover .t{color:var(--accent)}
 a.r:hover span{color:var(--accent)}
 svg.ic{width:18px;height:18px;flex:none;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+/* Verlauf 30 Tage */
+.trend{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-decoration:none;transition:border-color .15s}
+.trend:hover{border-color:rgba(255,77,100,.55)}
+.trend-h{display:flex;align-items:baseline;gap:10px;font-size:.95rem;font-weight:700}
+.trend-h b{color:var(--accent);font-size:1.1rem}
+.trend-h small{margin-left:auto;color:var(--muted);font-weight:500;font-size:.8rem}
+.chart{position:relative;height:140px}
+.chart svg{display:block;width:100%;height:100%;overflow:visible}
+.chart .grid{stroke:var(--border);stroke-width:1;vector-effect:non-scaling-stroke}
+.chart .area{fill:rgba(255,77,100,.14)}
+.chart .line{fill:none;stroke:var(--accent);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.chart .hit{fill:transparent}
+.chart .hit:hover{fill:rgba(255,77,100,.12)}
+.chart .lbl{position:absolute;left:0;font-size:.72rem;color:var(--muted);transform:translateY(-50%);background:var(--card);padding:0 4px 0 0}
+.chart .dot{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--card);transform:translate(-50%,-50%)}
+.axis{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+
 /* Links */
 .links{display:flex;flex-wrap:wrap;gap:8px}
 .links a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font-size:.86rem;font-weight:600;transition:border-color .15s}
@@ -128,15 +145,18 @@ svg.ic{width:18px;height:18px;flex:none;fill:none;stroke:var(--accent);stroke-wi
       </section>
     </div>
 
+    <a class="trend" href="/stats" aria-label="Utilisaziuns ils davos 30 dis – avrir Stats">
+      <div class="trend-h"><span>Utilisaziuns ils davos 30 dis</span><b class="num" id="t-sum">–</b><small>Stats →</small></div>
+      <div class="chart" id="chart"><p class="empty">Chargiar …</p></div>
+      <div class="axis"><span id="t-from"></span><span id="t-to">oz</span></div>
+    </a>
+
     <div class="sec-l"><span>Ulteriuras paginas</span></div>
     <nav class="links">
       <a href="/stats"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats</a>
-      <a href="/statsB"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats B</a>
-      <a href="/top"><svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg>Top</a>
       <a href="/feedback"><svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback</a>
       <a href="/lab/"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16L14 9V3M7 15h10"/></svg>Lab</a>
       <a href="/game"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3c3 3 5 6 5 10a5 5 0 0 1-10 0c0-2 1-4 2-5 0 2 1 3 2 3 0-3-1-5 1-8z"/></svg>Game</a>
-      <a href="/artitgel-beta"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Beta: Links d'artitgels</a>
       <a id="testlink" href="?test"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16L14 9V3"/></svg>Modus da test <span class="pill" id="testpill">betg activ</span></a>
     </nav>
   </div>
@@ -189,6 +209,7 @@ async function loadStats() {
     $('rank').innerHTML = rows.length ? rows.map((x, i) => `<a class="r" href="/${encodeURIComponent(x.tool)}"><b>${i + 1}</b><span>${esc(x.name)}</span><small class="num">${n(x.count)}</small><div class="bar"><i style="width:${x.count / max * 100}%"></i></div></a>`).join('')
       : '<p class="empty">Anc naginas utilisaziuns quest mais.</p>';
   } catch (e) { $('rank').innerHTML = '<p class="empty">La statistica n\'ha betg pudì vegnir chargiada.</p>'; }
+  loadTrend();
   try {
     const u = await fetch(API + '/usage').then(r => r.json());
     const pr = u.read / (u.limitRead || 1), pw2 = u.written / (u.limitWritten || 1), p = Math.max(pr, pw2);
@@ -197,6 +218,28 @@ async function loadStats() {
     $('b-cf').parentElement.className = 'bar' + (p < 0.8 ? ' ok' : '');
     $('d-cf').textContent = n(u.read) + ' legidas · ' + n(u.written) + ' scrittas';
   } catch (e) { $('d-cf').textContent = 'Betg disponibel'; }
+}
+
+// Verlauf: Nutzungen pro Tag (UTC) der letzten 30 Tage, alle Tools zusammen
+async function loadTrend() {
+  try {
+    const d = await fetch(API + '/ranking?range=30d&daily=1').then(r => r.json());
+    const per = {}; for (const r of d.daily || []) per[r.day] = (per[r.day] || 0) + (r.uses || 0);
+    const days = []; const t0 = new Date(); t0.setUTCHours(0, 0, 0, 0);
+    for (let i = 29; i >= 0; i--) { const x = new Date(t0 - i * 864e5); days.push(x.toISOString().slice(0, 10)); }
+    const vals = days.map(k => per[k] || 0), max = Math.max(1, ...vals), W = 1000, H = 100, step = W / (vals.length - 1);
+    const y = v => H - v / max * (H - 6) - 3;
+    const pts = vals.map((v, i) => `${(i * step).toFixed(1)},${y(v).toFixed(1)}`);
+    const fmtD = k => +k.slice(8, 10) + '.' + +k.slice(5, 7) + '.';
+    $('t-sum').textContent = n(vals.reduce((a, b) => a + b, 0));
+    $('t-from').textContent = fmtD(days[0]);
+    $('chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <line class="grid" x1="0" x2="${W}" y1="${y(max)}" y2="${y(max)}"/><line class="grid" x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}"/>
+      <polygon class="area" points="0,${H} ${pts.join(' ')} ${W},${H}"/>
+      <polyline class="line" points="${pts.join(' ')}"/>
+      ${vals.map((v, i) => `<rect class="hit" x="${Math.max(0, i * step - step / 2)}" y="0" width="${step}" height="${H}"><title>${fmtD(days[i])}: ${n(v)} utilisaziuns</title></rect>`).join('')}
+    </svg><span class="lbl" style="top:${y(max)}%">${n(max)}</span><span class="dot" style="left:100%;top:${y(vals.at(-1))}%"></span>`;
+  } catch (e) { $('chart').innerHTML = '<p class="empty">Il decurs n\'ha betg pudì vegnir chargià.</p>'; }
 }
 
 function showFeedback(items) {
