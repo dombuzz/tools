@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Spustar ils temps da suttitels, cumparegliar dus files e translatar suttitels rumantschs en tudestg – tut en in tool.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Subtitle Studio">
+<meta property="og:description" content="Spustar ils temps da suttitels, cumparegliar dus files e translatar suttitels rumantschs en tudestg – tut en in tool.">
+<meta property="og:url" content="https://tools.dombuzz.ch/studio">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>Subtitle Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='9.7 9.7 80.6 80.6'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='52' rx='8'/%3E%3Cpath d='M30 50h22M30 62h40M60 50h10'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#121214; --panel:#1c1c1f; --field:#232327; --ink:#ececef; --muted:#9a9aa2; --line:#2f2f34;
+  --accent:#ff4d64; --accent-ink:#121214; --ok:#5fd29a; --warn:#f0b454; --err:#ff6b7d;
+  --ok-bg:#1c3328; --warn-bg:#3a2e17; --err-bg:#3d1d23; --code:#26262a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+p.sub{margin:0;color:var(--muted)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:16px 0 16px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{background:transparent;color:var(--muted);border:none;border-bottom:2px solid transparent;border-radius:0;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs em{font-style:normal;color:var(--accent)}
+.tabs button[aria-selected="true"] em{color:inherit}
+@media (max-width:600px){.tabs button{padding:9px 9px;font-size:.88rem}}
+.pane .intro{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px 16px;margin:0 0 4px}
+.pane .intro .sub{flex:1 1 320px}
+.pane .intro .ext{flex:none;white-space:nowrap}
+#tab-sp, #tab-cu{display:grid;gap:16px}
+[hidden]{display:none!important}
+/* ---- spustar.html ---- */
+#tab-sp .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
+#tab-sp .card h2{font-size:.95rem;margin:0;display:flex;gap:8px;align-items:center}
+#tab-sp .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.75rem;font-weight:700}
+#tab-sp .drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--bg)}
+#tab-sp .drop:hover, #tab-sp .drop.over{border-color:var(--accent)}
+#tab-sp .drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
+#tab-sp .file{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+#tab-sp .file .name{font-weight:600;word-break:break-all}
+#tab-sp .info{color:var(--muted);font-size:13px}
+#tab-sp .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;background:var(--code);color:var(--muted);margin-right:4px}
+#tab-sp .seg{display:flex;flex-wrap:wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px;width:fit-content;max-width:100%}
+#tab-sp .seg button{border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:7px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+#tab-sp .seg button:hover{color:var(--ink)}
+#tab-sp .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+#tab-sp .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+#tab-sp label{display:grid;gap:4px;font-size:.82rem;color:var(--muted)}
+#tab-sp input, #tab-sp select{font:inherit;font-size:15px;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+#tab-sp input:focus, #tab-sp select:focus{outline:none;border-color:var(--accent)}
+#tab-sp input.bad{border-color:var(--err)}
+#tab-sp .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#tab-sp a.btn, #tab-sp button.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;text-decoration:none;font-weight:600}
+#tab-sp a.btn:hover, #tab-sp button.btn:hover{border-color:var(--accent)}
+#tab-sp .primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important}
+#tab-sp .ok{color:var(--ok)}
+#tab-sp .wrn{color:var(--warn)}
+#tab-sp .note{font-size:.85rem;color:var(--muted);margin:0}
+#tab-sp .note b{color:var(--ink);font-weight:600}
+#tab-sp .msg{font-size:.85rem;padding:8px 10px;border-radius:8px;background:var(--warn-bg);color:var(--warn)}
+#tab-sp .tbl{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px}
+#tab-sp table{border-collapse:collapse;width:100%;font-size:13px}
+#tab-sp th, #tab-sp td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+#tab-sp th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;font-size:12px}
+#tab-sp td.t{white-space:nowrap;font-variant-numeric:tabular-nums}
+#tab-sp td.n{color:var(--muted);font-variant-numeric:tabular-nums}
+#tab-sp .old{color:var(--muted);text-decoration:line-through;display:block;font-size:12px}
+#tab-sp tr.same td{opacity:.55}
+#tab-sp tr.neg td.t{color:var(--err)}
+@media (max-width:480px){#tab-sp .seg button{padding:7px 9px;font-size:.85rem}}
+#tab-sp .head2{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#tab-sp .xbtn{font:inherit;font-size:.8rem;font-weight:600;border:1px dashed var(--line);background:transparent;color:var(--muted);padding:5px 10px;border-radius:999px;cursor:pointer}
+#tab-sp .xbtn:hover{border-color:var(--accent);color:var(--ink)}
+#tab-sp .xbtn[aria-pressed="true"]{border-style:solid;border-color:var(--accent);color:var(--accent)}
+#tab-sp #sp-m-shift{display:grid;gap:12px}
+#tab-sp .tc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+#tab-sp .tc input{text-align:center;font-variant-numeric:tabular-nums}
+/* ---- cumparegliar.html ---- */
+#tab-cu .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
+#tab-cu .card h2{font-size:.95rem;margin:0;display:flex;gap:8px;align-items:center}
+#tab-cu .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.75rem;font-weight:700}
+#tab-cu .drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--bg)}
+#tab-cu .drop:hover, #tab-cu .drop.over{border-color:var(--accent)}
+#tab-cu .drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
+#tab-cu .file{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+#tab-cu .file .name{font-weight:600;word-break:break-all}
+#tab-cu .info{color:var(--muted);font-size:13px}
+#tab-cu .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;background:var(--code);color:var(--muted);margin-right:4px}
+#tab-cu .seg{display:flex;flex-wrap:wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px;width:fit-content;max-width:100%}
+#tab-cu .seg button{border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:7px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+#tab-cu .seg button:hover{color:var(--ink)}
+#tab-cu .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+#tab-cu .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+#tab-cu label{display:grid;gap:4px;font-size:.82rem;color:var(--muted)}
+#tab-cu input, #tab-cu select{font:inherit;font-size:15px;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+#tab-cu input:focus, #tab-cu select:focus{outline:none;border-color:var(--accent)}
+#tab-cu input.bad{border-color:var(--err)}
+#tab-cu .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#tab-cu a.btn, #tab-cu button.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;text-decoration:none;font-weight:600}
+#tab-cu a.btn:hover, #tab-cu button.btn:hover{border-color:var(--accent)}
+#tab-cu .primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important}
+#tab-cu .ok{color:var(--ok)}
+#tab-cu .wrn{color:var(--warn)}
+#tab-cu .note{font-size:.85rem;color:var(--muted);margin:0}
+#tab-cu .note b{color:var(--ink);font-weight:600}
+#tab-cu .msg{font-size:.85rem;padding:8px 10px;border-radius:8px;background:var(--warn-bg);color:var(--warn)}
+#tab-cu .tbl{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px}
+#tab-cu table{border-collapse:collapse;width:100%;font-size:13px}
+#tab-cu th, #tab-cu td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+#tab-cu th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;font-size:12px}
+#tab-cu td.t{white-space:nowrap;font-variant-numeric:tabular-nums}
+#tab-cu td.n{color:var(--muted);font-variant-numeric:tabular-nums}
+#tab-cu .old{color:var(--muted);text-decoration:line-through;display:block;font-size:12px}
+#tab-cu tr.same td{opacity:.55}
+#tab-cu tr.neg td.t{color:var(--err)}
+@media (max-width:480px){#tab-cu .seg button{padding:7px 9px;font-size:.85rem}}
+#tab-cu .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+#tab-cu .slot{display:grid;gap:8px;min-width:0}
+#tab-cu .slot .lbl{font-size:.82rem;color:var(--muted);font-weight:600}
+#tab-cu .chips{display:flex;flex-wrap:wrap;gap:8px}
+#tab-cu .chip{font-size:.85rem;padding:5px 10px;border-radius:999px;background:var(--field);border:1px solid var(--line)}
+#tab-cu .chip b{font-variant-numeric:tabular-nums}
+#tab-cu .chip.w{background:var(--warn-bg);border-color:transparent;color:var(--warn)}
+#tab-cu .chip.e{background:var(--err-bg);border-color:transparent;color:var(--err)}
+#tab-cu .chip.g{background:var(--ok-bg);border-color:transparent;color:var(--ok)}
+#tab-cu .tbl{max-height:560px}
+#tab-cu td.txt{min-width:160px}
+#tab-cu tr.d-time td.tb, #tab-cu tr.d-time td.ta{color:var(--warn)}
+#tab-cu tr.d-miss td{background:var(--err-bg)}
+#tab-cu tr.d-same td.txt{background:var(--warn-bg)}
+#tab-cu .delta{display:block;font-size:11px;color:var(--warn)}
+#tab-cu .rem{font-size:12px;color:var(--muted);white-space:nowrap}
+#tab-cu tr.fine td{opacity:.6}
+#tab-cu th{white-space:nowrap}
+/* ---- subs.html ---- */
+#tab-de section.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+#tab-de section.step h2{font-size:16px;margin:0 0 10px;display:flex;gap:8px;align-items:center}
+#tab-de .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:700}
+#tab-de .muted{color:var(--muted)}
+#tab-de .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#tab-de button, #tab-de .btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+#tab-de button.primary, #tab-de .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+#tab-de button:disabled{opacity:.45;cursor:not-allowed}
+#tab-de textarea, #tab-de input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+#tab-de textarea{width:100%;resize:vertical}
+#tab-de input[type=number]{width:70px}
+#tab-de #de-drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--bg)}
+#tab-de #de-drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
+#tab-de #de-drop:hover, #tab-de #de-drop.over{border-color:var(--accent)}
+#tab-de .chunks{display:grid;gap:8px;margin-top:10px}
+#tab-de .chunk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:var(--code);border-radius:8px}
+#tab-de .chunk.done{opacity:.6}
+#tab-de .settings{display:flex;flex-wrap:wrap;gap:14px}
+#tab-de .settings label{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:14px}
+#tab-de .stats{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+#tab-de .pill{font-size:13px;padding:3px 9px;border-radius:999px;background:var(--code)}
+#tab-de .pill.ok{background:var(--ok-bg);color:var(--ok)}
+#tab-de .pill.warn{background:var(--warn-bg);color:var(--warn)}
+#tab-de .pill.err{background:var(--err-bg);color:var(--err)}
+#tab-de .seg{border:1px solid var(--line);border-radius:10px;margin:10px 0;overflow:hidden}
+#tab-de .seg-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;background:var(--code)}
+#tab-de .seg-head .src{white-space:pre-wrap}
+#tab-de .seg-head textarea{min-height:52px}
+#tab-de .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:3px}
+#tab-de .cue{display:grid;grid-template-columns:150px 1fr 1fr 170px;gap:10px;padding:8px 10px;border-top:1px solid var(--line);align-items:start}
+#tab-de .cue .tc{font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--muted)}
+#tab-de .cue .srcc{white-space:pre-wrap;color:var(--muted);font-size:14px}
+#tab-de .cue textarea{font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;min-height:44px;padding:6px}
+#tab-de .cue.bad textarea{border-color:var(--err)}
+#tab-de .cue.meh textarea{border-color:var(--warn)}
+#tab-de .badges{display:flex;flex-wrap:wrap;gap:4px}
+#tab-de .badges .pill{font-size:12px;padding:2px 7px}
+#tab-de .hide-ok .seg.allok{display:none}
+#tab-de .notice{padding:8px 12px;border-radius:8px;margin:8px 0;font-size:14px}
+#tab-de .notice.warn{background:var(--warn-bg);color:var(--warn)}
+#tab-de .notice.ok{background:var(--ok-bg);color:var(--ok)}
+#tab-de .notice.err{background:var(--err-bg);color:var(--err)}
+@media (max-width:760px){#tab-de .seg-head{grid-template-columns:1fr}
+#tab-de .cue{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <a class="homelink" href="/">← Tools</a>
+  <h1>Subtitle <span class="acc">Studio</span></h1>
+  <p class="sub">Spustar temps, cumparegliar files e translatar suttitels rumantschs en tudestg.</p>
+  <div class="tabs" role="tablist" aria-label="Subtitle Studio">
+    <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
+    <button type="button" role="tab" data-tab="cu" aria-selected="false" aria-controls="tab-cu">Cumparegliar</button>
+    <button type="button" role="tab" data-tab="de" aria-selected="false" aria-controls="tab-de">RM <em>→</em> DE</button>
+  </div>
+  <section class="pane" id="tab-sp" role="tabpanel">
+<div class="intro"><p class="sub">Spustar ils suttitels pli tard u pli baud – en uras, minutas, secundas e maletgs.</p></div>
+
+  
+
+  <section class="card">
+    <h2><span class="num">1</span> File da suttitels</h2>
+    <div class="drop" id="sp-drop" tabindex="0" role="button" aria-label="Tscherner in file da suttitels">Trair qua il file u <u>cliccar</u><small>SRT · TTML</small><input id="sp-file" type="file" accept=".srt,.ttml,.xml" hidden></div>
+    <div class="file" id="sp-fileInfo" hidden><div><div class="name" id="sp-fname"></div><div class="info" id="sp-finfo"></div></div><button class="btn" id="sp-other" type="button">Auter file</button></div>
+  </section>
+
+  <section class="card" id="sp-step2" hidden>
+    <div class="head2"><h2><span class="num">2</span> Co spustar?</h2>
+      <button type="button" class="xbtn" id="sp-expert" aria-pressed="false">Modus expert</button></div>
+    <div class="seg" id="sp-mode" role="group" aria-label="Moda" hidden>
+      <button type="button" data-m="shift">Spustar</button>
+      <button type="button" data-m="fps">Rata da maletgs</button>
+      <button type="button" data-m="two">Dus puncts</button>
+    </div>
+
+    <div id="sp-m-shift">
+      <div class="seg" id="sp-dir" role="group" aria-label="Direcziun">
+        <button type="button" data-d="1">Pli tard (+)</button>
+        <button type="button" data-d="-1">Pli baud (−)</button>
+      </div>
+      <div class="tc">
+        <label>Uras <input id="sp-oh" type="number" min="0" value="0" inputmode="numeric"></label>
+        <label>Minutas <input id="sp-om" type="number" min="0" value="0" inputmode="numeric"></label>
+        <label>Secundas <input id="sp-os" type="number" min="0" value="0" inputmode="numeric"></label>
+        <label>Maletgs <input id="sp-of" type="number" min="0" value="0" inputmode="numeric"></label>
+      </div>
+      <div class="row">
+        <button class="btn" type="button" data-n="-1s">−1 s</button>
+        <button class="btn" type="button" data-n="-1f">−1 maletg</button>
+        <button class="btn" type="button" data-n="+1f">+1 maletg</button>
+        <button class="btn" type="button" data-n="+1s">+1 s</button>
+        <button class="btn" type="button" id="sp-zero" title="Turnar a 0">↺ 0</button>
+        <span class="note" id="sp-offInfo"></span>
+      </div>
+      <div class="grid">
+        <label>Maletgs per secunda <select id="sp-fpsS"></select></label>
+        <label>A partir da la lingia <input id="sp-from" type="number" min="1" value="1"></label>
+        <label>Fin a la lingia <input id="sp-to" type="number" min="1" placeholder="fin"></label>
+      </div>
+    </div>
+
+    <div id="sp-m-fps" class="grid" hidden>
+      <label>Rata actuala <select id="sp-fpsA"></select></label>
+      <label>Nova rata <select id="sp-fpsB"></select></label>
+    </div>
+    <p class="note" id="sp-m-fps2" hidden>Per suttitels fatgs per in video cun in'autra rata da maletgs (p. ex. 23,976 → 25). Tut ils temps vegnan multiplitgads cun <b id="sp-factor">1</b>.</p>
+
+    <div id="sp-m-two" hidden>
+      <div class="grid">
+        <label>Lingia A <input id="sp-aN" type="number" min="1" value="1"></label>
+        <label>Nov temp A <input id="sp-aT" spellcheck="false" autocomplete="off"></label>
+        <label>Lingia B <input id="sp-bN" type="number" min="1"></label>
+        <label>Nov temp B <input id="sp-bT" spellcheck="false" autocomplete="off"></label>
+      </div>
+      <p class="note" style="margin-top:10px">Endatar per duas lingias il temp d'entschatta correct (p. ex. ord il video). Ils auters temps vegnan adattads tranter quels dus puncts – utilisà sch'ils suttitels van pli e pli or da sincronisaziun.</p>
+    </div>
+    <div class="msg" id="sp-warn" hidden></div>
+  </section>
+
+  <section class="card" id="sp-step3" hidden>
+    <h2><span class="num">3</span> Survista</h2>
+    <p class="note" id="sp-sum"></p>
+    <div class="tbl"><table><thead><tr><th>Nr.</th><th>Entschatta</th><th>Fin</th><th>Text</th></tr></thead><tbody id="sp-rows"></tbody></table></div>
+  </section>
+
+  <section class="card" id="sp-step4" hidden>
+    <h2><span class="num">4</span> Telechargiar</h2>
+    <div class="seg" id="sp-out" role="group" aria-label="Format"></div>
+    <div class="row"><a class="btn primary" id="sp-dl" href="#">Telechargiar</a><span class="note" id="sp-dlname"></span></div>
+  </section>
+
+  </section>
+  <section class="pane" id="tab-cu" role="tabpanel" hidden>
+<div class="intro"><p class="sub">Dus files da suttitels l'in sper l'auter – p. ex. original rumantsch e translaziun tudestga. Il tool mussa temps differents, suttitels che mancan e text betg translatà.</p></div>
+
+  
+
+  <section class="card">
+    <h2><span class="num">1</span> Files</h2>
+    <div class="two">
+      <div class="slot"><span class="lbl">A</span>
+        <div class="drop" id="cu-dropA" tabindex="0" role="button" aria-label="Tscherner il file A">Trair qua u <u>cliccar</u><small>SRT · TTML</small></div>
+        <div class="info" id="cu-infoA"></div></div>
+      <div class="slot"><span class="lbl">B</span>
+        <div class="drop" id="cu-dropB" tabindex="0" role="button" aria-label="Tscherner il file B">Trair qua u <u>cliccar</u><small>SRT · TTML</small></div>
+        <div class="info" id="cu-infoB"></div></div>
+    </div>
+    <input id="cu-file" type="file" accept=".srt,.ttml,.xml" hidden>
+    <p class="note">Ti pos er trair omadus files a medem temp sin la pagina.</p>
+  </section>
+
+  <section class="card" id="cu-res" hidden>
+    <h2><span class="num">2</span> Resultat</h2>
+    <div class="grid">
+      <label>Toleranza per ils temps <select id="cu-tol">
+        <option value="0">0 (exact)</option><option value="40">1 maletg (40 ms)</option><option value="120">3 maletgs (120 ms)</option><option value="500">0,5 s</option></select></label>
+      <label>Mussar <select id="cu-filter"><option value="diff">Mo differenzas</option><option value="all">Tuts</option></select></label>
+    </div>
+    <div class="chips" id="cu-chips"></div>
+    <div class="tbl"><table><thead><tr><th>Nr. A</th><th>Temp A</th><th>Text A</th><th>Nr. B</th><th>Temp B</th><th>Text B</th><th></th></tr></thead><tbody id="cu-rows"></tbody></table></div>
+  </section>
+
+  <section class="card" id="cu-fix" hidden>
+    <h2><span class="num">3</span> Surpigliar ils temps da A</h2>
+    <p class="note" id="cu-fixNote"></p>
+    <div class="seg" id="cu-out" role="group" aria-label="Format"></div>
+    <div class="row"><a class="btn primary" id="cu-dl" href="#">Telechargiar B cun ils temps da A</a><span class="note" id="cu-dlname"></span></div>
+  </section>
+
+  </section>
+  <section class="pane" id="tab-de" role="tabpanel" hidden>
+<div class="intro"><p class="sub">Chargiar SRT, translatar las frasas en ALAS, reparter enavos sin ils timecodes, controllar las normas, exportar SRT u TTML.</p><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
+
+
+<section class="step">
+  <h2><span class="num">1</span> Chargiar SRT</h2>
+  <div id="de-drop" tabindex="0" role="button" aria-label="Tscherner file SRT">Trair qua il file u <u>cliccar</u><small>SRT</small><input id="de-file" type="file" accept=".srt,text/plain" hidden></div>
+  <p id="de-loadInfo" class="muted"></p>
+</section>
+
+<section class="step" id="de-s2" hidden>
+  <h2><span class="num">2</span> Translatar las frasas en ALAS</h2>
+  <p class="muted">Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en <a href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS</a> (idiom → tudestg), copiar il resultat ed l'integrar sutvart. Tar idioms maschadads simplamain tscherner il pli frequent u translatar ils blocs separadamain.</p>
+  <div class="row">
+    <label class="muted">Max. caracters per bloc <input type="number" id="de-chunkMax" value="3000" step="500" min="500"></label>
+    <a class="btn" href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">Avrir ALAS ↗</a>
+  </div>
+  <div class="chunks" id="de-chunks"></div>
+</section>
+
+<section class="step" id="de-s3" hidden>
+  <h2><span class="num">3</span> Integrar la translaziun</h2>
+  <p class="muted">Integrar qua tut ils blocs in suenter l'auter. Il dumber da lingias sto correspunder al dumber da frasas.</p>
+  <textarea id="de-paste" rows="8" placeholder="Translaziun tudestga dad ALAS…"></textarea>
+  <div class="row" style="margin-top:8px">
+    <button class="primary" id="de-apply">Surpigliar &amp; reparter</button>
+    <span id="de-pasteCount" class="muted"></span>
+  </div>
+  <div id="de-pasteMsg"></div>
+</section>
+
+<section class="step" id="de-s4" hidden>
+  <h2><span class="num">4</span> Controllar &amp; curreger</h2>
+  <div class="settings">
+    <label>Caracters/lingia <input type="number" id="de-maxLine" value="37" min="20" max="60"></label>
+    <label>Lingias max. <input type="number" id="de-maxLines" value="2" min="1" max="3"></label>
+    <label>Caracters/sec. <input type="number" id="de-maxCps" value="15" min="8" max="30" step="0.5"></label>
+    <label>Durada min. (s) <input type="number" id="de-minDur" value="1" min="0.3" max="3" step="0.1"></label>
+    <label>Durada max. (s) <input type="number" id="de-maxDur" value="7" min="3" max="15" step="0.5"></label>
+    <label><input type="checkbox" id="de-onlyBad"> mo frasas cun problems</label>
+  </div>
+  <div class="stats" id="de-stats"></div>
+  <p class="muted" style="font-size:14px">Midar la translaziun da la frasa → vegn reparti da nov sin ils suttitels. Adattar suttitels singuls directamain en il champ (nova lingia = nova lingia dal suttitel). ↻ rumpa da nov in suttitel.</p>
+  <div id="de-segs"></div>
+</section>
+
+<section class="step" id="de-s5" hidden>
+  <h2><span class="num">5</span> Export</h2>
+  <div class="row">
+    <label class="muted">Format
+      <select id="de-fmt" style="font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)">
+        <option value="srt">SRT (.srt)</option>
+        <option value="ttml">TTML (.ttml)</option>
+      </select>
+    </label>
+    <button class="primary" id="de-export">Telechargiar</button>
+    <span id="de-exportInfo" class="muted"></span>
+  </div>
+</section>
+
+
+  </section>
+</main>
+<script>
+// ---- Suttitels: lesen und schreiben (gleich in srt2ttml, spustar, cumparegliar) ----
+const SUB = (() => {
+  const p2 = (n, l = 2) => String(n).padStart(l, '0');
+  const FORMATS = { srt: 'SRT', vtt: 'VTT', ttml: 'TTML', sbv: 'SBV', ass: 'ASS', avid: 'Avid' };
+
+  // Zeit in ms -> hh:mm:ss.mmm (sep = ',' für SRT)
+  function tc(ms, sep = '.') { ms = Math.max(0, Math.round(ms));
+    return `${p2(Math.floor(ms / 3600000))}:${p2(Math.floor(ms / 60000) % 60)}:${p2(Math.floor(ms / 1000) % 60)}${sep}${p2(ms % 1000, 3)}`; }
+  // Zeit in ms -> hh:mm:ss:ff (Avid)
+  function tcF(ms, fps = 25) { ms = Math.max(0, Math.round(ms)); const s = Math.floor(ms / 1000), n = Math.round(fps);
+    const f = Math.min(n - 1, Math.round((ms % 1000) * fps / 1000));
+    return `${p2(Math.floor(s / 3600))}:${p2(Math.floor(s / 60) % 60)}:${p2(s % 60)}:${p2(f)}`; }
+  // kurze Anzeige: mm:ss,mmm (mit Stunden nur wenn nötig)
+  function show(ms) { const neg = ms < 0; ms = Math.abs(Math.round(ms)); const h = Math.floor(ms / 3600000);
+    const t = `${h ? p2(h) + ':' : ''}${p2(Math.floor(ms / 60000) % 60)}:${p2(Math.floor(ms / 1000) % 60)},${p2(ms % 1000, 3)}`; return (neg ? '−' : '') + t; }
+
+  // Zeitangaben: hh:mm:ss,mmm · mm:ss.mmm · hh:mm:ss:ff
+  function time(s, fps = 25) { s = String(s).trim();
+    let m = s.match(/^(\d+):(\d{1,2}):(\d{1,2})[,.](\d+)$/); if (m) return ((+m[1] * 60 + +m[2]) * 60 + +m[3]) * 1000 + +m[4].padEnd(3, '0').slice(0, 3);
+    m = s.match(/^(\d{1,3}):(\d{1,2})[,.](\d+)$/); if (m) return (+m[1] * 60 + +m[2]) * 1000 + +m[3].padEnd(3, '0').slice(0, 3);
+    m = s.match(/^(\d+):(\d{1,2}):(\d{1,2}):(\d{1,3})$/); if (m) return ((+m[1] * 60 + +m[2]) * 60 + +m[3]) * 1000 + +m[4] * 1000 / fps;
+    m = s.match(/^(\d+):(\d{1,2}):(\d{1,2})$/); if (m) return ((+m[1] * 60 + +m[2]) * 60 + +m[3]) * 1000;
+    return NaN; }
+
+  const ent = s => s.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  const clean = l => ent(l.replace(/<[^>]+>/g, '').replace(/\{\\[^}]*\}/g, '')).replace(/\s+/g, ' ').trim();
+  const xesc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  function detect(t) {
+    const head = t.slice(0, 4000).replace(/^\uFEFF/, '').trimStart();
+    if (/^WEBVTT/.test(head)) return 'vtt';
+    if (/<tt[\s>]/.test(head) || /^<\?xml/.test(head) && /<tt[\s>:]/.test(t)) return 'ttml';
+    if (/^\[Script Info\]/im.test(head) || /^Dialogue:/m.test(t)) return 'ass';
+    if (/<begin subtitles>/i.test(head)) return 'avid';
+    if (/-->/.test(t)) return 'srt';
+    if (/^\s*\d+:\d\d:\d\d\.\d+\s*,\s*\d+:\d\d:\d\d\.\d+\s*$/m.test(t)) return 'sbv';
+    return null;
+  }
+
+  // SRT und VTT: Blöcke mit «-->»
+  function parseArrow(t) { const out = [];
+    for (const block of t.split(/\n[ \t]*\n/)) { const lines = block.split('\n'); const ti = lines.findIndex(l => l.includes('-->'));
+      if (ti < 0) continue; const [a, b] = lines[ti].split('-->'); const start = time(a), end = time(b.trim().split(/\s+/)[0]);
+      if (isNaN(start) || isNaN(end)) continue;
+      const txt = lines.slice(ti + 1).map(clean).filter(Boolean); if (txt.length) out.push({ start, end, lines: txt }); }
+    return out; }
+  function parseSbv(t) { const out = [];
+    for (const block of t.split(/\n[ \t]*\n/)) { const lines = block.split('\n').filter(l => l.trim()); if (!lines.length) continue;
+      const m = lines[0].match(/^\s*([\d:.]+)\s*,\s*([\d:.]+)\s*$/); if (!m) continue;
+      const start = time(m[1]), end = time(m[2]); if (isNaN(start) || isNaN(end)) continue;
+      const txt = lines.slice(1).map(clean).filter(Boolean); if (txt.length) out.push({ start, end, lines: txt }); }
+    return out; }
+  function parseAvid(t, fps) { const out = []; let cur = null;
+    const body = t.split(/<begin subtitles>/i)[1] || t;
+    for (const raw of body.split(/<end subtitles>/i)[0].split('\n')) { const l = raw.trim();
+      const m = l.match(/^(\d+:\d\d:\d\d[:;]\d\d)\s+(\d+:\d\d:\d\d[:;]\d\d)$/);
+      if (m) { cur = { start: time(m[1].replace(';', ':'), fps), end: time(m[2].replace(';', ':'), fps), lines: [] }; out.push(cur); continue; }
+      if (!l) { cur = null; continue; } if (cur && !l.startsWith('@')) cur.lines.push(clean(l)); }
+    return out.filter(c => c.lines.length); }
+  function parseAss(t) { const out = [];
+    for (const l of t.split('\n')) { if (!/^Dialogue:/i.test(l)) continue; const f = l.slice(9).split(',');
+      if (f.length < 10) continue; const start = time(f[1]), end = time(f[2]); if (isNaN(start) || isNaN(end)) continue;
+      const txt = f.slice(9).join(',').replace(/\{[^}]*\}/g, '').split(/\\N|\\n/).map(clean).filter(Boolean);
+      if (txt.length) out.push({ start, end, lines: txt }); }
+    return out.sort((a, b) => a.start - b.start); }
+  function parseTtml(t) {
+    const doc = new DOMParser().parseFromString(t.replace(/^\uFEFF/, ''), 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) return [];
+    const tt = doc.documentElement, attr = (el, n) => { for (const a of el.attributes) if (a.localName === n) return a.value; return null; };
+    const fr = +(attr(tt, 'frameRate') || 25), mul = (attr(tt, 'frameRateMultiplier') || '1 1').split(/\s+/).map(Number);
+    const fps = fr * (mul[0] || 1) / (mul[1] || 1), tick = +(attr(tt, 'tickRate') || 1);
+    const tv = s => { if (!s) return NaN; s = s.trim(); const m = s.match(/^([\d.]+)(h|ms|m|s|f|t)$/);
+      if (m) { const v = +m[1]; return { h: v * 3600000, m: v * 60000, s: v * 1000, ms: v, f: v * 1000 / fps, t: v * 1000 / tick }[m[2]]; }
+      return time(s, fps); };
+    const textOf = n => { let s = ''; for (const c of n.childNodes) { if (c.nodeType === 3) s += c.nodeValue.replace(/\s+/g, ' ');
+      else if (c.nodeType === 1) s += c.localName === 'br' ? '\n' : textOf(c); } return s; };
+    const offset = el => { let o = 0; for (let p = el.parentElement; p && p !== tt; p = p.parentElement) { const b = tv(attr(p, 'begin')); if (!isNaN(b)) o += b; } return o; };
+    const out = [];
+    for (const p of doc.getElementsByTagName('*')) { if (p.localName !== 'p') continue;
+      const o = offset(p), b = tv(attr(p, 'begin')); let e = tv(attr(p, 'end')); const d = tv(attr(p, 'dur'));
+      if (isNaN(b)) continue; if (isNaN(e) && !isNaN(d)) e = b + d; if (isNaN(e)) continue;
+      const txt = textOf(p).split('\n').map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+      if (txt.length) out.push({ start: o + b, end: o + e, lines: txt }); }
+    return out.sort((a, b) => a.start - b.start); }
+
+  // Text -> { format, cues }
+  function parse(text, fps = 25) {
+    text = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+    const format = detect(text); if (!format) return { format: null, cues: [] };
+    const cues = { srt: parseArrow, vtt: parseArrow, sbv: parseSbv, ass: parseAss, ttml: parseTtml, avid: x => parseAvid(x, fps) }[format](text);
+    return { format, cues };
+  }
+
+  // ---- Schreiben ----
+  const BOM = '\uFEFF', crlf = s => s.replace(/\r?\n/g, '\r\n');
+  function ttml(list) { // Modell RTR (wie Subtitle Edit Custom Format «TTML per PLAY»)
+    const NL = '</span><br></br><span tts:color="#ffffff">';
+    const ps = list.map((c, i) => `<p begin="${tc(c.start)}" xml:id="p${i + 1}" end="${tc(c.end)}">
+    <span tts:color="#ffffff">${c.lines.map(xesc).join(NL)}</span>
+</p>`).join('\n');
+    return BOM + crlf(`<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+    <head>
+        <styling></styling>
+        <layout></layout>
+    </head>
+    <body><div>${ps}
+        </div>
+  </body>
+</tt>`); }
+  const srt = list => BOM + crlf(list.map((c, i) => `${i + 1}\n${tc(c.start, ',')} --> ${tc(c.end, ',')}\n${c.lines.join('\n')}\n`).join('\n'));
+  const vtt = list => 'WEBVTT\n\n' + list.map(c => `${tc(c.start)} --> ${tc(c.end)}\n${c.lines.map(xesc).join('\n')}\n`).join('\n');
+  const sbv = list => list.map(c => `${tc(c.start).replace(/^0/, '')},${tc(c.end).replace(/^0/, '')}\n${c.lines.join('\n')}\n`).join('\n');
+  const avid = (list, fps = 25) => crlf('@ This file written with the Avid Caption plugin, version 1\n\n<begin subtitles>\n' +
+    list.map(c => `${tcF(c.start, fps)} ${tcF(c.end, fps)}\n${c.lines.join('\n')}\n`).join('\n') + '<end subtitles>\n');
+  const txt = list => BOM + crlf(list.map(c => c.lines.join(' ')).join('\n') + '\n');
+
+  // Zielformate: Schlüssel -> [Bezeichnung, Endung, Schreiber, MIME]
+  const OUT = {
+    ttml: ['TTML (RTR)', '.ttml', ttml, 'application/ttml+xml'],
+    srt:  ['SRT', '.srt', srt, 'application/x-subrip'],
+    vtt:  ['VTT', '.vtt', vtt, 'text/vtt'],
+    avid: ['Avid (25 fps)', '_avid.txt', l => avid(l, 25), 'text/plain'],
+    txt:  ['Mo text', '_text.txt', txt, 'text/plain'],
+    sbv:  ['SBV (YouTube)', '.sbv', sbv, 'text/plain'],
+  };
+  // Eingabeformat -> bestes Ausgabeformat «sco l'original»
+  const SAME = { srt: 'srt', vtt: 'vtt', ttml: 'ttml', sbv: 'sbv', avid: 'avid', ass: 'srt' };
+  function write(list, key) { const o = OUT[key]; return { text: o[2](list), ext: o[1], mime: o[3] + ';charset=utf-8' }; }
+  const base = name => name.replace(/\.(srt|vtt|ttml|dfxp|xml|sbv|ass|ssa|txt|stl)$/i, '');
+
+  function decode(buf) { const b = new Uint8Array(buf);
+    if (b[0] === 0xFF && b[1] === 0xFE) return new TextDecoder('utf-16le').decode(b);
+    if (b[0] === 0xFE && b[1] === 0xFF) return new TextDecoder('utf-16be').decode(b);
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(b); }
+    catch (e) { return new TextDecoder('windows-1252').decode(b); } } // ANSI (z. B. aus Windows-Programmen)
+  const read = f => f.arrayBuffer().then(decode);
+
+  return { tc, tcF, show, time, parse, write, OUT, SAME, FORMATS, base, decode, read, xesc };
+})();
+
+// ---- Tabs ----
+(() => {
+  const HASH = { spustar: 'sp', cumparegliar: 'cu', 'rm-de': 'de', subs: 'de' }, NAME = { sp: 'spustar', cu: 'cumparegliar', de: 'rm-de' };
+  const btns = [...document.querySelectorAll('.tabs [data-tab]')];
+  function setTab(t, push) {
+    btns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+    for (const k of ['sp', 'cu', 'de']) document.getElementById('tab-' + k).hidden = k !== t;
+    try { localStorage.setItem('studio-tab', t); } catch (e) {}
+    if (push) history.replaceState(null, '', '#' + NAME[t]);
+  }
+  btns.forEach(b => b.onclick = () => setTab(b.dataset.tab, true));
+  let t = HASH[location.hash.slice(1)];
+  if (!t) try { t = localStorage.getItem('studio-tab'); } catch (e) {}
+  setTab(/^(sp|cu|de)$/.test(t || '') ? t : 'sp');
+  addEventListener('hashchange', () => { const h = HASH[location.hash.slice(1)]; if (h) setTab(h); });
+})();
+// ---- spustar.html ----
+
+(() => {
+'use strict';
+const ROOT = document.getElementById('tab-sp');
+const $ = id => document.getElementById('sp-' + id);
+const FPS = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
+const KEY = 'dbz-spustar';
+let st = { expert: false, mode: 'shift', fps: 25, fpsA: 23.976, fpsB: 25, out: null };
+try { st = Object.assign(st, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ expert: st.expert, mode: st.mode, fps: st.fps, fpsA: st.fpsA, fpsB: st.fpsB, out: st.out })); } catch (e) {} };
+
+let file = null, url = null; // { name, format, cues }
+const fmtF = v => String(v).replace('.', ',');
+for (const id of ['fpsS', 'fpsA', 'fpsB']) $(id).innerHTML = FPS.map(f => `<option value="${f}">${fmtF(f)}</option>`).join('');
+$('fpsS').value = st.fps; $('fpsA').value = st.fpsA; $('fpsB').value = st.fpsB;
+
+// Spustament aus den Feldern: Richtung × (Uras, Minutas, Secundas, Maletgs)
+let dir = 1;
+const num = id => Math.max(0, Math.floor(+$(id).value || 0));
+const offFrames = () => { const n = Math.round(st.fps); return ((num('oh') * 60 + num('om')) * 60 + num('os')) * n + num('of'); };
+// Frames (Vorzeichen inkl.) wieder auf die Felder verteilen
+function setFrames(total) {
+  const n = Math.round(st.fps); if (total) dir = total < 0 ? -1 : 1; let t = Math.abs(total);
+  $('of').value = t % n; t = Math.floor(t / n); $('os').value = t % 60; t = Math.floor(t / 60); $('om').value = t % 60; $('oh').value = Math.floor(t / 60);
+  showDir();
+}
+const showDir = () => $('dir').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.d === dir));
+// Spustament in ms (Secundas exact, Maletgs nach gewählter Rate)
+const offMs = () => { const n = Math.round(st.fps), f = offFrames(); return dir * (Math.floor(f / n) * 1000 + (f % n) * 1000 / st.fps); };
+function offText() {
+  const f = offFrames(); if (!f) return 'Nagin spustament';
+  const ms = offMs();
+  const a = Math.abs(ms);
+  return `= ${a < 60000 ? (a / 1000).toFixed(3).replace('.', ',') + ' s' : SUB.show(a)} ${dir > 0 ? 'pli tard' : 'pli baud'}`;
+}
+
+// Neue Zeiten berechnen
+function compute() {
+  if (!file) return null; const c = file.cues, n = c.length; let f = null, err = '';
+  if (st.mode === 'shift') {
+    const d = offMs();
+    $('offInfo').textContent = offText();
+    const a = Math.max(1, +$('from').value || 1), b = Math.min(n, +$('to').value || n);
+    f = (t, i) => (i + 1 >= a && i + 1 <= b) ? t + d : t;
+  } else if (st.mode === 'fps') {
+    const k = st.fpsA / st.fpsB; $('factor').textContent = String(+k.toFixed(6)).replace('.', ',');
+    f = t => t * k;
+  } else {
+    const ai = (+$('aN').value || 1) - 1, bi = (+$('bN').value || n) - 1;
+    const at = SUB.time($('aT').value), bt = SUB.time($('bT').value);
+    $('aT').classList.toggle('bad', isNaN(at)); $('bT').classList.toggle('bad', isNaN(bt));
+    if (!c[ai] || !c[bi] || ai === bi) err = 'Tscherna duas lingias differentas (1–' + n + ').';
+    else if (isNaN(at) || isNaN(bt)) err = 'Endatar ils temps sco 00:01:02,500.';
+    else if ((bt - at) * (c[bi].start - c[ai].start) <= 0) err = 'Ils temps nun èn en la medema successiun sco las lingias.';
+    if (err) { showWarn(err); return null; }
+    const k = (bt - at) / (c[bi].start - c[ai].start), o = at - c[ai].start * k;
+    f = t => t * k + o;
+  }
+  return c.map((x, i) => ({ start: f(x.start, i), end: f(x.end, i), lines: x.lines }));
+}
+
+function showWarn(t) { $('warn').hidden = !t; $('warn').textContent = t || ''; }
+
+function update() {
+  if (!file) return;
+  const res = compute();
+  if (!res) { $('step3').hidden = $('step4').hidden = true; return; }
+  showWarn('');
+  const c = file.cues; let neg = 0, changed = 0, overlap = 0;
+  res.forEach((x, i) => { if (x.start < 0) neg++; if (Math.round(x.start) !== Math.round(c[i].start) || Math.round(x.end) !== Math.round(c[i].end)) changed++;
+    if (i && x.start < res[i - 1].end - 1) overlap++; });
+  const warns = [];
+  if (neg) warns.push(`${neg === 1 ? '1 suttitel cumenza' : neg + ' suttitels cumenzan'} avant 00:00:00 – vegn${neg === 1 ? '' : 'an'} mess sin 0.`);
+  if (overlap && st.mode === 'shift') warns.push(`${overlap === 1 ? '1 suttitel surpassa' : overlap + ' suttitels surpassan'} il precedent (controllar la limita da las lingias).`);
+  showWarn(warns.join(' '));
+  $('sum').innerHTML = `<b>${changed}</b> da ${c.length} suttitels midads.`;
+  // Tabelle (max. 500 Zeilen, damit es flüssig bleibt)
+  const esc = SUB.xesc, rows = [];
+  res.slice(0, 500).forEach((x, i) => { const o = c[i], same = Math.round(x.start) === Math.round(o.start);
+    rows.push(`<tr class="${same ? 'same' : ''}${x.start < 0 ? ' neg' : ''}"><td class="n">${i + 1}</td>` +
+      `<td class="t">${same ? '' : `<span class="old">${SUB.show(o.start)}</span>`}${SUB.show(Math.max(0, x.start))}</td>` +
+      `<td class="t">${same ? '' : `<span class="old">${SUB.show(o.end)}</span>`}${SUB.show(Math.max(0, x.end))}</td>` +
+      `<td>${x.lines.map(esc).join('<br>')}</td></tr>`); });
+  if (res.length > 500) rows.push(`<tr><td colspan="4" class="n">… e ${res.length - 500} ulteriurs</td></tr>`);
+  $('rows').innerHTML = rows.join('');
+  // Datei
+  const fin = res.map(x => ({ start: Math.max(0, Math.round(x.start)), end: Math.max(0, Math.round(x.end)), lines: x.lines }));
+  const key = st.out || (file.format === 'ttml' ? 'ttml' : 'srt');
+  const w = SUB.write(fin, key);
+  if (url) URL.revokeObjectURL(url);
+  url = URL.createObjectURL(new Blob([w.text], { type: w.mime }));
+  const name = SUB.base(file.name) + '_spustà' + w.ext;
+  $('dl').href = url; $('dl').download = name; $('dlname').textContent = name;
+  $('step3').hidden = $('step4').hidden = false;
+}
+
+// Modus
+const showMode = () => {
+  if (!st.expert) st.mode = 'shift';
+  $('expert').setAttribute('aria-pressed', !!st.expert); $('mode').hidden = !st.expert;
+  $('expert').onclick = () => { st.expert = !st.expert; save(); showMode(); update(); };
+ROOT.querySelectorAll('#sp-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === st.mode));
+  $('m-shift').hidden = st.mode !== 'shift';
+  $('m-fps').hidden = $('m-fps2').hidden = st.mode !== 'fps';
+  $('m-two').hidden = st.mode !== 'two';
+};
+ROOT.querySelectorAll('#sp-mode button').forEach(b => b.onclick = () => { st.mode = b.dataset.m; save(); showMode(); update(); });
+
+// Ausgabeformat
+const OUTS = [['srt', 'SRT'], ['ttml', 'TTML (RTR)']];
+$('out').innerHTML = OUTS.map(([k, l]) => `<button type="button" data-k="${k}">${l}</button>`).join('');
+const showOut = () => $('out').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === (st.out || (file && file.format === 'ttml' ? 'ttml' : 'srt'))));
+$('out').querySelectorAll('button').forEach(b => b.onclick = () => { st.out = b.dataset.k; save(); showOut(); update(); });
+if (!OUTS.some(o => o[0] === st.out)) st.out = null; // noch keine Wahl: nach Eingabeformat
+showOut(); showMode();
+
+// Eingaben
+['oh', 'om', 'os', 'of', 'from', 'to', 'aN', 'aT', 'bN', 'bT'].forEach(id => $(id).addEventListener('input', update));
+['oh', 'om', 'os', 'of'].forEach(id => $(id).addEventListener('change', () => { setFrames(dir * offFrames()); update(); }));
+$('dir').querySelectorAll('button').forEach(b => b.onclick = () => { dir = +b.dataset.d; showDir(); update(); });
+$('zero').onclick = () => { setFrames(0); update(); };
+showDir();
+$('fpsS').onchange = () => { const ms = offMs(); st.fps = +$('fpsS').value; save(); const n = Math.round(st.fps), a = Math.abs(ms), sec = Math.floor(a / 1000); setFrames(Math.sign(ms) * (sec * n + Math.round((a - sec * 1000) * st.fps / 1000))); update(); };
+$('fpsA').onchange = () => { st.fpsA = +$('fpsA').value; save(); update(); };
+$('fpsB').onchange = () => { st.fpsB = +$('fpsB').value; save(); update(); };
+const fillTime = (nId, tId) => { const c = file && file.cues[(+$(nId).value || 1) - 1]; if (c) $(tId).value = SUB.tc(c.start, ','); };
+$('aN').addEventListener('change', () => { fillTime('aN', 'aT'); update(); });
+$('bN').addEventListener('change', () => { fillTime('bN', 'bT'); update(); });
+ROOT.querySelectorAll('#sp-m-shift [data-n]').forEach(b => b.onclick = () => {
+  const k = b.dataset.n, step = k.endsWith('s') ? Math.round(st.fps) : 1;
+  setFrames(dir * offFrames() + (k[0] === '-' ? -step : step)); update();
+});
+
+// Datei laden
+function load(f) {
+  if (!f) return;
+  SUB.read(f).then(text => {
+    const { format, cues } = SUB.parse(text);
+    $('fileInfo').hidden = false; $('drop').hidden = true; $('fname').textContent = f.name;
+    if (!cues.length) { file = null; $('finfo').textContent = 'Chattà nagins suttitels – è quai in file da suttitels?';
+      $('step2').hidden = $('step3').hidden = $('step4').hidden = true; return; }
+    file = { name: f.name, format, cues };
+    const n = cues.length;
+    $('finfo').innerHTML = `<span class="tag">${SUB.FORMATS[format]}</span>${n === 1 ? '1 suttitel' : n + ' suttitels'} · ${SUB.show(cues[0].start)} – ${SUB.show(cues[n - 1].end)}`;
+    $('to').max = $('from').max = $('aN').max = $('bN').max = n; $('to').placeholder = n;
+    $('bN').value = n; fillTime('aN', 'aT'); fillTime('bN', 'bT');
+    $('step2').hidden = false; showOut(); update();
+  });
+}
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } };
+$('file').onchange = e => { load(e.target.files[0]); e.target.value = ''; };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove('over'); load(e.dataTransfer.files[0]); };
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); if (!ROOT.offsetParent) return; if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+$('other').onclick = () => $('file').click();
+})();
+
+// ---- cumparegliar.html ----
+
+(() => {
+'use strict';
+const ROOT = document.getElementById('tab-cu');
+const $ = id => document.getElementById('cu-' + id);
+const KEY = 'dbz-cumparegliar';
+let st = { tol: '40', filter: 'diff', out: null };
+try { st = Object.assign(st, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+$('tol').value = st.tol; $('filter').value = st.filter;
+const F = { A: null, B: null }; let target = 'A', url = null;
+const esc = SUB.xesc;
+
+// Paare bilden: nach Zeit (Überlappung), fehlende Untertitel einzeln
+function pair(a, b) {
+  const out = []; let i = 0, j = 0;
+  const ov = (x, y) => Math.min(x.end, y.end) - Math.max(x.start, y.start);
+  while (i < a.length || j < b.length) {
+    const x = a[i], y = b[j];
+    if (!y) { out.push({ i, a: x }); i++; continue; }
+    if (!x) { out.push({ j, b: y }); j++; continue; }
+    if (ov(x, y) > 0 || Math.abs(x.start - y.start) < 200) { out.push({ i, a: x, j, b: y }); i++; j++; }
+    else if (x.start < y.start) { out.push({ i, a: x }); i++; }
+    else { out.push({ j, b: y }); j++; }
+  }
+  return out;
+}
+const norm = l => l.join(' ').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const ms = d => (d > 0 ? '+' : '−') + Math.abs(Math.round(d)) + ' ms';
+
+function run() {
+  const A = F.A, B = F.B; if (!A || !B) { $('res').hidden = $('fix').hidden = true; return; }
+  const tol = +st.tol, P = pair(A.cues, B.cues);
+  let nTime = 0, nA = 0, nB = 0, nSame = 0;
+  const rows = [];
+  for (const p of P) {
+    let cls = 'fine', rem = '';
+    if (!p.b) { nA++; cls = 'd-miss'; rem = 'Manca en B'; }
+    else if (!p.a) { nB++; cls = 'd-miss'; rem = 'Manca en A'; }
+    else {
+      const ds = p.b.start - p.a.start, de = p.b.end - p.a.end, flags = [];
+      if (Math.abs(ds) > tol || Math.abs(de) > tol) { nTime++; cls = 'd-time'; flags.push('Temp'); }
+      const na = norm(p.a.lines);
+      if (na.length > 3 && /\p{L}/u.test(na) && na === norm(p.b.lines)) { nSame++; cls += ' d-same'; flags.push('Medem text'); }
+      rem = flags.join(' · '); p.ds = ds; p.de = de;
+    }
+    p.cls = cls; p.rem = rem;
+    if (st.filter === 'all' || cls !== 'fine') rows.push(p);
+  }
+  const chip = (n, t, c) => `<span class="chip ${n ? c : ''}"><b>${n}</b> ${t}</span>`;
+  const all = !nTime && !nA && !nB && !nSame;
+  $('chips').innerHTML = `<span class="chip">A: <b>${A.cues.length}</b> · B: <b>${B.cues.length}</b></span>` +
+    (all ? '<span class="chip g">Tut correspunda ✓</span>' :
+      chip(nTime, nTime === 1 ? 'temp different' : 'temps differents', 'w') + chip(nA, 'mancan en B', 'e') + chip(nB, 'mancan en A', 'e') + chip(nSame, 'cun medem text', 'w'));
+  const t = (c, d) => c ? `${SUB.show(c.start)} – ${SUB.show(c.end)}` : '';
+  const dl = p => p.a && p.b && p.cls.includes('d-time') ? `<span class="delta">${Math.abs(p.ds) > tol ? 'entschatta ' + ms(p.ds) : ''}${Math.abs(p.ds) > tol && Math.abs(p.de) > tol ? ' · ' : ''}${Math.abs(p.de) > tol ? 'fin ' + ms(p.de) : ''}</span>` : '';
+  const max = 800;
+  $('rows').innerHTML = rows.slice(0, max).map(p => `<tr class="${p.cls}">` +
+    `<td class="n">${p.a ? p.i + 1 : ''}</td><td class="t ta">${t(p.a)}</td><td class="txt">${p.a ? p.a.lines.map(esc).join('<br>') : ''}</td>` +
+    `<td class="n">${p.b ? p.j + 1 : ''}</td><td class="t tb">${t(p.b)}${dl(p)}</td><td class="txt">${p.b ? p.b.lines.map(esc).join('<br>') : ''}</td>` +
+    `<td class="rem">${p.rem}</td></tr>`).join('') +
+    (rows.length > max ? `<tr><td colspan="7" class="n">… e ${rows.length - max} ulteriuras lingias</td></tr>` : '') +
+    (!rows.length ? '<tr><td colspan="7" class="n">Naginas differenzas.</td></tr>' : '');
+  $('res').hidden = false;
+
+  // Zeiten von A übernehmen (nur bei gleicher Anzahl)
+  const same = A.cues.length === B.cues.length;
+  $('fix').hidden = !(same && nTime);
+  if (same && nTime) {
+    showOut();
+    $('fixNote').innerHTML = `A e B han omadus <b>${A.cues.length}</b> suttitels. Il text da B vegn surpiglià, ils temps vegnan da A – lingia per lingia.`;
+    const fin = B.cues.map((c, k) => ({ start: A.cues[k].start, end: A.cues[k].end, lines: c.lines }));
+    const key = st.out || (B.format === 'ttml' ? 'ttml' : 'srt'), w = SUB.write(fin, key);
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(new Blob([w.text], { type: w.mime }));
+    const name = SUB.base(B.name) + '_temps-A' + w.ext;
+    $('dl').href = url; $('dl').download = name; $('dlname').textContent = name;
+  }
+}
+
+const OUTS = [['srt', 'SRT'], ['ttml', 'TTML (RTR)']];
+$('out').innerHTML = OUTS.map(([k, l]) => `<button type="button" data-k="${k}">${l}</button>`).join('');
+if (!OUTS.some(o => o[0] === st.out)) st.out = null;
+const showOut = () => $('out').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === (st.out || (F.B && F.B.format === 'ttml' ? 'ttml' : 'srt'))));
+$('out').querySelectorAll('button').forEach(b => b.onclick = () => { st.out = b.dataset.k; save(); showOut(); run(); });
+showOut();
+$('tol').onchange = () => { st.tol = $('tol').value; save(); run(); };
+$('filter').onchange = () => { st.filter = $('filter').value; save(); run(); };
+
+function load(slot, f) {
+  if (!f) return;
+  SUB.read(f).then(text => {
+    const { format, cues } = SUB.parse(text), info = $('info' + slot), d = $('drop' + slot);
+    d.innerHTML = ''; const nm = document.createElement('b'); nm.textContent = f.name; d.appendChild(nm);
+    d.insertAdjacentHTML('beforeend', '<small>Cliccar per in auter file</small>');
+    if (!cues.length) { F[slot] = null; info.textContent = 'Chattà nagins suttitels – è quai in file da suttitels?'; run(); return; }
+    F[slot] = { name: f.name, format, cues };
+    info.innerHTML = `<span class="tag">${SUB.FORMATS[format]}</span>${cues.length === 1 ? '1 suttitel' : cues.length + ' suttitels'} · fin ${SUB.show(cues[cues.length - 1].end)}`;
+    run();
+  });
+}
+for (const s of ['A', 'B']) {
+  const d = $('drop' + s);
+  d.onclick = () => { target = s; $('file').click(); };
+  d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); target = s; $('file').click(); } };
+  d.ondragover = e => { e.preventDefault(); d.classList.add('over'); };
+  d.ondragleave = () => d.classList.remove('over');
+  d.ondrop = e => { e.preventDefault(); e.stopPropagation(); d.classList.remove('over');
+    const fs = [...e.dataTransfer.files]; if (fs.length > 1) { load('A', fs[0]); load('B', fs[1]); } else load(s, fs[0]); };
+}
+$('file').onchange = e => { load(target, e.target.files[0]); e.target.value = ''; };
+// zwei Dateien irgendwo auf die Seite ziehen: erste = A, zweite = B (oder die freie Seite)
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); if (!ROOT.offsetParent) return; const fs = [...e.dataTransfer.files]; if (!fs.length) return;
+  if (fs.length > 1) { load('A', fs[0]); load('B', fs[1]); } else load(!F.A ? 'A' : 'B', fs[0]); });
+// Nutzung zählen, sobald beide Dateien verglichen wurden (like.js hört auf «dbz-success»)
+let told = false; const obs = new MutationObserver(() => { if (!told && !$('res').hidden) { told = true; window.dispatchEvent(new Event('dbz-success')); } });
+obs.observe($('res'), { attributes: true, attributeFilter: ['hidden'] });
+})();
+
+// ---- subs.html ----
+(() => {
+'use strict';
+const ROOT = document.getElementById('tab-de');
+const $ = id => document.getElementById('de-' + id);
+let fileName = 'untertitel';
+let cues = [];      // {idx,start,end,src,out}
+let segs = [];      // {cues:[i...], src, tr}
+
+/* ---------- Settings (per Browser gemerkt) ---------- */
+const SETTING_IDS = ['maxLine','maxLines','maxCps','minDur','maxDur','chunkMax'];
+try { const s = JSON.parse(localStorage.getItem('ut-settings')||'{}'); SETTING_IDS.forEach(k => { if (s[k]!=null) $(k).value = s[k]; }); } catch(e){}
+function saveSettings(){ try { const s={}; SETTING_IDS.forEach(k=>s[k]=$(k).value); localStorage.setItem('ut-settings',JSON.stringify(s)); } catch(e){} }
+const cfg = () => ({ maxLine:+$('maxLine').value||37, maxLines:+$('maxLines').value||2, maxCps:+$('maxCps').value||15, minDur:+$('minDur').value||1, maxDur:+$('maxDur').value||7 });
+
+/* ---------- SRT ---------- */
+function tcToMs(t){ const m=t.trim().match(/(\d+):(\d+):(\d+)[,.](\d+)/); if(!m) return NaN; return ((+m[1]*60+ +m[2])*60+ +m[3])*1000 + +m[4].padEnd(3,'0').slice(0,3); }
+function msToTc(ms){ ms=Math.max(0,Math.round(ms)); const h=Math.floor(ms/3600000), m=Math.floor(ms/60000)%60, s=Math.floor(ms/1000)%60, r=ms%1000; const p=(n,l=2)=>String(n).padStart(l,'0'); return `${p(h)}:${p(m)}:${p(s)},${p(r,3)}`; }
+function clean(t){ return t.replace(/<[^>]+>/g,'').replace(/\{\\[^}]*\}/g,'').replace(/\s+/g,' ').trim(); }
+function parseSrt(text){
+  text = text.replace(/^﻿/,'').replace(/\r\n?/g,'\n');
+  const out=[];
+  for (const block of text.split(/\n\s*\n/)){
+    const lines = block.split('\n').filter(l=>l.trim()!=='' );
+    const ti = lines.findIndex(l=>l.includes('-->'));
+    if (ti<0) continue;
+    const [a,b] = lines[ti].split('-->');
+    const start=tcToMs(a), end=tcToMs(b);
+    if (isNaN(start)||isNaN(end)) continue;
+    const raw = lines.slice(ti+1).join('\n');
+    out.push({start,end,raw,src:clean(raw),out:''});
+  }
+  return out;
+}
+
+/* ---------- Sätze bilden ---------- */
+const endsSentence = t => /[.!?…]["'»«”“)\]]*$/.test(t);
+const isDialogue = raw => /^\s*[-–]/.test(raw);
+function buildSegments(){
+  segs=[]; let cur=null;
+  cues.forEach((c,i)=>{
+    const dlg = isDialogue(c.raw);
+    if (cur && (dlg || cur.len > 400)) { segs.push(cur); cur=null; }
+    if (!cur) cur={cues:[],src:'',tr:'',len:0};
+    cur.cues.push(i); cur.src += (cur.src?' ':'') + c.src; cur.len=cur.src.length;
+    const multiSpeaker = (c.raw.match(/(^|\n)\s*[-–]/g)||[]).length>1;
+    if (endsSentence(c.src) || multiSpeaker || dlg && multiSpeaker) { segs.push(cur); cur=null; }
+  });
+  if (cur) segs.push(cur);
+}
+
+/* ---------- Blöcke für ALAS ---------- */
+function renderChunks(){
+  const max = +$('chunkMax').value || 3000;
+  const box=$('chunks'); box.innerHTML='';
+  let chunks=[], cur=[], len=0;
+  segs.forEach(s=>{ const l=s.src.length+1; if (cur.length && len+l>max){ chunks.push(cur); cur=[]; len=0; } cur.push(s.src); len+=l; });
+  if (cur.length) chunks.push(cur);
+  chunks.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='chunk';
+    const txt=c.join('\n');
+    d.innerHTML=`<strong>Block ${i+1}/${chunks.length}</strong><span class="muted">${c.length} frasas · ${txt.length} caracters</span>`;
+    const b=document.createElement('button'); b.textContent='Copiar';
+    b.onclick=async()=>{ try{ await navigator.clipboard.writeText(txt); }catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } b.textContent='✓ Copià'; d.classList.add('done'); };
+    d.appendChild(b); box.appendChild(d);
+  });
+}
+
+/* ---------- Verteilen & Umbrechen ---------- */
+const BAD_END = new Set(['der','die','das','den','dem','des','ein','eine','einen','einem','einer','eines','und','oder','aber','zu','zum','zur','im','in','am','an','auf','mit','von','vom','für','bei','nach','aus','über','unter','vor','wie','als','dass','weil','wenn','ob','sehr','nicht','kein','keine','mein','meine','sein','seine','ihr','ihre','unser','unsere','dieser','diese','dieses','ich','du','er','sie','es','wir','man']);
+const punctEnd = w => /[,;:–—.!?…]["'»«”“)]*$/.test(w);
+const badEnd = w => BAD_END.has(w.toLowerCase().replace(/[^a-zäöüß]/g,''));
+
+function distribute(seg){
+  const idxs=seg.cues, n=idxs.length;
+  const words=seg.tr.trim().split(/\s+/).filter(Boolean);
+  if (n===1 || !words.length){ idxs.forEach((ci,k)=>cues[ci].out = k===0 ? wrap(words.join(' ')) : ''); return; }
+  const srcLen=idxs.map(ci=>Math.max(1,cues[ci].src.length));
+  const sumSrc=srcLen.reduce((a,b)=>a+b,0);
+  const pos=[0]; words.forEach((w,j)=>pos.push(pos[j]+w.length+(j?1:0)));
+  const total=pos[words.length];
+  const cuts=[]; let prev=0, cum=0;
+  for (let k=1;k<n;k++){
+    cum+=srcLen[k-1];
+    const target=total*cum/sumSrc;
+    const lo=Math.min(prev+1, words.length), hi=Math.max(lo, words.length-(n-k));
+    let best=lo, bestCost=Infinity;
+    for (let j=lo;j<=hi;j++){
+      let cost=Math.abs(pos[j]-target)/Math.max(total,1);
+      if (punctEnd(words[j-1])) cost-=0.08;
+      if (badEnd(words[j-1])) cost+=0.05;
+      if (cost<bestCost){bestCost=cost;best=j;}
+    }
+    cuts.push(best); prev=best;
+  }
+  cuts.push(words.length);
+  let s=0;
+  idxs.forEach((ci,k)=>{ cues[ci].out = wrap(words.slice(s,cuts[k]).join(' ')); s=cuts[k]; });
+}
+
+function wrap(text){
+  const {maxLine}=cfg();
+  text=text.replace(/\s+/g,' ').trim();
+  const dlg=text.match(/^([-–]\s?.+?)\s([-–]\s?.+)$/);
+  if (dlg) return dlg[1]+'\n'+dlg[2];
+  if (text.length<=maxLine) return text;
+  const w=text.split(' ');
+  let best=null, bestCost=Infinity;
+  for (let j=1;j<w.length;j++){
+    const l1=w.slice(0,j).join(' ').length, l2=w.slice(j).join(' ').length;
+    let cost=Math.max(0,l1-maxLine)*10+Math.max(0,l2-maxLine)*10+Math.abs(l1-l2)*0.15;
+    if (punctEnd(w[j-1])) cost-=3;
+    if (badEnd(w[j-1])) cost+=3;
+    if (cost<bestCost){bestCost=cost;best=j;}
+  }
+  return w.slice(0,best).join(' ')+'\n'+w.slice(best).join(' ');
+}
+
+/* ---------- Prüfung ---------- */
+function check(c, nextStart){
+  const C=cfg(), issues=[];
+  const lines=c.out.split('\n').map(l=>l.trim()).filter(l=>l!=='');
+  const dur=(c.end-c.start)/1000;
+  const chars=lines.join(' ').length;
+  const cps= dur>0 ? chars/dur : Infinity;
+  if (!lines.length) issues.push(['err','vid']);
+  if (lines.length>C.maxLines) issues.push(['err',`${lines.length} lingias`]);
+  const longest=Math.max(0,...lines.map(l=>l.length));
+  if (longest>C.maxLine) issues.push(['err',`${longest} car./lingia`]);
+  if (cps>C.maxCps*1.2) issues.push(['err',`${cps.toFixed(1)} car./s`]);
+  else if (cps>C.maxCps) issues.push(['warn',`${cps.toFixed(1)} car./s`]);
+  if (dur<C.minDur) issues.push(['warn',`${dur.toFixed(2)} s curt`]);
+  if (dur>C.maxDur) issues.push(['warn',`${dur.toFixed(1)} s lung`]);
+  if (nextStart!=null && nextStart<c.end) issues.push(['err','Surpusiziun']);
+  return {issues, cps, dur, longest, chars};
+}
+
+/* ---------- Anzeige ---------- */
+function esc(s){return s.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function renderSegs(){
+  const box=$('segs'); box.innerHTML='';
+  segs.forEach((s,si)=>{
+    const el=document.createElement('div'); el.className='seg'; el.dataset.si=si;
+    el.innerHTML=`<div class="seg-head"><div><div class="lbl">Frasa ${si+1} · rumantsch</div><div class="src">${esc(s.src)}</div></div>
+      <div><div class="lbl">Tudestg (frasa entira)</div><textarea class="tr" rows="2">${esc(s.tr)}</textarea></div></div>`;
+    s.cues.forEach(ci=>{
+      const c=cues[ci];
+      const r=document.createElement('div'); r.className='cue'; r.dataset.ci=ci;
+      r.innerHTML=`<div class="tc">#${ci+1}<br>${msToTc(c.start)}<br>${msToTc(c.end)}</div>
+        <div class="srcc">${esc(c.src)}</div>
+        <textarea class="out" rows="2" spellcheck="true" lang="de">${esc(c.out)}</textarea>
+        <div><div class="badges"></div><div class="row" style="margin-top:4px"><button class="rewrap" title="Rumper da nov" aria-label="Rumper da nov">↻</button><span class="meta muted" style="font-size:12px"></span></div></div>`;
+      el.appendChild(r);
+    });
+    box.appendChild(el);
+  });
+  refreshChecks();
+}
+
+function refreshChecks(){
+  let nErr=0,nWarn=0,nOk=0;
+  ROOT.querySelectorAll('.seg').forEach(el=>{
+    let segBad=false;
+    el.querySelectorAll('.cue').forEach(r=>{
+      const ci=+r.dataset.ci, c=cues[ci];
+      const res=check(c, cues[ci+1]?.start);
+      const b=r.querySelector('.badges'); b.innerHTML='';
+      const hasErr=res.issues.some(i=>i[0]==='err'), hasWarn=res.issues.some(i=>i[0]==='warn');
+      if (!res.issues.length){ b.innerHTML='<span class="pill ok">OK</span>'; nOk++; }
+      else res.issues.forEach(([t,m])=>{ const p=document.createElement('span'); p.className='pill '+t; p.textContent=m; b.appendChild(p); });
+      if (hasErr) nErr++; else if (hasWarn) nWarn++;
+      if (hasErr||hasWarn) segBad=true;
+      r.classList.toggle('bad',hasErr); r.classList.toggle('meh',!hasErr&&hasWarn);
+      r.querySelector('.meta').textContent=`${res.dur.toFixed(1)} s · ${isFinite(res.cps)?res.cps.toFixed(1):'–'} car./s`;
+    });
+    el.classList.toggle('allok',!segBad);
+  });
+  $('stats').innerHTML=`<span class="pill">${cues.length} suttitels · ${segs.length} frasas</span><span class="pill ok">${nOk} OK</span><span class="pill warn">${nWarn} avertiment(s)</span><span class="pill err">${nErr} sbagl(s)</span>`;
+}
+
+/* ---------- Events ---------- */
+function loadText(text,name){
+  cues=parseSrt(text);
+  if (!cues.length){ $('loadInfo').textContent='Chattà nagins suttitels – è quai in file SRT?'; return; }
+  fileName=(name||'untertitel').replace(/\.srt$/i,'');
+  buildSegments();
+  $('loadInfo').textContent=`${name}: ${cues.length} suttitels → ${segs.length} frasas`;
+  ['s2','s3'].forEach(id=>$(id).hidden=false);
+  ['s4','s5'].forEach(id=>$(id).hidden=true);
+  $('paste').value=''; $('pasteMsg').innerHTML=''; updateCount();
+  renderChunks();
+}
+function decodeSrt(buf){
+  const b=new Uint8Array(buf);
+  if (b[0]===0xFF&&b[1]===0xFE) return new TextDecoder('utf-16le').decode(b);
+  if (b[0]===0xFE&&b[1]===0xFF) return new TextDecoder('utf-16be').decode(b);
+  try { return new TextDecoder('utf-8',{fatal:true}).decode(b); }
+  catch(e){ return new TextDecoder('windows-1252').decode(b); } // ANSI-SRT (z. B. aus Windows-Programmen)
+}
+function readFile(f){ const r=new FileReader(); r.onload=()=>loadText(decodeSrt(r.result),f.name); r.readAsArrayBuffer(f); }
+const drop=$('drop');
+drop.onclick=()=>$('file').click();
+drop.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('file').click(); } };
+$('file').onchange=e=>{ if(e.target.files[0]) readFile(e.target.files[0]); };
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over'); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);};
+
+$('chunkMax').onchange=()=>{saveSettings(); if(segs.length) renderChunks();};
+const pasteLines=()=>$('paste').value.replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
+function updateCount(){ const n=pasteLines().length; $('pasteCount').textContent = segs.length ? `${n} / ${segs.length} lingias` : ''; $('pasteCount').style.color = n===segs.length ? 'var(--ok)' : ''; }
+$('paste').oninput=updateCount;
+
+$('apply').onclick=()=>{
+  const lines=pasteLines();
+  const msg=$('pasteMsg');
+  if (!lines.length){ msg.innerHTML='<div class="notice err">Anc nagut integrà.</div>'; return; }
+  if (lines.length!==segs.length){
+    msg.innerHTML=`<div class="notice warn">${lines.length} lingias per ${segs.length} frasas – ALAS ha probablamain unì u separà frasas. Las lingias vegnan attribuidas en urden; controllescha a partir da l'emprima differenza ils champs da las frasas en il pass 4.</div>`;
+  } else msg.innerHTML='<div class="notice ok">Tut las frasas attribuidas.</div>';
+  segs.forEach((s,i)=>{ s.tr = lines[i]||''; distribute(s); });
+  if (lines.length>segs.length) segs[segs.length-1].tr += ' ' + lines.slice(segs.length).join(' '), distribute(segs[segs.length-1]);
+  $('s4').hidden=false; $('s5').hidden=false;
+  renderSegs();
+  $('s4').scrollIntoView({behavior:'smooth'});
+};
+
+$('segs').addEventListener('input',e=>{
+  const t=e.target;
+  if (t.classList.contains('out')){ cues[+t.closest('.cue').dataset.ci].out=t.value; refreshChecks(); }
+});
+$('segs').addEventListener('change',e=>{
+  const t=e.target;
+  if (t.classList.contains('tr')){
+    const el=t.closest('.seg'), s=segs[+el.dataset.si];
+    s.tr=t.value; distribute(s);
+    el.querySelectorAll('.cue').forEach(r=>{ r.querySelector('.out').value=cues[+r.dataset.ci].out; });
+    refreshChecks();
+  }
+});
+$('segs').addEventListener('click',e=>{
+  if (!e.target.classList.contains('rewrap')) return;
+  const r=e.target.closest('.cue'), c=cues[+r.dataset.ci];
+  c.out=wrap(c.out.replace(/\n/g,' ')); r.querySelector('.out').value=c.out; refreshChecks();
+});
+['maxLine','maxLines','maxCps','minDur','maxDur'].forEach(id=>$(id).addEventListener('change',()=>{saveSettings(); if(segs.length) refreshChecks();}));
+$('onlyBad').onchange=e=>$('segs').classList.toggle('hide-ok',e.target.checked);
+
+const msToTt = ms => msToTc(ms).replace(',','.');
+function buildSrt(list){
+  return '﻿'+list.map((c,i)=>`${i+1}\r\n${msToTc(c.start)} --> ${msToTc(c.end)}\r\n${c.lines.join('\r\n')}`).join('\r\n\r\n')+'\r\n';
+}
+function buildTtml(list){
+  const x=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // RTR-Vorlage (Subtitle Edit, Custom Text Format), Zeitformat hh:mm:ss.zzz
+  const NL='</span><br></br><span tts:color="#ffffff">';
+  const ps=list.map((c,i)=>`<p begin="${msToTt(c.start)}" xml:id="p${i+1}" end="${msToTt(c.end)}">
+    <span tts:color="#ffffff">${c.lines.map(x).join(NL)}</span>
+</p>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+    <head>
+        <styling></styling>
+        <layout></layout>
+    </head>
+    <body><div>
+${ps}
+        </div>
+  </body>
+</tt>
+`;
+}
+$('export').onclick=()=>{
+  let skipped=0; const list=[];
+  cues.forEach(c=>{
+    const lines=c.out.split('\n').map(l=>l.trim()).filter(Boolean);
+    if (!lines.length){ skipped++; return; }
+    list.push({start:c.start,end:c.end,lines});
+  });
+  const n=list.length, fmt=$('fmt').value;
+  const data = fmt==='ttml' ? buildTtml(list) : buildSrt(list);
+  const blob=new Blob([data],{type:(fmt==='ttml'?'application/ttml+xml':'text/plain')+';charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${fileName}_DE.${fmt}`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  $('exportInfo').textContent=`${n} suttitels exportads`+(skipped?` · ${skipped} vids sursiglids`:'');
+};
+
+// Test-Hook
+window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
+})();
+
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>
