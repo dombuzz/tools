@@ -137,6 +137,11 @@
   .nov { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #121214); font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; vertical-align: 2px; line-height: 1.5; }
   .novcnt { display: inline-block; margin-left: 10px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); font-size: 11px; font-weight: 700; vertical-align: 2px; }
   .favcard .dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  /* Versionsnummer ganz unten: v<Datum letzter Commit>_<Anzahl Commits an dem Tag>, live aus GitHub */
+  body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  main { width: 100%; }
+  .ver { margin: auto 0 0; padding: 0 16px 14px; text-align: center; color: var(--muted); font-size: 11px; letter-spacing: .04em; opacity: .35; }
+  .ver:empty { visibility: hidden; }
 </style>
 </head>
 <body>
@@ -159,6 +164,7 @@
     <div class="menu" id="menu" role="menu"></div>
   </div>
 </main>
+<footer class="ver" id="ver" aria-label="Versiun"></footer>
 
 <script>
   // Anzeigenamen im Dropdown (Dateiname -> Name).
@@ -444,5 +450,23 @@
 })();
 </script>
 <script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/index?t='+(document.documentElement.dataset.theme==='light'?'light':'dark')+(window.dbzCid&&dbzCid()?'&c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>
+  // Versionsnummer: Datum des letzten Commits auf main (Zürcher Zeit) + wievielter Commit an diesem Tag.
+  (() => {
+    const el = document.getElementById('ver'), K = 'dbz-ver';
+    try { el.textContent = localStorage.getItem(K) || ''; } catch (e) {}
+    const day = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Zurich' }).format(new Date(d));
+    fetch('https://api.github.com/repos/dombuzz/tools/commits?sha=main&per_page=100')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(list => {
+        if (!Array.isArray(list) || !list.length) return;
+        const dates = list.map(c => day(c.commit.committer.date)), last = dates[0];
+        const v = 'v' + last.replace(/-/g, '') + '_' + dates.filter(d => d === last).length;
+        el.textContent = v;
+        try { localStorage.setItem(K, v); } catch (e) {}
+      })
+      .catch(() => {});
+  })();
+</script>
 </body>
 </html>
