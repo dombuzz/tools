@@ -1,4 +1,4 @@
-// Spiel-Ebene für /game: Collecziun (entdeckte Tools), Serie (Tage in Folge) und Insignas.
+// Spiel-Ebene für /game: Collecziun (entdeckte Tools), Seria (Tage in Folge), Acziuns und Badges.
 // Alles bleibt im Browser (localStorage); Daten sammelt like.js auf den Tool-Seiten:
 //   dbz-visit-<tool>  Zeitpunkt des letzten Besuchs (gibt es schon für «nov»)
 //   dbz-days          Tage mit Tool-Nutzung (JJJJ-MM-TT)
@@ -43,10 +43,14 @@
   .gbig small { color: var(--muted); font-size: 13px; }
   .gnote { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; }
   .gins { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
-  .gi { padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); text-align: center; font-size: 11.5px; line-height: 1.3; color: var(--muted); }
+  .gi { font: inherit; background: none; cursor: pointer; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); text-align: center; font-size: 11.5px; line-height: 1.3; color: var(--muted); }
   .gi em { display: block; font-style: normal; font-size: 20px; line-height: 1.2; filter: grayscale(1); opacity: .35; }
   .gi.on { color: var(--text); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
-  .gi.on em { filter: none; opacity: 1; }`;
+  .gi.on em { filter: none; opacity: 1; }
+  .gi:hover, .gi:focus-visible, .gi.sel { border-color: var(--accent); outline: none; }
+  .gtip { margin: 10px 0 0; min-height: 2.9em; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .gtip b { color: var(--text); font-weight: 600; }
+  .gtip span { display: block; color: var(--accent); font-size: 12px; font-weight: 600; }`;
   document.head.insertAdjacentHTML('beforeend', '<style>' + css + '</style>');
 
   const h1 = document.querySelector('h1');
@@ -67,17 +71,20 @@
   const next = STEPS.find(s => s > total) || total;
   const prev = [...STEPS].reverse().find(s => s <= total) || 0;
 
+  // Badges: [Symbol, Name, erreicht?, Bedingung, aktueller Stand, Ziel]
+  const half = Math.ceil(tools.length / 2);
   const INS = [
-    ['🧭', 'Emprim tool', seen.length >= 1],
-    ['🗺️', 'Mez scuvrì', seen.length >= Math.ceil(tools.length / 2)],
-    ['🏆', 'Tut scuvrì', tools.length && seen.length === tools.length],
-    ['🔥', '3 dis', best >= 3],
-    ['⚡', '7 dis', best >= 7],
-    ['🌋', '30 dis', best >= 30],
-    ['✦', '10 acziuns', total >= 10],
-    ['✸', '100 acziuns', total >= 100],
-    ['💎', '500 acziuns', total >= 500],
-  ];
+    ['🧭', 'Emprim tool', seen.length, 1, 'Avra tes emprim tool.'],
+    ['🗺️', 'Mez scuvrì', seen.length, half, `Scuvra almain la mesadad dals tools (${half} da ${tools.length}).`],
+    ['🏆', 'Tut scuvrì', seen.length, tools.length, `Scuvra tut ils ${tools.length} tools.`],
+    ['🔥', '3 dis', best, 3, 'Dovra tools 3 dis a la lunga.'],
+    ['⚡', '7 dis', best, 7, 'Dovra tools 7 dis a la lunga.'],
+    ['🌋', '30 dis', best, 30, 'Dovra tools 30 dis a la lunga.'],
+    ['✦', '10 acziuns', total, 10, 'Fa 10 acziuns en ils tools (p.ex. download u export).'],
+    ['✸', '100 acziuns', total, 100, 'Fa 100 acziuns en ils tools (p.ex. download u export).'],
+    ['💎', '500 acziuns', total, 500, 'Fa 500 acziuns en ils tools (p.ex. download u export).'],
+  ].map(([e, n, have, goal, rule]) => ({ e, n, rule, on: goal > 0 && have >= goal,
+    state: goal > 0 && have >= goal ? '✓ Cuntanschì' : `Anc ${Math.max(goal - have, 0).toLocaleString('de-CH')} · ${Math.min(have, goal).toLocaleString('de-CH')} da ${goal.toLocaleString('de-CH')}` }));
   const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   const sec = document.createElement('section');
@@ -89,21 +96,39 @@
       <div class="gtools">${tools.map(t => `<a class="gt ${seen.includes(t) ? 'on' : 'off'}" href="${esc(t.href)}">${esc(t.name)}</a>`).join('')}</div>
     </div>
     <div class="gcard">
-      <div class="gh"><b>Serie</b><span>Record: ${best} ${best === 1 ? 'di' : 'dis'}</span></div>
-      <div class="gbig"><strong>${cur ? '🔥 ' + cur : '–'}</strong><small>${cur ? (cur === 1 ? 'di' : 'dis a la lunga') : 'Avra in tool per cumenzar ina serie.'}</small></div>
-      <p class="gnote">Sonda e dumengia na rumpan betg la serie.</p>
+      <div class="gh"><b>Seria</b><span>Record: ${best} ${best === 1 ? 'di' : 'dis'}</span></div>
+      <div class="gbig"><strong>${cur ? '🔥 ' + cur : '–'}</strong><small>${cur ? (cur === 1 ? 'di' : 'dis a la lunga') : 'Avra in tool per cumenzar ina seria.'}</small></div>
+      <p class="gnote">Sonda e dumengia na rumpan betg la seria.</p>
     </div>
     <div class="gcard">
       <div class="gh"><b>Acziuns</b><span>Quest mais: ${mon}</span></div>
-      <div class="gbig"><strong>${total.toLocaleString('de-CH')}</strong><small>en tut · proxima insigna tar ${next.toLocaleString('de-CH')}</small></div>
+      <div class="gbig"><strong>${total.toLocaleString('de-CH')}</strong><small>en tut · proxim badge tar ${next.toLocaleString('de-CH')}</small></div>
       <div class="gbar" style="margin-top:10px"><i style="width:0" data-w="${next > prev ? Math.round((total - prev) / (next - prev) * 100) : 100}"></i></div>
     </div>
     <div class="gcard">
-      <div class="gh"><b>Insignas</b><span>${INS.filter(x => x[2]).length} da ${INS.length}</span></div>
-      <div class="gins">${INS.map(([e, n, on]) => `<div class="gi${on ? ' on' : ''}"><em>${e}</em>${n}</div>`).join('')}</div>
+      <div class="gh"><b>Badges</b><span>${INS.filter(x => x.on).length} da ${INS.length}</span></div>
+      <div class="gins">${INS.map((b, i) => `<button type="button" class="gi${b.on ? ' on' : ''}" data-i="${i}" title="${esc(b.rule + ' – ' + b.state)}" aria-describedby="gtip"><em>${b.e}</em>${b.n}</button>`).join('')}</div>
+      <p class="gtip" id="gtip" aria-live="polite">Tippa sin in badge per vesair la cundiziun.</p>
     </div>`;
   const anchor = document.querySelector('.favs') || document.getElementById('selwrap');
   anchor.after(sec);
+  // Badges: Bedingung bei Hover, Fokus oder Klick unter dem Raster zeigen
+  const tip = sec.querySelector('.gtip'), tip0 = tip.textContent, btns = sec.querySelectorAll('.gi');
+  let pinned = -1;
+  const showTip = i => {
+    btns.forEach((b, j) => b.classList.toggle('sel', j === i && pinned === i));
+    if (i < 0) { tip.textContent = tip0; return; }
+    const b = INS[i];
+    tip.innerHTML = `<b>${esc(b.e + ' ' + b.n)}:</b> ${esc(b.rule)}<span>${esc(b.state)}</span>`;
+  };
+  btns.forEach(el => {
+    const i = +el.dataset.i;
+    el.addEventListener('mouseenter', () => showTip(i));
+    el.addEventListener('mouseleave', () => showTip(pinned));
+    el.addEventListener('focus', () => showTip(i));
+    el.addEventListener('click', () => { pinned = pinned === i ? -1 : i; showTip(pinned < 0 ? i : pinned); });
+  });
+
   // Balken einblenden
   requestAnimationFrame(() => setTimeout(() => {
     const [b1, b2] = sec.querySelectorAll('.gbar i');
