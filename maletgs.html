@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar e corregir colurs per layer. Export sco PNG.">
+<meta name="description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar, curreger la perspectiva e las colurs. Collascha cun 2 u 3 maletgs. Export sco PNG.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Elavurar maletgs">
-<meta property="og:description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar e corregir colurs per layer. Export sco PNG.">
+<meta property="og:description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar, curreger la perspectiva e las colurs. Collascha cun 2 u 3 maletgs. Export sco PNG.">
 <meta property="og:url" content="https://tools.dombuzz.ch/maletgs">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -225,7 +225,7 @@
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
   <h1>Elavurar <span class="acc">maletgs</span></h1>
-  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar e corregir colurs per layer. Collascha cun 2 u 3 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
+  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar, curreger la perspectiva e las colurs per layer. Collascha cun 2 u 3 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
 
   <div class="card">
     <div class="toolbar" id="layToolbar">
@@ -310,6 +310,9 @@
             </div>
             <h3>Drizzar</h3>
           <div class="ctl"><div class="top"><label for="c_ang">Angul</label><span class="val" data-for="ang" title="Reset">0.0°</span></div><input type="range" id="c_ang" data-c="ang" min="-10" max="10" step="0.1" value="0"></div>
+            <h3>Perspectiva <button type="button" class="secreset" data-reset="pv,ph" title="Reset perspectiva" aria-label="Reset perspectiva">↺</button></h3>
+          <div class="ctl"><div class="top"><label for="c_pv">Vertical</label><span class="wbhint">survart pli lad ↔ sutvart pli lad</span><span class="val" data-for="pv" title="Reset">0</span></div><input type="range" id="c_pv" data-c="pv" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_ph">Orizontal</label><span class="wbhint">sanestra ↔ dretga pli grond</span><span class="val" data-for="ph" title="Reset">0</span></div><input type="range" id="c_ph" data-c="ph" min="-100" max="100" step="1" value="0"></div>
           </div>
         </div>
 
@@ -460,6 +463,54 @@ function applyColor(src, dst, P){
 }
 const dimsOf = im => [im.naturalWidth || im.width, im.naturalHeight || im.height];
 
+/* Perspectiva: Trapez aus dem Bild auf die ganze Fläche ziehen (keine leeren Ecken, Rand wird beschnitten).
+   Vertical < 0: oben breiter (stürzende Linien von unten fotografiert), > 0: unten breiter.
+   Orizontal < 0: links grösser, > 0: rechts grösser. */
+function quadOf(w, h, pv, ph){
+  const tv = -pv / 100 * 0.3, th = -ph / 100 * 0.3;
+  const ti = Math.max(tv, 0) * w, bi = Math.max(-tv, 0) * w, li = Math.max(th, 0) * h, ri = Math.max(-th, 0) * h;
+  return [[ti, li], [w - ti, ri], [w - bi, h - ri], [bi, h - li]];
+}
+function persp(src, pv, ph){
+  if (!pv && !ph) return src;
+  const [w, h] = dimsOf(src);
+  const sc = document.createElement('canvas'); sc.width = w; sc.height = h;
+  const sx = sc.getContext('2d', { willReadFrequently:true }); sx.drawImage(src, 0, 0);
+  const S = sx.getImageData(0, 0, w, h).data, out = sx.createImageData(w, h), D = out.data;
+  // Einheitsquadrat → Viereck (Heckbert)
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = quadOf(w, h, pv, ph);
+  const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+  const den = dx1 * dy2 - dx2 * dy1;
+  const g = (dx3 * dy2 - dx2 * dy3) / den, hh = (dx1 * dy3 - dx3 * dy1) / den;
+  const a = x1 - x0 + g * x1, b = x3 - x0 + hh * x3, c = x0, d = y1 - y0 + g * y1, e = y3 - y0 + hh * y3, f = y0;
+  const W1 = w - 1, H1 = h - 1;
+  let o = 0;
+  for (let y = 0; y < h; y++){
+    const v = (y + 0.5) / h;
+    for (let x = 0; x < w; x++, o += 4){
+      const u = (x + 0.5) / w, q = g * u + hh * v + 1;
+      let fx = (a * u + b * v + c) / q - 0.5, fy = (d * u + e * v + f) / q - 0.5;
+      fx = fx < 0 ? 0 : fx > W1 ? W1 : fx; fy = fy < 0 ? 0 : fy > H1 ? H1 : fy;
+      const ix = fx | 0, iy = fy | 0, ax = fx - ix, ay = fy - iy;
+      const jx = ix < W1 ? 4 : 0, jy = iy < H1 ? w * 4 : 0, p = (iy * w + ix) * 4;
+      for (let k = 0; k < 4; k++){
+        const t = S[p + k] + (S[p + jx + k] - S[p + k]) * ax;
+        const btm = S[p + jy + k] + (S[p + jy + jx + k] - S[p + jy + k]) * ax;
+        D[o + k] = t + (btm - t) * ay;
+      }
+    }
+  }
+  sx.putImageData(out, 0, 0);
+  return sc;
+}
+// volle Auflösung mit Perspektive (zwischengespeichert)
+function srcFull(L){
+  if (!L.pv && !L.ph) return L.src;
+  const key = L.pv + ',' + L.ph;
+  if (L.wsrc && L.wkey === key && L.wfrom === L.src) return L.wsrc;
+  L.wkey = key; L.wfrom = L.src; return L.wsrc = persp(L.src, L.pv, L.ph);
+}
+
 /* Ausrichtung: 90°-Schritte und Spiegeln ergeben eine neue Quelle (volle Auflösung) */
 function orient(L){
   const [w0, h0] = dimsOf(L.img);
@@ -475,13 +526,17 @@ function orient(L){
     L.src = c;
   }
   [L.iw, L.ih] = dimsOf(L.src);
-  // verkleinerte, unbearbeitete Vorschau-Daten
+  reprev(L);
+}
+// verkleinerte Vorschau-Daten (mit Perspektive, ohne Farben)
+function reprev(L){
   const k = Math.min(1, PREVIEW_MAX / Math.max(L.iw, L.ih));
   const pw = Math.max(1, Math.round(L.iw * k)), ph = Math.max(1, Math.round(L.ih * k));
   const pc = document.createElement('canvas'); pc.width = pw; pc.height = ph;
   const px = pc.getContext('2d', { willReadFrequently:true }); px.imageSmoothingQuality = 'high';
   px.drawImage(scaled(L.src, pw, ph), 0, 0, pw, ph);
-  L.base = px.getImageData(0, 0, pw, ph);
+  const wc = persp(pc, L.pv, L.ph);
+  L.base = wc.getContext('2d', { willReadFrequently:true }).getImageData(0, 0, pw, ph);
   recolor(L);
 }
 function recolor(L){
@@ -726,7 +781,7 @@ list.addEventListener('pointercancel', e => { if (rowDrag && rowDrag.id === e.po
 function duplicate(L){
   if (layers.length >= MAX) { setMsg(`Maximalmain ${MAX} layers.`, true); return; }
   const C = { id: nextId++, name: L.name.replace(/ \(copia( \d+)?\)$/, '') + ' (copia)', url: L.url, img: L.img,
-    src: L.src, base: L.base, q: L.q, fh: L.fh, fv: L.fv, ang: L.ang, col: { ...L.col },
+    src: L.src, base: L.base, q: L.q, fh: L.fh, fv: L.fv, ang: L.ang, pv: L.pv, ph: L.ph, col: { ...L.col },
     iw: L.iw, ih: L.ih, s: L.s, x: L.x, y: L.y, mode: L.mode, blur: L.blur, visible: L.visible, locked: false };
   C.el = document.createElement('canvas'); C.el.className = 'lay';
   clip.appendChild(C.el);
@@ -788,7 +843,7 @@ function addFile(file, label){
     im.onload = () => {
       if (layers.length >= MAX) { URL.revokeObjectURL(url); setMsg(`Maximalmain ${MAX} layers.`, true); return res(false); }
       const L = { id: nextId++, name: label || file.name || 'Maletg', url, img: im, iw: im.naturalWidth, ih: im.naturalHeight, visible: true,
-        q: 0, fh: false, fv: false, ang: 0, col: newCol() };
+        q: 0, fh: false, fv: false, ang: 0, pv: 0, ph: 0, col: newCol() };
       // Bilder mit Transparenz in anderem Seitenverhältnis (z. B. Logos) frei platzieren, sonst Fläche füllen
       const sameRatio = Math.abs(L.iw / L.ih - W / H) < 0.01;
       L.mode = hasAlpha(im) && !sameRatio ? 'free' : 'cover';
@@ -1034,7 +1089,7 @@ $('dlBtn').onclick = () => {
     if (L.blur && L.bg) cx.drawImage(L.bg, 0, 0, OW, OH);
     if (L.blur === 'only') continue;
     const w = L.iw * L.s * F, h = L.ih * L.s * F;
-    let src = scaled(L.src, w, h);
+    let src = scaled(srcFull(L), w, h);
     if (!isNeutral(L.col)){
       const [sw, sh] = dimsOf(src);
       const t2 = document.createElement('canvas'); t2.width = sw; t2.height = sh;
@@ -1106,8 +1161,8 @@ function syncEdit(){
   $('tcount').textContent = layers.length ? `(${layers.length}/${MAX})` : '';
   if (A){
     $('flipH').setAttribute('aria-pressed', !!A.fh); $('flipV').setAttribute('aria-pressed', !!A.fv);
-    const vals = { ...A.col, ang: A.ang || 0 };
-    for (const id of [...CIDS, 'ang']){
+    const vals = { ...A.col, ang: A.ang || 0, pv: A.pv || 0, ph: A.ph || 0 };
+    for (const id of [...CIDS, 'ang', 'pv', 'ph']){
       const el = $('c_' + id); if (+el.value !== vals[id]) el.value = vals[id];
       document.querySelector(`.val[data-for="${id}"]`).textContent = id === 'ang' ? (vals.ang > 0 ? '+' : '') + vals.ang.toFixed(1) + '°' : vals[id] + (id === 'hue' ? '°' : '');
     }
@@ -1119,6 +1174,12 @@ document.querySelectorAll('[data-edit] input[type=range]').forEach(inp => inp.ad
   const A = editTarget(); if (!A || A.locked) return;
   const id = inp.dataset.c;
   if (id === 'ang'){ A.ang = Math.round(+inp.value * 10) / 10; if (isCell(A)){ syncEdit(); paint(); } else render(); return; }
+  if (id === 'pv' || id === 'ph'){
+    A[id] = +inp.value; syncEdit();
+    cancelAnimationFrame(colRaf);
+    colRaf = requestAnimationFrame(() => { if (isCell(A)){ cellOrient(A); paint(); renderPool(); } else { reprev(A); render(); updateThumb(A); } });
+    return;
+  }
   A.col[id] = +inp.value;
   syncEdit();
   cancelAnimationFrame(colRaf);
@@ -1132,9 +1193,10 @@ document.querySelectorAll('[data-edit] .ctl label').forEach(l => l.addEventListe
 // ↺ neben «Clerezza» bzw. «Colurs» setzt die ganze Gruppe zurück
 document.querySelectorAll('.secreset').forEach(b => b.onclick = () => {
   const A = editTarget(); if (!A || A.locked) return;
-  b.dataset.reset.split(',').forEach(id => { A.col[id] = 0; });
-  if (isCell(A)){ cellRecolor(A); paint(); syncEdit(); return; }
-  recolor(A); render(); updateThumb(A);
+  const ids = b.dataset.reset.split(','), pers = ids.includes('pv');
+  ids.forEach(id => { if (pers) A[id] = 0; else A.col[id] = 0; });
+  if (isCell(A)){ if (pers) cellOrient(A); else cellRecolor(A); paint(); syncEdit(); return; }
+  if (pers) reprev(A); else recolor(A); render(); updateThumb(A); syncEdit();
 });
 document.querySelectorAll('[data-edit] .val').forEach(v => v.onclick = () => {
   const inp = $('c_' + v.dataset.for); inp.value = 0; inp.dispatchEvent(new Event('input'));
@@ -1317,7 +1379,7 @@ buildLays();
 // Jede Part hat eigene Bearbeitung wie ein Layer: 90°-Schritte, Spiegeln, Begradigen, Farben
 const CPREV = 2000;
 function mkItem(im, name){
-  const C = { orig: im, name, z: 1, fx: 0, fy: 0, q: 0, fh: false, fv: false, ang: 0, col: newCol() };
+  const C = { orig: im, name, z: 1, fx: 0, fy: 0, q: 0, fh: false, fv: false, ang: 0, pv: 0, ph: 0, col: newCol() };
   cellOrient(C); return C;
 }
 function orientCanvas(im, q, fh, fv, maxSide){
@@ -1333,7 +1395,7 @@ function orientCanvas(im, q, fh, fv, maxSide){
 function cellOrient(C){
   const [w0, h0] = dimsOf(C.orig);
   C.iw = C.q % 2 ? h0 : w0; C.ih = C.q % 2 ? w0 : h0;
-  const pc = orientCanvas(C.orig, C.q, C.fh, C.fv, CPREV);
+  const pc = persp(orientCanvas(C.orig, C.q, C.fh, C.fv, CPREV), C.pv, C.ph);
   C.base = pc.getContext('2d').getImageData(0, 0, pc.width, pc.height);
   C.prev = pc; cellRecolor(C);
 }
@@ -1346,7 +1408,7 @@ function cellRecolor(C){
 // volle Auflösung erst beim Export (zwischengespeichert, bis die Part wieder bearbeitet wird)
 function cellFull(C){
   if (C.full) return C.full;
-  const c = orientCanvas(C.orig, C.q, C.fh, C.fv, 6000);
+  const c = persp(orientCanvas(C.orig, C.q, C.fh, C.fv, 6000), C.pv, C.ph);
   if (!isNeutral(C.col)){ const x = c.getContext('2d', { willReadFrequently:true }), d = x.getImageData(0, 0, c.width, c.height); applyColor(d, d, params(C.col)); x.putImageData(d, 0, 0); }
   return C.full = c;
 }
@@ -1561,7 +1623,7 @@ function fromLayer(L){
   const [w, h] = dimsOf(L.src), k = Math.min(1, 4096 / Math.max(w, h));
   const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
   const x = c.getContext('2d', { willReadFrequently:true }); x.imageSmoothingQuality = 'high';
-  x.drawImage(scaled(L.src, c.width, c.height), 0, 0, c.width, c.height);
+  x.drawImage(scaled(srcFull(L), c.width, c.height), 0, 0, c.width, c.height);
   if (!isNeutral(L.col)){ const d = x.getImageData(0, 0, c.width, c.height); applyColor(d, d, params(L.col)); x.putImageData(d, 0, 0); }
   const C = mkItem(c, L.name); C.lid = L.id; C.ver = L.ver + '|' + (L.ang || 0); C.ang = L.ang || 0; return C;
 }
@@ -1571,7 +1633,7 @@ function colFromLayers(){
   for (const arr of [cells, pool]) arr.forEach((C, i) => {
     if (!C || C.lid == null) return;
     const L = src.find(l => l.id === C.lid);
-    if (L && L.ver + '|' + (L.ang || 0) !== C.ver){ const N = fromLayer(L); N.z = C.z; N.fx = C.fx; N.fy = C.fy; Object.assign(N, { q: C.q, fh: C.fh, fv: C.fv, col: { ...C.col } }); cellOrient(N); arr[i] = N; }
+    if (L && L.ver + '|' + (L.ang || 0) !== C.ver){ const N = fromLayer(L); N.z = C.z; N.fx = C.fx; N.fy = C.fy; Object.assign(N, { q: C.q, fh: C.fh, fv: C.fv, pv: C.pv, ph: C.ph, col: { ...C.col } }); cellOrient(N); arr[i] = N; }
   });
   const neu = src.filter(L => !seen.has(L.id));
   neu.forEach(L => seen.add(L.id));
