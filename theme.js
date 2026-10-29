@@ -12,6 +12,8 @@
   } catch (e) { return; }
   window.dbzTest = true;
   var f = window.fetch;
+  // Gerät beim Worker als Test-Gerät melden: alle bisherigen Einträge dieses Browsers fallen aus der Statistik (auch rückwirkend)
+  setTimeout(function () { var c = window.dbzCid && dbzCid(); if (c) f('https://fragrant-grass-c193.zappa-pfadi.workers.dev/exclude?c=' + encodeURIComponent(c), { method: 'POST', keepalive: true }).catch(function () {}); }, 0);
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
     var m = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
