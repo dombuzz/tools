@@ -31,10 +31,10 @@
   h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
   h1 .acc{color:var(--accent)}
   .lead{color:var(--muted);margin:0 0 20px;font-size:.9rem}
-  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-  .tab{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 15px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px;margin-bottom:14px}
+  .tab{flex:1;min-width:0;background:transparent;border:0;color:var(--muted);border-radius:9px;padding:8px 0;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
   .tab:hover{color:var(--text)}
-  .tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  .tab[aria-selected=true]{background:var(--accent);color:var(--on-accent)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 0}
   .row{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:11px 18px;border-top:1px solid var(--line)}
   .row:first-child{border-top:0}
@@ -260,11 +260,11 @@
   </section>
 
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" data-r="today" aria-selected="false">oz</button>
-    <button class="tab" role="tab" data-r="week" aria-selected="false">quest'emna</button>
-    <button class="tab" role="tab" data-r="month" aria-selected="false">mais actual</button>
-    <button class="tab" role="tab" data-r="30d" aria-selected="false">ultims 30 dis</button>
-    <button class="tab" role="tab" data-r="all" aria-selected="true">entir temp</button>
+    <button class="tab" role="tab" data-r="today" aria-selected="false" title="oz" aria-label="oz">oz</button>
+    <button class="tab" role="tab" data-r="week" aria-selected="false" title="quest'emna" aria-label="quest'emna">emna</button>
+    <button class="tab" role="tab" data-r="month" aria-selected="false" title="mais actual" aria-label="mais actual">mais</button>
+    <button class="tab" role="tab" data-r="30d" aria-selected="false" title="ultims 30 dis" aria-label="ultims 30 dis">30 dis</button>
+    <button class="tab" role="tab" data-r="all" aria-selected="true" title="entir temp" aria-label="entir temp">tut</button>
   </div>
 
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
