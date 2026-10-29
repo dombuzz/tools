@@ -13,13 +13,18 @@
   // /game spiegelt die Startseite: lädt index.html live und legt game.js obendrauf.
   // So muss nichts doppelt gepflegt werden – jede Änderung an index.html gilt auch hier.
   // Der Seitenaufruf wird als «game» gezählt; der Worker zählt «game» zu «index» (GROUP).
-  fetch('/index.html', { cache: 'no-cache' })
-    .then(r => r.ok ? r.text() : Promise.reject())
-    .then(html => {
+  // Akzentfarbe auf /game: Blau (wie der Rahmen in «Plans da lavur»), damit man sieht, dass man im Spiel-Bereich ist.
+  // game.js wird ohne Browser-Cache geladen und direkt eingebettet, damit Änderungen sofort ankommen.
+  const nc = { cache: 'no-cache' };
+  Promise.all([
+    fetch('/index.html', nc).then(r => r.ok ? r.text() : Promise.reject()),
+    fetch('/game.js', nc).then(r => r.ok ? r.text() : Promise.reject())
+  ]).then(([html, js]) => {
       html = html
+        .replace(/ff4d64/gi, '5aa6ff')
         .replace('<title>dombuzz Tools</title>', '<title>dombuzz Tools · game</title>')
         .replace('/view/index?', '/view/game?')
-        .replace(/<\/body>(?![\s\S]*<\/body>)/, '<script src="/game.js"><\/script></body>');
+        .replace(/<\/body>(?![\s\S]*<\/body>)/, () => '<script>' + js.replace(/<\/script/gi, '<\\/script') + '<\/script></body>');
       document.open(); document.write(html); document.close();
     })
     .catch(() => { location.replace('/'); });
