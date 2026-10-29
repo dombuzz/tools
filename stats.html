@@ -246,7 +246,7 @@
   const fmt = n => n.toLocaleString('de-CH');
   const EYE = '<svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   // Alle übrigen Seiten (erscheinen auch ohne Aufrufe); 'top-popup' = Klicks auf das Symbol «top Tools» in der Übersicht
-  const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'top-popup': 'top Tools (clics sin il pop-up)', 'top': 'top Tools (pagina /top)', 'lab-index': 'Lab (survista)', '404': 'Pagina betg chattada (404)' };
+  const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'game': 'Game (pagina /game)', 'top-popup': 'top Tools (clics sin il pop-up)', 'top': 'top Tools (pagina /top)', 'lab-index': 'Lab (survista)', '404': 'Pagina betg chattada (404)' };
   // Eine Rangliste zeichnen (Standard: nach Nutzungen, dann Likes); gibt die Summen zurück
   const showZero = {};
   const HEAD = [['n', 'Duvrà'], ['h', '♥'], ['v', EYE], ['p', '%']];
@@ -426,7 +426,7 @@
       const isLab = t => t.startsWith('lab-');
       const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => t === 'artitgel-challenge' ? '/' : '/' + t, views);
       const lab = draw(document.getElementById(ids[2]), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
-      const hrefs = { index: '/', 'top-popup': '/', top: '/top', 'lab-index': '/lab/', '404': '/404' };
+      const hrefs = { index: '/', game: '/game', 'top-popup': '/', top: '/top', 'lab-index': '/lab/', '404': '/404' };
       if (ids[0] === 'list') { // Favurits: ★ gesetzt im Zeitraum, darunter wie viele es aktuell markiert haben
         const fv = d.favs || {}, now = d.favsNow || {};
         const ft = [...new Set([...Object.keys(fv), ...Object.keys(now)])].filter(t => fv[t] || now[t])
