@@ -260,12 +260,12 @@ function parsePlan(pages, SVC){
 
 const SPARTEN={
   newsdesk:{name:"Newsdesk",blocks:[
-    [["Online 1",["O1","O1So","O1Du"]],["Online 2",["O2"]],["Online 3",["O3"]],["Online 4",["O4"]],["prod On",["pOn"]]],
+    [["Online 1",["O1","O1So","O1Du"]],["Online 2",["O2"]],["Online 3",["O3"]],["Online 4",["O4"]],["Prod Online",["pOn"]]],
     [["Novitads 1",["N1"]],["Novitads 2",["N2"]]],
     [["Grafica",["graf"]]],
     [["Social",["soc1"]]]],
     // all = jeden Tag besetzt, wd = nur Montag–Freitag (am Wochenende nicht geplant)
-    need:{"Online 1":"all","Online 2":"wd","Online 3":"wd","Online 4":"all","prod On":"wd"}},
+    need:{"Online 1":"all","Online 2":"wd","Online 3":"wd","Online 4":"all","Prod Online":"wd"}},
   radio:{name:"Radio",blocks:[[
     ["Mod 1",["m1","m1_s"]],["Mod 2",["m2","m2_s","mAcc"]],["Mod magazins",["m_ma"]],
     ["Prod radio 1",["p1","p1_s"]],["Prod radio 2",["p2","pV2"]],
@@ -281,7 +281,7 @@ const SPARTEN={
 ,
   producers:{name:"Producers",blocks:[[
     ["Prod radio 1",["p1","p1_s"]],["Prod radio 2",["p2","pV2"]],["Prod Actualitad",["prod"]],
-    ["prod On",["pOn"]],
+    ["Prod Online",["pOn"]],
     ["TSG producziun",["pTSG"]],["MSG producziun",["pMSG"]]]]}
 };
 const SVC=[...new Set(Object.values(SPARTEN).flatMap(s=>s.blocks.flat().flatMap(r=>r[1])))];
