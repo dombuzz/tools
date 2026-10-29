@@ -200,6 +200,38 @@ const meterDB = (db, m) => {
 };
 const recordUsage = (db, m) => db.prepare("INSERT INTO usage (day, r, w) VALUES (date('now'), ?1, ?2) ON CONFLICT(day) DO UPDATE SET r = r + ?1, w = w + ?2")
   .bind(m.r, m.w + 1).run().catch(() => {});
+// Log-Kontingent (Workers Logs, ab 1.12.2026 im Gratis-Plan 0,5 GB pro Tag für das ganze Konto, Reset 00:00 UTC).
+// Cloudflare liefert über die API nur die Anzahl Log-Einträge, nicht die Grösse: geschätzt mit Ø 5 kB pro Eintrag
+// (Wert aus dem Dashboard «Observability → Usage»). Braucht die Secrets CF_ACCOUNT_ID und CF_API_TOKEN
+// (Token mit Berechtigung «Workers Observability: Read»). Ohne Secrets bleibt «logs» leer. 10 Minuten zwischengespeichert.
+const LOG_LIMIT_BYTES = 0.5e9, LOG_EVENT_BYTES = 5e3, LOG_CACHE_MS = 10 * 60 * 1000;
+let logMem = null;
+async function logsToday(env) {
+  if (!env.CF_ACCOUNT_ID || !env.CF_API_TOKEN) return { configured: false };
+  const now = Date.now();
+  if (logMem && now - logMem.ts < LOG_CACHE_MS) return logMem.v;
+  const d = new Date(now), from = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  try {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/workers/observability/telemetry/query`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.CF_API_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        queryId: 'dombuzz-log-usage', view: 'calculations', chartType: 'aggregate', ignoreSeries: true,
+        timeframe: { from, to: now },
+        parameters: { calculations: [{ operator: 'count' }], groupBys: [{ type: 'string', value: '$metadata.service' }], limit: 20 },
+      }),
+    });
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j || j.success === false) return { configured: true, error: r.status };
+    const agg = (j.result?.calculations?.[0]?.aggregates) || [];
+    const services = agg.map(a => ({ name: String(a.groups?.[0]?.value ?? '?'), events: Math.round(a.count ?? a.value ?? 0) }))
+      .sort((a, b) => b.events - a.events);
+    const events = services.reduce((t, x) => t + x.events, 0);
+    const v = { configured: true, events, bytes: events * LOG_EVENT_BYTES, limitBytes: LOG_LIMIT_BYTES, estimated: true, services };
+    logMem = { ts: now, v };
+    return v;
+  } catch (e) { return { configured: true, error: 'fetch' }; }
+}
 // Zwischenspeicher (2 Minuten) für die Statistik-Abfragen: zuerst im Speicher des Workers, sonst eine Zeile in der Tabelle «cache»
 const CACHE_MS = 2 * 60 * 1000, mem = new Map();
 async function cached(request, env, parts, url, compute) {
@@ -265,7 +297,7 @@ export default {
       if (request.method === 'GET' && parts[0] === 'usage' && parts.length === 1) {
         await ensureViews(env);
         const { results: [u] } = await env.DB.prepare("SELECT day, r, w FROM usage WHERE day = date('now')").all();
-        res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE }, request);
+        res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE, logs: await logsToday(env) }, request);
       } else if (request.method === 'GET' && (parts[0] === 'ranking' || parts[0] === 'hourly') && parts.length === 1) {
         res = await cached(request, env, parts, url, () => handle(request, env));
       } else res = await handle(request, env, ctx);
