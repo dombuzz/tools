@@ -46,7 +46,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 textarea,input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
 textarea{width:100%;resize:vertical}
 input[type=number]{width:70px}
-#drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;cursor:pointer}
+#drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--bg)}
+#drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
 #drop:hover,#drop.over{border-color:var(--accent)}
 .chunks{display:grid;gap:8px;margin-top:10px}
 .chunk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:var(--code);border-radius:8px}
@@ -95,7 +96,7 @@ h1 .acc{color:var(--accent)}
 
 <section class="step">
   <h2><span class="num">1</span> Chargiar SRT</h2>
-  <div id="drop" tabindex="0" role="button" aria-label="Tscherner file SRT">Trair qua il file SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" hidden></div>
+  <div id="drop" tabindex="0" role="button" aria-label="Tscherner file SRT">Trair qua il file u <u>cliccar</u><small>SRT</small><input id="file" type="file" accept=".srt,text/plain" hidden></div>
   <p id="loadInfo" class="muted"></p>
 </section>
 
