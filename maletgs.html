@@ -152,6 +152,19 @@
   .edit .ctl label:hover{ color:var(--accent); }
   .secreset{ background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:6px;
     padding:0 7px; font-size:0.85rem; line-height:1.5; margin-left:6px; vertical-align:1px; }
+  .guiderow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .guiderow .ghost{ padding:7px 10px; font-size:.82rem; }
+  .gstate{ font-size:.78rem; color:var(--muted); }
+  .guiderow .link{ background:none; border:none; padding:0; color:var(--accent); font-size:.8rem; font-weight:600; text-decoration:underline; cursor:pointer; }
+  .guiderow .link:hover{ background:none; }
+  .gmodal{ position:fixed; inset:0; z-index:80; background:rgba(0,0,0,.72); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .gbox{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; width:min(1200px, 100%); max-height:100%; display:flex; flex-direction:column; gap:10px; }
+  .ghead b{ font-size:.95rem; }
+  .ghead p{ margin:4px 0 0; font-size:.82rem; color:var(--muted); line-height:1.45; }
+  .gv{ color:#ff4d64; font-weight:600; } .gh{ color:#4da3ff; font-weight:600; }
+  .gwrap{ display:flex; justify-content:center; min-height:0; }
+  #gCanvas{ display:block; max-width:100%; touch-action:none; cursor:crosshair; border-radius:6px; }
+  .gfoot{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .edit h3.resettable{ cursor:pointer; user-select:none; }
   .edit h3.resettable:hover{ color:var(--accent); }
   .secreset:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
@@ -318,6 +331,11 @@
             <h3>Perspectiva <button type="button" class="secreset" data-reset="pv,ph" title="Reset perspectiva" aria-label="Reset perspectiva">↺</button></h3>
           <div class="ctl"><div class="top"><label for="c_pv">Vertical</label><span class="wbhint">survart pli lad ↔ sutvart pli lad</span><span class="val" data-for="pv" title="Reset">0</span></div><input type="range" id="c_pv" data-c="pv" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_ph">Orizontal</label><span class="wbhint">sanestra ↔ dretga pli grond</span><span class="val" data-for="ph" title="Reset">0</span></div><input type="range" id="c_ph" data-c="ph" min="-100" max="100" step="1" value="0"></div>
+            <div class="guiderow">
+              <button type="button" class="ghost" id="gOpen" title="Lingias tras ils urs che duessan esser verticals u orizontals">📐 Lingias da guida</button>
+              <span class="gstate" id="gState"></span>
+              <button type="button" class="link" id="gOff" hidden>allontanar</button>
+            </div>
           </div>
         </div>
 
@@ -395,6 +413,20 @@
         <span class="msg" id="cMsg"></span>
       </div>
     </section>
+  </div>
+  <div class="gmodal" id="gModal" hidden role="dialog" aria-modal="true" aria-labelledby="gTitle">
+    <div class="gbox">
+      <div class="ghead"><b id="gTitle">Lingias da guida</b>
+        <p>Trair lingias lung ils urs che duessan esser <span class="gv">verticals</span> (p.ex. paraids u chantuns da chasa) – ideal 2. Opziunal 2 lingias <span class="gh">orizontalas</span>. Spustar ils puncts finals per adattar, dubel clic sin ina lingia per la stizzar.</p></div>
+      <div class="gwrap"><canvas id="gCanvas"></canvas></div>
+      <div class="gfoot">
+        <span class="msg" id="gMsg"></span>
+        <span class="spacer"></span>
+        <button type="button" class="ghost" id="gClear">Stizzar tut</button>
+        <button type="button" class="ghost" id="gCancel">Interrumper</button>
+        <button type="button" id="gApply">Applitgar</button>
+      </div>
+    </div>
   </div>
   <input type="file" id="file" accept="image/*" multiple hidden>
   <input type="file" id="cFile" accept="image/*" multiple hidden>
@@ -476,14 +508,14 @@ function quadOf(w, h, pv, ph){
   const ti = Math.max(tv, 0) * w, bi = Math.max(-tv, 0) * w, li = Math.max(th, 0) * h, ri = Math.max(-th, 0) * h;
   return [[ti, li], [w - ti, ri], [w - bi, h - ri], [bi, h - li]];
 }
-function persp(src, pv, ph){
-  if (!pv && !ph) return src;
+function persp(src, pv, ph, gq){
+  if (!pv && !ph && !gq) return src;
   const [w, h] = dimsOf(src);
   const sc = document.createElement('canvas'); sc.width = w; sc.height = h;
   const sx = sc.getContext('2d', { willReadFrequently:true }); sx.drawImage(src, 0, 0);
   const S = sx.getImageData(0, 0, w, h).data, out = sx.createImageData(w, h), D = out.data;
   // Einheitsquadrat → Viereck (Heckbert)
-  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = quadOf(w, h, pv, ph);
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = gq ? gq.map(([u, v]) => [u * w, v * h]) : quadOf(w, h, pv, ph);
   const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
   const den = dx1 * dy2 - dx2 * dy1;
   const g = (dx3 * dy2 - dx2 * dy3) / den, hh = (dx1 * dy3 - dx3 * dy1) / den;
@@ -510,10 +542,78 @@ function persp(src, pv, ph){
 }
 // volle Auflösung mit Perspektive (zwischengespeichert)
 function srcFull(L){
-  if (!L.pv && !L.ph) return L.src;
-  const key = L.pv + ',' + L.ph;
+  if (!L.pv && !L.ph && !L.gq) return L.src;
+  const key = L.pv + ',' + L.ph + ',' + JSON.stringify(L.gq || 0);
   if (L.wsrc && L.wkey === key && L.wfrom === L.src) return L.wsrc;
-  L.wkey = key; L.wfrom = L.src; return L.wsrc = persp(L.src, L.pv, L.ph);
+  L.wkey = key; L.wfrom = L.src; return L.wsrc = persp(L.src, L.pv, L.ph, L.gq);
+}
+
+/* Lingias da guida (wie «Upright – Geführt» in Lightroom / ShiftN):
+   Linien, die senkrecht bzw. waagrecht sein sollten, ergeben eine projektive Korrektur.
+   Rückgabe: Viereck im Originalbild (0–1), das auf die ganze Fläche gezogen wird, oder null. */
+const isVert = g => Math.abs(g.y2 - g.y1) >= Math.abs(g.x2 - g.x1);
+function guideQuad(guides, w, h){
+  const X = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const P = g => [[(g.x1 - .5) * w, (g.y1 - .5) * h, 1], [(g.x2 - .5) * w, (g.y2 - .5) * h, 1]];
+  const line = g => { const [a, b] = P(g); return X(a, b); };
+  const vp = set => {
+    if (!set.length) return null;
+    if (set.length === 1){ const [a, b] = P(set[0]); return [b[0] - a[0], b[1] - a[1], 0]; }
+    const v = X(line(set[0]), line(set[1]));
+    if (Math.abs(v[2]) < 1e-9 * Math.hypot(v[0], v[1])) v[2] = 0;   // parallel: Fluchtpunkt im Unendlichen
+    return v;
+  };
+  const vv = vp(guides.filter(isVert)), vh = vp(guides.filter(g => !isVert(g)));
+  if (!vv && !vh) return null;
+  // 1) Fluchtpunkte ins Unendliche schieben
+  let l = null;
+  if (vv && vh) l = X(vv, vh);
+  else if (vv && vv[2]) l = [0, vv[2], -vv[1]];
+  else if (vh && vh[2]) l = [vh[2], 0, -vh[0]];
+  let M = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  if (l && Math.abs(l[2]) > 1e-12 && (l[0] || l[1])) M = [1, 0, 0, 0, 1, 0, l[0] / l[2], l[1] / l[2], 1];
+  const ap = (m, p) => [m[0] * p[0] + m[1] * p[1] + m[2] * p[2], m[3] * p[0] + m[4] * p[1] + m[5] * p[2], m[6] * p[0] + m[7] * p[1] + m[8] * p[2]];
+  const mm = (a, b) => { const r = []; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) r[i * 3 + j] = a[i * 3] * b[j] + a[i * 3 + 1] * b[3 + j] + a[i * 3 + 2] * b[6 + j]; return r; };
+  // 2) Richtungen senkrecht / waagrecht stellen (affin)
+  let dv = vv && ap(M, vv), dh = vh && ap(M, vh);
+  const unit = d => { const n = Math.hypot(d[0], d[1]) || 1; return [d[0] / n, d[1] / n, 0]; };
+  if (dv){ dv = unit(dv); if (dv[1] < 0) dv = dv.map(v => -v); }
+  if (dh){ dh = unit(dh); if (dh[0] < 0) dh = dh.map(v => -v); }
+  let A;
+  if (dv && dh){
+    const det = dh[0] * dv[1] - dv[0] * dh[1]; if (Math.abs(det) < 1e-12) return null;
+    A = [dv[1] / det, -dv[0] / det, 0, -dh[1] / det, dh[0] / det, 0, 0, 0, 1];
+  } else if (dv) A = [1, -dv[0] / dv[1], 0, 0, 1, 0, 0, 0, 1];
+  else A = [1, 0, 0, -dh[1] / dh[0], 1, 0, 0, 0, 1];
+  const Hm = mm(A, M);
+  // Ecken des Bildes abbilden
+  const C = [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
+  const Q = [];
+  for (const [x, y] of C){ const r = ap(Hm, [x, y, 1]); if (r[2] <= 1e-9) return null; Q.push([r[0] / r[2], r[1] / r[2]]); }
+  // 3) grösstes Rechteck im Seitenverhältnis des Bildes innerhalb des Vierecks
+  const sgn = Math.sign((Q[1][0] - Q[0][0]) * (Q[2][1] - Q[1][1]) - (Q[1][1] - Q[0][1]) * (Q[2][0] - Q[1][0]));
+  const inside = (x, y) => Q.every((a, i) => { const b = Q[(i + 1) % 4]; return sgn * ((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0])) >= -1e-9; });
+  const fits = (cx, cy, k) => inside(cx - k * w / 2, cy - k * h / 2) && inside(cx + k * w / 2, cy - k * h / 2) && inside(cx + k * w / 2, cy + k * h / 2) && inside(cx - k * w / 2, cy + k * h / 2);
+  const xs = Q.map(q => q[0]), ys = Q.map(q => q[1]);
+  const bx0 = Math.min(...xs), bx1 = Math.max(...xs), by0 = Math.min(...ys), by1 = Math.max(...ys);
+  let best = null;
+  const N = 14;
+  for (let i = 1; i < N; i++) for (let j = 1; j < N; j++){
+    const cx = bx0 + (bx1 - bx0) * i / N, cy = by0 + (by1 - by0) * j / N;
+    if (!inside(cx, cy)) continue;
+    let lo = 0, hi = Math.max(bx1 - bx0, by1 - by0) / Math.min(w, h) * 2;
+    for (let it = 0; it < 30; it++){ const m = (lo + hi) / 2; if (fits(cx, cy, m)) lo = m; else hi = m; }
+    if (!best || lo > best.k) best = { cx, cy, k: lo };
+  }
+  if (!best || best.k <= 1e-6) return null;
+  // Rechteckecken zurück ins Originalbild
+  const inv = m => { const [a, b, c, d, e, f, g, h2, i] = m, A0 = e * i - f * h2, B0 = -(d * i - f * g), C0 = d * h2 - e * g, det = a * A0 + b * B0 + c * C0;
+    return [A0 / det, -(b * i - c * h2) / det, (b * f - c * e) / det, B0 / det, (a * i - c * g) / det, -(a * f - c * d) / det, C0 / det, -(a * h2 - b * g) / det, (a * e - b * d) / det]; };
+  const Hi = inv(Hm), { cx, cy, k } = best;
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
+    const r = ap(Hi, [cx + sx * k * w / 2, cy + sy * k * h / 2, 1]);
+    return [r[0] / r[2] / w + .5, r[1] / r[2] / h + .5];
+  });
 }
 
 /* Ausrichtung: 90°-Schritte und Spiegeln ergeben eine neue Quelle (volle Auflösung) */
@@ -540,7 +640,7 @@ function reprev(L){
   const pc = document.createElement('canvas'); pc.width = pw; pc.height = ph;
   const px = pc.getContext('2d', { willReadFrequently:true }); px.imageSmoothingQuality = 'high';
   px.drawImage(scaled(L.src, pw, ph), 0, 0, pw, ph);
-  const wc = persp(pc, L.pv, L.ph);
+  const wc = persp(pc, L.pv, L.ph, L.gq);
   L.base = wc.getContext('2d', { willReadFrequently:true }).getImageData(0, 0, pw, ph);
   recolor(L);
 }
@@ -786,7 +886,7 @@ list.addEventListener('pointercancel', e => { if (rowDrag && rowDrag.id === e.po
 function duplicate(L){
   if (layers.length >= MAX) { setMsg(`Maximalmain ${MAX} layers.`, true); return; }
   const C = { id: nextId++, name: L.name.replace(/ \(copia( \d+)?\)$/, '') + ' (copia)', url: L.url, img: L.img,
-    src: L.src, base: L.base, q: L.q, fh: L.fh, fv: L.fv, ang: L.ang, pv: L.pv, ph: L.ph, col: { ...L.col },
+    src: L.src, base: L.base, q: L.q, fh: L.fh, fv: L.fv, ang: L.ang, pv: L.pv, ph: L.ph, gq: L.gq, guides: L.guides, col: { ...L.col },
     iw: L.iw, ih: L.ih, s: L.s, x: L.x, y: L.y, mode: L.mode, blur: L.blur, visible: L.visible, locked: false };
   C.el = document.createElement('canvas'); C.el.className = 'lay';
   clip.appendChild(C.el);
@@ -1172,6 +1272,9 @@ function syncEdit(){
       document.querySelector(`.val[data-for="${id}"]`).textContent = id === 'ang' ? (vals.ang > 0 ? '+' : '') + vals.ang.toFixed(1) + '°' : vals[id] + (id === 'hue' ? '°' : '');
     }
   }
+  const gs = A && A.gq && A.guides ? A.guides : null;
+  $('gState').textContent = gs ? `activ: ${gs.filter(isVert).length} vert., ${gs.filter(g => !isVert(g)).length} oriz.` : '';
+  $('gOff').hidden = !gs;
   updateSizes();
 }
 let colRaf = 0;
@@ -1202,7 +1305,7 @@ document.querySelectorAll('[data-edit] input[type=range]').forEach(inp => inp.ad
   const id = inp.dataset.c;
   if (id === 'ang'){ A.ang = Math.round(+inp.value * 10) / 10; if (isCell(A)){ syncEdit(); paint(); } else render(); return; }
   if (id === 'pv' || id === 'ph'){
-    A[id] = +inp.value; syncEdit();
+    A[id] = +inp.value; A.gq = null; syncEdit();
     cancelAnimationFrame(colRaf);
     colRaf = requestAnimationFrame(() => { if (isCell(A)){ cellOrient(A); paint(); renderPool(); } else { reprev(A); render(); updateThumb(A); } });
     return;
@@ -1223,6 +1326,7 @@ document.querySelectorAll('.secreset').forEach(b => b.onclick = () => {
   const ids = b.dataset.reset.split(','), pers = ids.includes('pv');
   if (ids[0] === 'ang'){ A.ang = 0; syncEdit(); if (isCell(A)) paint(); else render(); return; }
   ids.forEach(id => { if (pers) A[id] = 0; else A.col[id] = 0; });
+  if (pers) A.gq = null;
   if (isCell(A)){ if (pers) cellOrient(A); else cellRecolor(A); paint(); syncEdit(); return; }
   if (pers) reprev(A); else recolor(A); render(); updateThumb(A); syncEdit();
 });
@@ -1240,8 +1344,98 @@ function updateThumb(L){
   cx.clearRect(0, 0, 88, 88);
   cx.drawImage(L.el, (88 - L.el.width * tk) / 2, (88 - L.el.height * tk) / 2, L.el.width * tk, L.el.height * tk);
 }
+/* Editur da lingias da guida */
+const gModal = $('gModal'), gCv = $('gCanvas'), gCx = gCv.getContext('2d');
+let gT = null, gLines = [], gImg = null, gDrag = null;
+function gSource(A){
+  if (isCell(A)) return orientCanvas(A.orig, A.q, A.fh, A.fv, 1800);
+  return scaled(A.src, 1800, 1800);
+}
+function gLayout(){
+  const [iw, ih] = dimsOf(gImg), dpr = window.devicePixelRatio || 1;
+  const maxW = Math.min(1170, window.innerWidth - 60), maxH = window.innerHeight - 230;
+  const k = Math.min(maxW / iw, maxH / ih, 1.5);
+  gCv.style.width = Math.round(iw * k) + 'px'; gCv.style.height = Math.round(ih * k) + 'px';
+  gCv.width = Math.round(iw * k * dpr); gCv.height = Math.round(ih * k * dpr);
+  gDraw();
+}
+function gDraw(){
+  const W2 = gCv.width, H2 = gCv.height, dpr = window.devicePixelRatio || 1;
+  gCx.clearRect(0, 0, W2, H2); gCx.drawImage(gImg, 0, 0, W2, H2);
+  for (const g of gLines){
+    const col = isVert(g) ? '#ff4d64' : '#4da3ff', x1 = g.x1 * W2, y1 = g.y1 * H2, x2 = g.x2 * W2, y2 = g.y2 * H2;
+    // Linie über den ganzen Bildbereich verlängert (dünn) + Strecke (dick)
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ex = dx / L * (W2 + H2), ey = dy / L * (W2 + H2);
+    gCx.lineCap = 'round';
+    gCx.strokeStyle = 'rgba(0,0,0,.5)'; gCx.lineWidth = 3 * dpr; gCx.beginPath(); gCx.moveTo(x1 - ex, y1 - ey); gCx.lineTo(x2 + ex, y2 + ey); gCx.stroke();
+    gCx.strokeStyle = col; gCx.globalAlpha = .55; gCx.lineWidth = 1.2 * dpr; gCx.stroke(); gCx.globalAlpha = 1;
+    gCx.strokeStyle = 'rgba(0,0,0,.6)'; gCx.lineWidth = 5 * dpr; gCx.beginPath(); gCx.moveTo(x1, y1); gCx.lineTo(x2, y2); gCx.stroke();
+    gCx.strokeStyle = col; gCx.lineWidth = 2.5 * dpr; gCx.stroke();
+    for (const [x, y] of [[x1, y1], [x2, y2]]){ gCx.beginPath(); gCx.arc(x, y, 7 * dpr, 0, Math.PI * 2); gCx.fillStyle = '#fff'; gCx.fill(); gCx.lineWidth = 3 * dpr; gCx.strokeStyle = col; gCx.stroke(); }
+  }
+}
+const gPt = e => { const r = gCv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, r]; };
+gCv.addEventListener('pointerdown', e => {
+  const [u, v, r] = gPt(e); gCv.setPointerCapture(e.pointerId);
+  // Endpunkt in der Nähe? (16 px)
+  for (const g of gLines) for (const end of [1, 2]){
+    if (Math.hypot((g['x' + end] - u) * r.width, (g['y' + end] - v) * r.height) < 16){ gDrag = { g, end }; return; }
+  }
+  const g = { x1: u, y1: v, x2: u, y2: v }; gLines.push(g); gDrag = { g, end: 2, fresh: true }; gDraw();
+});
+gCv.addEventListener('pointermove', e => {
+  if (!gDrag) return; const [u, v] = gPt(e);
+  gDrag.g['x' + gDrag.end] = Math.max(0, Math.min(1, u)); gDrag.g['y' + gDrag.end] = Math.max(0, Math.min(1, v)); gDraw();
+});
+const gUp = () => {
+  if (!gDrag) return; const { g, fresh } = gDrag, r = gCv.getBoundingClientRect(); gDrag = null;
+  if (Math.hypot((g.x2 - g.x1) * r.width, (g.y2 - g.y1) * r.height) < 15){ gLines.splice(gLines.indexOf(g), 1); gDraw(); return; }
+  if (fresh){
+    // höchstens 2 Linien pro Richtung: die älteste derselben Richtung fällt weg
+    const same = gLines.filter(o => isVert(o) === isVert(g));
+    if (same.length > 2) gLines.splice(gLines.indexOf(same[0]), 1);
+  }
+  $('gMsg').textContent = ''; gDraw();
+};
+gCv.addEventListener('pointerup', gUp); gCv.addEventListener('pointercancel', gUp);
+gCv.addEventListener('dblclick', e => {
+  const [u, v, r] = gPt(e), px = u * r.width, py = v * r.height;
+  let bi = -1, bd = 12;
+  gLines.forEach((g, i) => {
+    const ax = g.x1 * r.width, ay = g.y1 * r.height, bx = g.x2 * r.width, by = g.y2 * r.height, L2 = (bx - ax) ** 2 + (by - ay) ** 2 || 1;
+    const t = Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / L2)), d = Math.hypot(px - ax - t * (bx - ax), py - ay - t * (by - ay));
+    if (d < bd){ bd = d; bi = i; }
+  });
+  if (bi >= 0){ gLines.splice(bi, 1); gDraw(); }
+});
+function gClose(){ gModal.hidden = true; gT = null; gImg = null; window.removeEventListener('resize', gLayout); document.removeEventListener('keydown', gKey); }
+function gKey(e){ if (e.key === 'Escape') gClose(); }
+function gRefresh(A){
+  if (isCell(A)){ cellOrient(A); paint(); renderPool(); } else { reprev(A); render(); updateThumb(A); }
+  syncEdit();
+}
+$('gOpen').onclick = () => {
+  const A = editTarget(); if (!A || A.locked) return;
+  gT = A; gImg = gSource(A); gLines = (A.guides || []).map(g => ({ ...g }));
+  $('gMsg').textContent = ''; gModal.hidden = false; gLayout();
+  window.addEventListener('resize', gLayout); document.addEventListener('keydown', gKey);
+};
+$('gCancel').onclick = gClose;
+gModal.addEventListener('pointerdown', e => { if (e.target === gModal) gClose(); });
+$('gClear').onclick = () => { gLines = []; gDraw(); };
+$('gApply').onclick = () => {
+  const A = gT; if (!A) return;
+  if (!gLines.length){ A.gq = null; A.guides = []; gClose(); gRefresh(A); return; }
+  const [iw, ih] = dimsOf(gImg), q = guideQuad(gLines, iw, ih);
+  if (!q){ const m = $('gMsg'); m.textContent = 'Questas lingias na lubeschan nagina correctura – stizza ina u emprova puspè.'; m.classList.add('err'); return; }
+  A.gq = q; A.guides = gLines.map(g => ({ ...g })); A.pv = 0; A.ph = 0;
+  gClose(); gRefresh(A);
+};
+$('gOff').onclick = () => { const A = editTarget(); if (!A) return; A.gq = null; A.guides = []; gRefresh(A); };
+
 function reorient(fn){
   const A = editTarget(); if (!A || A.locked) return;
+  A.gq = null; A.guides = [];   // Linien passen nach Drehen/Spiegeln nicht mehr
   if (isCell(A)){ fn(A); cellOrient(A); A.fx = A.fy = 0; paint(); syncEdit(); return; }
   fn(A); orient(A); refreshOrigFmt(); fitLayer(A); renderList(); render();
 }
@@ -1440,7 +1634,7 @@ function orientCanvas(im, q, fh, fv, maxSide){
 function cellOrient(C){
   const [w0, h0] = dimsOf(C.orig);
   C.iw = C.q % 2 ? h0 : w0; C.ih = C.q % 2 ? w0 : h0;
-  const pc = persp(orientCanvas(C.orig, C.q, C.fh, C.fv, CPREV), C.pv, C.ph);
+  const pc = persp(orientCanvas(C.orig, C.q, C.fh, C.fv, CPREV), C.pv, C.ph, C.gq);
   C.base = pc.getContext('2d').getImageData(0, 0, pc.width, pc.height);
   C.prev = pc; cellRecolor(C);
 }
@@ -1453,7 +1647,7 @@ function cellRecolor(C){
 // volle Auflösung erst beim Export (zwischengespeichert, bis die Part wieder bearbeitet wird)
 function cellFull(C){
   if (C.full) return C.full;
-  const c = persp(orientCanvas(C.orig, C.q, C.fh, C.fv, 6000), C.pv, C.ph);
+  const c = persp(orientCanvas(C.orig, C.q, C.fh, C.fv, 6000), C.pv, C.ph, C.gq);
   if (!isNeutral(C.col)){ const x = c.getContext('2d', { willReadFrequently:true }), d = x.getImageData(0, 0, c.width, c.height); applyColor(d, d, params(C.col)); x.putImageData(d, 0, 0); }
   return C.full = c;
 }
@@ -1680,7 +1874,7 @@ function colFromLayers(){
   for (const arr of [cells, pool]) arr.forEach((C, i) => {
     if (!C || C.lid == null) return;
     const L = src.find(l => l.id === C.lid);
-    if (L && L.ver + '|' + (L.ang || 0) !== C.ver){ const N = fromLayer(L); N.z = C.z; N.fx = C.fx; N.fy = C.fy; Object.assign(N, { q: C.q, fh: C.fh, fv: C.fv, pv: C.pv, ph: C.ph, col: { ...C.col } }); cellOrient(N); arr[i] = N; }
+    if (L && L.ver + '|' + (L.ang || 0) !== C.ver){ const N = fromLayer(L); N.z = C.z; N.fx = C.fx; N.fy = C.fy; Object.assign(N, { q: C.q, fh: C.fh, fv: C.fv, pv: C.pv, ph: C.ph, gq: C.gq, guides: C.guides, col: { ...C.col } }); cellOrient(N); arr[i] = N; }
   });
   const neu = src.filter(L => !seen.has(L.id));
   neu.forEach(L => seen.add(L.id));
