@@ -24,8 +24,8 @@
   var show = function () {
     if (document.getElementById('dbz-testbadge')) return;
     var b = document.createElement('div'); b.id = 'dbz-testbadge';
-    b.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:9999;display:flex;align-items:center;gap:8px;padding:5px 6px 5px 11px;border-radius:999px;background:#ffb86b;color:#121214;font:600 12px/1.2 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)';
-    b.innerHTML = '<span>Modus test – betg dumbrà</span><button type="button" title="Terminar il modus test" aria-label="Terminar il modus test" style="border:0;background:rgba(0,0,0,.15);color:inherit;border-radius:999px;width:20px;height:20px;padding:0;font:700 12px/1 system-ui;cursor:pointer">✕</button>';
+    b.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:9999;display:flex;align-items:center;gap:8px;padding:5px 6px 5px 11px;border-radius:999px;background:#ffb86b;color:#121214;border:2px solid #ff4d64;font:600 12px/1.2 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+    b.innerHTML = '<span>Conturn da test – naginas statisticas</span><button type="button" title="Terminar il conturn da test" aria-label="Terminar il conturn da test" style="border:0;background:rgba(0,0,0,.15);color:inherit;border-radius:999px;width:20px;height:20px;padding:0;font:700 12px/1 system-ui;cursor:pointer">✕</button>';
     b.querySelector('button').onclick = function () { try { localStorage.removeItem(K); } catch (e) {} location.reload(); };
     document.body.appendChild(b);
   };

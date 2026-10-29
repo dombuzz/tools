@@ -600,7 +600,8 @@
           <div class="name"><a href="${t === 'artitgel-challenge' ? '/' : '/' + esc(t)}">${esc(NAMES[t] || t)}</a></div>
           <span class="cnt" title="${fmt(fv[t] || 0)} giadas marcà en quest temp · actualmain tar ${fmt(now[t] || 0)}">★ ${fmt(fv[t] || 0)}<small>actualmain ${fmt(now[t] || 0)}</small></span></div>`).join('')
           : '<div class="msg">Anc nagins favurits en quest temp.</div>';
-        document.getElementById('favmeta').textContent = `${fmt(d.favsTotal || 0)} giadas marcà sco favurit`;
+        const fc = d.favClients || 0, fp = d.favClientsPeriod || 0;
+        document.getElementById('favmeta').textContent = `${fmt(d.favsTotal || 0)} giadas marcà sco favurit · ${fmt(fp)} ${fp === 1 ? 'apparat' : 'apparats'} en quest temp · ${fmt(fc)} ${fc === 1 ? 'apparat ha' : 'apparats han'} actualmain favurits`;
       }
       document.getElementById(ids[1]).innerHTML = Object.keys(OTHER).map(t => `<div class="row" data-t="${esc(t)}"><span class="rank">·</span>
         <div class="name"><a href="${hrefs[t]}">${esc(OTHER[t])}</a></div>
