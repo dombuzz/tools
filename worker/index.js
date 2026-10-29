@@ -40,10 +40,11 @@ const NAMES = {
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 // «Links d'artitgels»: die frühere Beta-Seite /artitgel-beta zählt zu /artitgel
 // «Magazin / Il di / #mument»: das frühere Einzeltool /mument zählt zu /visual
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual' };
+// «Elavurar maletgs»: die Einzeltools im Hintergrund (/colurs, /rotar, /ebenas) zählen zu /layers
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', colurs: 'layers', rotar: 'layers', ebenas: 'layers' };
 const grp = t => GROUP[t] || t;
-// Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst und Tools im Hintergrund)
-const NO_STATS = new Set(['stats', 'colurs', 'ebenas', 'rotar']);
+// Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
+const NO_STATS = new Set(['stats']);
 const NO_STATS_SQL = `tool NOT IN (${[...NO_STATS].map(t => `'${t}'`).join(', ')})`;
 // Modus test: Einträge eines Geräts (cid) bis zum Zeitpunkt, an dem es den Testmodus zuletzt gemeldet hat, nicht zählen (auch rückwirkend)
 const EX = t => `NOT EXISTS (SELECT 1 FROM excl e WHERE e.cid = ${t}.cid AND ${t}.ts <= e.ts)`;
