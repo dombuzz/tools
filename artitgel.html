@@ -60,6 +60,9 @@ input.txt:focus{border-color:var(--accent)}
 .legend dt{font-weight:600;color:var(--text)}
 .legend dd{margin:0}
 .legend p{margin:10px 0 0}
+.pub{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;vertical-align:1px}
+.pub.no{color:var(--warn);border:1px solid var(--warn)}
+.pub.ok{color:var(--ok);border:1px solid var(--ok)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -92,7 +95,7 @@ input.txt:focus{border-color:var(--accent)}
       <dl>
         <dt>Prevista</dt><dd>Prevista da l'artitgel en il CMS – be cun login dal CMS.</dd>
         <dt>Elavurar</dt><dd>L'artitgel en il CMS per elavurar – be cun login dal CMS.</dd>
-        <dt>Link URN</dt><dd>Link permanent cun l'ID (rtr.ch/article/…). Cumpara sut «Link uffizial», uschè ditg che l'artitgel n'è anc betg publitgà – per newsletters e posts da social media planisads.</dd>
+        <dt>URN-Link</dt><dd>Link permanent cun l'ID (rtr.ch/article/…). Cumpara empè dal «Link uffizial», uschè ditg che l'artitgel n'è anc betg publitgà – per newsletters e posts da social media planisads.</dd>
         <dt>Link uffizial</dt><dd>La URL cun il titel da l'artitgel. Datti be, sche l'artitgel è gia publitgà.</dd>
       </dl>
       <p>Cun ina URL publica sco input mussa il tool be «Prevista» ed «Elavurar».</p>
@@ -126,7 +129,8 @@ input.txt:focus{border-color:var(--accent)}
   const esc = v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function say(html, warn) { const s = $('status'); s.innerHTML = html; s.classList.toggle('warn', !!warn); }
   function status() {
-    say(`Enconuschì: ${KIND[kind]}${kind !== 'text' && portal !== DEF ? ` · portal <code>${esc(portal)}</code>` : ''} · <code>${id}</code>` + (title ? `<br>«${esc(title)}»` : ''));
+    const pub = kind === 'text' ? '' : textState === 'ok' ? ' <span class="pub ok">Publitgà</span>' : textState === 'none' ? ' <span class="pub no">Anc betg publitgà</span>' : '';
+    say(`Enconuschì: ${KIND[kind]}${kind !== 'text' && portal !== DEF ? ` · portal <code>${esc(portal)}</code>` : ''} · <code>${id}</code>${pub}` + (title ? `<br>«${esc(title)}»` : ''));
   }
 
   async function lookup(q, my) {
@@ -189,6 +193,8 @@ input.txt:focus{border-color:var(--accent)}
     const box = $('url');
     // Link uffizial noch nicht da (Artikel nicht publiziert bzw. Server weg): stattdessen den Link URN zeigen und kopierbar machen
     const unpub = tab === 'text' && (textState === 'none' || textState === 'err');
+    // nicht publiziert: Tab heisst «URN-Link» statt «Link uffizial»
+    document.querySelector('.tab[data-k=text]').textContent = textState === 'none' || textState === 'err' ? 'URN-Link' : 'Link uffizial';
     const u = unpub ? `${RTR}/article/${id}` : link(tab);
     const waiting = tab === 'text' && textState === 'wait';
     box.classList.toggle('wait', waiting);
