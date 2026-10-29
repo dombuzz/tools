@@ -157,6 +157,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
           <button type="button" data-s="radio">Radio</button>
           <button type="button" data-s="televisiun">Televisiun</button>
           <button type="button" data-s="ondemand">On demand</button>
+          <button type="button" data-s="producers">Producers</button>
         </div>
       </div>
       <label class="field" for="from">A partir da
@@ -277,6 +278,11 @@ const SPARTEN={
   ondemand:{name:"On demand",blocks:[[
     ["Clic",["Clic"]],["Ils Dus Da Nus",["DusN","I2DN"]],["On demand divertiment",["oDdi"]],["On demand societad e cultura",["oDs&"]],
     ["Social",["soc1"]]]]}
+,
+  producers:{name:"Producers",blocks:[[
+    ["Prod radio 1",["p1","p1_s"]],["Prod radio 2",["p2","pV2"]],["Prod Actualitad",["prod"]],
+    ["prod On",["pOn"]],
+    ["TSG producziun",["pTSG"]],["MSG producziun",["pMSG"]]]]}
 };
 const SVC=[...new Set(Object.values(SPARTEN).flatMap(s=>s.blocks.flat().flatMap(r=>r[1])))];
 const SVCL=new Set(SVC.map(c=>c.toLowerCase()));
