@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark light">
+<script src="/theme.js"></script>
+<title>Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Cg fill='white'%3E%3Crect x='20' y='20' width='26' height='26' rx='5'/%3E%3Crect x='54' y='20' width='26' height='26' rx='5'/%3E%3Crect x='20' y='54' width='26' height='26' rx='5'/%3E%3Crect x='54' y='54' width='26' height='26' rx='5' opacity='.55'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* Dashboard: interne Übersicht (Variante B). Zugang mit dem Passwort von /feedback. Kein like.js, keine Zählung, nicht auf /stats. */
+:root{
+  --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+  --accent:#ff4d64; --border:#2f2f34; --mono:#26262a; --ok:#4caf6f; --err:#ff6b7d; --warn:#ffb86b;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 16px;padding-block:40px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.wrap>*{min-width:0}
+a{color:inherit}
+.homelink{color:var(--muted);text-decoration:none;font-size:.85rem}
+.homelink:hover{color:var(--text)}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+h1{font-size:1.4rem;margin:4px 0 0;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.top small{color:var(--muted);font-size:.82rem;display:flex;gap:10px;align-items:center}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;background:var(--accent);color:#121214;cursor:pointer}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500;padding:5px 10px;font-size:.8rem}
+button.ghost:hover{color:var(--text)}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+form.login{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=password]{flex:1 1 220px;font:inherit;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
+label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
+.msg{font-size:.88rem;color:var(--muted);min-height:1.2em;margin:10px 0 0}
+.msg.err{color:var(--err)}
+#view:not([hidden]){display:flex;flex-direction:column;gap:14px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Kennzahlen */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;text-decoration:none;transition:border-color .15s}
+a.kpi:hover{border-color:rgba(255,77,100,.55)}
+.kpi label{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;cursor:inherit}
+.kpi .v{font-size:1.55rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.kpi .d{font-size:.75rem;color:var(--muted);line-height:1.35}
+.kpi .d.up{color:var(--ok)}
+.kpi .d.down{color:var(--err)}
+.kpi.alert{border-color:rgba(255,77,100,.6)}
+.kpi.alert .v{color:var(--accent)}
+.bar{height:6px;border-radius:3px;background:var(--mono);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.bar.ok i{background:var(--ok)}
+.sec-l{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
+.sec-l a{text-transform:none;letter-spacing:0;font-weight:500;font-size:.8rem;text-decoration:none}
+.sec-l a:hover{color:var(--text)}
+
+/* Panels */
+.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:12px}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel h2{margin:0;font-size:.95rem;display:flex;align-items:center;gap:8px}
+.panel h2 a.more{margin-left:auto;font-size:.8rem;color:var(--muted);font-weight:500;text-decoration:none}
+.panel h2 a.more:hover{color:var(--text)}
+.badge{display:inline-block;min-width:22px;text-align:center;font-size:.75rem;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--accent);color:#121214}
+.badge.zero{background:var(--mono);color:var(--muted)}
+.fb{border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;text-decoration:none}
+.fb:first-of-type{border-top:0;padding-top:0}
+.fb .m{font-size:.75rem;color:var(--muted)}
+.fb .m b{color:var(--accent);font-weight:600}
+.fb .t{overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+a.fb:hover .t{color:var(--accent)}
+.empty{color:var(--muted);font-size:.88rem}
+.rank{display:flex;flex-direction:column;gap:9px}
+.rank .r{display:grid;grid-template-columns:16px 1fr auto;gap:4px 8px;align-items:center;font-size:.86rem;text-decoration:none}
+.rank .r b{color:var(--muted);font-weight:600}
+.rank .r span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank .r .bar{grid-column:2/3}
+.rank .r small{color:var(--muted);font-size:.75rem}
+a.r:hover span{color:var(--accent)}
+svg.ic{width:18px;height:18px;flex:none;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Links */
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 13px;font-size:.86rem;font-weight:600;transition:border-color .15s}
+.links a:hover{border-color:rgba(255,77,100,.55)}
+.links a svg.ic{width:16px;height:16px}
+.pill{font-size:.72rem;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+.pill.on{border-color:rgba(255,184,107,.6);color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><a class="homelink" href="/">← Tools</a><h1>Dash<span>board</span></h1></div>
+    <small><span id="period"></span><button type="button" class="ghost" id="logout" hidden>Serrar</button></small>
+  </header>
+
+  <div class="card" id="login">
+    <form class="login" id="lf">
+      <input type="password" id="pw" placeholder="Pled-clav" aria-label="Pled-clav" autocomplete="current-password" required>
+      <button type="submit">Avrir</button>
+      <label class="chk"><input type="checkbox" id="keep"> Memorisar sin quest apparat</label>
+    </form>
+    <p class="msg" id="lmsg"></p>
+  </div>
+
+  <div id="view" hidden>
+    <div class="sec-l"><span>Statistica quest mais</span><a href="/stats">Stats →</a></div>
+    <div class="kpis">
+      <a class="kpi" href="/stats"><label>Utilisaziuns</label><span class="v num" id="k-uses">–</span><span class="d" id="d-uses"></span></a>
+      <a class="kpi" href="/stats"><label>Cors</label><span class="v num" id="k-likes">–</span><span class="d" id="d-likes"></span></a>
+      <a class="kpi" href="/stats"><label>Visitaduras e visitaders</label><span class="v num" id="k-clients">–</span><span class="d" id="d-clients"></span></a>
+      <a class="kpi" href="/feedback" id="kpi-fb"><label>Feedback nov</label><span class="v num" id="k-fb">–</span><span class="d" id="d-fb"></span></a>
+      <a class="kpi" href="/stats"><label>Contingent Cloudflare oz</label><span class="v num" id="k-cf">–</span><div class="bar ok"><i id="b-cf" style="width:0"></i></div><span class="d" id="d-cf"></span></a>
+    </div>
+
+    <div class="cols">
+      <section class="panel">
+        <h2><svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback nov <span class="badge zero" id="fb-badge">0</span><a class="more" href="/feedback">Tuts →</a></h2>
+        <div id="fb-list"><p class="empty">Chargiar …</p></div>
+      </section>
+      <section class="panel">
+        <h2><svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Top 5 quest mais<a class="more" href="/top">Top →</a></h2>
+        <div class="rank" id="rank"><p class="empty">Chargiar …</p></div>
+      </section>
+    </div>
+
+    <div class="sec-l"><span>Ulteriuras paginas</span></div>
+    <nav class="links">
+      <a href="/stats"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats</a>
+      <a href="/statsB"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Stats B</a>
+      <a href="/top"><svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg>Top</a>
+      <a href="/feedback"><svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback</a>
+      <a href="/lab/"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16L14 9V3M7 15h10"/></svg>Lab</a>
+      <a href="/game"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3c3 3 5 6 5 10a5 5 0 0 1-10 0c0-2 1-4 2-5 0 2 1 3 2 3 0-3-1-5 1-8z"/></svg>Game</a>
+      <a href="/artitgel-beta"><svg class="ic" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Beta: Links d'artitgels</a>
+      <a id="testlink" href="?test"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20h16L14 9V3"/></svg>Modus da test <span class="pill" id="testpill">betg activ</span></a>
+    </nav>
+  </div>
+</div>
+
+<script>
+const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const n = x => Number(x || 0).toLocaleString('de-CH');
+const MONTHS = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
+let pw = '';
+try { pw = localStorage.getItem('dbz-fb-pw') || sessionStorage.getItem('dbz-fb-pw') || ''; } catch (e) {}
+
+// Modus da test (gilt pro Browser, siehe theme.js)
+let test = false; try { test = localStorage.getItem('dbz-test') === '1'; } catch (e) {}
+$('testpill').textContent = test ? 'activ' : 'betg activ'; $('testpill').classList.toggle('on', test);
+$('testlink').href = test ? '?test=0' : '?test';
+$('testlink').title = test ? 'Terminar il modus da test sin quest apparat' : 'Activar il modus da test sin quest apparat';
+
+const ago = ts => { const d = new Date(ts.replace(' ', 'T') + 'Z'), s = (Date.now() - d) / 1000;
+  if (s < 3600) return 'avant ' + Math.max(1, Math.round(s / 60)) + ' min.';
+  if (s < 86400) return 'avant ' + Math.round(s / 3600) + ' uras';
+  return d.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }); };
+
+// Vergleich mit dem Vormonat bis zum gleichen Tag (z. B. 1.–29. Oktober mit 1.–29. September)
+function delta(el, now, before, monthName) {
+  if (!before) { el.textContent = ''; return; }
+  const p = Math.round((now - before) / before * 100);
+  el.className = 'd ' + (p > 0 ? 'up' : p < 0 ? 'down' : '');
+  el.textContent = (p > 0 ? '+' : '') + p + ' % cumpareglià cun ' + monthName;
+}
+
+async function loadStats() {
+  const today = new Date(), dayNo = today.getUTCDate();
+  const last = MONTHS[(today.getMonth() + 11) % 12];
+  $('period').textContent = MONTHS[today.getMonth()] + ' ' + today.getFullYear();
+  try {
+    const [cur, prev] = await Promise.all([
+      fetch(API + '/ranking?range=month').then(r => r.json()),
+      fetch(API + '/ranking?range=lastmonth&daily=1').then(r => r.json()),
+    ]);
+    $('k-uses').textContent = n(cur.usesTotal); $('k-likes').textContent = n(cur.total); $('k-clients').textContent = n(cur.clients);
+    const upTo = (prev.daily || []).filter(d => +d.day.slice(8, 10) <= dayNo);
+    const pu = upTo.reduce((t, d) => t + d.uses, 0), pl = upTo.reduce((t, d) => t + d.likes, 0);
+    delta($('d-uses'), cur.usesTotal, pu, last + ' (fin ils ' + dayNo + '.)');
+    delta($('d-likes'), cur.total, pl, last + ' (fin ils ' + dayNo + '.)');
+    $('d-clients').textContent = cur.returning ? n(cur.returning) + ' turnads a plirs dis' : '';
+    const rows = (cur.uses || []).filter(x => !x.tool.startsWith('lab-') && x.count).slice(0, 5), max = Math.max(1, ...rows.map(x => x.count));
+    $('rank').innerHTML = rows.length ? rows.map((x, i) => `<a class="r" href="/${encodeURIComponent(x.tool)}"><b>${i + 1}</b><span>${esc(x.name)}</span><small class="num">${n(x.count)}</small><div class="bar"><i style="width:${x.count / max * 100}%"></i></div></a>`).join('')
+      : '<p class="empty">Anc naginas utilisaziuns quest mais.</p>';
+  } catch (e) { $('rank').innerHTML = '<p class="empty">La statistica n\'ha betg pudì vegnir chargiada.</p>'; }
+  try {
+    const u = await fetch(API + '/usage').then(r => r.json());
+    const pr = u.read / (u.limitRead || 1), pw2 = u.written / (u.limitWritten || 1), p = Math.max(pr, pw2);
+    $('k-cf').textContent = (p < 0.01 && p > 0 ? '< 1' : Math.round(p * 100)) + ' %';
+    $('b-cf').style.width = Math.min(100, p * 100) + '%';
+    $('b-cf').parentElement.className = 'bar' + (p < 0.8 ? ' ok' : '');
+    $('d-cf').textContent = n(u.read) + ' legidas · ' + n(u.written) + ' scrittas';
+  } catch (e) { $('d-cf').textContent = 'Betg disponibel'; }
+}
+
+function showFeedback(items) {
+  const nov = items.filter(i => (i.status || 'nov') === 'nov'), lavur = items.filter(i => i.status === 'lavur').length;
+  $('k-fb').textContent = nov.length; $('d-fb').textContent = 'En lavur ' + lavur;
+  $('kpi-fb').classList.toggle('alert', nov.length > 0);
+  $('fb-badge').textContent = nov.length; $('fb-badge').classList.toggle('zero', !nov.length);
+  $('fb-list').innerHTML = nov.length ? nov.slice(0, 3).map(i => `<a class="fb" href="/feedback"><span class="m"><b>${esc(i.toolName)}</b> · ${esc(ago(i.ts))} · ${i.name ? esc(i.name) : 'anonim'}</span><span class="t">${esc(i.text)}</span></a>`).join('')
+    + (nov.length > 3 ? `<a class="fb" href="/feedback"><span class="m">+ ${nov.length - 3} ulteriurs</span></a>` : '')
+    : '<p class="empty">Nagins novs messadis.</p>';
+}
+
+// Zugang: dasselbe Passwort wie /feedback (der Worker prüft es beim Abruf der Meldungen)
+async function open_() {
+  $('lmsg').className = 'msg'; $('lmsg').textContent = 'Chargiar …';
+  try {
+    const r = await fetch(API + '/feedback', { headers: { Authorization: 'Bearer ' + pw }, cache: 'no-store' });
+    if (r.status === 401) throw new Error('Pled-clav fallì.');
+    if (r.status === 503) throw new Error('Il pled-clav n\'è anc betg definì sin il server (FEEDBACK_PASSWORD).');
+    if (!r.ok) throw new Error('Las datas n\'han betg pudì vegnir chargiadas.');
+    const { items } = await r.json();
+    $('login').hidden = true; $('view').hidden = false; $('logout').hidden = false;
+    showFeedback(items || []);
+    loadStats();
+  } catch (e) {
+    $('login').hidden = false; $('view').hidden = true; $('logout').hidden = true;
+    $('lmsg').className = 'msg err'; $('lmsg').textContent = e.message;
+  }
+}
+$('lf').addEventListener('submit', e => {
+  e.preventDefault(); pw = $('pw').value;
+  try { (($('keep').checked) ? localStorage : sessionStorage).setItem('dbz-fb-pw', pw); } catch (err) {}
+  open_();
+});
+$('logout').addEventListener('click', () => {
+  pw = ''; try { localStorage.removeItem('dbz-fb-pw'); sessionStorage.removeItem('dbz-fb-pw'); } catch (e) {}
+  $('view').hidden = true; $('login').hidden = false; $('logout').hidden = true; $('pw').value = ''; $('lmsg').textContent = '';
+});
+if (pw) open_(); else $('pw').focus();
+</script>
+</body>
+</html>
