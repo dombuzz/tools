@@ -234,6 +234,24 @@
   .out{display:flex;justify-content:center;margin:28px 0 0}
   .outbtn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 16px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
   .outbtn:hover{color:var(--accent);border-color:var(--accent)}
+  /* Box «Detagls»: Was ist live, Monats-Mail, Treue pro Tool, neue Besucher */
+  .info{padding:4px 14px 12px}
+  .ib{border-top:1px solid var(--line);padding:12px 0 2px}.ib:first-child{border-top:0}
+  .ib h3{margin:0 0 8px;font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.02em}
+  .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 12px;font-size:.86rem;align-items:baseline}
+  .kv>span:nth-child(odd){color:var(--muted);font-size:.8rem}
+  .kv code{font:600 .82rem var(--num,ui-monospace,monospace)}
+  .kv .cm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .st{font-weight:600}.st.ok{color:#5fd29a}.st.wa{color:#ffb86b}.st.cr{color:var(--accent)}
+  :root[data-theme="light"] .st.ok{color:#1f9d63}:root[data-theme="light"] .st.wa{color:#a8650a}
+  .ly{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:.86rem;padding:5px 0}
+  .ly small{color:var(--muted);font-size:.78rem;text-align:right;white-space:nowrap}
+  .ly .bar{grid-column:1/-1;height:5px;border-radius:3px;background:var(--field);overflow:hidden}
+  .ly .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+  .nv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .nv div{background:var(--field);border-radius:10px;padding:8px 10px}
+  .nv b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums}.nv span{font-size:.75rem;color:var(--muted)}
+  .note{font-size:.75rem;color:var(--muted);margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -282,6 +300,11 @@
     <summary class="labh other">Favurits <span>★</span></summary>
     <div class="card" id="favlist"><div class="msg">Chargel …</div></div>
     <p class="meta" id="favmeta"></p>
+  </details>
+
+  <details class="fold" data-k="info" id="infofold">
+    <summary class="labh other">Detagls</summary>
+    <div class="card info" id="info"><div class="msg">Chargel …</div></div>
   </details>
 
   <details class="fold" data-k="other">
@@ -388,7 +411,7 @@
   function unlock() { document.documentElement.classList.remove('locked'); if (!started) { started = true;
     let r = 'all'; try { const v = localStorage.getItem('dbz-stats-range'); if (['today', 'week', 'month', '30d', 'all'].includes(v)) r = v; } catch (e) {}
     document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x.dataset.r === r));
-    load(r); loadFeedback(true); setInterval(() => loadFeedback(true), 5 * 60 * 1000); } }
+    load(r); loadFeedback(true); if (document.getElementById('infofold').open) loadInfo(); setInterval(() => loadFeedback(true), 5 * 60 * 1000); } }
   document.getElementById('lock').addEventListener('submit', async e => {
     e.preventDefault();
     const pw = document.getElementById('pw').value, err = document.getElementById('err');
@@ -792,6 +815,82 @@
     try { localStorage.setItem('dbz-stats-range', b.dataset.r); } catch (e) {}
     load(b.dataset.r);
   });
+
+  // ----- Box «Detagls» (lädt beim Aufklappen, GitHub-Abfragen 2 Minuten zwischengespeichert) -----
+  const GH = 'https://api.github.com/repos/dombuzz/tools';
+  async function gh(path) {
+    const k = 'dbz-gh-' + path;
+    try { const c = JSON.parse(sessionStorage.getItem(k) || 'null'); if (c && Date.now() - c.t < 120000) return c.v; } catch (e) {}
+    const r = await fetch(GH + path); if (!r.ok) throw new Error(r.status);
+    const v = await r.json(); try { sessionStorage.setItem(k, JSON.stringify({ t: Date.now(), v })); } catch (e) {}
+    return v;
+  }
+  const zh = d => new Date(d);
+  const hm = d => { const x = zh(d); return pad2(x.getHours()) + ':' + pad2(x.getMinutes()); };
+  const dm = d => { const x = zh(d), t = new Date(); return x.toDateString() === t.toDateString() ? 'oz ' + hm(d) : x.getDate() + '.' + (x.getMonth() + 1) + '. ' + hm(d); };
+  const utc = s => s ? new Date(s.replace(' ', 'T') + (s.includes('Z') ? '' : 'Z')) : null;
+  let infoBusy = false;
+  async function loadInfo() {
+    if (infoBusy) return; infoBusy = true;
+    const el = document.getElementById('info');
+    const [ins, commits, wCommits, cCommits, deps] = await Promise.all([
+      fetch(API + '/insights').then(r => r.json()).catch(() => null),
+      gh('/commits?sha=main&per_page=100').catch(() => null),
+      gh('/commits?sha=main&path=worker&per_page=1').catch(() => null),
+      gh('/commits?sha=main&path=wrangler.jsonc&per_page=1').catch(() => null),
+      gh('/deployments?environment=github-pages&per_page=1').catch(() => null),
+    ]);
+    let pages = null;
+    if (Array.isArray(deps) && deps[0]) { try { const st = await gh('/deployments/' + deps[0].id + '/statuses?per_page=1'); pages = { sha: deps[0].sha, state: st[0]?.state || 'pending', at: st[0]?.created_at || deps[0].created_at }; } catch (e) {} }
+    const parts = [];
+    // 1 Was ist live
+    {
+      const rows = [];
+      if (Array.isArray(commits) && commits.length) {
+        const day = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Zurich' }).format(new Date(d));
+        const dates = commits.map(c => day(c.commit.committer.date)), last = commits[0];
+        rows.push(['Versiun', `<code>v${dates[0].replace(/-/g, '')}_${dates.filter(d => d === dates[0]).length}</code>`]);
+        rows.push(['Ultim commit', `<span class="cm" title="${esc(last.commit.message)}">${dm(last.commit.committer.date)} · ${esc(last.commit.message.split('\n')[0])}</span>`]);
+        if (pages) {
+          const cur = pages.sha === last.sha, ok = pages.state === 'success';
+          rows.push(['Paginas', ok && cur ? '<span class="st ok">✓ online</span>' : pages.state === 'failure' || pages.state === 'error' ? '<span class="st cr">✗ publitgaziun fallida</span>' : '<span class="st wa">⏳ vegn publitgà …</span>']);
+        }
+      } else rows.push(['GitHub', '<span class="st wa">betg cuntanschibel</span>']);
+      const w = ins && ins.worker, wc = [wCommits, cCommits].flatMap(x => Array.isArray(x) ? x : []).map(c => new Date(c.commit.committer.date)).sort((a, b) => b - a)[0];
+      if (w && w.deployed) {
+        const dep = new Date(w.deployed), behind = wc && wc - dep > 60000;
+        rows.push(['Worker', !behind ? `<span class="st ok">✓ deployà</span> ${dm(w.deployed)}`
+          : Date.now() - wc < 15 * 60000 ? `<span class="st wa">⏳ deploy en lavur</span> (commit ${hm(wc)})`
+          : `<span class="st cr">⚠ betg actualisà</span> – ultim deploy ${dm(w.deployed)}, commit ${dm(wc)}`]);
+      } else rows.push(['Worker', '<span class="st wa">nagina infurmaziun</span>']);
+      parts.push(`<div class="ib"><h3>Tge è online</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
+    }
+    // 2 Monats-Mail
+    {
+      const m = ins && ins.mail, n = new Date(), next = new Date(n.getFullYear(), n.getMonth() + 1, 1, 6, 50);
+      const lab = mo => { const [y, mm] = (mo || '').split('-'); return mm ? MONTHS[+mm - 1] + ' ' + y : ''; };
+      const rows = m ? [['Ultima', `${m.status === 'ok' ? '<span class="st ok">✓ tramess</span>' : '<span class="st cr">✗ betg reussì</span>'} ${dm(utc(m.ts))}${m.month ? ' · ' + lab(m.month) : ''}`]]
+        : [['Ultima', '<span class="st wa">anc nagina annunzia</span>']];
+      rows.push(['Proxima', `${next.getDate()}. ${MONTHS[next.getMonth()]} ${next.getFullYear()}, 06:50`]);
+      parts.push(`<div class="ib"><h3>E-mail mensil</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
+    }
+    // 3 Treue pro Tool
+    if (ins && Array.isArray(ins.loyalty)) {
+      const L = ins.loyalty.filter(x => x.users), name = t => NAMES[t] || LAB[t] || t;
+      parts.push(`<div class="ib"><h3>Fidelitad · ultims 30 dis</h3>${L.length ? L.map(x => { const p = Math.round(x.repeat / x.users * 100);
+        return `<div class="ly"><span>${esc(name(x.tool))}</span><small>${fmt(x.repeat)} da ${fmt(x.users)} ${x.users === 1 ? 'utilisader' : 'utilisaders'} turnads · ${p} %</small><div class="bar"><i style="width:${p}%"></i></div></div>`; }).join('')
+        : '<p class="note">Anc naginas datas.</p>'}<p class="note">Turnads = han duvrà il tool a dus u plirs dis differents.</p></div>`);
+    }
+    // 4 Neu vs. bekannt
+    if (ins && ins.week) {
+      const w = ins.week, since = utc(w.countingSince), from = utc(w.from);
+      parts.push(`<div class="ib"><h3>Novs ed enconuschents · quest'emna</h3><div class="nv"><div><b>${fmt(w.visitors)}</b><span>visitaders</span></div><div><b>${fmt(w.new)}</b><span>per l'emprima giada</span></div><div><b>${fmt(w.known)}</b><span>enconuschents</span></div></div>${since && from && since > new Date(from - 28 * 864e5) ? `<p class="note">Visitaders vegnan dumbrads pir dapi ils ${since.getDate()}.${since.getMonth() + 1}.${since.getFullYear()} – «novs» è anc pli aut che la realitad.</p>` : ''}</div>`);
+    }
+    el.innerHTML = parts.join('') || '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas.</div>';
+    infoBusy = false;
+  }
+  { const f = document.getElementById('infofold'); f.addEventListener('toggle', () => { if (f.open && started) loadInfo(); }); }
+
   // ----- Admin: Modus test (pro Browser, siehe theme.js) -----
   { let t = false; try { t = localStorage.getItem('dbz-test') === '1'; } catch (e) {}
     const tp = document.getElementById('testpill'), tl = document.getElementById('testlink');
