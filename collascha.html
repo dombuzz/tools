@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Collascha</title>
+<!-- Collascha ist ein Tab in /layers; /collascha öffnet das Tool direkt mit diesem Tab (übrige Parameter wie ?img= bleiben) -->
+<script>
+  const q = new URLSearchParams(location.search); q.set('tab', 'collascha');
+  location.replace('/layers?' + q.toString() + location.hash);
+</script>
+<noscript><meta http-equiv="refresh" content="0; url=/layers?tab=collascha"></noscript>
+</head>
+<body><a href="/layers?tab=collascha">Collascha</a></body>
+</html>
