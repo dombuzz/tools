@@ -1120,28 +1120,56 @@ const CL = {
   c3:  { n:3, r:[[0,0,1/3,1],[1/3,0,1/3,1],[2/3,0,1/3,1]] },
   r3:  { n:3, r:[[0,0,1,1/3],[0,1/3,1,1/3],[0,2/3,1,1/3]] },
   l12: { n:3, r:[[0,0,.5,1],[.5,0,.5,.5],[.5,.5,.5,.5]] },
-  l12w:{ n:3, r:[[0,0,1/3,1],[1/3,0,2/3,.5],[1/3,.5,2/3,.5]] },
+  l12w:{ n:3, r:[[0,0,1/3,1],[1/3,0,2/3,.5],[1/3,.5,2/3,.5]], only:'16:9' },
   l21: { n:3, r:[[0,0,.5,.5],[0,.5,.5,.5],[.5,0,.5,1]] },
   t12: { n:3, r:[[0,0,1,.5],[0,.5,.5,.5],[.5,.5,.5,.5]] },
+  s2:  { n:2, sl:true },   // sbiec: Schnittkante schräg (oben weiter rechts)
+  s3:  { n:3, sl:true },
 };
+const SL = 0.13;            // halbe horizontale Verschiebung der schrägen Kante, im Verhältnis zur Höhe
 const stageC = $('cStage'), cv = $('cCanvas'), cx2 = cv.getContext('2d'), cMsgEl = $('cMsg');
 const cells = [null, null, null];   // pro Part: { img, prev, iw, ih, name, z, fx, fy }
 const cs = { fmt:'16:9', lay:'c2', line:'', lw:5 };
 try { Object.assign(cs, JSON.parse(localStorage.getItem('collage-set') || '{}')); } catch(e){}
 if (!CL[cs.lay]) cs.lay = 'c2';
+const okLay = k => !CL[k].only || CL[k].only === cs.fmt;
+if (!okLay(cs.lay)) cs.lay = 'l12';
 let sel = 0, target = 0;
 function colMsg(t, err){ cMsgEl.textContent = t; cMsgEl.classList.toggle('err', !!err); }
 const save = () => { try { localStorage.setItem('collage-set', JSON.stringify(cs)); } catch(e){} };
 const dims = () => cs.fmt === '1:1' ? [1080, 1080] : [1920, 1080];
 const nParts = () => CL[cs.lay].n;
 
-/* Rechteck einer Part in Pixeln; an inneren Schnittkanten um die halbe Linienbreite eingerückt */
-function rect(i, W, H){
-  const [a, b, w, h] = CL[cs.lay].r[i], g = cs.line ? cs.lw / 2 : 0, e = 1e-6;
+/* Fläche einer Part als Polygon in Pixeln; an inneren Schnittkanten um die halbe Linienbreite (g) eingerückt */
+function polyOf(L, i, W, H, g){
+  const e = 1e-6;
+  if (L.sl){
+    const d = SL * H, hs = g * Math.hypot(2 * d, H) / H, n = L.n;
+    const lt = i ? i * W / n + d + hs : 0, lb = i ? i * W / n - d + hs : 0;
+    const rt = i < n - 1 ? (i + 1) * W / n + d - hs : W, rb = i < n - 1 ? (i + 1) * W / n - d - hs : W;
+    return [[lt, 0], [rt, 0], [rb, H], [lb, H]];
+  }
+  const [a, b, w, h] = L.r[i];
   let x0 = a * W, y0 = b * H, x1 = (a + w) * W, y1 = (b + h) * H;
   if (a > e) x0 += g; if (a + w < 1 - e) x1 -= g;
   if (b > e) y0 += g; if (b + h < 1 - e) y1 -= g;
-  return { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
+  return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+}
+const poly = (i, W, H) => polyOf(CL[cs.lay], i, W, H, cs.line ? cs.lw / 2 : 0);
+function bbox(P){
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  const x = Math.min(...xs), y = Math.min(...ys);
+  return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+}
+const rect = (i, W, H) => bbox(poly(i, W, H));
+function path(ctx, P){ ctx.beginPath(); P.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); }
+function inPoly(P, x, y){
+  let inside = false;
+  for (let a = 0, b = P.length - 1; a < P.length; b = a++){
+    const [xa, ya] = P[a], [xb, yb] = P[b];
+    if ((ya > y) !== (yb > y) && x < (xb - xa) * (y - ya) / (yb - ya) + xa) inside = !inside;
+  }
+  return inside;
 }
 function geom(i, W, H){
   const R = rect(i, W, H), C = cells[i];
@@ -1156,27 +1184,31 @@ function draw(ctx, W, H, preview){
   ctx.fillStyle = cs.line || '#000'; ctx.fillRect(0, 0, W, H);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   for (let i = 0; i < nParts(); i++){
-    const R = rect(i, W, H), C = cells[i];
-    ctx.save(); ctx.beginPath(); ctx.rect(R.x, R.y, R.w, R.h); ctx.clip();
+    const P = poly(i, W, H), R = bbox(P), C = cells[i];
+    ctx.save(); path(ctx, P); ctx.clip();
     if (C){
       const g = geom(i, W, H);
       const src = preview ? C.prev : scaled(C.img, g.dw, g.dh);
       ctx.drawImage(src, g.cx - g.dw / 2, g.cy - g.dh / 2, g.dw, g.dh);
     } else if (preview){
       ctx.fillStyle = i % 2 ? '#34343a' : '#3c3c43'; ctx.fillRect(R.x, R.y, R.w, R.h);
-      const f = Math.round(H * 0.034);
+      // Mitte und nutzbare Breite auf halber Höhe (auch für schräge Parts)
+      const mx = P.reduce((t, p) => t + p[0], 0) / P.length, my = R.y + R.h / 2;
+      const mw = ((P[1][0] - P[0][0]) + (P[2][0] - P[3][0])) / 2;
+      const f = Math.round(Math.min(H * 0.034, mw * 0.075));
       ctx.fillStyle = '#ececef'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = `600 ${f}px system-ui, sans-serif`;
-      ctx.fillText('Trair qua in maletg', R.x + R.w / 2, R.y + R.h / 2 - f * 0.7);
+      ctx.fillText('Trair qua in maletg', mx, my - f * 0.7);
       ctx.fillStyle = '#9a9aa2'; ctx.font = `${Math.round(f * 0.75)}px system-ui, sans-serif`;
-      ctx.fillText('u tutgar per tscherner', R.x + R.w / 2, R.y + R.h / 2 + f * 0.7);
+      ctx.fillText('u tutgar per tscherner', mx, my + f * 0.7);
     }
     ctx.restore();
   }
   if (preview){
-    const R = rect(sel, W, H), t = Math.max(3, Math.round(H / 270));
-    ctx.strokeStyle = '#ff4d64'; ctx.lineWidth = t; ctx.setLineDash([t * 4, t * 2]);
-    ctx.strokeRect(R.x + t / 2, R.y + t / 2, R.w - t, R.h - t);
+    const P = poly(sel, W, H), t = Math.max(3, Math.round(H / 270));
+    ctx.save(); path(ctx, P); ctx.clip();
+    ctx.strokeStyle = '#ff4d64'; ctx.lineWidth = t * 2; ctx.setLineDash([t * 4, t * 2]);
+    path(ctx, P); ctx.stroke(); ctx.restore();
   }
   ctx.restore();
 }
@@ -1198,22 +1230,19 @@ function paint(){
 function seg(id, key, num){
   const bs = [...document.querySelectorAll(`#${id} button`)];
   const sync = () => bs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v) === String(cs[key])));
-  bs.forEach(b => b.onclick = () => { cs[key] = num ? +b.dataset.v : b.dataset.v; save(); sync(); if (key === 'fmt') buildLays(); paint(); });
+  bs.forEach(b => b.onclick = () => { cs[key] = num ? +b.dataset.v : b.dataset.v; save(); sync(); if (key === 'fmt'){ if (!okLay(cs.lay)){ cs.lay = 'l12'; save(); } buildLays(); } paint(); });
   sync();
 }
 function icon(L){
   const [W, H] = cs.fmt === '1:1' ? [18, 18] : [32, 18];
-  const o = 1.6 / 2, e = 1e-6;
-  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">` + L.r.map(([a, b, w, h]) => {
-    let x0 = a * W, y0 = b * H, x1 = (a + w) * W, y1 = (b + h) * H;
-    if (a > e) x0 += o; if (a + w < 1 - e) x1 -= o; if (b > e) y0 += o; if (b + h < 1 - e) y1 -= o;
-    return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="1" fill="currentColor"/>`;
-  }).join('') + '</svg>';
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">` + Array.from({ length: L.n }, (_, i) =>
+    `<polygon points="${polyOf(L, i, W, H, 0.8).map(p => p.map(v => +v.toFixed(2)).join(',')).join(' ')}" fill="currentColor" stroke="currentColor" stroke-width=".6" stroke-linejoin="round"/>`).join('') + '</svg>';
 }
-const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l12w:'1 stretg a sanestra, 2 lads a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart' };
+const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l12w:'1 stretg a sanestra, 2 lads a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart', s2:'2 parts cun lingia sbieca', s3:'3 parts cun lingias sbiecas' };
 function buildLays(){
   const box = $('cLays'); box.innerHTML = '';
   for (const k of Object.keys(CL)){
+    if (!okLay(k)) continue;
     const b = document.createElement('button'); b.type = 'button';
     b.title = LAYNAME[k]; b.setAttribute('aria-label', LAYNAME[k]);
     b.setAttribute('aria-pressed', k === cs.lay); b.innerHTML = icon(CL[k]);
@@ -1271,7 +1300,9 @@ $('cFile').onchange = e => { colAddFiles(e.target.files, target); e.target.value
 const toPx = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
 function partAt(px, py){
   const [W, H] = dims();
-  for (let i = 0; i < nParts(); i++){ const [a, b, w, h] = CL[cs.lay].r[i]; if (px >= a * W && px <= (a + w) * W && py >= b * H && py <= (b + h) * H) return i; }
+  for (let i = 0; i < nParts(); i++) if (inPoly(polyOf(CL[cs.lay], i, W, H, 0), px, py)) return i;
+  // auf der Linie: nächste Part
+  for (let i = 0; i < nParts(); i++){ const R = bbox(polyOf(CL[cs.lay], i, W, H, 0)); if (px >= R.x && px <= R.x + R.w && py >= R.y && py <= R.y + R.h) return i; }
   return -1;
 }
 function zoomPart(i, z, px, py){
