@@ -219,10 +219,18 @@
   .fbe{color:var(--muted);font-size:.85rem;margin:0}
   .fbl{display:flex;gap:8px}.fbl input{flex:1;min-width:0;padding:7px 10px;font:inherit;font-size:.85rem;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:8px}
   .fbl button{font:inherit;font-size:.85rem;font-weight:600;border:0;border-radius:8px;padding:7px 12px;background:var(--accent);color:#121214;cursor:pointer}
-  .testl{font-size:.85rem;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-  .testl:hover{color:var(--accent)}
-  .tpill{font-size:.72rem;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-  .tpill.on{border-color:rgba(255,184,107,.6);color:#ffb86b}
+  .toprow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+  .toprow .homelink{margin:0}
+  .tsw{display:inline-flex;align-items:center;gap:8px;padding:5px 10px 5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--muted);font-size:.8rem;text-decoration:none;cursor:pointer;transition:border-color .15s,color .15s}
+  .tsw:hover{border-color:var(--accent);color:var(--text)}
+  .tsw-k{position:relative;width:30px;height:17px;border-radius:999px;background:var(--field);border:1px solid var(--line);transition:background .15s}
+  .tsw-k i{position:absolute;top:1px;left:1px;width:13px;height:13px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+  .tsw-s{font-weight:600;min-width:3.6em}
+  .tsw.on{border-color:rgba(255,184,107,.6);color:var(--text)}
+  .tsw.on .tsw-k{background:#ffb86b;border-color:#ffb86b}
+  .tsw.on .tsw-k i{transform:translateX(13px);background:#121214}
+  .tsw.on .tsw-s{color:#ffb86b}
+  :root[data-theme="light"] .tsw.on .tsw-s{color:#b26a12}
 </style>
 </head>
 <body>
@@ -235,7 +243,7 @@
     <button type="submit">Avrir</button>
     <p class="err" id="err" role="alert"></p>
   </form>
-  <a class="homelink" href="/">← Tools</a><span class="homesep" aria-hidden="true"> · </span><a class="homelink testl" id="testlink" href="?test">Modus da test <span class="tpill" id="testpill">betg activ</span></a>
+  <div class="toprow"><a class="homelink" href="/">← Tools</a><a class="tsw" id="testlink" href="?test" role="switch" aria-checked="false"><span class="tsw-l">Conturn da test</span><span class="tsw-k"><i></i></span><span class="tsw-s" id="testpill">activar</span></a></div>
   <h1><span class="acc">Dashboard</span><button class="help" id="help" type="button" aria-expanded="false" aria-controls="legend" aria-label="Declaraziun">?</button></h1>
   <p class="lead">Tge tools vegnan duvrads il pli savens – u han gidà da simplifitgar la lavur?</p>
   <div class="legend" id="legend" hidden>
@@ -779,7 +787,7 @@
   // ----- Admin: Modus test (pro Browser, siehe theme.js) -----
   { let t = false; try { t = localStorage.getItem('dbz-test') === '1'; } catch (e) {}
     const tp = document.getElementById('testpill'), tl = document.getElementById('testlink');
-    tp.textContent = t ? 'activ' : 'betg activ'; tp.classList.toggle('on', t);
+    tp.textContent = t ? 'activ' : 'activar'; tl.classList.toggle('on', t); tl.setAttribute('aria-checked', t);
     tl.href = t ? '?test=0' : '?test'; tl.title = t ? 'Terminar il modus da test sin quest apparat' : 'Activar il modus da test sin quest apparat'; }
 
   // ----- Admin: Feedback-Eingang (Passwort von /feedback, prüft der Worker) -----
