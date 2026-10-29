@@ -182,14 +182,14 @@
   .fold:first-of-type{margin-top:8px}
 
   /* Kachel «Cloudflare oz»: Verbrauch des Gratis-Kontingents (grün < 50 %, orange ab 50 %, rot ab 80 %) */
-  :root{--cf-ok:#5fd29a;--cf-wa:#ffb86b;--cf-cr:#ff4d64}
-  :root[data-theme="light"]{--cf-ok:#1f9d63;--cf-wa:#c77a12;--cf-cr:#d22e47}
-  .cf{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:9px;min-width:0;margin-top:16px}
+  :root{--cf:#f6821f;--cf-ok:#5fd29a;--cf-wa:#ffd54d;--cf-cr:#ff4d64}
+  :root[data-theme="light"]{--cf:#d4650a;--cf-ok:#1f9d63;--cf-wa:#a88400;--cf-cr:#d22e47}
+  .cf{background:color-mix(in srgb,var(--cf) 6%,var(--card));border:1px solid color-mix(in srgb,var(--cf) 55%,transparent);border-radius:12px;padding:12px 14px;display:grid;gap:9px;min-width:0;margin-top:28px}
   .cf[hidden]{display:none}
   .cf.wa{border-color:var(--cf-wa)}.cf.cr{border-color:var(--cf-cr);box-shadow:0 0 0 3px rgba(255,77,100,.15)}
   .cf-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .cf-h b{font-size:.85rem;font-weight:600}
-  .cf-h b svg{width:15px;height:15px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px}
+  .cf-h b{font-size:.85rem;font-weight:600;color:var(--cf)}
+  .cf-h b svg{width:15px;height:15px;fill:none;stroke:var(--cf);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px}
   .cf-h small{font-size:.75rem;color:var(--muted)}
   .cf-m{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
   .cf-m .l{font-size:.78rem;color:var(--muted)}
@@ -238,7 +238,6 @@
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <div class="ticker" id="ticker" hidden aria-live="off"><span id="tickt"></span></div>
   <div class="metarow"><div class="meta" id="meta"></div><div class="thbar" id="themeBar" hidden></div></div>
-  <div class="cf" id="cfu" hidden></div>
 
   <section class="pan"><p class="sec" id="sparkh">Activitad · ultimas 24 uras</p><div id="spark"><div class="msg">Chargel …</div></div></section>
   <section class="pan"><p class="sec">Cura vegnan ils tools duvrads</p><div id="heat"><div class="msg">Chargel …</div></div></section>
@@ -280,6 +279,8 @@
     </details>
   </div>
   </section>
+
+  <div class="cf" id="cfu" hidden></div>
 </div>
 
 <script>
