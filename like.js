@@ -122,7 +122,7 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   const LIMIT = 5, day = new Date().toLocaleDateString('sv'), key = `dbz-like-${tool}`;
   const used = () => { try { const v = JSON.parse(localStorage.getItem(key) || '{}'); return v.day === day ? v.n : 0; } catch (e) { return 0; } };
   const use = () => { try { localStorage.setItem(key, JSON.stringify({ day, n: used() + 1 })); } catch (e) {} };
-  const lim = document.createElement('span'); lim.className = 'n'; box.append(lim);
+  const lim = document.createElement('span'); lim.className = 'n'; const fbBox = box.querySelector('.dbz-fb'); fbBox ? box.insertBefore(lim, fbBox) : box.append(lim); // Hinweis zum Tageslimit vor «Propostas, giavischs, critica?»
   const full = () => { btn.disabled = true; btn.classList.add('done'); btn.title = 'Turna damaun';
     lim.textContent = 'Ti has gia dà tes 5 cors per oz en quest tool – Grazia ♥️'; };
   if (used() >= LIMIT) full();
