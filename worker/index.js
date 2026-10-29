@@ -39,8 +39,7 @@ const NAMES = {
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 // «Links d'artitgels»: die frühere Beta-Seite /artitgel-beta zählt zu /artitgel
-// «game»: die gespiegelte Startseite /game zählt zur Startseite (index)
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', game: 'index' };
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel' };
 const grp = t => GROUP[t] || t;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst und Tools im Hintergrund)
 const NO_STATS = new Set(['stats', 'colurs', 'ebenas', 'rotar']);
