@@ -177,6 +177,21 @@
   .sizeseg button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); }
   .sizeseg small{ display:block; font-weight:400; font-size:0.72rem; opacity:.85; }
 
+  /* Collage */
+  .cstage{ padding:24px 4%; }
+  .cstage canvas{ display:block; width:100%; height:auto; margin:0 auto; cursor:grab; touch-action:none; }
+  .cstage.sq canvas{ width:min(100%, 62vh); }
+  .cstage canvas.drag{ cursor:grabbing; }
+  #collage .side h3{ font-size:0.85rem; margin:16px 0 8px; }
+  #collage .side h3:first-child{ margin-top:4px; }
+  .lays{ display:flex; flex-wrap:wrap; gap:6px; }
+  .lays button{ background:var(--mono); border:1px solid var(--border); color:var(--muted); padding:6px; border-radius:8px; line-height:0; }
+  .lays button:hover{ background:var(--mono); color:var(--text); border-color:var(--muted); }
+  .lays button[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  .lays svg{ display:block; height:24px; width:auto; }
+  .crow{ display:flex; flex-wrap:wrap; gap:8px; }
+  .cbtns{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .cbtns button{ padding:8px 6px; font-size:0.82rem; }
   .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
   .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
@@ -194,10 +209,10 @@
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
   <h1>Elavurar <span class="acc">maletgs</span></h1>
-  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar e corregir colurs per layer. Export sco PNG en grondezza standard u en resoluziun originala.</p>
+  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar e corregir colurs per layer. Collage cun 2 u 3 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
 
   <div class="card">
-    <div class="toolbar">
+    <div class="toolbar" id="layToolbar">
       <label class="field">Format
         <select id="fmtSel">
           <option value="orig">Original (sco il layer giudim)</option>
@@ -227,9 +242,10 @@
       <button type="button" role="tab" data-tab="0" aria-selected="true">Clerezza <em>+</em> colurs</button>
       <button type="button" role="tab" data-tab="1" aria-selected="false">Rotar <em>+</em> drizzar</button>
       <button type="button" role="tab" data-tab="2" aria-selected="false">Layers <span class="tcount" id="tcount"></span></button>
+      <button type="button" role="tab" data-tab="3" aria-selected="false">Collage</button>
     </div>
 
-    <div class="work">
+    <div class="work" id="layWork">
       <div>
         <div class="stage" id="stage" tabindex="0" aria-label="Surfatscha da lavur">
           <div class="frame" id="frame">
@@ -291,15 +307,62 @@
       </div>
     </div>
 
-    <p class="hint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Tutgar il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
+    <p class="hint" id="layHint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Tutgar il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
 
-    <div class="actions">
+    <div class="actions" id="layActions">
       <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
       <button type="button" class="ghost" id="fitBtn" disabled>Reposiziunar</button>
       <span class="msg" id="msg"></span>
     </div>
+
+    <section id="collage" hidden>
+      <div class="work">
+        <div>
+          <div class="stage cstage" id="cStage" tabindex="0" aria-label="Collage">
+            <canvas id="cCanvas" width="1920" height="1080"></canvas>
+          </div>
+        </div>
+        <div class="side">
+          <h3>Format</h3>
+          <div class="sizeseg" role="group" aria-label="Format" id="cFmt">
+            <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920 × 1080</small></button>
+            <button type="button" data-v="1:1" aria-pressed="false">1:1<small>1080 × 1080</small></button>
+          </div>
+          <h3>Disposiziun</h3>
+          <div class="lays" id="cLays"></div>
+          <h3>Lingia da separaziun</h3>
+          <div class="crow">
+            <div class="sizeseg" role="group" aria-label="Colur da la lingia" id="cLine">
+              <button type="button" data-v="" aria-pressed="true">Nagina</button>
+              <button type="button" data-v="#ffffff" aria-pressed="false">Alva</button>
+              <button type="button" data-v="#000000" aria-pressed="false">Naira</button>
+            </div>
+            <div class="sizeseg" role="group" aria-label="Grossezza da la lingia" id="cLw">
+              <button type="button" data-v="5" aria-pressed="true">5 px</button>
+              <button type="button" data-v="10" aria-pressed="false">10 px</button>
+            </div>
+          </div>
+          <h3 id="cPartTitle">Part</h3>
+          <div class="edit off" id="cEdit">
+            <div class="ctl"><div class="top"><label for="cZoom">Zoom</label><span class="val" id="cZoomVal" title="Reset">100 %</span></div><input type="range" id="cZoom" min="100" max="500" step="1" value="100"></div>
+            <div class="cbtns">
+              <button type="button" class="ghost" id="cRepl">Remplazzar</button>
+              <button type="button" class="ghost" id="cSwap" title="Barattar cun la proxima part">⇄ Barattar</button>
+              <button type="button" class="ghost" id="cFit" title="Puspè emplenir la part">Reposiziunar</button>
+              <button type="button" class="ghost" id="cDel">Allontanar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="hint">Trair ils maletgs en las parts u tutgar ina part vida per tscherner in maletg. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur.</p>
+      <div class="actions">
+        <button type="button" id="cDl" disabled>Telechargiar la collage</button>
+        <span class="msg" id="cMsg"></span>
+      </div>
+    </section>
   </div>
   <input type="file" id="file" accept="image/*" multiple hidden>
+  <input type="file" id="cFile" accept="image/*" multiple hidden>
 </div>
 
 <script>
@@ -730,7 +793,7 @@ stage.addEventListener('drop', e => { if (!e.dataTransfer.files.length) return; 
 document.addEventListener('paste', e => {
   if (e.target === urlInput) return;          // Einfügen ins Linkfeld normal behandeln
   const files = [...e.clipboardData.items].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile());
-  if (files.length) { addFiles(files); return; }
+  if (files.length) { if (colOn()) colAddFiles(files); else addFiles(files); return; }
   const txt = (e.clipboardData.getData('text') || '').trim();
   if (/^https?:\/\//i.test(txt) || /^\/.*\/cms\/images\//i.test(txt)){ urlInput.value = txt; loadFromUrl(txt); }
 });
@@ -789,27 +852,28 @@ async function loadFromUrl(raw){
   const my = ++urlToken;
   const v = (raw || '').trim();
   if (!v) return;
-  if (layers.length >= MAX) { setMsg(`Maximalmain ${MAX} layers.`, true); return; }
+  if (!colOn() && layers.length >= MAX) { setMsg(`Maximalmain ${MAX} layers.`, true); return; }
+  const say = colOn() ? colMsg : setMsg;
   let res = convertOne(v);
-  setMsg('Chargel il maletg…');
+  say('Chargel il maletg…');
   try {
     if (res.error){
-      if (!/^https?:\/\//i.test(v)) { setMsg(res.error, true); return; }
-      setMsg('Tschertg il maletg en l\'artitgel…');
+      if (!/^https?:\/\//i.test(v)) { say(res.error, true); return; }
+      say('Tschertg il maletg en l\'artitgel…');
       const html = await (await fetchOk(v)).text();
       if (my !== urlToken) return;
       const c = firstCandidate(html);
-      if (!c) { setMsg('Chattà nagin maletg sin questa pagina.', true); return; }
+      if (!c) { say('Chattà nagin maletg sin questa pagina.', true); return; }
       res = convertOne(c);
-      if (res.error) { setMsg(res.error, true); return; }
+      if (res.error) { say(res.error, true); return; }
     }
     let blob = await (await fetchOk(res.url)).blob();
     if (my !== urlToken) return;
     if (!blob.type.startsWith('image/')) blob = new Blob([blob], { type:'image/webp' });
-    if (await addFile(blob, res.filename || 'Maletg RTR')) urlInput.value = '';
+    if (await (colOn() ? colAddFiles([blob]) : addFile(blob, res.filename || 'Maletg RTR'))) urlInput.value = '';
   } catch(e){
     if (my !== urlToken) return;
-    setMsg('Il maletg n\'ha betg pudì vegnir chargià directamain. Al telechargiar cun «RTR Picture-downloader» e trair qua.', true);
+    say('Il maletg n\'ha betg pudì vegnir chargià directamain. Al telechargiar cun «RTR Picture-downloader» e trair qua.', true);
   }
 }
 $('urlBtn').onclick = () => loadFromUrl(urlInput.value);
@@ -974,14 +1038,19 @@ $('dlBtn').onclick = () => {
 const edits = [...document.querySelectorAll('[data-edit]')];
 /* Tabs: Clerezza + colurs, Rotar + drizzar, Layers */
 const tabBtns = [...document.querySelectorAll('.tabs [data-tab]')], panes = [...document.querySelectorAll('.pane')];
+let curTab = 0;
+const colOn = () => curTab === 3;
 function setTab(i){
+  curTab = i;
   tabBtns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === String(i)));
   panes.forEach(p => p.hidden = p.dataset.pane !== String(i));
+  ['layToolbar', 'layWork', 'layHint', 'layActions'].forEach(id => $(id).hidden = i === 3);
+  $('collage').hidden = i !== 3;
   try { localStorage.setItem('layers-tab', i); } catch(e){}
 }
 tabBtns.forEach(b => b.onclick = () => setTab(+b.dataset.tab));
 document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => setTab(+b.dataset.goto));
-try { const s = localStorage.getItem('layers-tab'); if (s !== null && /^[012]$/.test(s)) setTab(+s); } catch(e){}
+try { const s = localStorage.getItem('layers-tab'); if (s !== null && /^[0-3]$/.test(s)) setTab(+s); } catch(e){}
 function syncEdit(){
   const A = active, on = !!A && !A.locked;
   edits.forEach(e => e.classList.toggle('off', !on));
@@ -1040,6 +1109,259 @@ $('flipV').onclick = () => reorient(A => { A.fv = !A.fv; });
 sizeBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.s === sizeMode));
 applyFmt();
 renderList();
+</script>
+<script>
+/* ---------- Collage: 2 u 3 maletgs en 16:9 u 1:1 ---------- */
+const CL = {
+  c2:  { n:2, r:[[0,0,.5,1],[.5,0,.5,1]] },
+  r2:  { n:2, r:[[0,0,1,.5],[0,.5,1,.5]] },
+  c3:  { n:3, r:[[0,0,1/3,1],[1/3,0,1/3,1],[2/3,0,1/3,1]] },
+  r3:  { n:3, r:[[0,0,1,1/3],[0,1/3,1,1/3],[0,2/3,1,1/3]] },
+  l12: { n:3, r:[[0,0,.5,1],[.5,0,.5,.5],[.5,.5,.5,.5]] },
+  l21: { n:3, r:[[0,0,.5,.5],[0,.5,.5,.5],[.5,0,.5,1]] },
+  t12: { n:3, r:[[0,0,1,.5],[0,.5,.5,.5],[.5,.5,.5,.5]] },
+};
+const stageC = $('cStage'), cv = $('cCanvas'), cx2 = cv.getContext('2d'), cMsgEl = $('cMsg');
+const cells = [null, null, null];   // pro Part: { img, prev, iw, ih, name, z, fx, fy }
+const cs = { fmt:'16:9', lay:'c2', line:'', lw:5 };
+try { Object.assign(cs, JSON.parse(localStorage.getItem('collage-set') || '{}')); } catch(e){}
+if (!CL[cs.lay]) cs.lay = 'c2';
+let sel = 0, target = 0;
+function colMsg(t, err){ cMsgEl.textContent = t; cMsgEl.classList.toggle('err', !!err); }
+const save = () => { try { localStorage.setItem('collage-set', JSON.stringify(cs)); } catch(e){} };
+const dims = () => cs.fmt === '1:1' ? [1080, 1080] : [1920, 1080];
+const nParts = () => CL[cs.lay].n;
+
+/* Rechteck einer Part in Pixeln; an inneren Schnittkanten um die halbe Linienbreite eingerückt */
+function rect(i, W, H){
+  const [a, b, w, h] = CL[cs.lay].r[i], g = cs.line ? cs.lw / 2 : 0, e = 1e-6;
+  let x0 = a * W, y0 = b * H, x1 = (a + w) * W, y1 = (b + h) * H;
+  if (a > e) x0 += g; if (a + w < 1 - e) x1 -= g;
+  if (b > e) y0 += g; if (b + h < 1 - e) y1 -= g;
+  return { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
+}
+function geom(i, W, H){
+  const R = rect(i, W, H), C = cells[i];
+  const s = Math.max(R.w / C.iw, R.h / C.ih) * C.z, dw = C.iw * s, dh = C.ih * s;
+  const sx = dw - R.w, sy = dh - R.h;
+  return { R, s, dw, dh, sx, sy, cx: R.x + R.w / 2 + C.fx * sx / 2, cy: R.y + R.h / 2 + C.fy * sy / 2 };
+}
+const cl1 = v => Math.max(-1, Math.min(1, v));
+
+function draw(ctx, W, H, preview){
+  ctx.save();
+  ctx.fillStyle = cs.line || '#000'; ctx.fillRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  for (let i = 0; i < nParts(); i++){
+    const R = rect(i, W, H), C = cells[i];
+    ctx.save(); ctx.beginPath(); ctx.rect(R.x, R.y, R.w, R.h); ctx.clip();
+    if (C){
+      const g = geom(i, W, H);
+      const src = preview ? C.prev : scaled(C.img, g.dw, g.dh);
+      ctx.drawImage(src, g.cx - g.dw / 2, g.cy - g.dh / 2, g.dw, g.dh);
+    } else if (preview){
+      ctx.fillStyle = i % 2 ? '#34343a' : '#3c3c43'; ctx.fillRect(R.x, R.y, R.w, R.h);
+      const f = Math.round(H * 0.034);
+      ctx.fillStyle = '#ececef'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `600 ${f}px system-ui, sans-serif`;
+      ctx.fillText('Trair qua in maletg', R.x + R.w / 2, R.y + R.h / 2 - f * 0.7);
+      ctx.fillStyle = '#9a9aa2'; ctx.font = `${Math.round(f * 0.75)}px system-ui, sans-serif`;
+      ctx.fillText('u tutgar per tscherner', R.x + R.w / 2, R.y + R.h / 2 + f * 0.7);
+    }
+    ctx.restore();
+  }
+  if (preview){
+    const R = rect(sel, W, H), t = Math.max(3, Math.round(H / 270));
+    ctx.strokeStyle = '#ff4d64'; ctx.lineWidth = t; ctx.setLineDash([t * 4, t * 2]);
+    ctx.strokeRect(R.x + t / 2, R.y + t / 2, R.w - t, R.h - t);
+  }
+  ctx.restore();
+}
+function paint(){
+  const [W, H] = dims();
+  if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  stageC.classList.toggle('sq', W === H);
+  draw(cx2, W, H, true);
+  const n = nParts(), filled = cells.slice(0, n).filter(Boolean).length;
+  $('cDl').disabled = !filled;
+  const C = cells[sel];
+  $('cPartTitle').textContent = `Part ${sel + 1} da ${n}` + (C ? ' · ' + C.name : '');
+  $('cEdit').classList.toggle('off', !C);
+  const z = C ? Math.round(C.z * 100) : 100;
+  $('cZoom').value = z; $('cZoomVal').textContent = z + ' %';
+}
+
+/* Steuerung: Format, Disposiziun, Lingia */
+function seg(id, key, num){
+  const bs = [...document.querySelectorAll(`#${id} button`)];
+  const sync = () => bs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v) === String(cs[key])));
+  bs.forEach(b => b.onclick = () => { cs[key] = num ? +b.dataset.v : b.dataset.v; save(); sync(); if (key === 'fmt') buildLays(); paint(); });
+  sync();
+}
+function icon(L){
+  const [W, H] = cs.fmt === '1:1' ? [18, 18] : [32, 18];
+  const o = 1.6 / 2, e = 1e-6;
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">` + L.r.map(([a, b, w, h]) => {
+    let x0 = a * W, y0 = b * H, x1 = (a + w) * W, y1 = (b + h) * H;
+    if (a > e) x0 += o; if (a + w < 1 - e) x1 -= o; if (b > e) y0 += o; if (b + h < 1 - e) y1 -= o;
+    return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="1" fill="currentColor"/>`;
+  }).join('') + '</svg>';
+}
+const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart' };
+function buildLays(){
+  const box = $('cLays'); box.innerHTML = '';
+  for (const k of Object.keys(CL)){
+    const b = document.createElement('button'); b.type = 'button';
+    b.title = LAYNAME[k]; b.setAttribute('aria-label', LAYNAME[k]);
+    b.setAttribute('aria-pressed', k === cs.lay); b.innerHTML = icon(CL[k]);
+    b.onclick = () => { cs.lay = k; if (sel >= nParts()) sel = 0; save(); buildLays(); paint(); };
+    box.append(b);
+  }
+}
+seg('cFmt', 'fmt'); seg('cLine', 'line'); seg('cLw', 'lw', true);
+buildLays();
+
+/* Maletgs chargiar */
+function loadImg(file){
+  return new Promise(res => {
+    if (!file || !(file.type || '').startsWith('image/')) return res(null);
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const [iw, ih] = dimsOf(im), k = Math.min(1, 2400 / Math.max(iw, ih));
+      const pw = Math.max(1, Math.round(iw * k)), ph = Math.max(1, Math.round(ih * k));
+      const p = document.createElement('canvas'); p.width = pw; p.height = ph;
+      const px = p.getContext('2d'); px.imageSmoothingQuality = 'high'; px.drawImage(scaled(im, pw, ph), 0, 0, pw, ph);
+      res({ img: im, prev: p, iw, ih, name: file.name || 'Maletg', z: 1, fx: 0, fy: 0 });
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); res(null); };
+    im.src = url;
+  });
+}
+// ab Part «start»: zuerst die angetippte Part, dann die übrigen leeren Parts
+async function colAddFiles(files, start){
+  const imgs = [...files].filter(f => f && (f.type || '').startsWith('image/'));
+  if (!imgs.length){ colMsg('Quai n\'è nagin file da maletg.', true); return false; }
+  const n = nParts();
+  let first = start ?? (cells[sel] ? -1 : sel);
+  const order = [];
+  if (first >= 0) order.push(first);
+  for (let i = 0; i < n; i++) if (!cells[i] && !order.includes(i)) order.push(i);
+  if (!order.length) order.push(sel);       // alle Parts plain: tschernida Part remplazzar
+  let k = 0, last = -1;
+  for (const f of imgs){
+    if (k >= order.length) break;
+    const C = await loadImg(f);
+    if (!C){ colMsg('Il maletg n\'ha betg pudì vegnir legì.', true); continue; }
+    cells[order[k]] = C; last = order[k]; k++;
+  }
+  if (last < 0) return false;
+  sel = last;
+  const rest = imgs.length - k;
+  colMsg(rest > 0 ? `${rest} ${rest === 1 ? 'maletg n\'ha' : 'maletgs n\'han'} betg pli gì plazza.` : '');
+  paint();
+  return true;
+}
+const cPick = i => { target = i; $('cFile').click(); };
+$('cFile').onchange = e => { colAddFiles(e.target.files, target); e.target.value = ''; };
+
+/* Mieur / det */
+const toPx = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+function partAt(px, py){
+  const [W, H] = dims();
+  for (let i = 0; i < nParts(); i++){ const [a, b, w, h] = CL[cs.lay].r[i]; if (px >= a * W && px <= (a + w) * W && py >= b * H && py <= (b + h) * H) return i; }
+  return -1;
+}
+function zoomPart(i, z, px, py){
+  const C = cells[i]; if (!C) return;
+  const [W, H] = dims(), g0 = geom(i, W, H);
+  const nz = Math.max(1, Math.min(5, z)); if (nz === C.z) return;
+  const r = nz / C.z, ncx = px - (px - g0.cx) * r, ncy = py - (py - g0.cy) * r;
+  C.z = nz;
+  const g = geom(i, W, H);
+  C.fx = g.sx > 0 ? cl1(2 * (ncx - g.R.x - g.R.w / 2) / g.sx) : 0;
+  C.fy = g.sy > 0 ? cl1(2 * (ncy - g.R.y - g.R.h / 2) / g.sy) : 0;
+  paint();
+}
+const ptrs = new Map(); let dragI = -1, moved = false, pinch = null;
+cv.addEventListener('pointerdown', e => {
+  const [px, py] = toPx(e), i = partAt(px, py); if (i < 0) return;
+  cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [px, py]);
+  if (ptrs.size === 1){ dragI = i; moved = false; if (sel !== i){ sel = i; paint(); } }
+  if (ptrs.size === 2 && cells[dragI]){
+    const [a, b] = [...ptrs.values()];
+    pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: cells[dragI].z };
+  }
+});
+cv.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const [px, py] = toPx(e), [ox, oy] = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [px, py]);
+  const C = cells[dragI]; if (!C) return;
+  if (pinch && ptrs.size === 2){
+    const [a, b] = [...ptrs.values()];
+    zoomPart(dragI, pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+    moved = true; return;
+  }
+  if (Math.abs(px - ox) + Math.abs(py - oy) > 0.5) moved = true;
+  const [W, H] = dims(), g = geom(dragI, W, H);
+  if (g.sx > 0) C.fx = cl1(C.fx + 2 * (px - ox) / g.sx);
+  if (g.sy > 0) C.fy = cl1(C.fy + 2 * (py - oy) / g.sy);
+  cv.classList.add('drag'); paint();
+});
+function cUp(e){
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
+  if (!ptrs.size){
+    cv.classList.remove('drag');
+    if (!moved && dragI >= 0 && !cells[dragI] && e.type === 'pointerup') cPick(dragI);
+    dragI = -1;
+  }
+}
+cv.addEventListener('pointerup', cUp); cv.addEventListener('pointercancel', cUp);
+cv.addEventListener('dblclick', e => { const [px, py] = toPx(e), i = partAt(px, py), C = cells[i]; if (C){ C.z = 1; C.fx = C.fy = 0; paint(); } });
+cv.addEventListener('wheel', e => {
+  const [px, py] = toPx(e), i = partAt(px, py); if (i < 0 || !cells[i]) return;
+  e.preventDefault(); if (sel !== i) sel = i;
+  zoomPart(i, cells[i].z * Math.exp(-e.deltaY * 0.0015), px, py); paint();
+}, { passive:false });
+stageC.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('Files')){ e.preventDefault(); stageC.classList.add('over'); } });
+stageC.addEventListener('dragleave', () => stageC.classList.remove('over'));
+stageC.addEventListener('drop', e => {
+  if (!e.dataTransfer.files.length) return; e.preventDefault(); stageC.classList.remove('over');
+  const [px, py] = toPx(e), i = partAt(px, py);
+  colAddFiles(e.dataTransfer.files, i >= 0 ? i : undefined);
+});
+
+/* Part tschernida */
+$('cZoom').oninput = e => { const C = cells[sel]; if (!C) return; const [W, H] = dims(), R = rect(sel, W, H), g = geom(sel, W, H);
+  zoomPart(sel, +e.target.value / 100, g.cx, g.cy); };
+$('cZoomVal').onclick = () => { const C = cells[sel]; if (C){ C.z = 1; C.fx = C.fy = 0; paint(); } };
+$('cFit').onclick = () => { const C = cells[sel]; if (C){ C.z = 1; C.fx = C.fy = 0; paint(); } };
+$('cRepl').onclick = () => cPick(sel);
+$('cDel').onclick = () => { cells[sel] = null; paint(); };
+$('cSwap').onclick = () => {
+  const n = nParts(), j = (sel + 1) % n;
+  [cells[sel], cells[j]] = [cells[j], cells[sel]]; sel = j; paint();
+};
+
+/* Export */
+$('cDl').onclick = () => {
+  const [W, H] = dims();
+  colMsg('Elavurel…');
+  setTimeout(() => { try {
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    draw(c.getContext('2d'), W, H, false);
+    c.toBlob(b => {
+      if (!b){ colMsg('Export betg reussì.', true); return; }
+      const d = new Date(), z = n => String(n).padStart(2, '0');
+      const name = `collage_${W}x${H}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      colMsg(`Memorisà: ${name} (${W} × ${H} px)`);
+    }, 'image/png');
+  } catch(e){ colMsg('Export betg reussì.', true); } }, 30);
+};
+paint();
 </script>
 <script src="/handoff.js"></script>
 <script src="/like.js" defer></script>
