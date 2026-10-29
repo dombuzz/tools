@@ -72,7 +72,10 @@
     .map(a => ({ key: (a.getAttribute('href') || '').replace(/^\//, ''), name: (n => { n.querySelectorAll('.star, .nov, .dot').forEach(x => x.remove()); return n.textContent.trim(); })(a.cloneNode(true)), href: a.getAttribute('href') }))
     .filter((t, i, all) => /^[A-Za-z0-9-]+$/.test(t.key) && all.findIndex(x => x.key === t.key) === i);
   const seen = tools.filter(t => ls('dbz-visit-' + t.key, null));
-  const days = lj('dbz-days', []), cur = streak(Array.isArray(days) ? days : []);
+  // Nutzungstage: Tagesliste aus like.js plus die Tage der letzten Besuche pro Tool (Daten von vor dem Start von /game)
+  const days = [...new Set([...(Array.isArray(lj('dbz-days', [])) ? lj('dbz-days', []) : []),
+    ...tools.map(t => +ls('dbz-visit-' + t.key, 0)).filter(Boolean).map(ms => ymd(new Date(ms)))])];
+  const cur = streak(days), nDays = days.length; // nDays: verschiedene Tage, nicht zwingend nacheinander
   const best = Math.max(+ls('dbz-best', 0) || 0, cur);
   const acts = lj('dbz-acts', {}) || {}, month = new Date().toLocaleDateString('sv').slice(0, 7);
   const total = +acts.total || 0, mon = acts.month === month ? +acts.m || 0 : 0;
@@ -89,8 +92,8 @@
     ['🗺️', 'Mez scuvrì', seen.length, half, `Scuvra almain la mesadad dals tools (${half} da ${tools.length}).`],
     ['🏆', 'Tut scuvrì', seen.length, tools.length, `Scuvra tut ils ${tools.length} tools.`],
     ['🔥', '3 dis', best, 3, 'Dovra tools 3 dis a la lunga.'],
-    ['⚡', '7 dis', best, 7, 'Dovra tools 7 dis a la lunga.'],
-    ['🌋', '30 dis', best, 30, 'Dovra tools 30 dis a la lunga.'],
+    ['⚡', '7 dis', nDays, 7, 'Dovra tools a 7 dis differents – er cun pausas.'],
+    ['🌋', '30 dis', nDays, 30, 'Dovra tools a 30 dis differents – er cun pausas.'],
     ['✦', '10 acziuns', total, 10, 'Fa 10 acziuns en ils tools (p.ex. download u export).'],
     ['✸', '100 acziuns', total, 100, 'Fa 100 acziuns en ils tools (p.ex. download u export).'],
     ['💎', '500 acziuns', total, 500, 'Fa 500 acziuns en ils tools (p.ex. download u export).'],
