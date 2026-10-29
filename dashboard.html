@@ -341,7 +341,7 @@
   const OTHER = { 'index': 'Survista (tools.dombuzz.ch)', 'game': 'Game (pagina /game)', 'top-popup': 'top Tools (clics sin il pop-up)', 'top': 'top Tools (pagina /top)', 'lab-index': 'Lab (survista)', '404': 'Pagina betg chattada (404)' };
   // Eine Rangliste zeichnen (Standard: nach Nutzungen, dann Likes); gibt die Summen zurück
   const showZero = {};
-  const HEAD = [['n', 'Duvrà'], ['h', '♥'], ['v', EYE], ['p', '%']];
+  const HEAD = [['n', 'Duvrà'], ['h', '<span class="hrt">♥</span>'], ['v', EYE], ['p', '%']];
   const TITLES = { n: 'Duvrà', h: 'Gea (♥)', v: 'Visitas', p: 'Duvrà per 100 visitas' };
   const arrow = k => k !== sortKey ? '' : `<span class="arr">${(k === 'rank' ? sortAsc : !sortAsc) ? '↑' : '↓'}</span>`;
   const header = () => `<div class="hdrow"><button class="hd first${sortKey === 'rank' ? ' on' : ''}" data-k="rank">Rang${arrow('rank')}</button>`
