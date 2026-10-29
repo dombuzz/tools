@@ -25,7 +25,8 @@
   *{box-sizing:border-box}
   body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   .wrap{max-width:640px;margin:0 auto}
-  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+  .homesep{color:var(--muted);font-size:.85rem}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
   .homelink:hover,.homelink:focus-visible{color:var(--accent)}
   h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
   h1 .acc{color:var(--accent)}
@@ -215,7 +216,7 @@
     <button type="submit">Avrir</button>
     <p class="err" id="err" role="alert"></p>
   </form>
-  <a class="homelink" href="/">← Tools</a>
+  <a class="homelink" href="/">← Tools</a><span class="homesep" aria-hidden="true"> · </span><a class="homelink" href="/dashboard">Dashboard</a>
   <h1><span class="acc">Statistica</span><button class="help" id="help" type="button" aria-expanded="false" aria-controls="legend" aria-label="Declaraziun">?</button></h1>
   <p class="lead">Tge tools vegnan duvrads il pli savens – u han gidà da simplifitgar la lavur?</p>
   <div class="legend" id="legend" hidden>
