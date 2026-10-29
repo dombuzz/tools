@@ -152,6 +152,33 @@
   .fold>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
   .fold:not([open])>summary{margin-bottom:0}
   .archive .subh{margin:22px 0 8px}
+
+  /* Lauftext, Kurve 24 h, Wochenraster (aus /statsB) */
+  :root{--num:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;--tick:#ffb86b}
+  :root[data-theme="light"]{--tick:#b4650f}
+  .row.m .c[data-f="h"]{color:var(--accent)}.row.zero .c[data-f="h"]{color:var(--dim)}
+  .ticker{overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--tick);font:500 .82rem var(--num);padding:8px 0;margin:0 0 10px}
+  .ticker[hidden]{display:none}
+  .ticker span{display:inline-block;padding-left:100%;animation:run var(--dur,40s) linear infinite}
+  .ticker:hover span{animation-play-state:paused}
+  @keyframes run{to{transform:translateX(-100%)}}
+  @media (prefers-reduced-motion:reduce){.ticker span{animation:none;padding-left:0;white-space:normal}.ticker{white-space:normal}}
+  .pan{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0;margin-top:16px}
+  .sec{font-size:.85rem;font-weight:600;color:var(--muted);margin:0 0 10px}
+  .spark{display:block;width:100%;height:84px}
+  .sp-ax{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+  .sp-sum{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:6px}
+  .sp-sum b{color:var(--text);font-variant-numeric:tabular-nums}
+  .sp-sum i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .heat{overflow-x:auto}
+  .heat table{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed;min-width:300px}
+  .heat td{height:14px;border-radius:3px;padding:0;background:var(--field)}
+  .heat th{font-size:.62rem;font-weight:500;color:var(--muted);text-align:left;padding:0;white-space:nowrap;overflow:visible}
+  .heat th:first-child{width:28px}
+  .hm{font-size:.75rem;color:var(--muted);margin-top:8px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .hm .sc{display:inline-flex;align-items:center;gap:3px}
+  .hm .sc i{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .fold:first-of-type{margin-top:8px}
 </style>
 </head>
 <body>
@@ -183,9 +210,13 @@
     <button class="tab" role="tab" data-r="all" aria-selected="true">entir temp</button>
   </div>
 
+  <div class="ticker" id="ticker" hidden aria-live="off"><span id="tickt"></span></div>
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <div class="metarow"><div class="meta" id="meta"></div><div class="thbar" id="themeBar" hidden></div></div>
+
+  <section class="pan"><p class="sec">Activitad · ultimas 24 uras</p><div id="spark"><div class="msg">Chargel …</div></div></section>
+  <section class="pan"><p class="sec">Cura vegnan ils tools duvrads</p><div id="heat"><div class="msg">Chargel …</div></div></section>
 
   <details class="fold" data-k="favs">
     <summary class="labh other">Favurits <span>★</span></summary>
@@ -341,7 +372,7 @@
       if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
       const before = silent && lastData ? snap(lastData) : null;
       lastData = d; lastRange = range;
-      render(); stamp();
+      render(); stamp(); loadHourly(range);
       if (silent) playFx(before, snap(d));
     } catch (e) {
       if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
@@ -417,6 +448,80 @@
     });
     box.addEventListener('mouseleave', () => { const t = tip(); if (t) t.hidden = true; box.querySelectorAll('.hit.on').forEach(e => e.classList.remove('on')); });
   })();
+  // ===== Stundenzahlen (Kurve 24 h, Wochenraster, Rekorde) =====
+  const DAYS = ['Gli', 'Ma', 'Me', 'Gie', 'Ve', 'So', 'Du'];
+  const DAYS_L = ['glindesdi', 'mardi', 'mesemna', 'gievgia', 'venderdi', 'sonda', 'dumengia'];
+  const hourDate = h => new Date(h.replace(' ', 'T') + ':00:00Z'); // UTC-Stunde -> Date (Anzeige in Lokalzeit)
+  const dayKey = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  let hourAll = null, hour24 = null, hourRange = null, hourRangeKey = null;
+  async function loadHourly(range) {
+    try {
+      const get = async q => { const r = await fetch(`${API}/hourly?range=${q}`); if (!r.ok) throw new Error(r.status); return r.json(); };
+      const [all, h24, hr] = await Promise.all([get('all'), get('24h'), range === 'all' ? null : get(range)]);
+      hourAll = all; hour24 = h24; hourRange = hr || all; hourRangeKey = range;
+      drawHourly();
+    } catch (e) {
+      ['spark', 'heat'].forEach(id => { const el = document.getElementById(id); if (!hour24) el.innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas.</div>'; });
+    }
+  }
+  function drawHourly() {
+    if (!hour24 || !hourRange) return;
+    // Kurve: 24 volle Stunden bis jetzt (Lokalzeit), Duvrà (rot) und Visitas (grau)
+    const now = new Date(); now.setMinutes(0, 0, 0);
+    const slots = Array.from({ length: 24 }, (_, i) => new Date(now - (23 - i) * 36e5));
+    const idx = d => slots.findIndex(s => s.getTime() === d.getTime());
+    const u = Array(24).fill(0), v = Array(24).fill(0);
+    hour24.uses.forEach(x => { const i = idx(hourDate(x.h)); if (i >= 0) u[i] += x.n; });
+    hour24.views.forEach(x => { const i = idx(hourDate(x.h)); if (i >= 0) v[i] += x.n; });
+    const W = 600, H = 84, mx = Math.max(1, ...u, ...v);
+    const pt = (a, i) => [i / 23 * W, H - 4 - a[i] / mx * (H - 12)];
+    const path = a => a.map((_, i) => (i ? 'L' : 'M') + pt(a, i).map(n => n.toFixed(1)).join(' ')).join(' ');
+    const lu = pt(u, 23);
+    document.getElementById('spark').innerHTML = `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Activitad da las ultimas 24 uras">
+      ${[.25, .5, .75].map(f => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" style="stroke:var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`).join('')}
+      <path d="${path(v)}" fill="none" style="stroke:var(--muted)" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>
+      <path d="${path(u)} L${W} ${H} L0 ${H} Z" fill="rgba(255,77,100,.15)"/>
+      <path d="${path(u)}" fill="none" style="stroke:var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      <circle cx="${lu[0] - 3}" cy="${lu[1]}" r="3.5" style="fill:var(--accent)"/></svg>
+      <div class="sp-ax"><span>${pad2(slots[0].getHours())}:00</span><span>${pad2(slots[12].getHours())}:00</span><span>ussa</span></div>
+      <div class="sp-sum"><span><i style="background:var(--accent)"></i><b>${fmt(u.reduce((a, b) => a + b, 0))}</b> giadas duvrà</span><span><i style="background:var(--muted)"></i><b>${fmt(v.reduce((a, b) => a + b, 0))}</b> visitas</span></div>`;
+    // Wochenraster: Wochentag × Stunde (Lokalzeit), Duvrà im gewählten Zeitraum
+    const g = Array.from({ length: 7 }, () => Array(24).fill(0));
+    hourRange.uses.forEach(x => { const d = hourDate(x.h); g[(d.getDay() + 6) % 7][d.getHours()] += x.n; });
+    const gm = Math.max(1, ...g.flat()), tot = g.flat().reduce((a, b) => a + b, 0);
+    let best = [0, 0, 0]; g.forEach((row, di) => row.forEach((n, hh) => { if (n > best[0]) best = [n, di, hh]; }));
+    const cell = (n, di, hh) => `<td title="${DAYS_L[di]} ${pad2(hh)}–${pad2((hh + 1) % 24)}: ${fmt(n)} ${n === 1 ? 'giada' : 'giadas'} duvrà" style="${n ? `background:rgba(255,77,100,${(.18 + n / gm * .82).toFixed(2)})` : ''}"></td>`;
+    document.getElementById('heat').innerHTML = tot ? `<div class="heat"><table><thead><tr><th></th>${Array.from({ length: 24 }, (_, i) => `<th>${i % 6 === 0 ? pad2(i) : ''}</th>`).join('')}</tr></thead><tbody>
+      ${g.map((row, di) => `<tr><th>${DAYS[di]}</th>${row.map((n, hh) => cell(n, di, hh)).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="hm"><span>Il pli savens: ${DAYS_L[best[1]]} ${pad2(best[2])}–${pad2((best[2] + 1) % 24)}</span><span class="sc">pauc <i style="background:rgba(255,77,100,.2)"></i><i style="background:rgba(255,77,100,.55)"></i><i style="background:rgba(255,77,100,1)"></i> bler</span></div>`
+      : '<div class="msg">Anc naginas datas en quest temp.</div>';
+    ticker();
+  }
+  // Lauftext: Rekorde und Höhepunkte aus den echten Zahlen
+  function ticker() {
+    const el = document.getElementById('ticker'); if (!hourAll || !lastData) return;
+    const perDay = {}; hourAll.uses.forEach(x => { const k = dayKey(hourDate(x.h)); perDay[k] = (perDay[k] || 0) + x.n; });
+    const today = dayKey(new Date()), nToday = perDay[today] || 0;
+    const rec = Object.entries(perDay).sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0];
+    const perH = Array(24).fill(0); hourAll.uses.forEach(x => perH[hourDate(x.h).getHours()] += x.n);
+    const ph = perH.indexOf(Math.max(...perH));
+    const wd = Array(7).fill(0); Object.entries(perDay).forEach(([k, n]) => wd[(new Date(k + 'T12:00').getDay() + 6) % 7] += n);
+    const pw = wd.indexOf(Math.max(...wd));
+    const lbl = { all: 'dapi il cumenzament', today: 'oz', week: "quest'emna", '30d': 'ils ultims 30 dis', month: 'quest mais' }[lastRange] || '';
+    const top = (lastData.uses || []).filter(x => !x.tool.startsWith('lab-'))[0];
+    const items = [];
+    if (rec) { const [y, m, d] = rec[0].split('-').map(Number);
+      items.push(rec[0] === today ? `▲ Nov record: ${fmt(rec[1])} giadas duvrà oz` : `▲ Record: ${fmt(rec[1])} giadas duvrà en in di (${d}. ${MONTHS[m - 1]} ${y})`); }
+    if (rec && rec[0] !== today) items.push(`● Oz: ${fmt(nToday)} ${nToday === 1 ? 'giada' : 'giadas'} duvrà`);
+    if (top) items.push(`★ ${NAMES[top.tool] || top.name || top.tool} sin plaz 1 ${lbl}`);
+    if (lastData.total) items.push(`♥ ${fmt(lastData.total)} ${lastData.total === 1 ? 'cor' : 'cors'} ${lbl}`);
+    if (lastData.clients) items.push(`${fmt(lastData.clients)} ${lastData.clients === 1 ? 'visitader unic' : 'visitaders unics'} ${lbl}`);
+    if (perH[ph]) items.push(`◷ Ura la pli activa: ${pad2(ph)}–${pad2((ph + 1) % 24)}`);
+    if (wd[pw]) items.push(`Di il pli activ: ${DAYS_L[pw]}`);
+    el.hidden = !items.length;
+    const t = document.getElementById('tickt'), txt = items.join('   ·   ');
+    if (t.textContent !== txt) { t.textContent = txt; el.style.setProperty('--dur', Math.max(25, txt.length / 5) + 's'); }
+  }
   function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
   function renderInto(d, range, ids) {
     const meta = document.getElementById(ids[3]);
