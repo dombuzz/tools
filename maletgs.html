@@ -193,6 +193,7 @@
   .cbtns{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
   .cbtns button{ padding:8px 6px; font-size:0.82rem; }
   .cbtns .wide{ grid-column:1 / -1; }
+  .cbtns em{ font-style:normal; color:var(--accent); }
   .cpool{ margin-top:12px; border:1px dashed var(--border); border-radius:12px; padding:10px 12px; transition:border-color .15s, background .15s; }
   .cpool.over{ border-color:var(--accent); background:rgba(255,77,100,.06); }
   .cpool-h{ display:flex; align-items:baseline; gap:8px; font-size:.85rem; margin-bottom:8px; }
@@ -280,9 +281,9 @@
         </div>
       </div>
 
-      <div class="side">
+      <div class="side" id="laySide">
         <div class="pane" data-pane="0">
-          <p class="who"><span>Layer:</span> <b class="whoName">–</b> <button type="button" class="link" data-goto="2">midar</button></p>
+          <p class="who"><span class="whoLbl">Layer:</span> <b class="whoName">–</b> <button type="button" class="link" data-goto="2">midar</button></p>
           <div class="edit off" data-edit>
             <h3>Clerezza <button type="button" class="secreset" data-reset="bri,con,hil,sha" title="Reset clerezza, cuntrast, clers e stgirs" aria-label="Reset clerezza, cuntrast, clers e stgirs">↺</button></h3>
           <div class="ctl"><div class="top"><label for="c_bri">Clerezza</label><span class="val" data-for="bri" title="Reset">0</span></div><input type="range" id="c_bri" data-c="bri" min="-100" max="100" step="1" value="0"></div>
@@ -298,7 +299,7 @@
         </div>
 
         <div class="pane" data-pane="1" hidden>
-          <p class="who"><span>Layer:</span> <b class="whoName">–</b> <button type="button" class="link" data-goto="2">midar</button></p>
+          <p class="who"><span class="whoLbl">Layer:</span> <b class="whoName">–</b> <button type="button" class="link" data-goto="2">midar</button></p>
           <div class="edit off" data-edit>
             <h3>Rotar e spievlar</h3>
             <div class="rot">
@@ -336,13 +337,15 @@
           <div class="stage cstage" id="cStage" tabindex="0" aria-label="Collascha">
             <canvas id="cCanvas" width="1920" height="1080"></canvas>
           </div>
-          <div class="cpool" id="cPool" aria-label="Plazza da parcar">
-            <div class="cpool-h"><b>Plazza da parcar</b> <span class="info" id="cPoolN"></span><button type="button" class="plink" id="cPoolAdd">+ Agiuntar maletgs</button></div>
+          <div class="cpool" id="cPool" aria-label="Parcadi">
+            <div class="cpool-h"><b>Parcadi</b> <span class="info" id="cPoolN"></span><button type="button" class="plink" id="cPoolAdd">+ Agiuntar maletgs</button></div>
             <div class="cpool-list" id="cPoolList"></div>
             <p class="cpool-empty" id="cPoolEmpty">Trair qua maletgs per als parcar a curt temp – dal computer u ord la collascha.</p>
           </div>
         </div>
         <div class="side">
+          <div id="cSideEdit"></div>
+          <div id="cSide">
           <h3>Format</h3>
           <div class="sizeseg" role="group" aria-label="Format" id="cFmt">
             <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920 × 1080</small></button>
@@ -369,13 +372,16 @@
               <button type="button" class="ghost" id="cRepl">Remplazzar</button>
               <button type="button" class="ghost" id="cSwap" title="Barattar cun la proxima part">⇄ Barattar</button>
               <button type="button" class="ghost" id="cFit" title="Puspè emplenir la part">Reposiziunar</button>
-              <button type="button" class="ghost" id="cPark" title="Metter il maletg sin la plazza da parcar">Parcar</button>
+              <button type="button" class="ghost" id="cPark" title="Metter il maletg en il parcadi">Parcar</button>
               <button type="button" class="ghost wide" id="cDel">Allontanar</button>
+              <button type="button" class="ghost" data-etab="0">Clerezza <em>+</em> colurs</button>
+              <button type="button" class="ghost" data-etab="1">Rotar <em>+</em> drizzar</button>
             </div>
+          </div>
           </div>
         </div>
       </div>
-      <p class="hint">Trair ils maletgs en las parts u tutgar ina part vida per tscherner in maletg. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur. Ils maletgs dals layers vegnan surpigliads automaticamain. Sin la plazza da parcar pos ti deponer maletgs: trair in maletg da la collascha giu là, u da là sin ina part; tutgar in maletg parcà al metta en la part tschernida.</p>
+      <p class="hint">Trair ils maletgs en las parts u tutgar ina part vida per tscherner in maletg. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur. Ils maletgs dals layers vegnan surpigliads automaticamain. En il parcadi pos ti deponer maletgs: trair in maletg da la collascha giu là, u da là sin ina part; tutgar in maletg parcà al metta en la part tschernida. Las parts tschernidas pos ti era elavurar en «Clerezza + colurs» e «Rotar + drizzar».</p>
       <div class="actions">
         <button type="button" id="cDl" disabled>Telechargiar la collascha</button>
         <span class="msg" id="cMsg"></span>
@@ -1061,24 +1067,42 @@ const edits = [...document.querySelectorAll('[data-edit]')];
 const tabBtns = [...document.querySelectorAll('.tabs [data-tab]')], panes = [...document.querySelectorAll('.pane')];
 let curTab = 0;
 const colOn = () => curTab === 3;
+// Bearbeitung («Clerezza + colurs», «Rotar + drizzar») gilt für den Layer oder – nach «Collascha» – für die gewählte Part
+let ectx = 'layers';
+const editTarget = () => ectx === 'collage' ? (typeof colSel === 'function' ? colSel() : null) : active;
+const isCell = A => !!(A && A.orig);
 function setTab(i){
   curTab = i;
+  if (i === 3) ectx = 'collage'; else if (i === 2) ectx = 'layers';
+  const colView = i === 3 || ectx === 'collage';
   tabBtns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === String(i)));
   panes.forEach(p => p.hidden = p.dataset.pane !== String(i));
-  ['layToolbar', 'layWork', 'layHint', 'layActions'].forEach(id => $(id).hidden = i === 3);
-  $('collage').hidden = i !== 3;
+  ['layToolbar', 'layWork', 'layHint', 'layActions'].forEach(id => $(id).hidden = colView);
+  $('collage').hidden = !colView;
+  $('cSide').hidden = i !== 3;
+  // Regler-Bereiche an die richtige Arbeitsfläche hängen
+  const p2 = panes.find(p => p.dataset.pane === '2');
+  panes.filter(p => p !== p2).forEach(p => {
+    if (colView){ if (p.parentNode !== $('cSideEdit')) $('cSideEdit').append(p); }
+    else if (p.parentNode !== $('laySide')) $('laySide').insertBefore(p, p2);
+  });
   if (i === 3 && window.colFromLayers) colFromLayers();
+  if (typeof colSel === 'function') syncEdit();
   try { localStorage.setItem('layers-tab', i); } catch(e){}
 }
 tabBtns.forEach(b => b.onclick = () => setTab(+b.dataset.tab));
-document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => setTab(+b.dataset.goto));
+document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => setTab(ectx === 'collage' ? 3 : +b.dataset.goto));
+document.querySelectorAll('[data-etab]').forEach(b => b.onclick = () => setTab(+b.dataset.etab));
 try { const s = localStorage.getItem('layers-tab'); if (s !== null && /^[0-3]$/.test(s)) setTab(+s); } catch(e){}
 // Direktlink auf einen Tab, z. B. /maletgs?tab=collascha (bzw. /collascha)
 { const t = { colurs:0, rotar:1, layers:2, collascha:3 }[(new URLSearchParams(location.search).get('tab') || '').toLowerCase()]; if (t !== undefined) setTab(t); }
 function syncEdit(){
-  const A = active, on = !!A && !A.locked;
+  const A = editTarget(), on = !!A && !A.locked, col = ectx === 'collage';
   edits.forEach(e => e.classList.toggle('off', !on));
-  document.querySelectorAll('.whoName').forEach(w => w.textContent = A ? A.name + (A.locked ? ' · bloccà' : '') : 'anc nagin layer');
+  document.querySelectorAll('.whoLbl').forEach(w => w.textContent = col ? 'Collascha:' : 'Layer:');
+  document.querySelectorAll('.whoName').forEach(w => w.textContent = col
+    ? (A ? `part ${colSelIndex() + 1} · ${A.name}` : 'nagina part cun maletg tschernida')
+    : (A ? A.name + (A.locked ? ' · bloccà' : '') : 'anc nagin layer'));
   $('tcount').textContent = layers.length ? `(${layers.length}/${MAX})` : '';
   if (A){
     $('flipH').setAttribute('aria-pressed', !!A.fh); $('flipV').setAttribute('aria-pressed', !!A.fv);
@@ -1091,30 +1115,31 @@ function syncEdit(){
   updateSizes();
 }
 let colRaf = 0;
-document.querySelectorAll('.edit input[type=range]').forEach(inp => inp.addEventListener('input', () => {
-  const A = active; if (!A || A.locked) return;
+document.querySelectorAll('[data-edit] input[type=range]').forEach(inp => inp.addEventListener('input', () => {
+  const A = editTarget(); if (!A || A.locked) return;
   const id = inp.dataset.c;
-  if (id === 'ang'){ A.ang = Math.round(+inp.value * 10) / 10; render(); return; }
+  if (id === 'ang'){ A.ang = Math.round(+inp.value * 10) / 10; if (isCell(A)){ syncEdit(); paint(); } else render(); return; }
   A.col[id] = +inp.value;
   syncEdit();
   cancelAnimationFrame(colRaf);
-  colRaf = requestAnimationFrame(() => { recolor(A); render(); updateThumb(A); });
+  colRaf = requestAnimationFrame(() => { if (isCell(A)){ cellRecolor(A); paint(); renderPool(); } else { recolor(A); render(); updateThumb(A); } });
 }));
 // Klick auf den Namen eines Reglers setzt ihn zurück
-document.querySelectorAll('.edit .ctl label').forEach(l => l.addEventListener('click', e => {
+document.querySelectorAll('[data-edit] .ctl label').forEach(l => l.addEventListener('click', e => {
   e.preventDefault();
   const inp = $(l.htmlFor); inp.value = 0; inp.dispatchEvent(new Event('input'));
 }));
 // ↺ neben «Clerezza» bzw. «Colurs» setzt die ganze Gruppe zurück
 document.querySelectorAll('.secreset').forEach(b => b.onclick = () => {
-  const A = active; if (!A || A.locked) return;
+  const A = editTarget(); if (!A || A.locked) return;
   b.dataset.reset.split(',').forEach(id => { A.col[id] = 0; });
+  if (isCell(A)){ cellRecolor(A); paint(); syncEdit(); return; }
   recolor(A); render(); updateThumb(A);
 });
-document.querySelectorAll('.edit .val').forEach(v => v.onclick = () => {
+document.querySelectorAll('[data-edit] .val').forEach(v => v.onclick = () => {
   const inp = $('c_' + v.dataset.for); inp.value = 0; inp.dispatchEvent(new Event('input'));
 });
-$('resetCol').onclick = () => { const A = active; if (!A || A.locked) return; A.col = newCol(); recolor(A); render(); updateThumb(A); };
+$('resetCol').onclick = () => { const A = editTarget(); if (!A || A.locked) return; A.col = newCol(); if (isCell(A)){ cellRecolor(A); paint(); syncEdit(); return; } recolor(A); render(); updateThumb(A); };
 function updateThumb(L){
   const th = list.querySelector(`.row[data-id="${L.id}"] .thumb`); if (!th) return;
   const cx = th.getContext('2d'), tk = Math.min(88 / L.el.width, 88 / L.el.height);
@@ -1122,7 +1147,8 @@ function updateThumb(L){
   cx.drawImage(L.el, (88 - L.el.width * tk) / 2, (88 - L.el.height * tk) / 2, L.el.width * tk, L.el.height * tk);
 }
 function reorient(fn){
-  const A = active; if (!A || A.locked) return;
+  const A = editTarget(); if (!A || A.locked) return;
+  if (isCell(A)){ fn(A); cellOrient(A); A.fx = A.fy = 0; paint(); syncEdit(); return; }
   fn(A); orient(A); refreshOrigFmt(); fitLayer(A); renderList(); render();
 }
 $('rotL').onclick = () => reorient(A => { A.q = (A.q + 3) % 4; });
@@ -1157,7 +1183,7 @@ if (!CL[cs.lay]) cs.lay = 'c2';
 const okLay = k => !CL[k].only || CL[k].only === cs.fmt;
 if (!okLay(cs.lay)) cs.lay = 'l12';
 let sel = 0, target = 0, hov = -1;
-const pool = [];                    // Plazza da parcar
+const pool = [];                    // Parcadi
 const seen = new Set();             // Layers, che èn gia vegnids surpigliads (id)
 function colMsg(t, err){ cMsgEl.textContent = t; cMsgEl.classList.toggle('err', !!err); }
 const save = () => { try { localStorage.setItem('collage-set', JSON.stringify(cs)); } catch(e){} };
@@ -1196,10 +1222,12 @@ function inPoly(P, x, y){
   return inside;
 }
 function geom(i, W, H){
-  const R = rect(i, W, H), C = cells[i];
-  const s = Math.max(R.w / C.iw, R.h / C.ih) * C.z, dw = C.iw * s, dh = C.ih * s;
-  const sx = dw - R.w, sy = dh - R.h;
-  return { R, s, dw, dh, sx, sy, cx: R.x + R.w / 2 + C.fx * sx / 2, cy: R.y + R.h / 2 + C.fy * sy / 2 };
+  // Mit Drehwinkel: Das Bild deckt das um den Winkel gedrehte Umfeld der Part ab (keine Lücken)
+  const R = rect(i, W, H), C = cells[i], a = (C.ang || 0) * Math.PI / 180;
+  const ca = Math.cos(a), sa = Math.sin(a), Wr = R.w * Math.abs(ca) + R.h * Math.abs(sa), Hr = R.w * Math.abs(sa) + R.h * Math.abs(ca);
+  const s = Math.max(Wr / C.iw, Hr / C.ih) * C.z, dw = C.iw * s, dh = C.ih * s;
+  const sx = dw - Wr, sy = dh - Hr, ox = C.fx * sx / 2, oy = C.fy * sy / 2;
+  return { R, s, dw, dh, sx, sy, a, ca, sa, cx: R.x + R.w / 2 + ox * ca - oy * sa, cy: R.y + R.h / 2 + ox * sa + oy * ca };
 }
 const cl1 = v => Math.max(-1, Math.min(1, v));
 
@@ -1212,8 +1240,9 @@ function draw(ctx, W, H, preview){
     ctx.save(); path(ctx, P); ctx.clip();
     if (C){
       const g = geom(i, W, H);
-      const src = preview ? C.prev : scaled(C.img, g.dw, g.dh);
-      ctx.drawImage(src, g.cx - g.dw / 2, g.cy - g.dh / 2, g.dw, g.dh);
+      const src = preview ? C.prev : scaled(cellFull(C), g.dw, g.dh);
+      ctx.translate(g.cx, g.cy); ctx.rotate(g.a);
+      ctx.drawImage(src, -g.dw / 2, -g.dh / 2, g.dw, g.dh);
     } else if (preview){
       ctx.fillStyle = i % 2 ? '#34343a' : '#3c3c43'; ctx.fillRect(R.x, R.y, R.w, R.h);
       // Mitte und nutzbare Breite auf halber Höhe (auch für schräge Parts)
@@ -1254,6 +1283,7 @@ function paint(){
   $('cEdit').classList.toggle('off', !C);
   const z = C ? Math.round(C.z * 100) : 100;
   $('cZoom').value = z; $('cZoomVal').textContent = z + ' %';
+  if (ectx === 'collage' && curTab < 2) syncEdit();
 }
 
 /* Steuerung: Format, Disposiziun, Lingia */
@@ -1284,13 +1314,44 @@ seg('cFmt', 'fmt'); seg('cLine', 'line'); seg('cLw', 'lw', true);
 buildLays();
 
 /* Maletgs chargiar */
+// Jede Part hat eigene Bearbeitung wie ein Layer: 90°-Schritte, Spiegeln, Begradigen, Farben
+const CPREV = 2000;
 function mkItem(im, name){
-  const [iw, ih] = dimsOf(im), k = Math.min(1, 2400 / Math.max(iw, ih));
-  const pw = Math.max(1, Math.round(iw * k)), ph = Math.max(1, Math.round(ih * k));
-  const p = document.createElement('canvas'); p.width = pw; p.height = ph;
-  const px = p.getContext('2d'); px.imageSmoothingQuality = 'high'; px.drawImage(scaled(im, pw, ph), 0, 0, pw, ph);
-  return { img: im, prev: p, iw, ih, name, z: 1, fx: 0, fy: 0 };
+  const C = { orig: im, name, z: 1, fx: 0, fy: 0, q: 0, fh: false, fv: false, ang: 0, col: newCol() };
+  cellOrient(C); return C;
 }
+function orientCanvas(im, q, fh, fv, maxSide){
+  const [w0, h0] = dimsOf(im), k = Math.min(1, maxSide / Math.max(w0, h0));
+  const w1 = Math.max(1, Math.round(w0 * k)), h1 = Math.max(1, Math.round(h0 * k));
+  const w = q % 2 ? h1 : w1, h = q % 2 ? w1 : h1;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d', { willReadFrequently:true }); x.imageSmoothingQuality = 'high';
+  x.translate(w / 2, h / 2); x.scale(fh ? -1 : 1, fv ? -1 : 1); x.rotate(q * Math.PI / 2);
+  x.drawImage(scaled(im, w1, h1), -w1 / 2, -h1 / 2, w1, h1);
+  return c;
+}
+function cellOrient(C){
+  const [w0, h0] = dimsOf(C.orig);
+  C.iw = C.q % 2 ? h0 : w0; C.ih = C.q % 2 ? w0 : h0;
+  const pc = orientCanvas(C.orig, C.q, C.fh, C.fv, CPREV);
+  C.base = pc.getContext('2d').getImageData(0, 0, pc.width, pc.height);
+  C.prev = pc; cellRecolor(C);
+}
+function cellRecolor(C){
+  const x = C.prev.getContext('2d');
+  if (isNeutral(C.col)) x.putImageData(C.base, 0, 0);
+  else { const out = new ImageData(C.base.width, C.base.height); applyColor(C.base, out, params(C.col)); x.putImageData(out, 0, 0); }
+  C.full = null;
+}
+// volle Auflösung erst beim Export (zwischengespeichert, bis die Part wieder bearbeitet wird)
+function cellFull(C){
+  if (C.full) return C.full;
+  const c = orientCanvas(C.orig, C.q, C.fh, C.fv, 6000);
+  if (!isNeutral(C.col)){ const x = c.getContext('2d', { willReadFrequently:true }), d = x.getImageData(0, 0, c.width, c.height); applyColor(d, d, params(C.col)); x.putImageData(d, 0, 0); }
+  return C.full = c;
+}
+const colSel = () => cells[sel] || null;
+const colSelIndex = () => sel;
 function loadImg(file){
   return new Promise(res => {
     if (!file || !(file.type || '').startsWith('image/')) return res(null);
@@ -1320,7 +1381,7 @@ async function colAddFiles(files, start){
   }
   if (last < 0 && !parked) return false;
   if (last >= 0) sel = last;
-  colMsg(parked ? `${parked} ${parked === 1 ? 'maletg è vegnì parcà' : 'maletgs èn vegnids parcads'} sin la plazza da parcar.` : '');
+  colMsg(parked ? `${parked} ${parked === 1 ? 'maletg è vegnì parcà' : 'maletgs èn vegnids parcads'} en il parcadi.` : '');
   renderPool();
   paint();
   return true;
@@ -1344,8 +1405,9 @@ function zoomPart(i, z, px, py){
   const r = nz / C.z, ncx = px - (px - g0.cx) * r, ncy = py - (py - g0.cy) * r;
   C.z = nz;
   const g = geom(i, W, H);
-  C.fx = g.sx > 0 ? cl1(2 * (ncx - g.R.x - g.R.w / 2) / g.sx) : 0;
-  C.fy = g.sy > 0 ? cl1(2 * (ncy - g.R.y - g.R.h / 2) / g.sy) : 0;
+  const dx = ncx - g.R.x - g.R.w / 2, dy = ncy - g.R.y - g.R.h / 2;
+  C.fx = g.sx > 0 ? cl1(2 * (dx * g.ca + dy * g.sa) / g.sx) : 0;
+  C.fy = g.sy > 0 ? cl1(2 * (-dx * g.sa + dy * g.ca) / g.sy) : 0;
   paint();
 }
 const ptrs = new Map(); let dragI = -1, moved = false, pinch = null;
@@ -1368,13 +1430,14 @@ cv.addEventListener('pointermove', e => {
     moved = true; return;
   }
   if (Math.abs(px - ox) + Math.abs(py - oy) > 0.5) moved = true;
-  // über der Plazza da parcar: nicht verschieben, sondern Ablage anzeigen
+  // über dem Parcadi: nicht verschieben, sondern Ablage anzeigen
   const overPool = !pinch && overEl(e, '#cPool');
   poolEl.classList.toggle('over', !!overPool);
   if (overPool) return;
   const [W, H] = dims(), g = geom(dragI, W, H);
-  if (g.sx > 0) C.fx = cl1(C.fx + 2 * (px - ox) / g.sx);
-  if (g.sy > 0) C.fy = cl1(C.fy + 2 * (py - oy) / g.sy);
+  const ddx = px - ox, ddy = py - oy;
+  if (g.sx > 0) C.fx = cl1(C.fx + 2 * (ddx * g.ca + ddy * g.sa) / g.sx);
+  if (g.sy > 0) C.fy = cl1(C.fy + 2 * (-ddx * g.sa + ddy * g.ca) / g.sy);
   cv.classList.add('drag'); paint();
 });
 function cUp(e){
@@ -1416,7 +1479,7 @@ $('cSwap').onclick = () => {
   [cells[sel], cells[j]] = [cells[j], cells[sel]]; sel = j; paint();
 };
 
-/* Plazza da parcar */
+/* Parcadi */
 const poolEl = $('cPool'), poolList = $('cPoolList');
 const overEl = (e, sel) => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.closest(sel); };
 const fresh = C => (C.z = 1, C.fx = C.fy = 0, C);
@@ -1447,7 +1510,7 @@ function park(i){
   const C = cells[i]; if (!C) return;
   pool.push(fresh(C)); cells[i] = null; renderPool(); paint();
 }
-// Maletg da la plazza da parcar en ina part; il maletg che steva là vegn parcà al medem lieu
+// Maletg dal parcadi en ina part; il maletg che steva là vegn parcà al medem lieu
 function placeFromPool(idx, part){
   if (part < 0 || part >= nParts()) return;
   const C = pool.splice(idx, 1)[0];
@@ -1500,7 +1563,7 @@ function fromLayer(L){
   const x = c.getContext('2d', { willReadFrequently:true }); x.imageSmoothingQuality = 'high';
   x.drawImage(scaled(L.src, c.width, c.height), 0, 0, c.width, c.height);
   if (!isNeutral(L.col)){ const d = x.getImageData(0, 0, c.width, c.height); applyColor(d, d, params(L.col)); x.putImageData(d, 0, 0); }
-  const C = mkItem(c, L.name); C.lid = L.id; C.ver = L.ver; return C;
+  const C = mkItem(c, L.name); C.lid = L.id; C.ver = L.ver + '|' + (L.ang || 0); C.ang = L.ang || 0; return C;
 }
 function colFromLayers(){
   const src = layers.filter(L => L.src && L.blur !== 'only');
@@ -1508,7 +1571,7 @@ function colFromLayers(){
   for (const arr of [cells, pool]) arr.forEach((C, i) => {
     if (!C || C.lid == null) return;
     const L = src.find(l => l.id === C.lid);
-    if (L && L.ver !== C.ver){ const N = fromLayer(L); N.z = C.z; N.fx = C.fx; N.fy = C.fy; arr[i] = N; }
+    if (L && L.ver + '|' + (L.ang || 0) !== C.ver){ const N = fromLayer(L); N.z = C.z; N.fx = C.fx; N.fy = C.fy; Object.assign(N, { q: C.q, fh: C.fh, fv: C.fv, col: { ...C.col } }); cellOrient(N); arr[i] = N; }
   });
   const neu = src.filter(L => !seen.has(L.id));
   neu.forEach(L => seen.add(L.id));
@@ -1522,7 +1585,7 @@ function colFromLayers(){
       colMsg(neu.length === 1 ? 'Surpiglià il maletg dals layers.' : `Surpiglià ${neu.length} maletgs dals layers.`);
     } else {
       neu.forEach(L => pool.push(fromLayer(L)));
-      colMsg(neu.length === 1 ? '1 maletg dals layers è sin la plazza da parcar.' : `${neu.length} maletgs dals layers èn sin la plazza da parcar.`);
+      colMsg(neu.length === 1 ? '1 maletg dals layers è en il parcadi.' : `${neu.length} maletgs dals layers èn en il parcadi.`);
     }
   }
   renderPool(); paint();
