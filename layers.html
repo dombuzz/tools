@@ -1051,6 +1051,8 @@ function setTab(i){
 tabBtns.forEach(b => b.onclick = () => setTab(+b.dataset.tab));
 document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => setTab(+b.dataset.goto));
 try { const s = localStorage.getItem('layers-tab'); if (s !== null && /^[0-3]$/.test(s)) setTab(+s); } catch(e){}
+// Direktlink auf einen Tab, z. B. /layers?tab=collascha (bzw. /collascha)
+{ const t = { colurs:0, rotar:1, layers:2, collascha:3 }[(new URLSearchParams(location.search).get('tab') || '').toLowerCase()]; if (t !== undefined) setTab(t); }
 function syncEdit(){
   const A = active, on = !!A && !A.locked;
   edits.forEach(e => e.classList.toggle('off', !on));
