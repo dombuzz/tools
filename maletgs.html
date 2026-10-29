@@ -81,6 +81,8 @@
   .blurbg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   .ghost-img{ opacity:.3; }
   .clip{ position:absolute; inset:0; overflow:hidden; z-index:1; }
+  .gridov{ position:absolute; inset:0; z-index:2; pointer-events:none; filter:drop-shadow(0 0 1px rgba(0,0,0,.9));
+    background-image:linear-gradient(to right, rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.6) 1px, transparent 1px); }
   .frame-line{ position:absolute; inset:0; z-index:2; outline:1px solid rgba(255,77,100,.8); pointer-events:none; }
   .box{ position:absolute; z-index:3; cursor:move; outline:1px dashed rgba(255,77,100,.7); }
   .handle{
@@ -193,6 +195,7 @@
   .cbtns{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
   .cbtns button{ padding:8px 6px; font-size:0.82rem; }
   .cbtns .wide{ grid-column:1 / -1; }
+  .cadd{ width:100%; margin-bottom:4px; }
   .cbtns em{ font-style:normal; color:var(--accent); }
   .cpool{ margin-top:12px; border:1px dashed var(--border); border-radius:12px; padding:10px 12px; transition:border-color .15s, background .15s; }
   .cpool.over{ border-color:var(--accent); background:rgba(255,77,100,.06); }
@@ -269,13 +272,14 @@
             <canvas class="ghost-img" id="ghost" hidden></canvas>
             <div class="clip" id="clip"></div>
             <div class="frame-line"></div>
+            <div class="gridov" id="gridov" hidden></div>
             <div class="box" id="box" hidden>
               <div class="handle" data-c="nw"></div><div class="handle" data-c="ne"></div>
               <div class="handle" data-c="sw"></div><div class="handle" data-c="se"></div>
             </div>
             <div class="empty" id="empty">
               <strong>Trair qua ils maletgs</strong>
-              <span>u tutgar per tscherner, integrar cun Ctrl/Cmd+V u inditgar survart in link RTR</span>
+              <span>u cliccar per tscherner, integrar cun Ctrl/Cmd+V u inditgar survart in link RTR</span>
             </div>
           </div>
         </div>
@@ -318,7 +322,7 @@
 
         <div class="pane layers" data-pane="2" hidden>
           <h2>Layers <span id="count" class="info"></span></h2>
-          <p class="note">Il layer survart en la glista stat davant. Successiun: ↑ ↓ u trair cun il mieur. Tutgar il num dal layer tschernì (✎) per al renumnar.</p>
+          <p class="note">Il layer survart en la glista stat davant. Successiun: ↑ ↓ u trair cun il mieur. Cliccar sin il num dal layer tschernì (✎) per al renumnar.</p>
           <p class="nolayers" id="nolayers">Anc nagins layers.</p>
           <div class="list" id="list"></div>
           <button type="button" class="ghost add" id="addBtn">+ Agiuntar in layer</button>
@@ -326,7 +330,7 @@
       </div>
     </div>
 
-    <p class="hint" id="layHint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Tutgar il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
+    <p class="hint" id="layHint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Cliccar sin il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
 
     <div class="actions" id="layActions">
       <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
@@ -349,6 +353,7 @@
         <div class="side">
           <div id="cSideEdit"></div>
           <div id="cSide">
+          <button type="button" id="cAdd" class="cadd">+ Agiuntar maletgs</button>
           <h3>Format</h3>
           <div class="sizeseg" role="group" aria-label="Format" id="cFmt">
             <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920 × 1080</small></button>
@@ -384,7 +389,7 @@
           </div>
         </div>
       </div>
-      <p class="hint">Trair ils maletgs en las parts u tutgar ina part vida per tscherner in maletg. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur. Ils maletgs dals layers vegnan surpigliads automaticamain. En il parcadi pos ti deponer maletgs: trair in maletg da la collascha giu là, u da là sin ina part; tutgar in maletg parcà al metta en la part tschernida. Las parts tschernidas pos ti era elavurar en «Clerezza + colurs» e «Rotar + drizzar».</p>
+      <p class="hint">Trair ils maletgs en las parts u cliccar sin ina part vida per tscherner in u plirs maletgs; «+ Agiuntar maletgs» chargia plirs maletgs a la giada. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur. Ils maletgs dals layers vegnan surpigliads automaticamain. En il parcadi pos ti deponer maletgs: trair in maletg da la collascha giu là, u da là sin ina part; cliccar sin in maletg parcà al metta en la part tschernida. Las parts tschernidas pos ti era elavurar en «Clerezza + colurs» e «Rotar + drizzar».</p>
       <div class="actions">
         <button type="button" id="cDl" disabled>Telechargiar la collascha</button>
         <span class="msg" id="cMsg"></span>
@@ -697,7 +702,7 @@ function renderList(){
     const th = row.querySelector('.thumb'), tk = Math.min(88 / L.el.width, 88 / L.el.height);
     th.getContext('2d').drawImage(L.el, (88 - L.el.width * tk) / 2, (88 - L.el.height * tk) / 2, L.el.width * tk, L.el.height * tk);
     row.querySelector('.name').textContent = L.name;
-    row.querySelector('.name').title = L === active ? 'Tutgar per renumnar' : '';
+    row.querySelector('.name').title = L === active ? 'Cliccar per renumnar' : '';
     row.querySelector('.info').textContent = `${L.iw} × ${L.ih} px` + (L.locked ? ' · bloccà' : '');
     row.querySelector('[data-a="up"]').disabled = i === layers.length - 1;
     row.querySelector('[data-a="down"]').disabled = i === 0;
@@ -1170,6 +1175,28 @@ function syncEdit(){
   updateSizes();
 }
 let colRaf = 0;
+/* Gitter zur Orientierung, solange «Angul» oder «Perspectiva» bewegt wird */
+let gridOn = false, gridT = 0;
+function showGrid(){
+  clearTimeout(gridT);
+  if (!gridOn){
+    gridOn = true;
+    const g = $('gridov'), cols = 12, rows = Math.max(1, Math.round(cols * H / W));
+    g.style.backgroundSize = `${100 / cols}% ${100 / rows}%`; g.hidden = false;
+    if (typeof paint === 'function' && ectx === 'collage') paint();
+  }
+  gridT = setTimeout(hideGrid, 1200);
+}
+function hideGrid(){
+  clearTimeout(gridT); if (!gridOn) return;
+  gridOn = false; $('gridov').hidden = true;
+  if (typeof paint === 'function' && ectx === 'collage') paint();
+}
+['c_ang', 'c_pv', 'c_ph'].forEach(id => {
+  const el = $(id);
+  el.addEventListener('pointerdown', showGrid); el.addEventListener('input', showGrid); el.addEventListener('focus', showGrid);
+  el.addEventListener('pointerup', () => { clearTimeout(gridT); gridT = setTimeout(hideGrid, 700); });
+});
 document.querySelectorAll('[data-edit] input[type=range]').forEach(inp => inp.addEventListener('input', () => {
   const A = editTarget(); if (!A || A.locked) return;
   const id = inp.dataset.c;
@@ -1313,9 +1340,22 @@ function draw(ctx, W, H, preview){
       const f = Math.round(Math.min(H * 0.034, mw * 0.075));
       ctx.fillStyle = '#ececef'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = `600 ${f}px system-ui, sans-serif`;
-      ctx.fillText('Trair qua in maletg', mx, my - f * 0.7);
+      ctx.fillText('Trair qua maletgs', mx, my - f * 0.7);
       ctx.fillStyle = '#9a9aa2'; ctx.font = `${Math.round(f * 0.75)}px system-ui, sans-serif`;
-      ctx.fillText('u tutgar per tscherner', mx, my + f * 0.7);
+      ctx.fillText('u cliccar per tscherner', mx, my + f * 0.7);
+    }
+    ctx.restore();
+  }
+  if (preview && gridOn && cells[sel]){
+    // Orientierungsgitter in der gewählten Part (beim Begradigen / Perspektive)
+    const P = poly(sel, W, H), R = bbox(P), st = H / 12;
+    ctx.save(); path(ctx, P); ctx.clip();
+    ctx.lineWidth = Math.max(1, H / 900);
+    for (const [col, off] of [['rgba(0,0,0,.55)', ctx.lineWidth], ['rgba(255,255,255,.75)', 0]]){
+      ctx.strokeStyle = col; ctx.beginPath();
+      for (let x = R.x + st; x < R.x + R.w; x += st){ ctx.moveTo(x + off, R.y); ctx.lineTo(x + off, R.y + R.h); }
+      for (let y = R.y + st; y < R.y + R.h; y += st){ ctx.moveTo(R.x, y + off); ctx.lineTo(R.x + R.w, y + off); }
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -1449,7 +1489,9 @@ async function colAddFiles(files, start){
   return true;
 }
 const cPick = i => { target = i; $('cFile').click(); };
-$('cFile').onchange = e => { if (target === 'pool') poolAddFiles(e.target.files); else colAddFiles(e.target.files, target); e.target.value = ''; };
+// mehrere Bilder auf einmal: zuerst die leeren Parts, der Rest kommt ins Parcadi
+$('cAdd').onclick = () => { target = cells.slice(0, nParts()).findIndex(c => !c); if (target < 0) target = 'fill'; $('cFile').click(); };
+$('cFile').onchange = e => { if (target === 'pool' || target === 'fill') poolAddFiles(e.target.files); else colAddFiles(e.target.files, target); e.target.value = ''; };
 
 /* Mieur / det */
 const toPx = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
@@ -1555,7 +1597,7 @@ function thumb(C, w, h){
 function renderPool(){
   poolList.innerHTML = '';
   pool.forEach((C, i) => {
-    const d = document.createElement('div'); d.className = 'pthumb'; d.title = C.name + ' – trair sin ina part u tutgar';
+    const d = document.createElement('div'); d.className = 'pthumb'; d.title = C.name + ' – trair sin ina part u cliccar';
     d.append(thumb(C, 104, 70));
     const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×';
     x.title = 'Allontanar'; x.setAttribute('aria-label', 'Allontanar ' + C.name);
@@ -1603,7 +1645,7 @@ function poolDrag(e, idx, el){
     el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
     const target = hov; hov = -1;
     if (ghost){ ghost.remove(); el.style.opacity = ''; if (ev.type === 'pointerup' && target >= 0) placeFromPool(idx, target); else paint(); }
-    else if (ev.type === 'pointerup') placeFromPool(idx, sel);   // tutgar: en la part tschernida
+    else if (ev.type === 'pointerup') placeFromPool(idx, sel);   // cliccar: en la part tschernida
   };
   el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
 }
