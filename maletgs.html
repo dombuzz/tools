@@ -152,6 +152,8 @@
   .edit .ctl label:hover{ color:var(--accent); }
   .secreset{ background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:6px;
     padding:0 7px; font-size:0.85rem; line-height:1.5; margin-left:6px; vertical-align:1px; }
+  .edit h3.resettable{ cursor:pointer; user-select:none; }
+  .edit h3.resettable:hover{ color:var(--accent); }
   .secreset:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
   .tabs .tcount{ font-size:0.75rem; color:inherit; opacity:.9; font-weight:400; }
   @media (max-width:600px){ .tabs button{ padding:9px 9px; font-size:0.85rem; } }
@@ -311,7 +313,7 @@
               <button type="button" class="ghost" id="flipH" aria-pressed="false" title="Spievlar orizontal">⇋</button>
               <button type="button" class="ghost" id="flipV" aria-pressed="false" title="Spievlar vertical">⇵</button>
             </div>
-            <h3>Drizzar</h3>
+            <h3>Drizzar <button type="button" class="secreset" data-reset="ang" title="Reset angul" aria-label="Reset angul">↺</button></h3>
           <div class="ctl"><div class="top"><label for="c_ang">Angul</label><span class="val" data-for="ang" title="Reset">0.0°</span></div><input type="range" id="c_ang" data-c="ang" min="-10" max="10" step="0.1" value="0"></div>
             <h3>Perspectiva <button type="button" class="secreset" data-reset="pv,ph" title="Reset perspectiva" aria-label="Reset perspectiva">↺</button></h3>
           <div class="ctl"><div class="top"><label for="c_pv">Vertical</label><span class="wbhint">survart pli lad ↔ sutvart pli lad</span><span class="val" data-for="pv" title="Reset">0</span></div><input type="range" id="c_pv" data-c="pv" min="-100" max="100" step="1" value="0"></div>
@@ -1219,10 +1221,15 @@ document.querySelectorAll('[data-edit] .ctl label').forEach(l => l.addEventListe
 document.querySelectorAll('.secreset').forEach(b => b.onclick = () => {
   const A = editTarget(); if (!A || A.locked) return;
   const ids = b.dataset.reset.split(','), pers = ids.includes('pv');
+  if (ids[0] === 'ang'){ A.ang = 0; syncEdit(); if (isCell(A)) paint(); else render(); return; }
   ids.forEach(id => { if (pers) A[id] = 0; else A.col[id] = 0; });
   if (isCell(A)){ if (pers) cellOrient(A); else cellRecolor(A); paint(); syncEdit(); return; }
   if (pers) reprev(A); else recolor(A); render(); updateThumb(A); syncEdit();
 });
+// Klick auf den Titel einer Gruppe (z. B. «Drizzar») wirkt wie ↺
+document.querySelectorAll('[data-edit] h3').forEach(h => { const r = h.querySelector('.secreset'); if (!r) return;
+  h.classList.add('resettable'); h.title = r.title;
+  h.addEventListener('click', e => { if (e.target !== r) r.click(); }); });
 document.querySelectorAll('[data-edit] .val').forEach(v => v.onclick = () => {
   const inp = $('c_' + v.dataset.for); inp.value = 0; inp.dispatchEvent(new Event('input'));
 });
