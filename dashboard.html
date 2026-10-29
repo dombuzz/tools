@@ -221,11 +221,12 @@ async function loadStats() {
   loadTrend();
   try {
     const u = await fetch(API + '/usage').then(r => r.json());
-    const pr = u.read / (u.limitRead || 1), pw2 = u.written / (u.limitWritten || 1), p = Math.max(pr, pw2);
+    const L = u.logs || {}, pl = L.configured && !L.error && L.limitBytes ? L.bytes / L.limitBytes : 0;
+    const pr = u.read / (u.limitRead || 1), pw2 = u.written / (u.limitWritten || 1), p = Math.max(pr, pw2, pl);
     $('k-cf').textContent = (p < 0.01 && p > 0 ? '< 1' : Math.round(p * 100)) + ' %';
     $('b-cf').style.width = Math.min(100, p * 100) + '%';
     $('b-cf').parentElement.className = 'bar' + (p < 0.8 ? ' ok' : '');
-    $('d-cf').textContent = n(u.read) + ' legidas · ' + n(u.written) + ' scrittas';
+    $('d-cf').textContent = n(u.read) + ' legidas · ' + n(u.written) + ' scrittas' + (L.bytes != null && !L.error ? ' · logs ≈ ' + (L.bytes / 1e6).toFixed(1).replace('.', ',') + ' MB' : '');
   } catch (e) { $('d-cf').textContent = 'Betg disponibel'; }
 }
 

@@ -616,12 +616,17 @@
       const u = await r.json();
       const lvl = p => p >= 80 ? 'cr' : p >= 50 ? 'wa' : 'ok';
       const big = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : fmt(n);
-      const pr = u.read / u.limitRead * 100, pw = u.written / u.limitWritten * 100, c = lvl(Math.max(pr, pw));
-      const meter = (lab, n, max, p) => `<div class="cf-m ${lvl(p)}"><span class="l">${lab}</span><span class="v">${big(n)} <em>/ ${big(max)} · ${p < 1 && n ? '<1' : Math.round(p)} %</em></span><div class="cf-t"><i style="width:${Math.min(100, p)}%"></i></div></div>`;
+      const L = u.logs || {}, hasLogs = L.configured && !L.error && L.limitBytes;
+      const pl = hasLogs ? L.bytes / L.limitBytes * 100 : 0;
+      const mb = b => (b / 1e6 >= 100 ? Math.round(b / 1e6) : (b / 1e6).toFixed(1).replace('.', ',')) + ' MB';
+      const pr = u.read / u.limitRead * 100, pw = u.written / u.limitWritten * 100, c = lvl(Math.max(pr, pw, pl));
+      const meter = (lab, n, max, p, f = big) => `<div class="cf-m ${lvl(p)}"><span class="l">${lab}</span><span class="v">${f(n)} <em>/ ${f(max)} · ${p < 1 && n ? '<1' : Math.round(p)} %</em></span><div class="cf-t"><i style="width:${Math.min(100, p)}%"></i></div></div>`;
       const d = new Date(); const reset = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1));
       el.className = 'cf' + (c === 'ok' ? '' : ' ' + c);
       el.innerHTML = `<div class="cf-h"><b><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Cloudflare oz</b><span class="cf-p ${c}">${{ ok: 'tut en urden', wa: 'attenziun', cr: 'stretg' }[c]}</span></div>
         ${meter('lingias legidas', u.read, u.limitRead, pr)}${meter('lingias scrittas', u.written, u.limitWritten, pw)}
+        ${hasLogs ? meter(`logs <em title="${fmt(L.events)} ${L.events === 1 ? 'endataziun' : 'endataziuns'} × Ø 5 kB${(L.services || []).length ? ' · ' + L.services.map(x => x.name + ' ' + fmt(x.events)).join(', ') : ''}">≈</em>`, L.bytes, L.limitBytes, pl, mb)
+          : `<div class="cf-m"><span class="l">logs</span><span class="v"><em>${L.configured ? 'betg disponibel' : 'anc betg configurà'}</em></span></div>`}
         <div class="cf-h"><small>Nov contingent a las ${pad2(reset.getHours())}:${pad2(reset.getMinutes())}</small><small>Plan gratuit</small></div>`;
       el.hidden = false;
     } catch (e) { /* Kachel bleibt verborgen */ }
