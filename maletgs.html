@@ -195,7 +195,6 @@
   .cbtns{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
   .cbtns button{ padding:8px 6px; font-size:0.82rem; }
   .cbtns .wide{ grid-column:1 / -1; }
-  .cadd{ width:100%; margin-bottom:4px; }
   .cbtns em{ font-style:normal; color:var(--accent); }
   .cpool{ margin-top:12px; border:1px dashed var(--border); border-radius:12px; padding:10px 12px; transition:border-color .15s, background .15s; }
   .cpool.over{ border-color:var(--accent); background:rgba(255,77,100,.06); }
@@ -353,7 +352,6 @@
         <div class="side">
           <div id="cSideEdit"></div>
           <div id="cSide">
-          <button type="button" id="cAdd" class="cadd">+ Agiuntar maletgs</button>
           <h3>Format</h3>
           <div class="sizeseg" role="group" aria-label="Format" id="cFmt">
             <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920 × 1080</small></button>
@@ -389,7 +387,7 @@
           </div>
         </div>
       </div>
-      <p class="hint">Trair ils maletgs en las parts u cliccar sin ina part vida per tscherner in u plirs maletgs; «+ Agiuntar maletgs» chargia plirs maletgs a la giada. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur. Ils maletgs dals layers vegnan surpigliads automaticamain. En il parcadi pos ti deponer maletgs: trair in maletg da la collascha giu là, u da là sin ina part; cliccar sin in maletg parcà al metta en la part tschernida. Las parts tschernidas pos ti era elavurar en «Clerezza + colurs» e «Rotar + drizzar».</p>
+      <p class="hint">Trair ils maletgs en las parts u cliccar sin ina part vida per tscherner in u plirs maletgs; «+ Agiuntar maletgs» en il parcadi chargia plirs maletgs a la giada. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur. Ils maletgs dals layers vegnan surpigliads automaticamain. En il parcadi pos ti deponer maletgs: trair in maletg da la collascha giu là, u da là sin ina part; cliccar sin in maletg parcà al metta en la part tschernida. Las parts tschernidas pos ti era elavurar en «Clerezza + colurs» e «Rotar + drizzar».</p>
       <div class="actions">
         <button type="button" id="cDl" disabled>Telechargiar la collascha</button>
         <span class="msg" id="cMsg"></span>
@@ -1490,7 +1488,6 @@ async function colAddFiles(files, start){
 }
 const cPick = i => { target = i; $('cFile').click(); };
 // mehrere Bilder auf einmal: zuerst die leeren Parts, der Rest kommt ins Parcadi
-$('cAdd').onclick = () => { target = cells.slice(0, nParts()).findIndex(c => !c); if (target < 0) target = 'fill'; $('cFile').click(); };
 $('cFile').onchange = e => { if (target === 'pool' || target === 'fill') poolAddFiles(e.target.files); else colAddFiles(e.target.files, target); e.target.value = ''; };
 
 /* Mieur / det */
