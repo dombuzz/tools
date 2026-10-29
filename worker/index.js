@@ -298,7 +298,7 @@ export default {
         await ensureViews(env);
         const { results: [u] } = await env.DB.prepare("SELECT day, r, w FROM usage WHERE day = date('now')").all();
         res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE, logs: await logsToday(env) }, request);
-      } else if (request.method === 'GET' && (parts[0] === 'ranking' || parts[0] === 'hourly') && parts.length === 1) {
+      } else if (request.method === 'GET' && (parts[0] === 'ranking' || parts[0] === 'hourly' || parts[0] === 'insights') && parts.length === 1) {
         res = await cached(request, env, parts, url, () => handle(request, env));
       } else res = await handle(request, env, ctx);
     } catch (e) { res = json({ error: 'server' }, request, 500); }
@@ -313,6 +313,36 @@ async function handle(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(request) });
 
     try {
+      // Monats-Mail meldet sich nach dem Versand: /mailsent?s=ok|fail&m=YYYY-MM (aufgerufen vom geplanten Task)
+      if (request.method === 'GET' && parts[0] === 'mailsent' && parts.length === 1) {
+        const st = url.searchParams.get('s') === 'fail' ? 'fail' : 'ok', mo = /^\d{4}-(0[1-9]|1[0-2])$/.test(url.searchParams.get('m') || '') ? url.searchParams.get('m') : '';
+        await env.DB.prepare('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT, ts TEXT NOT NULL)').run();
+        await env.DB.prepare("INSERT INTO meta (k, v, ts) VALUES ('mail', ?1, datetime('now')) ON CONFLICT(k) DO UPDATE SET v = ?1, ts = datetime('now')").bind(JSON.stringify({ status: st, month: mo })).run();
+        return json({ ok: true }, request);
+      }
+
+      // Dashboard-Box «Detagls»: Worker-Version, Monats-Mail, Treue pro Tool (30 Tage), neue Besucher (diese Woche)
+      if (request.method === 'GET' && parts[0] === 'insights' && parts.length === 1) {
+        await ensureViews(env);
+        await env.DB.prepare('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT, ts TEXT NOT NULL)').run();
+        const { results: [mr] } = await env.DB.prepare("SELECT v, ts FROM meta WHERE k = 'mail'").all();
+        let mail = null; if (mr) { try { mail = { ...JSON.parse(mr.v), ts: mr.ts }; } catch (e) {} }
+        const d30 = period('30d').from, wk = period('week').from;
+        const { results: loyalty } = await env.DB.prepare(
+          'SELECT tool, COUNT(*) AS users, SUM(CASE WHEN d > 1 THEN 1 ELSE 0 END) AS repeat FROM (SELECT tool, cid, COUNT(DISTINCT substr(ts, 1, 10)) AS d FROM uses WHERE cid IS NOT NULL AND ' + EX('uses') + ' AND ts >= ?1 GROUP BY tool, cid) GROUP BY tool ORDER BY users DESC, repeat DESC')
+          .bind(d30).all();
+        const { results: [nw] } = await env.DB.prepare(
+          'SELECT COUNT(*) AS total, SUM(CASE WHEN first >= ?1 THEN 1 ELSE 0 END) AS neu, MIN(first) AS since FROM (SELECT cid, MIN(ts) AS first, MAX(ts) AS last FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL GROUP BY cid) WHERE last >= ?1')
+          .bind(wk).all();
+        const { results: [first] } = await env.DB.prepare('SELECT MIN(ts) AS t FROM views WHERE cid IS NOT NULL').all();
+        const vm = env.CF_VERSION_METADATA || null;
+        return json({
+          worker: vm ? { id: vm.id, tag: vm.tag || '', deployed: vm.timestamp } : null,
+          mail, loyalty: loyalty.map(x => ({ tool: x.tool, users: x.users, repeat: x.repeat || 0 })),
+          week: { from: wk, visitors: nw?.total || 0, new: nw?.neu || 0, known: (nw?.total || 0) - (nw?.neu || 0), countingSince: first?.t || null },
+        }, request);
+      }
+
       // «Chatta Schweiz»: Liste (?list=1) oder direkt Weiterleitung auf einen Zufallsartikel
       if (request.method === 'GET' && parts[0] === 'chatta' && parts.length === 1) {
         const items = await rtrRecent(30);
