@@ -501,7 +501,7 @@
       <line id="sphl" x1="0" x2="0" y1="0" y2="${H}" style="stroke:var(--muted)" stroke-width="1" vector-effect="non-scaling-stroke" visibility="hidden"/>
       ${slots.map((_, i) => `<rect class="sphit" data-i="${i}" x="${Math.max(0, (i - .5) / N * W)}" y="0" width="${W / N}" height="${H}" fill="transparent"/>`).join('')}</svg>
       <div class="tip sptip" id="sptip" hidden></div>
-      <div class="sp-ax"><span>${lab(slots[0])}</span><span>${lab(slots[Math.round(N / 2)])}</span><span>ussa</span></div>
+      <div class="sp-ax"><span>${lab(slots[0])}</span><span>${lab(slots[Math.round(N / 2)])}</span><span>${rk === 'today' ? 'ussa' : 'oz'}</span></div>
       <div class="sp-sum"><span><i style="background:var(--accent)"></i><b>${fmt(u.reduce((a, b) => a + b, 0))}</b> giadas duvrà</span><span><i style="background:var(--muted)"></i><b>${fmt(v.reduce((a, b) => a + b, 0))}</b> visitas</span></div>`;
     // Wochenraster: Wochentag × Stunde (Lokalzeit), Duvrà im gewählten Zeitraum
     const g = Array.from({ length: 7 }, () => Array(24).fill(0));
