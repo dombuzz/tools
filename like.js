@@ -29,12 +29,40 @@ const CSS = `.dbz-like{max-width:640px;margin:36px auto 8px;padding:0 16px;text-
 .dbz-toast .dbz-yes{padding:6px 14px 6px 11px}
 .dbz-toast small{color:var(--muted,var(--mute,#9a9aa2));font-size:.78rem}
 @media (max-width:480px){.dbz-toast{left:12px;right:12px;bottom:12px;width:auto}}
+/* Feedback (Propostas, giavischs, critica?) */
+.dbz-fb{margin:22px auto 0;max-width:480px;text-align:left}
+.dbz-fb summary{cursor:pointer;list-style:none;text-align:center;color:var(--muted,var(--mute,#9a9aa2));font-size:.9rem}
+.dbz-fb summary::-webkit-details-marker{display:none}
+.dbz-fb summary:hover{color:var(--text,var(--ink,var(--fg,#ececef)))}
+.dbz-fb summary span{border-bottom:1px dashed currentColor}
+.dbz-fb form{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.dbz-fb textarea,.dbz-fb input{width:100%;box-sizing:border-box;font:inherit;font-size:.92rem;color:var(--text,var(--ink,var(--fg,#ececef)));background:var(--mono,var(--card,#26262a));border:1px solid var(--line,var(--border,#2f2f34));border-radius:8px;padding:9px 11px}
+.dbz-fb textarea{min-height:96px;resize:vertical}
+.dbz-fb textarea:focus,.dbz-fb input:focus{outline:2px solid var(--accent,var(--acc,#ff4d64));outline-offset:1px}
+.dbz-fb .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dbz-fb .row input{flex:1 1 180px;width:auto}
+.dbz-fb button{padding:8px 16px}
+.dbz-fb small{display:block;font-size:.78rem;color:var(--muted,var(--mute,#9a9aa2))}
+.dbz-fb .msg{font-size:.85rem;min-height:1.2em}
+.dbz-fb .msg.err{color:var(--err,#ff6b7d)}
 @media (prefers-reduced-motion:reduce){.dbz-like button.pop svg,.dbz-toast .pop svg{animation:none}.dbz-toast{transition:none}}`;
 
 const HTML = `<div class="dbz-like" id="dbz-like">
   <p>Ha quest tool simplifitgà tia lavur?</p>
   <button type="button"><svg viewBox="2 3 20 19" aria-hidden="true"><path d="M12 20s-7-4.3-9-8.6C1.6 8.2 3.6 4.8 7 4.8c2 0 3.4 1.1 4.1 2.5h1.8c.7-1.4 2.1-2.5 4.1-2.5 3.4 0 5.4 3.4 4 6.6-2 4.3-9 8.6-9 8.6z"/></svg>Gea</button>
   <span class="n" aria-live="polite"></span>
+  <details class="dbz-fb">
+    <summary><span>Propostas, giavischs, critica?</span></summary>
+    <form>
+      <textarea name="text" maxlength="1000" required placeholder="Tes messadi …" aria-label="Tes messadi"></textarea>
+      <div class="row">
+        <input name="name" maxlength="60" placeholder="Num (opziunal)" aria-label="Num (opziunal)">
+        <button type="submit">Trametter</button>
+      </div>
+      <small>Senza num resta il messadi anonim.</small>
+      <span class="msg" aria-live="polite"></span>
+    </form>
+  </details>
 </div>
 <div class="dbz-toast" id="dbz-toast" role="dialog" aria-label="Ha quest tool gidà?">
   <button type="button" class="dbz-x" aria-label="Serrar">×</button>
@@ -139,5 +167,20 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   const origClick = HTMLAnchorElement.prototype.click;
   HTMLAnchorElement.prototype.click = function () { if (this.hasAttribute('download')) done(); return origClick.apply(this, arguments); };
   window.addEventListener('dbz-success', done);
+
+  // Feedback: geht an den Worker, ist nur auf der passwortgeschützten Seite /feedback lesbar
+  const fb = box.querySelector('.dbz-fb form'), fbMsg = fb.querySelector('.msg'), fbBtn = fb.querySelector('button');
+  fb.addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = fb.elements.text.value.trim(); if (!text) return;
+    fbBtn.disabled = true; fbMsg.className = 'msg'; fbMsg.textContent = 'Vegn tramess …';
+    try {
+      const r = await fetch(API + '/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool, text, name: fb.elements.name.value.trim() }) });
+      if (r.status === 429) throw new Error('Ti has gia tramess plirs messadis oz – emprova damaun.');
+      if (!r.ok) throw new Error('Betg reussì – emprova pli tard.');
+      fb.reset(); fbMsg.textContent = 'Grazia fitg! Tes messadi è arrivà.';
+    } catch (err) { fbMsg.className = 'msg err'; fbMsg.textContent = err.message || 'Betg reussì – emprova pli tard.'; }
+    fbBtn.disabled = false;
+  });
 })();
 }

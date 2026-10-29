@@ -78,8 +78,8 @@ function cors(request) {
   const origin = request.headers.get('Origin') || '';
   return {
     'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Vary': 'Origin',
   };
 }
@@ -218,6 +218,40 @@ async function cached(request, env, parts, url, compute) {
   return res;
 }
 
+// ---------- Feedback ----------
+// Formular «Propostas, giavischs, critica?» unten in den Tools (like.js). Nicht in Statistiken.
+// Lesen/Löschen nur mit Passwort: Secret FEEDBACK_PASSWORD (Cloudflare → Worker → Settings → Variables and Secrets).
+// Mail bei neuem Feedback (optional): send_email-Binding FEEDBACK_MAIL, Absender FEEDBACK_FROM, Empfänger FEEDBACK_TO.
+let fbReady;
+const ensureFeedback = env => fbReady ||= env.DB.batch([
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tool TEXT NOT NULL, name TEXT, text TEXT NOT NULL, iph TEXT)'),
+  env.DB.prepare('CREATE INDEX IF NOT EXISTS feedback_ts ON feedback (ts)'),
+]).catch(e => { fbReady = null; throw e; });
+async function sha256(s) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+async function fbAuth(request, env) {
+  if (!env.FEEDBACK_PASSWORD) return 'unset';
+  const given = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  return given && await sha256(given) === await sha256(env.FEEDBACK_PASSWORD) ? 'ok' : 'no';
+}
+const b64 = s => { const u = new TextEncoder().encode(s); let x = ''; for (const c of u) x += String.fromCharCode(c); return btoa(x); };
+async function fbMail(env, tool, name, text) {
+  if (!env.FEEDBACK_MAIL || !env.FEEDBACK_TO) return;
+  const { EmailMessage } = await import('cloudflare:email');
+  const from = env.FEEDBACK_FROM || 'feedback@dombuzz.ch', to = env.FEEDBACK_TO;
+  const body = `Nov feedback sin tools.dombuzz.ch\n\nTool: ${NAMES[tool] || tool}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: https://tools.dombuzz.ch/feedback\n`;
+  const raw = [
+    `From: dombuzz Tools <${from}>`, `To: <${to}>`,
+    `Subject: =?UTF-8?B?${b64('Feedback: ' + (NAMES[tool] || tool))}?=`,
+    `Message-ID: <${crypto.randomUUID()}@dombuzz.ch>`, `Date: ${new Date().toUTCString()}`,
+    'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '',
+    b64(body).replace(/.{76}/g, '$&\r\n'),
+  ].join('\r\n');
+  await env.FEEDBACK_MAIL.send(new EmailMessage(from, to, raw));
+}
+
 export default {
   async fetch(request, env, ctx) {
     const m = { r: 0, w: 0 }, raw = env.DB;
@@ -232,14 +266,14 @@ export default {
         res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE }, request);
       } else if (request.method === 'GET' && (parts[0] === 'ranking' || parts[0] === 'hourly') && parts.length === 1) {
         res = await cached(request, env, parts, url, () => handle(request, env));
-      } else res = await handle(request, env);
+      } else res = await handle(request, env, ctx);
     } catch (e) { res = json({ error: 'server' }, request, 500); }
     if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m));
     return res;
   },
 };
 
-async function handle(request, env) {
+async function handle(request, env, ctx) {
     const url = new URL(request.url);
     const parts = url.pathname.split('/').filter(Boolean);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(request) });
@@ -429,6 +463,39 @@ async function handle(request, env) {
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
         await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid) VALUES (?1, datetime('now'), ?2, ?3)").bind(tool, theme, cid).run();
+        return json({ ok: true }, request);
+      }
+
+      // Feedback abgeben
+      if (request.method === 'POST' && parts[0] === 'feedback' && parts.length === 1) {
+        const origin = request.headers.get('Origin') || '';
+        if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
+        let d; try { d = await request.json(); } catch (e) { return json({ error: 'json' }, request, 400); }
+        const tool = String(d.tool || ''), text = String(d.text || '').trim(), name = String(d.name || '').trim().slice(0, 60);
+        if (!TOOL_NAME.test(tool) || !text || text.length > 1000) return json({ error: 'input' }, request, 400);
+        await ensureFeedback(env);
+        // höchstens 5 Meldungen pro Tag und Anschluss (gespeichert wird nur ein Tages-Hash, keine IP)
+        const iph = (await sha256((request.headers.get('CF-Connecting-IP') || '') + '|' + new Date().toISOString().slice(0, 10))).slice(0, 16);
+        const { results: rc } = await env.DB.prepare("SELECT COUNT(*) AS n FROM feedback WHERE iph = ?1 AND ts >= datetime('now', '-1 day')").bind(iph).all();
+        if ((rc[0]?.n || 0) >= 5) return json({ error: 'limit' }, request, 429);
+        await env.DB.prepare("INSERT INTO feedback (ts, tool, name, text, iph) VALUES (datetime('now'), ?1, ?2, ?3, ?4)").bind(tool, name || null, text, iph).run();
+        if (ctx && ctx.waitUntil) ctx.waitUntil(fbMail(env, tool, name, text).catch(() => {}));
+        return json({ ok: true }, request);
+      }
+      // Feedback lesen (Passwort)
+      if (request.method === 'GET' && parts[0] === 'feedback' && parts.length === 1) {
+        const a = await fbAuth(request, env);
+        if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
+        await ensureFeedback(env);
+        const { results } = await env.DB.prepare('SELECT id, ts, tool, name, text FROM feedback ORDER BY id DESC LIMIT 500').all();
+        return json({ items: results.map(r => ({ ...r, toolName: NAMES[r.tool] || r.tool })) }, request);
+      }
+      // Feedback löschen (Passwort)
+      if (request.method === 'DELETE' && parts[0] === 'feedback' && parts.length === 2) {
+        const a = await fbAuth(request, env);
+        if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
+        await ensureFeedback(env);
+        await env.DB.prepare('DELETE FROM feedback WHERE id = ?1').bind(+parts[1] || 0).run();
         return json({ ok: true }, request);
       }
 

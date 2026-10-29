@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark light">
+<script src="/theme.js"></script>
+<title>Feedback</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ff4d64'/%3E%3Cpath d='M24 30h52v32H46l-14 12V62h-8z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+/* Feedback: Liste der Meldungen aus dem Formular in den Tools. Kein like.js, keine Zählung. */
+:root{
+  --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+  --accent:#ff4d64; --border:#2f2f34; --mono:#26262a; --err:#ff6b7d;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 16px;padding-block:40px 48px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.homelink{color:var(--muted);text-decoration:none;font-size:.85rem}
+.homelink:hover{color:var(--text)}
+h1{font-size:1.4rem;margin:4px 0 0;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+form.login{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=password]{flex:1 1 220px;font:inherit;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;background:var(--accent);color:#121214;cursor:pointer}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500;padding:5px 10px;font-size:.8rem}
+button.ghost:hover{color:var(--text)}
+label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
+.msg{font-size:.88rem;color:var(--muted);min-height:1.2em}
+.msg.err{color:var(--err)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:.88rem;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:.8rem;color:var(--muted)}
+.meta b{color:var(--accent);font-weight:600}
+.meta .sp{flex:1}
+.text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:.95rem}
+.empty{color:var(--muted);text-align:center;padding:24px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="homelink" href="/">← Tools</a>
+    <h1><span class="acc">Feedback</span></h1>
+  </header>
+
+  <div class="card" id="login">
+    <form class="login" id="lf">
+      <input type="password" id="pw" placeholder="Pled-clav" aria-label="Pled-clav" autocomplete="current-password" required>
+      <button type="submit">Avrir</button>
+      <label class="chk"><input type="checkbox" id="keep"> Memorisar sin quest apparat</label>
+    </form>
+    <p class="msg" id="lmsg"></p>
+  </div>
+
+  <div id="view" hidden>
+    <div class="bar"><span id="count"></span><button type="button" class="ghost" id="logout">Serrar</button></div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<script>
+const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let pw = '';
+try { pw = localStorage.getItem('dbz-fb-pw') || sessionStorage.getItem('dbz-fb-pw') || ''; } catch (e) {}
+
+const fmt = ts => { const d = new Date(ts.replace(' ', 'T') + 'Z');
+  return d.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }); };
+
+async function load() {
+  $('lmsg').className = 'msg'; $('lmsg').textContent = 'Chargiar …';
+  try {
+    const r = await fetch(API + '/feedback', { headers: { Authorization: 'Bearer ' + pw }, cache: 'no-store' });
+    if (r.status === 401) throw new Error('Pled-clav fallì.');
+    if (r.status === 503) throw new Error('Il pled-clav n\'è anc betg definì sin il server (FEEDBACK_PASSWORD).');
+    if (!r.ok) throw new Error('Las datas n\'han betg pudì vegnir chargiadas.');
+    const { items } = await r.json();
+    $('login').hidden = true; $('view').hidden = false;
+    $('count').textContent = items.length === 1 ? '1 messadi' : items.length + ' messadis';
+    $('list').innerHTML = items.length ? items.map(i => `<article class="item" data-id="${i.id}">
+      <div class="meta"><b>${esc(i.toolName)}</b><span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><button type="button" class="ghost del">Stizzar</button></div>
+      <div class="text">${esc(i.text)}</div></article>`).join('') : '<p class="empty">Anc nagins messadis.</p>';
+  } catch (e) {
+    $('login').hidden = false; $('view').hidden = true;
+    $('lmsg').className = 'msg err'; $('lmsg').textContent = e.message;
+  }
+}
+
+$('lf').addEventListener('submit', e => {
+  e.preventDefault(); pw = $('pw').value;
+  try { (($('keep').checked) ? localStorage : sessionStorage).setItem('dbz-fb-pw', pw); } catch (err) {}
+  load();
+});
+$('logout').addEventListener('click', () => {
+  pw = ''; try { localStorage.removeItem('dbz-fb-pw'); sessionStorage.removeItem('dbz-fb-pw'); } catch (e) {}
+  $('view').hidden = true; $('login').hidden = false; $('pw').value = ''; $('lmsg').textContent = '';
+});
+// Löschen in zwei Schritten (ohne confirm-Dialog): erster Klick fragt nach, zweiter löscht
+$('list').addEventListener('click', async e => {
+  const b = e.target.closest('.del'); if (!b) return;
+  if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Propi stizzar?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Stizzar'; }, 4000); return; }
+  const art = b.closest('.item');
+  const r = await fetch(API + '/feedback/' + art.dataset.id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + pw } }).catch(() => null);
+  if (r && r.ok) load(); else { b.textContent = 'Betg reussì'; }
+});
+
+if (pw) load(); else $('pw').focus();
+</script>
+</body>
+</html>
