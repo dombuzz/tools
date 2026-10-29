@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark light">
+<title>dombuzz Tools · game</title>
+<style>html,body{margin:0;background:#121214}</style>
+</head>
+<body>
+<script>
+  // /game spiegelt die Startseite: lädt index.html live und legt game.js obendrauf.
+  // So muss nichts doppelt gepflegt werden – jede Änderung an index.html gilt auch hier.
+  // Der Seitenaufruf wird als «game» gezählt; der Worker zählt «game» zu «index» (GROUP).
+  fetch('/index.html', { cache: 'no-cache' })
+    .then(r => r.ok ? r.text() : Promise.reject())
+    .then(html => {
+      html = html
+        .replace('<title>dombuzz Tools</title>', '<title>dombuzz Tools · game</title>')
+        .replace('/view/index?', '/view/game?')
+        .replace(/<\/body>(?![\s\S]*<\/body>)/, '<script src="/game.js"><\/script></body>');
+      document.open(); document.write(html); document.close();
+    })
+    .catch(() => { location.replace('/'); });
+</script>
+</body>
+</html>

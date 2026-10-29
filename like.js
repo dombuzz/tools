@@ -52,7 +52,31 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   // Tool-Kennung aus der Adresse: /Resizer2000 → Resizer2000, /lab/csv → lab-csv
   const segs = location.pathname.replace(/\.html?$/i, '').split('/').filter(Boolean);
   const tool = (segs[0] === 'lab' && segs.length > 1 ? 'lab-' : '') + (segs.at(-1) || 'index');
+  let wasUsed = false; try { wasUsed = !!localStorage.getItem('dbz-visit-' + tool); } catch (e) {}
   try { localStorage.setItem('dbz-visit-' + tool, Date.now()); } catch (e) {} // für «nov» auf der Startseite
+  // /game: Tage mit Tool-Nutzung merken (nur im Browser) und bei erneuter Nutzung die Serie zeigen
+  (() => {
+    const ymd = d => d.toLocaleDateString('sv'), today = ymd(new Date());
+    let days = []; try { days = JSON.parse(localStorage.getItem('dbz-days') || '[]'); if (!Array.isArray(days)) days = []; } catch (e) {}
+    if (!days.includes(today)) { days.push(today); days = days.slice(-400); try { localStorage.setItem('dbz-days', JSON.stringify(days)); } catch (e) {} }
+    // Serie: Tage in Folge; Samstag/Sonntag ohne Nutzung unterbrechen sie nicht
+    const set = new Set(days), d = new Date(); let n = 0;
+    for (let i = 0; i < 400; i++, d.setDate(d.getDate() - 1)) { if (set.has(ymd(d))) n++; else if (d.getDay() % 6 !== 0) break; }
+    try { if (n > (+localStorage.getItem('dbz-best') || 0)) localStorage.setItem('dbz-best', n); } catch (e) {}
+    let game = false, shown = ''; try { game = localStorage.getItem('dbz-game') === '1'; shown = localStorage.getItem('dbz-serie-shown') || ''; } catch (e) {}
+    if (!game || !wasUsed || n < 2 || shown === today) return; // einmal pro Tag, nur wer /game kennt
+    try { localStorage.setItem('dbz-serie-shown', today); } catch (e) {}
+    const st = document.createElement('style');
+    st.textContent = '.dbz-serie{position:fixed;left:50%;top:16px;z-index:9999;transform:translate(-50%,-140%);display:flex;align-items:center;gap:10px;padding:10px 18px 10px 14px;border:1px solid var(--accent,var(--acc,#ff4d64));border-radius:999px;background:var(--card,#1c1c1f);color:var(--text,#ececef);font:600 15px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .45s cubic-bezier(.2,1.4,.4,1);cursor:pointer;white-space:nowrap}.dbz-serie.on{transform:translate(-50%,0)}.dbz-serie b{font-size:22px;line-height:1}.dbz-serie small{display:block;color:var(--muted,#9a9aa2);font-weight:500;font-size:12px}@media (prefers-reduced-motion:reduce){.dbz-serie{transition:none}}';
+    document.head.append(st);
+    const el = document.createElement('div'); el.className = 'dbz-serie'; el.setAttribute('role', 'status');
+    el.innerHTML = '<b>🔥</b><span>' + n + ' dis a la lunga<small>Turna damaun per cuntinuar</small></span>';
+    document.body.append(el);
+    const off = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); };
+    el.addEventListener('click', off);
+    setTimeout(() => el.classList.add('on'), 500);
+    setTimeout(off, 4500);
+  })();
   // Seitenaufruf zählen (einmal pro Aufruf; nur Tool-Name und Zeitpunkt)
   // Anonyme Zufalls-Kennung pro Browser (nur zum Zählen verschiedener Besucher, gilt für alle Tools gemeinsam)
   let cid = ''; try { cid = localStorage.getItem('dbz-cid') || ''; if (!/^[A-Za-z0-9-]{8,40}$/.test(cid)) { cid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)); localStorage.setItem('dbz-cid', cid); } } catch (e) { cid = ''; }
@@ -104,7 +128,10 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   // Nutzung zählen: einmal pro Seitenaufruf
   let counted = false;
   function done() {
-    if (!counted) { counted = true; fetch(API + '/use/' + encodeURIComponent(tool) + (cid ? '?c=' + cid : ''), { method: 'POST', keepalive: true }).catch(() => {}); }
+    if (!counted) { counted = true;
+      try { const m = new Date().toLocaleDateString('sv').slice(0, 7), a = JSON.parse(localStorage.getItem('dbz-acts') || '{}') || {}; // für /game
+        localStorage.setItem('dbz-acts', JSON.stringify({ total: (+a.total || 0) + 1, month: m, m: (a.month === m ? +a.m || 0 : 0) + 1 })); } catch (e) {}
+      fetch(API + '/use/' + encodeURIComponent(tool) + (cid ? '?c=' + cid : ''), { method: 'POST', keepalive: true }).catch(() => {}); }
     ask();
   }
   // Downloads erkennen: Klick auf einen Download-Link oder a.click() im Skript
