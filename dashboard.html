@@ -371,12 +371,13 @@
     return sum;
   }
 
-  // Passwortabfrage (nur Seitenschutz: der Hash liegt im Code, die Daten bleiben über den Worker abrufbar)
-  const SALT = 'a68aaee4317f89d1', HASH = '438f90d77177337d678a479a515909f20a6ab8995cd7aa76705f068191f10566';
+  // Passwortabfrage: das Passwort ist das Cloudflare-Secret FEEDBACK_PASSWORD (der Worker prüft es über /feedback)
   async function check(pw) {
-    const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw.normalize('NFC')), 'PBKDF2', false, ['deriveBits']);
-    const b = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(SALT), iterations: 150000, hash: 'SHA-256' }, k, 256);
-    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('') === HASH;
+    const r = await fetch(API + '/feedback', { headers: { Authorization: 'Bearer ' + pw }, cache: 'no-store' });
+    if (r.status === 401) return 'no';
+    if (r.status === 503) return 'unset';
+    if (!r.ok) throw new Error(r.status);
+    return 'ok';
   }
   let started = false;
   function unlock() { document.documentElement.classList.remove('locked'); if (!started) { started = true;
@@ -385,9 +386,11 @@
     load(r); loadFeedback(true); setInterval(() => loadFeedback(true), 5 * 60 * 1000); } }
   document.getElementById('lock').addEventListener('submit', async e => {
     e.preventDefault();
-    const pw = document.getElementById('pw').value.trim(), err = document.getElementById('err');
-    let ok = false; try { ok = await check(pw); } catch (x) { err.textContent = 'Il browser na sustegn betg la verificaziun.'; return; }
-    if (ok) { try { localStorage.setItem('dbz-stats-ok', HASH); } catch (x) {} if (!fbPw) fbPw = pw; unlock(); }
+    const pw = document.getElementById('pw').value, err = document.getElementById('err');
+    err.textContent = '';
+    let res; try { res = await check(pw); } catch (x) { err.textContent = 'Il server n\'è betg cuntanschibel. Emprova pli tard.'; return; }
+    if (res === 'ok') { fbPw = pw; try { localStorage.setItem('dbz-fb-pw', pw); localStorage.removeItem('dbz-stats-ok'); } catch (x) {} unlock(); }
+    else if (res === 'unset') err.textContent = 'Il pled-clav n\'è anc betg definì sin il server (FEEDBACK_PASSWORD).';
     else { err.textContent = 'Pled-clav sbaglià.'; document.getElementById('pw').select(); }
   });
 
@@ -815,8 +818,10 @@
     } catch (e) { document.getElementById('fb-list').innerHTML = '<p class="fbe">Il feedback n\'ha betg pudì vegnir chargià.</p>'; }
   }
 
-  let saved = null; try { saved = localStorage.getItem('dbz-stats-ok'); } catch (e) {}
-  if (saved === HASH) unlock(); else document.getElementById('pw').focus();
+  // Gespeichertes Passwort beim Worker prüfen; nur wenn es gilt, öffnet sich die Seite direkt
+  if (fbPw) check(fbPw).then(r => { if (r === 'ok') unlock(); else { try { localStorage.removeItem('dbz-fb-pw'); sessionStorage.removeItem('dbz-fb-pw'); } catch (e) {} fbPw = ''; document.getElementById('pw').focus(); } })
+    .catch(() => { document.getElementById('err').textContent = 'Il server n\'è betg cuntanschibel. Emprova pli tard.'; });
+  else document.getElementById('pw').focus();
 </script>
 </body>
 </html>
