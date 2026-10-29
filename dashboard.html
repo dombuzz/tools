@@ -94,7 +94,11 @@ svg.ic{width:18px;height:18px;flex:none;fill:none;stroke:var(--accent);stroke-wi
 .chart .area{fill:rgba(255,77,100,.14)}
 .chart .line{fill:none;stroke:var(--accent);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
 .chart .hit{fill:transparent}
-.chart .hit:hover{fill:rgba(255,77,100,.12)}
+.chart .views{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
+.chart .hl{stroke:var(--muted);stroke-width:1;vector-effect:non-scaling-stroke}
+.chart .tip{position:absolute;top:-6px;transform:translate(-50%,-100%);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:.82rem;line-height:1.45;display:flex;flex-direction:column;white-space:nowrap;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.45);z-index:2}
+.chart .tip b{font-weight:700}
+.chart .tip .tu{color:var(--accent)}
 .chart .lbl{position:absolute;left:0;font-size:.72rem;color:var(--muted);transform:translateY(-50%);background:var(--card);padding:0 4px 0 0}
 .chart .dot{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--card);transform:translate(-50%,-50%)}
 .axis{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)}
@@ -223,25 +227,44 @@ async function loadStats() {
   } catch (e) { $('d-cf').textContent = 'Betg disponibel'; }
 }
 
-// Verlauf: Nutzungen pro Tag (UTC) der letzten 30 Tage, alle Tools zusammen
+// Verlauf: wie /stats («Activitad · ultims 30 dis»): Nutzungen und Visiten pro Tag (Lokalzeit) aus /hourly
+const DAYS_L = ['dumengia', 'glindesdi', 'mardi', 'mesemna', 'gievgia', 'venderdi', 'sonda'];
 async function loadTrend() {
   try {
-    const d = await fetch(API + '/ranking?range=30d&daily=1').then(r => r.json());
-    const per = {}; for (const r of d.daily || []) if (!r.tool.startsWith('lab-')) per[r.day] = (per[r.day] || 0) + (r.uses || 0);
-    const days = []; const t0 = new Date(); t0.setUTCHours(0, 0, 0, 0);
-    for (let i = 29; i >= 0; i--) { const x = new Date(t0 - i * 864e5); days.push(x.toISOString().slice(0, 10)); }
-    const vals = days.map(k => per[k] || 0), max = Math.max(1, ...vals), W = 1000, H = 100, step = W / (vals.length - 1);
-    const y = v => H - v / max * (H - 6) - 3;
-    const pts = vals.map((v, i) => `${(i * step).toFixed(1)},${y(v).toFixed(1)}`);
-    const fmtD = k => +k.slice(8, 10) + '.' + +k.slice(5, 7) + '.';
-    $('t-sum').textContent = n(vals.reduce((a, b) => a + b, 0));
-    $('t-from').textContent = fmtD(days[0]);
+    const d = await fetch(API + '/hourly?range=30d').then(r => r.json());
+    const pad2 = x => String(x).padStart(2, '0'), dayKey = x => `${x.getFullYear()}-${pad2(x.getMonth() + 1)}-${pad2(x.getDate())}`;
+    const hourDate = h => new Date(h.replace(' ', 'T') + ':00:00Z');
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+    const slots = []; for (let i = 29; i >= 0; i--) { const x = new Date(d0); x.setDate(x.getDate() - i); slots.push(x); }
+    const pos = new Map(slots.map((s, i) => [dayKey(s), i]));
+    const u = Array(30).fill(0), v = Array(30).fill(0);
+    (d.uses || []).forEach(x => { const i = pos.get(dayKey(hourDate(x.h))); if (i !== undefined) u[i] += x.n; });
+    (d.views || []).forEach(x => { const i = pos.get(dayKey(hourDate(x.h))); if (i !== undefined) v[i] += x.n; });
+    const W = 1000, H = 100, N = 29, mx = Math.max(1, ...u, ...v), step = W / N;
+    const y = a => H - 3 - a / mx * (H - 8);
+    const pts = a => a.map((val, i) => `${(i * step).toFixed(1)},${y(val).toFixed(1)}`).join(' ');
+    const fmtD = x => x.getDate() + '.' + (x.getMonth() + 1) + '.';
+    $('t-sum').textContent = n(u.reduce((a, b) => a + b, 0));
+    $('t-from').textContent = fmtD(slots[0]);
     $('chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-      <line class="grid" x1="0" x2="${W}" y1="${y(max)}" y2="${y(max)}"/><line class="grid" x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}"/>
-      <polygon class="area" points="0,${H} ${pts.join(' ')} ${W},${H}"/>
-      <polyline class="line" points="${pts.join(' ')}"/>
-      ${vals.map((v, i) => `<rect class="hit" x="${Math.max(0, i * step - step / 2)}" y="0" width="${step}" height="${H}"><title>${fmtD(days[i])}: ${n(v)} utilisaziuns</title></rect>`).join('')}
-    </svg><span class="lbl" style="top:${y(max)}%">${n(max)}</span><span class="dot" style="left:100%;top:${y(vals.at(-1))}%"></span>`;
+      <line class="grid" x1="0" x2="${W}" y1="${y(mx)}" y2="${y(mx)}"/><line class="grid" x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}"/>
+      <polyline class="views" points="${pts(v)}"/>
+      <polygon class="area" points="0,${H} ${pts(u)} ${W},${H}"/>
+      <polyline class="line" points="${pts(u)}"/>
+      <line class="hl" id="t-hl" x1="0" x2="0" y1="0" y2="${H}" visibility="hidden"/>
+      ${u.map((_, i) => `<rect class="hit" data-i="${i}" x="${Math.max(0, i * step - step / 2)}" y="0" width="${step}" height="${H}"/>`).join('')}
+    </svg><span class="lbl" style="top:${y(mx)}%">${n(mx)}</span><span class="dot" style="left:100%;top:${y(u[N])}%"></span>
+    <div class="tip" id="t-tip" hidden></div>`;
+    const svg = $('chart').querySelector('svg'), tip = $('t-tip'), hl = $('t-hl');
+    svg.addEventListener('mousemove', e => {
+      const r = e.target.closest('.hit'); if (!r) return;
+      const i = +r.dataset.i, s = slots[i], x = i / N;
+      hl.setAttribute('x1', i * step); hl.setAttribute('x2', i * step); hl.setAttribute('visibility', 'visible');
+      tip.innerHTML = `<b>${DAYS_L[s.getDay()]} ${s.getDate()}. ${MONTHS[s.getMonth()]}</b><span class="tu">${n(u[i])} ${u[i] === 1 ? 'giada' : 'giadas'} duvrà</span><span>${n(v[i])} ${v[i] === 1 ? 'visita' : 'visitas'}</span>`;
+      tip.hidden = false;
+      tip.style.left = Math.min(Math.max(x * 100, 8), 92) + '%';
+    });
+    svg.addEventListener('mouseleave', () => { tip.hidden = true; hl.setAttribute('visibility', 'hidden'); });
   } catch (e) { $('chart').innerHTML = '<p class="empty">Il decurs n\'ha betg pudì vegnir chargià.</p>'; }
 }
 
