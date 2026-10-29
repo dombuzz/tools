@@ -165,7 +165,8 @@
   @media (prefers-reduced-motion:reduce){.ticker span{animation:none;padding-left:0;white-space:normal}.ticker{white-space:normal}}
   .pan{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0;margin-top:16px}
   .sec{font-size:.85rem;font-weight:600;color:var(--muted);margin:0 0 10px}
-  .spark{display:block;width:100%;height:84px}
+  .spark{display:block;width:100%;height:84px;cursor:crosshair}
+  .sptip{z-index:3}
   .sp-ax{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
   .sp-sum{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:6px}
   .sp-sum b{color:var(--text);font-variant-numeric:tabular-nums}
@@ -489,13 +490,17 @@
     const lu = pt(u, N);
     const lab = d => rk === 'today' ? `${pad2(d.getHours())}:00` : rk === 'week' ? DAYS[(d.getDay() + 6) % 7] : `${d.getDate()}.${d.getMonth() + 1}.`;
     const ttl = { today: 'oz', week: "quest'emna", month: 'mais actual', '30d': 'ultims 30 dis', all: 'entir temp' }[rk] || '';
+    sparkData = { slots, u, v, hourly, N, W };
     const sh = document.getElementById('sparkh'); if (sh) sh.textContent = 'Activitad · ' + ttl;
     document.getElementById('spark').innerHTML = `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Activitad ${ttl}">
       ${[.25, .5, .75].map(f => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" style="stroke:var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`).join('')}
       <path d="${path(v)}" fill="none" style="stroke:var(--muted)" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>
       <path d="${path(u)} L${W} ${H} L0 ${H} Z" fill="rgba(255,77,100,.15)"/>
       <path d="${path(u)}" fill="none" style="stroke:var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/>
-      <circle cx="${lu[0] - 3}" cy="${lu[1]}" r="3.5" style="fill:var(--accent)"/></svg>
+      <circle cx="${lu[0] - 3}" cy="${lu[1]}" r="3.5" style="fill:var(--accent)"/>
+      <line id="sphl" x1="0" x2="0" y1="0" y2="${H}" style="stroke:var(--muted)" stroke-width="1" vector-effect="non-scaling-stroke" visibility="hidden"/>
+      ${slots.map((_, i) => `<rect class="sphit" data-i="${i}" x="${Math.max(0, (i - .5) / N * W)}" y="0" width="${W / N}" height="${H}" fill="transparent"/>`).join('')}</svg>
+      <div class="tip sptip" id="sptip" hidden></div>
       <div class="sp-ax"><span>${lab(slots[0])}</span><span>${lab(slots[Math.round(N / 2)])}</span><span>ussa</span></div>
       <div class="sp-sum"><span><i style="background:var(--accent)"></i><b>${fmt(u.reduce((a, b) => a + b, 0))}</b> giadas duvrà</span><span><i style="background:var(--muted)"></i><b>${fmt(v.reduce((a, b) => a + b, 0))}</b> visitas</span></div>`;
     // Wochenraster: Wochentag × Stunde (Lokalzeit), Duvrà im gewählten Zeitraum
@@ -510,6 +515,27 @@
       : '<div class="msg">Anc naginas datas en quest temp.</div>';
     ticker();
   }
+  // Tooltip der Aktivitätskurve: Hover (Maus) oder Tippen zeigt Zeit, Duvrà und Visitas
+  let sparkData = null;
+  (function () {
+    const box = document.getElementById('spark');
+    const hide = () => { const t = document.getElementById('sptip'), l = document.getElementById('sphl'); if (t) t.hidden = true; if (l) l.setAttribute('visibility', 'hidden'); };
+    const show = r => {
+      const t = document.getElementById('sptip'), l = document.getElementById('sphl'); if (!t || !sparkData) return;
+      const { slots, u, v, hourly, N, W } = sparkData, i = +r.dataset.i, d = slots[i];
+      const when = hourly ? `${DAYS_L[(d.getDay() + 6) % 7]} ${d.getDate()}. ${MONTHS[d.getMonth()]}, ${pad2(d.getHours())}–${pad2((d.getHours() + 1) % 24)}` : `${DAYS_L[(d.getDay() + 6) % 7]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
+      t.innerHTML = `<b>${when}</b><br><span style="color:var(--accent)">${fmt(u[i])} ${u[i] === 1 ? 'giada' : 'giadas'} duvrà</span><br>${fmt(v[i])} ${v[i] === 1 ? 'visita' : 'visitas'}`;
+      t.hidden = false;
+      const x = i / N * W; l.setAttribute('x1', x); l.setAttribute('x2', x); l.setAttribute('visibility', 'visible');
+      const br = box.getBoundingClientRect(), svg = box.querySelector('svg').getBoundingClientRect(), px = svg.left - br.left + i / N * svg.width, w = t.offsetWidth;
+      t.style.left = Math.max(0, Math.min(br.width - w, px - w / 2)) + 'px';
+      t.style.top = (svg.top - br.top + 2) + 'px';
+    };
+    box.style.position = 'relative';
+    box.addEventListener('mouseover', e => { const r = e.target.closest('.sphit'); if (r) show(r); });
+    box.addEventListener('click', e => { const r = e.target.closest('.sphit'); if (r) show(r); });
+    box.addEventListener('mouseleave', hide);
+  })();
   // Lauftext: Rekorde und Höhepunkte aus den echten Zahlen
   function ticker() {
     const el = document.getElementById('ticker'); if (!hourAll || !lastData) return;
