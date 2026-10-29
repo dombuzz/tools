@@ -560,6 +560,7 @@
     const show = r => {
       const t = document.getElementById('sptip'), l = document.getElementById('sphl'); if (!t || !sparkData) return;
       const { slots, u, v, hourly, N, W } = sparkData, i = +r.dataset.i, d = slots[i];
+      if (!u[i] && !v[i]) return hide(); // keine Zahlen: kein Tooltip
       const when = hourly ? `${DAYS_L[(d.getDay() + 6) % 7]} ${d.getDate()}. ${MONTHS[d.getMonth()]}, ${pad2(d.getHours())}–${pad2((d.getHours() + 1) % 24)}` : `${DAYS_L[(d.getDay() + 6) % 7]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
       t.innerHTML = `<b>${when}</b><br><span style="color:var(--accent)">${fmt(u[i])} ${u[i] === 1 ? 'giada' : 'giadas'} duvrà</span><br>${fmt(v[i])} ${v[i] === 1 ? 'visita' : 'visitas'}`;
       t.hidden = false;
