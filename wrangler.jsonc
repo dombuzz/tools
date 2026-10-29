@@ -10,5 +10,11 @@
       "database_name": "dombuzz-likes",
       "database_id": "be639ac8-3c52-4c14-8a2c-4d3b1b84c320"
     }
-  ]
+  ],
+  // Mail bei neuem Feedback (worker/index.js → fbMail). Versand erst aktiv, wenn das Binding «send_email» ergänzt ist
+  // (setzt Email Routing auf dombuzz.ch mit bestätigter Zieladresse voraus).
+  "vars": {
+    "FEEDBACK_TO": "dominik.hardegger@rtr.ch",
+    "FEEDBACK_FROM": "feedback@dombuzz.ch"
+  }
 }
