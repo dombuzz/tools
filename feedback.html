@@ -40,6 +40,21 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .meta .sp{flex:1}
 .text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:.95rem}
 .empty{color:var(--muted);text-align:center;padding:24px 0}
+.tabs{display:inline-flex;flex-wrap:wrap;gap:2px;background:var(--mono);border:1px solid var(--border);border-radius:10px;padding:3px}
+.tabs button{background:transparent;color:var(--muted);font-weight:600;padding:7px 14px;border-radius:7px;display:inline-flex;gap:8px;align-items:center}
+.tabs button:hover{color:var(--text)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:#121214}
+.cnt{font-variant-numeric:tabular-nums;font-size:.78rem;min-width:1.6em;padding:1px 6px;border-radius:999px;background:var(--border);color:var(--text)}
+.tabs button[aria-selected="true"] .cnt{background:rgba(0,0,0,.18);color:#121214}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+#view:not([hidden]){display:flex;flex-direction:column;gap:14px}
+.trash{border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.trash summary{cursor:pointer;padding:12px 16px;color:var(--muted);font-size:.9rem;list-style:none;display:flex;justify-content:space-between}
+.trash summary::-webkit-details-marker{display:none}
+.trash summary::after{content:"▸"}
+.trash[open] summary::after{content:"▾"}
+.trash .list{padding:0 12px 12px}
+.trash .item{background:var(--bg);opacity:.8}
 </style>
 </head>
 <body>
@@ -59,8 +74,19 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
   </div>
 
   <div id="view" hidden>
-    <div class="bar"><span id="count"></span><button type="button" class="ghost" id="logout">Serrar</button></div>
+    <div class="bar">
+      <div class="tabs" role="tablist" aria-label="Status">
+        <button type="button" role="tab" data-s="nov">Nov <span class="cnt" id="c-nov">0</span></button>
+        <button type="button" role="tab" data-s="lavur">En lavur <span class="cnt" id="c-lavur">0</span></button>
+        <button type="button" role="tab" data-s="liquida">Liquidà <span class="cnt" id="c-liquida">0</span></button>
+      </div>
+      <button type="button" class="ghost" id="logout">Serrar</button>
+    </div>
     <div class="list" id="list"></div>
+    <details class="trash" id="trash">
+      <summary>Stizzads</summary>
+      <div class="list" id="tlist"></div>
+    </details>
   </div>
 </div>
 
@@ -74,6 +100,28 @@ try { pw = localStorage.getItem('dbz-fb-pw') || sessionStorage.getItem('dbz-fb-p
 const fmt = ts => { const d = new Date(ts.replace(' ', 'T') + 'Z');
   return d.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }); };
 
+const LBL = { nov: 'Nov', lavur: 'En lavur', liquida: 'Liquidà' };
+let items = [], tab = 'nov';
+try { const s = localStorage.getItem('dbz-fb-tab'); if (LBL[s]) tab = s; } catch (e) {}
+
+const card = (i, acts) => `<article class="item" data-id="${i.id}">
+  <div class="meta"><b>${esc(i.toolName)}</b><span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${acts}</div></div>
+  <div class="text">${esc(i.text)}</div></article>`;
+const btn = (act, label) => `<button type="button" class="ghost" data-act="${act}">${label}</button>`;
+
+function render() {
+  const st = i => LBL[i.status] ? i.status : (i.status === 'stizza' ? 'stizza' : 'nov');
+  for (const s of Object.keys(LBL)) $('c-' + s).textContent = items.filter(i => st(i) === s).length;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.s === tab)));
+  const cur = items.filter(i => st(i) === tab);
+  $('list').innerHTML = cur.length ? cur.map(i => card(i,
+    Object.keys(LBL).filter(s => s !== tab).map(s => btn('to:' + s, '→ ' + LBL[s])).join('') + btn('to:stizza', 'Stizzar'))).join('')
+    : `<p class="empty">Nagins messadis «${LBL[tab]}».</p>`;
+  const del = items.filter(i => st(i) === 'stizza');
+  $('trash').hidden = !del.length;
+  $('tlist').innerHTML = del.map(i => card(i, btn('to:nov', 'Restaurar') + btn('purge', 'Stizzar definitivamain'))).join('');
+}
+
 async function load() {
   $('lmsg').className = 'msg'; $('lmsg').textContent = 'Chargiar …';
   try {
@@ -81,12 +129,9 @@ async function load() {
     if (r.status === 401) throw new Error('Pled-clav fallì.');
     if (r.status === 503) throw new Error('Il pled-clav n\'è anc betg definì sin il server (FEEDBACK_PASSWORD).');
     if (!r.ok) throw new Error('Las datas n\'han betg pudì vegnir chargiadas.');
-    const { items } = await r.json();
+    items = (await r.json()).items || [];
     $('login').hidden = true; $('view').hidden = false;
-    $('count').textContent = items.length === 1 ? '1 messadi' : items.length + ' messadis';
-    $('list').innerHTML = items.length ? items.map(i => `<article class="item" data-id="${i.id}">
-      <div class="meta"><b>${esc(i.toolName)}</b><span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><button type="button" class="ghost del">Stizzar</button></div>
-      <div class="text">${esc(i.text)}</div></article>`).join('') : '<p class="empty">Anc nagins messadis.</p>';
+    render();
   } catch (e) {
     $('login').hidden = false; $('view').hidden = true;
     $('lmsg').className = 'msg err'; $('lmsg').textContent = e.message;
@@ -102,13 +147,21 @@ $('logout').addEventListener('click', () => {
   pw = ''; try { localStorage.removeItem('dbz-fb-pw'); sessionStorage.removeItem('dbz-fb-pw'); } catch (e) {}
   $('view').hidden = true; $('login').hidden = false; $('pw').value = ''; $('lmsg').textContent = '';
 });
-// Löschen in zwei Schritten (ohne confirm-Dialog): erster Klick fragt nach, zweiter löscht
-$('list').addEventListener('click', async e => {
-  const b = e.target.closest('.del'); if (!b) return;
-  if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Propi stizzar?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Stizzar'; }, 4000); return; }
-  const art = b.closest('.item');
-  const r = await fetch(API + '/feedback/' + art.dataset.id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + pw } }).catch(() => null);
-  if (r && r.ok) load(); else { b.textContent = 'Betg reussì'; }
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  tab = b.dataset.s; try { localStorage.setItem('dbz-fb-tab', tab); } catch (e) {} render();
+}));
+// Status ändern bzw. endgültig löschen (endgültig nur aus «Stizzads», mit zweitem Klick)
+document.getElementById('view').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const id = +b.closest('.item').dataset.id, act = b.dataset.act;
+  if (act === 'purge' && !b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Propi stizzar?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Stizzar definitivamain'; }, 4000); return; }
+  b.disabled = true;
+  const r = act === 'purge'
+    ? await fetch(API + '/feedback/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + pw } }).catch(() => null)
+    : await fetch(API + '/feedback/' + id + '/status', { method: 'POST', headers: { Authorization: 'Bearer ' + pw, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: act.slice(3) }) }).catch(() => null);
+  if (!r || !r.ok) { b.disabled = false; b.textContent = 'Betg reussì'; return; }
+  if (act === 'purge') items = items.filter(i => i.id !== id); else items.find(i => i.id === id).status = act.slice(3);
+  render();
 });
 
 if (pw) load(); else $('pw').focus();
