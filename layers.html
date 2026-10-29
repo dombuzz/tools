@@ -209,7 +209,7 @@
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
   <h1>Elavurar <span class="acc">maletgs</span></h1>
-  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar e corregir colurs per layer. Collage cun 2 u 3 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
+  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar e corregir colurs per layer. Collascha cun 2 u 3 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
 
   <div class="card">
     <div class="toolbar" id="layToolbar">
@@ -242,7 +242,7 @@
       <button type="button" role="tab" data-tab="0" aria-selected="true">Clerezza <em>+</em> colurs</button>
       <button type="button" role="tab" data-tab="1" aria-selected="false">Rotar <em>+</em> drizzar</button>
       <button type="button" role="tab" data-tab="2" aria-selected="false">Layers <span class="tcount" id="tcount"></span></button>
-      <button type="button" role="tab" data-tab="3" aria-selected="false">Collage</button>
+      <button type="button" role="tab" data-tab="3" aria-selected="false">Collascha</button>
     </div>
 
     <div class="work" id="layWork">
@@ -318,7 +318,7 @@
     <section id="collage" hidden>
       <div class="work">
         <div>
-          <div class="stage cstage" id="cStage" tabindex="0" aria-label="Collage">
+          <div class="stage cstage" id="cStage" tabindex="0" aria-label="Collascha">
             <canvas id="cCanvas" width="1920" height="1080"></canvas>
           </div>
         </div>
@@ -356,7 +356,7 @@
       </div>
       <p class="hint">Trair ils maletgs en las parts u tutgar ina part vida per tscherner in maletg. Cun plirs maletgs vegnan emplenidas las parts vidas ina suenter l'autra. Mintga maletg emplenescha sia part; spustar cun il mieur u il det, zoomar cun la rodella dal mieur u cun dus dets, dubel clic metta enavos. La lingia da separaziun vegn mo tranter las parts, betg a l'ur.</p>
       <div class="actions">
-        <button type="button" id="cDl" disabled>Telechargiar la collage</button>
+        <button type="button" id="cDl" disabled>Telechargiar la collascha</button>
         <span class="msg" id="cMsg"></span>
       </div>
     </section>
@@ -1118,6 +1118,7 @@ const CL = {
   c3:  { n:3, r:[[0,0,1/3,1],[1/3,0,1/3,1],[2/3,0,1/3,1]] },
   r3:  { n:3, r:[[0,0,1,1/3],[0,1/3,1,1/3],[0,2/3,1,1/3]] },
   l12: { n:3, r:[[0,0,.5,1],[.5,0,.5,.5],[.5,.5,.5,.5]] },
+  l12w:{ n:3, r:[[0,0,1/3,1],[1/3,0,2/3,.5],[1/3,.5,2/3,.5]] },
   l21: { n:3, r:[[0,0,.5,.5],[0,.5,.5,.5],[.5,0,.5,1]] },
   t12: { n:3, r:[[0,0,1,.5],[0,.5,.5,.5],[.5,.5,.5,.5]] },
 };
@@ -1207,7 +1208,7 @@ function icon(L){
     return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="1" fill="currentColor"/>`;
   }).join('') + '</svg>';
 }
-const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart' };
+const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l12w:'1 stretg a sanestra, 2 lads a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart' };
 function buildLays(){
   const box = $('cLays'); box.innerHTML = '';
   for (const k of Object.keys(CL)){
@@ -1353,7 +1354,7 @@ $('cDl').onclick = () => {
     c.toBlob(b => {
       if (!b){ colMsg('Export betg reussì.', true); return; }
       const d = new Date(), z = n => String(n).padStart(2, '0');
-      const name = `collage_${W}x${H}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
+      const name = `collascha_${W}x${H}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
       const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
