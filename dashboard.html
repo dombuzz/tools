@@ -199,11 +199,14 @@ async function loadStats() {
       fetch(API + '/ranking?range=month').then(r => r.json()),
       fetch(API + '/ranking?range=lastmonth&daily=1').then(r => r.json()),
     ]);
-    $('k-uses').textContent = n(cur.usesTotal); $('k-likes').textContent = n(cur.total); $('k-clients').textContent = n(cur.clients);
-    const upTo = (prev.daily || []).filter(d => +d.day.slice(8, 10) <= dayNo);
+    // wie /stats: ohne Lab-Experimente
+    const main = x => !String(x.tool).startsWith('lab-');
+    const usesM = (cur.uses || []).filter(main).reduce((t, x) => t + x.count, 0), likesM = (cur.items || []).filter(main).reduce((t, x) => t + x.count, 0);
+    $('k-uses').textContent = n(usesM); $('k-likes').textContent = n(likesM); $('k-clients').textContent = n(cur.clients);
+    const upTo = (prev.daily || []).filter(d => main(d) && +d.day.slice(8, 10) <= dayNo);
     const pu = upTo.reduce((t, d) => t + d.uses, 0), pl = upTo.reduce((t, d) => t + d.likes, 0);
-    delta($('d-uses'), cur.usesTotal, pu, last + ' (fin ils ' + dayNo + '.)');
-    delta($('d-likes'), cur.total, pl, last + ' (fin ils ' + dayNo + '.)');
+    delta($('d-uses'), usesM, pu, last + ' (fin ils ' + dayNo + '.)');
+    delta($('d-likes'), likesM, pl, last + ' (fin ils ' + dayNo + '.)');
     $('d-clients').textContent = cur.returning ? n(cur.returning) + ' turnads a plirs dis' : '';
     const rows = (cur.uses || []).filter(x => !x.tool.startsWith('lab-') && x.count).slice(0, 5), max = Math.max(1, ...rows.map(x => x.count));
     $('rank').innerHTML = rows.length ? rows.map((x, i) => `<a class="r" href="/${encodeURIComponent(x.tool)}"><b>${i + 1}</b><span>${esc(x.name)}</span><small class="num">${n(x.count)}</small><div class="bar"><i style="width:${x.count / max * 100}%"></i></div></a>`).join('')
@@ -224,7 +227,7 @@ async function loadStats() {
 async function loadTrend() {
   try {
     const d = await fetch(API + '/ranking?range=30d&daily=1').then(r => r.json());
-    const per = {}; for (const r of d.daily || []) per[r.day] = (per[r.day] || 0) + (r.uses || 0);
+    const per = {}; for (const r of d.daily || []) if (!r.tool.startsWith('lab-')) per[r.day] = (per[r.day] || 0) + (r.uses || 0);
     const days = []; const t0 = new Date(); t0.setUTCHours(0, 0, 0, 0);
     for (let i = 29; i >= 0; i--) { const x = new Date(t0 - i * 864e5); days.push(x.toISOString().slice(0, 10)); }
     const vals = days.map(k => per[k] || 0), max = Math.max(1, ...vals), W = 1000, H = 100, step = W / (vals.length - 1);
