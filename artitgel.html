@@ -189,13 +189,18 @@ input.txt:focus{border-color:var(--accent)}
     const vis = shown(), cur = vis.includes(tab) ? tab : vis[0];
     document.querySelectorAll('.tab').forEach(b => { b.hidden = !vis.includes(b.dataset.k); b.setAttribute('aria-selected', String(b.dataset.k === cur)); });
     const tab0 = tab; tab = cur;
-    const u = link(tab), box = $('url');
-    const waiting = tab === 'text' && textState !== 'ok';
+    const box = $('url');
+    // Link uffizial noch nicht da (Artikel nicht publiziert bzw. Server weg): stattdessen den Link URN zeigen und kopierbar machen
+    const unpub = tab === 'text' && (textState === 'none' || textState === 'err');
+    const u = unpub ? `${RTR}/article/${id}` : link(tab);
+    const waiting = tab === 'text' && textState === 'wait';
     box.classList.toggle('wait', waiting);
-    box.textContent = !waiting ? u : textState === 'wait' ? 'Chargel …' : textState === 'err' ? "Il server n'ha betg respundì. Emprova pli tard." : "Anc nagina URL cun text – l'artitgel n'è probablamain anc betg publitgà.";
+    box.textContent = waiting ? 'Chargel …' : u;
     $('open').href = waiting ? '#' : u;
     $('open').setAttribute('aria-disabled', waiting); $('copy').setAttribute('aria-disabled', waiting);
-    $('hint').textContent = HINT[tab];
+    $('hint').textContent = !unpub ? HINT[tab] : textState === 'none'
+      ? "L'artitgel n'è anc betg publitgà – qua il link URN. El funcziuna per tuts, uschespert che l'artitgel è publitgà – era per newsletters e posts da social media planisads."
+      : "Il link uffizial n'ha betg pudì vegnir chargià – qua il link URN. El funcziuna per tuts, uschespert che l'artitgel è publitgà.";
     $('urncopy').hidden = kind !== 'text'; // nur bei eingegebener URL cun text
     tab = tab0; // gespeicherte Wahl nicht überschreiben
   }
