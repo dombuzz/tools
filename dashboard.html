@@ -43,7 +43,8 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 .kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;text-decoration:none;transition:border-color .15s}
 a.kpi:hover{border-color:rgba(255,77,100,.55)}
-.kpi label{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;cursor:inherit}
+.kpi label{display:flex;align-items:center;gap:7px;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;cursor:inherit}
+.kpi .ki{width:15px;height:15px;flex:none;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .kpi .v{font-size:1.55rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
 .kpi .d{font-size:.75rem;color:var(--muted);line-height:1.35}
 .kpi .d.up{color:var(--ok)}
@@ -131,11 +132,11 @@ svg.ic{width:18px;height:18px;flex:none;fill:none;stroke:var(--accent);stroke-wi
   <div id="view" hidden>
     <div class="sec-l"><span>Statistica quest mais</span><a href="/stats">Stats →</a></div>
     <div class="kpis">
-      <a class="kpi" href="/stats"><label>Utilisaziuns</label><span class="v num" id="k-uses">–</span><span class="d" id="d-uses"></span></a>
-      <a class="kpi" href="/stats"><label>Cors</label><span class="v num" id="k-likes">–</span><span class="d" id="d-likes"></span></a>
-      <a class="kpi" href="/stats"><label>Visitaduras e visitaders</label><span class="v num" id="k-clients">–</span><span class="d" id="d-clients"></span></a>
-      <a class="kpi" href="/feedback" id="kpi-fb"><label>Feedback nov</label><span class="v num" id="k-fb">–</span><span class="d" id="d-fb"></span></a>
-      <a class="kpi" href="/stats"><label>Contingent Cloudflare oz</label><span class="v num" id="k-cf">–</span><div class="bar ok"><i id="b-cf" style="width:0"></i></div><span class="d" id="d-cf"></span></a>
+      <a class="kpi" href="/stats"><label><svg class="ki" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Utilisaziuns</label><span class="v num" id="k-uses">–</span><span class="d" id="d-uses"></span></a>
+      <a class="kpi" href="/stats"><label><svg class="ki" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.3-9-8.6C1.6 8.2 3.6 4.8 7 4.8c2 0 3.4 1.1 4.1 2.5h1.8c.7-1.4 2.1-2.5 4.1-2.5 3.4 0 5.4 3.4 4 6.6-2 4.3-9 8.6-9 8.6z"/></svg>Cors</label><span class="v num" id="k-likes">–</span><span class="d" id="d-likes"></span></a>
+      <a class="kpi" href="/stats"><label><svg class="ki" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Visitaduras e visitaders</label><span class="v num" id="k-clients">–</span><span class="d" id="d-clients"></span></a>
+      <a class="kpi" href="/feedback" id="kpi-fb"><label><svg class="ki" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>Feedback nov</label><span class="v num" id="k-fb">–</span><span class="d" id="d-fb"></span></a>
+      <a class="kpi" href="/stats"><label><svg class="ki" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 1 1 1.6-9.7A6 6 0 0 1 20 11a4 4 0 0 1-1 7z"/></svg>Contingent Cloudflare oz</label><span class="v num" id="k-cf">–</span><div class="bar ok"><i id="b-cf" style="width:0"></i></div><span class="d" id="d-cf"></span></a>
     </div>
 
     <div class="cols">
