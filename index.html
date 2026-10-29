@@ -141,7 +141,9 @@
   body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
   main { width: 100%; }
   .ver { margin: auto 0 0; padding: 0 16px 14px; text-align: center; color: var(--muted); font-size: 11px; letter-spacing: .04em; opacity: .35; }
-  .ver:empty { visibility: hidden; }
+  .ver a { color: var(--accent); text-decoration: none; }
+  .ver a:hover, .ver a:focus-visible { text-decoration: underline; outline: none; }
+  #vnum:not(:empty)::after { content: " · "; }
 </style>
 </head>
 <body>
@@ -164,7 +166,7 @@
     <div class="menu" id="menu" role="menu"></div>
   </div>
 </main>
-<footer class="ver" id="ver" aria-label="Versiun"></footer>
+<footer class="ver" aria-label="Versiun"><span id="vnum"></span><a href="/game" id="vgame">game</a></footer>
 
 <script>
   // Anzeigenamen im Dropdown (Dateiname -> Name).
@@ -453,7 +455,7 @@
 <script>
   // Versionsnummer: Datum des letzten Commits auf main (Zürcher Zeit) + wievielter Commit an diesem Tag.
   (() => {
-    const el = document.getElementById('ver'), K = 'dbz-ver';
+    const el = document.getElementById('vnum'), K = 'dbz-ver';
     try { el.textContent = localStorage.getItem(K) || ''; } catch (e) {}
     const day = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Zurich' }).format(new Date(d));
     fetch('https://api.github.com/repos/dombuzz/tools/commits?sha=main&per_page=100')

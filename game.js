@@ -53,6 +53,10 @@
   .gtip span { display: block; color: var(--accent); font-size: 12px; font-weight: 600; }`;
   document.head.insertAdjacentHTML('beforeend', '<style>' + css + '</style>');
 
+  // Link unten neben der Versionsnummer: auf /game zurück zur normalen Startseite
+  const vg = document.getElementById('vgame');
+  if (vg) { vg.href = '/'; vg.textContent = 'tools'; }
+
   const h1 = document.querySelector('h1');
   if (h1) h1.insertAdjacentHTML('beforeend', '<span class="h1g">game</span>');
 
