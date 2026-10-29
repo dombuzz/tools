@@ -3,7 +3,7 @@
 (() => {
   const q = new URLSearchParams(location.search), img = q.get('img');
   if (!img || !/^https?:\/\/([a-z0-9-]+\.)*(rtr\.ch|srf\.ch|srgssr\.ch)\//i.test(img)) return;
-  const FROM = { picture: 'RTR Picture-downloader', layers: 'Elavurar maletgs' };
+  const FROM = { picture: 'RTR Picture-downloader', layers: 'Elavurar maletgs', maletgs: 'Colurar, rotar e cumbinar' };
   const from = FROM[q.get('from')] || '';
   history.replaceState(null, '', location.pathname); // Parameter nicht stehen lassen (Neuladen = leeres Tool)
   const note = (txt, warn) => {

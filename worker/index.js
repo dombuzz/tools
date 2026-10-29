@@ -29,7 +29,7 @@ const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = {
-  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'layers': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
+  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
   'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
@@ -40,9 +40,9 @@ const NAMES = {
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 // «Links d'artitgels»: die frühere Beta-Seite /artitgel-beta zählt zu /artitgel
 // «Magazin / Il di / #mument»: das frühere Einzeltool /mument zählt zu /visual
-// «Elavurar maletgs»: die Einzeltools im Hintergrund (/colurs, /rotar, /ebenas) zählen zu /layers
+// «Elavurar maletgs»: die Einzeltools im Hintergrund (/colurs, /rotar, /ebenas) und die frühere Adresse /layers zählen zu /maletgs
 // «Subtitle Studio»: die früheren Einzeltools /spustar, /cumparegliar und /subs zählen zu /studio
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', colurs: 'layers', rotar: 'layers', ebenas: 'layers', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
 const NO_STATS = new Set(['stats']);
