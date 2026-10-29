@@ -168,7 +168,7 @@ h1 .acc{color:var(--accent)}
         <button class="btn-secondary" id="copyUrlBtn" title="Copiar la URL">Copiar la URL</button>
       </div>
 
-      <div class="avrir" id="avrir"><b>Avrir en …</b><div><a data-to="visual" href="/visual"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='20' y='30' width='60' height='40' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E" alt="">Magazin / Il di</a><a data-to="layers" href="/layers"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='16' y='38' width='52' height='36' rx='4' stroke='%23ff4d64' stroke-width='8' fill='none'/%3E%3Cpath d='M32 26h52v36' stroke='%23ff4d64' stroke-width='8' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E" alt="">Elavurar maletgs</a><a data-to="Resizer2000" href="/Resizer2000"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15.3 15.3 69.4 69.4'%3E%3Cpath d='M24 76V40h12M76 24v36H64M24 76l52-52' stroke='%23ff4d64' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" alt="">Resizer 2000</a><a data-to="mument" href="/mument"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='30' y='20' width='40' height='60' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E" alt="">#mument</a></div></div>
+      <div class="avrir" id="avrir"><b>Avrir en …</b><div><a data-to="visual" href="/visual"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='20' y='30' width='60' height='40' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E" alt="">Magazin / Il di</a><a data-to="layers" href="/layers"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='16' y='38' width='52' height='36' rx='4' stroke='%23ff4d64' stroke-width='8' fill='none'/%3E%3Cpath d='M32 26h52v36' stroke='%23ff4d64' stroke-width='8' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E" alt="">Elavurar maletgs</a><a data-to="Resizer2000" href="/Resizer2000"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15.3 15.3 69.4 69.4'%3E%3Cpath d='M24 76V40h12M76 24v36H64M24 76l52-52' stroke='%23ff4d64' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" alt="">Resizer 2000</a><a data-to="visual" data-fmt="mument" href="/visual?fmt=mument"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='30' y='20' width='40' height='60' rx='4' stroke='%23ff4d64' stroke-width='9' fill='none'/%3E%3C/svg%3E" alt="">#mument</a></div></div>
 
       <div id="status"></div>
       <div id="fallback" hidden></div>
@@ -339,7 +339,7 @@ h1 .acc{color:var(--accent)}
     downloadBtn.disabled = false;
     currentUrl = res.url;
     // «Avrir en …»: Bild direkt in einem anderen Tool öffnen
-    document.querySelectorAll('#avrir a').forEach(a => { a.href = '/' + a.dataset.to + '?from=picture&img=' + encodeURIComponent(res.url); });
+    document.querySelectorAll('#avrir a').forEach(a => { a.href = '/' + a.dataset.to + '?' + (a.dataset.fmt ? 'fmt=' + a.dataset.fmt + '&' : '') + 'from=picture&img=' + encodeURIComponent(res.url); });
     urlDisplay.textContent = res.url;
     filenameInput.value = res.filename;
     statusEl.textContent = '';

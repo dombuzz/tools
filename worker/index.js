@@ -29,7 +29,7 @@ const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = {
-  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'layers': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
+  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'layers': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML',
   'subs': 'Suttitels RM → DE', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
@@ -39,7 +39,8 @@ const NAMES = {
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 // «Links d'artitgels»: die frühere Beta-Seite /artitgel-beta zählt zu /artitgel
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel' };
+// «Magazin / Il di / #mument»: das frühere Einzeltool /mument zählt zu /visual
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual' };
 const grp = t => GROUP[t] || t;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst und Tools im Hintergrund)
 const NO_STATS = new Set(['stats', 'colurs', 'ebenas', 'rotar']);
