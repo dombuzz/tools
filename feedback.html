@@ -18,6 +18,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 16px;padding-block:40px 48px}
 .wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.homesep{color:var(--muted);font-size:.85rem}
 .homelink{color:var(--muted);text-decoration:none;font-size:.85rem}
 .homelink:hover{color:var(--text)}
 h1{font-size:1.4rem;margin:4px 0 0;letter-spacing:-.01em}
@@ -62,7 +63,7 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 <body>
 <div class="wrap">
   <header>
-    <a class="homelink" href="/">← Tools</a>
+    <a class="homelink" href="/">← Tools</a><span class="homesep" aria-hidden="true"> · </span><a class="homelink" href="/dashboard">Dashboard</a>
     <h1><span class="acc">Feedback</span></h1>
   </header>
 
