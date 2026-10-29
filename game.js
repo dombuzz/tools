@@ -26,6 +26,7 @@
   const css = `
   :root:root { --accent: #5aa6ff; --acc: #5aa6ff; --link: #5aa6ff; }
   :root:root[data-theme="light"] { --accent: #1f6fd1; --acc: #1f6fd1; --accent-dark: #1857a8; --acc2: #1857a8; --link: #1a63bd; }
+  #vnum::after { content: none !important; } /* kein «·» nach der Versionsnummer, der game-Link fehlt hier */
   .homelink { display: inline-block; margin: 0 0 10px; font-size: .85rem; color: var(--muted); text-decoration: none; }
   .homelink:hover, .homelink:focus-visible { color: var(--accent); }
   .h1g { display: inline-block; margin-left: 8px; padding: 1px 8px; border: 1px solid var(--accent); border-radius: 999px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; vertical-align: 6px; }
