@@ -15,6 +15,8 @@
   // (setzt Email Routing auf dombuzz.ch mit bestätigter Zieladresse voraus).
   "vars": {
     "FEEDBACK_TO": "dominik.hardegger@rtr.ch",
-    "FEEDBACK_FROM": "feedback@dombuzz.ch"
+    "FEEDBACK_FROM": "feedback@dombuzz.ch",
+    // Für das Log-Kontingent auf /stats (Token kommt als Secret CF_API_TOKEN dazu, nicht hier eintragen)
+    "CF_ACCOUNT_ID": "39da93a659736066e9818f5eba757d5e"
   }
 }
