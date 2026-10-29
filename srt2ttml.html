@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Convertescha suttitels en TTML tenor il model da RTR – u en SRT, VTT, Avid u text. Plirs files a medem temp èn pussaivels.">
+<meta name="description" content="Convertescha files SRT en TTML tenor il model da RTR. Plirs files a medem temp èn pussaivels.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="SRT → TTML">
-<meta property="og:description" content="Convertescha suttitels en TTML tenor il model da RTR – u en SRT, VTT, Avid u text. Plirs files a medem temp èn pussaivels.">
+<meta property="og:description" content="Convertescha files SRT en TTML tenor il model da RTR. Plirs files a medem temp èn pussaivels.">
 <meta property="og:url" content="https://tools.dombuzz.ch/srt2ttml">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -52,12 +52,6 @@ h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
 h1 .acc{color:var(--accent)}
 .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
 .homelink:hover,.homelink:focus-visible{color:var(--accent)}
-.fmt{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
-.lbl{font-size:.82rem;color:var(--muted)}
-.seg{display:flex;flex-wrap:wrap;background:var(--field,#232327);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px;width:fit-content;max-width:100%}
-.seg button{border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:7px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
-.seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 #drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;background:var(--code);color:var(--muted);margin-right:4px}
 </style>
@@ -66,9 +60,8 @@ h1 .acc{color:var(--accent)}
 <main>
   <a class="homelink" href="/">← Tools</a>
   <h1>SRT <span class="acc">→</span> TTML</h1>
-  <p class="sub">Convertescha suttitels en TTML tenor il model da RTR – u en in auter format.<br>Plirs files a medem temp èn pussaivels.</p>
-  <div class="fmt"><span class="lbl">Format da destinaziun</span><div class="seg" id="out" role="group" aria-label="Format da destinaziun"></div></div>
-  <div id="drop" tabindex="0" role="button" aria-label="Tscherner files da suttitels">Trair qua ils files da suttitels u <u>cliccar</u><br><small>SRT · VTT · TTML · SBV · ASS · Avid</small><input id="file" type="file" accept=".srt,.vtt,.ttml,.dfxp,.xml,.sbv,.ass,.ssa,.txt,text/plain" multiple hidden></div>
+  <p class="sub">Convertescha files SRT en TTML tenor il model da RTR.<br>Plirs files a medem temp èn pussaivels.</p>
+  <div id="drop" tabindex="0" role="button" aria-label="Tscherner files SRT">Trair qua ils files SRT u <u>cliccar</u><input id="file" type="file" accept=".srt,text/plain" multiple hidden></div>
   <div class="row" id="allRow" hidden><button class="primary" id="all">Telechargiar tuts</button><button id="clear" data-dbz-hold>Svidar la glista</button></div>
   <div id="list"></div>
   <details>
@@ -244,32 +237,21 @@ const SUB = (() => {
 'use strict';
 const $ = id => document.getElementById(id);
 const items = [];   // { fileName, format, cues, el }
-const KEY = 'dbz-srt2ttml-out';
-let out = 'ttml'; try { const v = localStorage.getItem(KEY); if (SUB.OUT[v]) out = v; } catch (e) {}
-
-// Zielformat-Schalter
-const seg = $('out');
-for (const k of ['ttml', 'srt', 'vtt', 'avid', 'txt']) {
-  const b = document.createElement('button'); b.type = 'button'; b.dataset.k = k; b.textContent = SUB.OUT[k][0];
-  b.onclick = () => { out = k; try { localStorage.setItem(KEY, k); } catch (e) {} mark(); items.forEach(render); };
-  seg.appendChild(b);
-}
-const mark = () => seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === out));
-mark();
+const out = 'ttml';
 
 function render(it) {
   const el = it.el; el.className = 'item'; el.innerHTML = '';
   if (it.url) URL.revokeObjectURL(it.url), it.url = null;
   if (!it.cues.length) {
     el.classList.add('err');
-    el.innerHTML = `<div><div class="name"></div><div class="info">Chattà nagins suttitels – è quai in file da suttitels?</div></div>`;
+    el.innerHTML = `<div><div class="name"></div><div class="info">Chattà nagins suttitels – è quai in file SRT?</div></div>`;
     el.querySelector('.name').textContent = it.fileName; return;
   }
   const w = SUB.write(it.cues, out);
   it.name = SUB.base(it.fileName) + w.ext;
   it.url = URL.createObjectURL(new Blob([w.text], { type: w.mime }));
   const n = it.cues.length, dur = SUB.tc(it.cues[n - 1].end).slice(0, 8);
-  el.innerHTML = `<div><div class="name"></div><div class="info"><span class="tag">${SUB.FORMATS[it.format]}</span>${n === 1 ? '1 suttitel' : n + ' suttitels'} · fin ${dur}</div></div>`;
+  el.innerHTML = `<div><div class="name"></div><div class="info">${n === 1 ? '1 suttitel' : n + ' suttitels'} · fin ${dur}</div></div>`;
   el.querySelector('.name').textContent = it.name;
   const b = document.createElement('a'); b.className = 'btn primary'; b.textContent = 'Telechargiar'; b.href = it.url; b.download = it.name;
   el.appendChild(b);
