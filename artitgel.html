@@ -60,8 +60,6 @@ input.txt:focus{border-color:var(--accent)}
 .legend dt{font-weight:600;color:var(--text)}
 .legend dd{margin:0}
 .legend p{margin:10px 0 0}
-.urncopy{display:block;margin:10px 0 0 auto;padding:4px 2px;border:0;background:none;color:var(--muted);font:inherit;font-size:.8rem;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer;word-break:break-all;text-align:right}
-.urncopy:hover,.urncopy:focus-visible{color:var(--accent);outline:none}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -89,16 +87,15 @@ input.txt:focus{border-color:var(--accent)}
       </div>
       <p class="hint" id="hint"></p>
     </div>
-    <button type="button" class="urncopy" id="urncopy" hidden>Copiar link URN</button>
     <details class="legend">
       <summary>Legenda</summary>
       <dl>
         <dt>Prevista</dt><dd>Prevista da l'artitgel en il CMS – be cun login dal CMS.</dd>
         <dt>Elavurar</dt><dd>L'artitgel en il CMS per elavurar – be cun login dal CMS.</dd>
-        <dt>Link URN</dt><dd>«Copiar link URN» sut il resultat: link permanent cun l'ID (rtr.ch/article/…). Funcziuna per tuts, uschespert che l'artitgel è publitgà – era gia ordavant per newsletters e posts planisads.</dd>
+        <dt>Link URN</dt><dd>Link permanent cun l'ID (rtr.ch/article/…). Cumpara sut «Link uffizial», uschè ditg che l'artitgel n'è anc betg publitgà – per newsletters e posts da social media planisads.</dd>
         <dt>Link uffizial</dt><dd>La URL cun il titel da l'artitgel. Datti be, sche l'artitgel è gia publitgà.</dd>
       </dl>
-      <p>Cun ina URL publica sco input mussa il tool be «Prevista» ed «Elavurar» – ed il link URN da copiar.</p>
+      <p>Cun ina URL publica sco input mussa il tool be «Prevista» ed «Elavurar».</p>
     </details>
   </div>
 </main>
@@ -182,7 +179,7 @@ input.txt:focus{border-color:var(--accent)}
     status(); paint();
   }
 
-  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> dazu «Link». «Copiar link URN» dezent darunter, nur bei URL cun text.
+  // URL cun text eingegeben -> nur Prevista und Elavurar; Link mit ID -> dazu «Link». Nicht publiziert -> «Link uffizial» zeigt den Link URN.
   const shown = () => kind === 'text' ? ['preview', 'edit'] : ['preview', 'edit', 'text'];
   function paint() {
     if (!id) return;
@@ -201,7 +198,6 @@ input.txt:focus{border-color:var(--accent)}
     $('hint').textContent = !unpub ? HINT[tab] : textState === 'none'
       ? "L'artitgel n'è anc betg publitgà – qua il link URN. El funcziuna per tuts, uschespert che l'artitgel è publitgà – era per newsletters e posts da social media planisads."
       : "Il link uffizial n'ha betg pudì vegnir chargià – qua il link URN. El funcziuna per tuts, uschespert che l'artitgel è publitgà.";
-    $('urncopy').hidden = kind !== 'text'; // nur bei eingegebener URL cun text
     tab = tab0; // gespeicherte Wahl nicht überschreiben
   }
 
@@ -217,15 +213,6 @@ input.txt:focus{border-color:var(--accent)}
     }
     b.textContent = ok ? 'Copià' : 'Betg reussì – marcar a maun';
     setTimeout(() => { b.textContent = 'Copiar'; }, 1800);
-    if (ok) window.dispatchEvent(new Event('dbz-success'));
-  });
-  // dezent: Link URN kopieren (rtr.ch/article/<ID>)
-  $('urncopy').addEventListener('click', async () => {
-    const b = $('urncopy'), u = `${RTR}/article/${id}`;
-    let ok = false;
-    try { await navigator.clipboard.writeText(u); ok = true; } catch (e) {}
-    b.textContent = ok ? 'Link URN copià ✓' : u;
-    setTimeout(() => { b.textContent = 'Copiar link URN'; }, ok ? 1800 : 6000);
     if (ok) window.dispatchEvent(new Event('dbz-success'));
   });
   parse();
