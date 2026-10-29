@@ -1650,8 +1650,9 @@ function poolDrag(e, idx, el){
   el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
 }
 async function poolAddFiles(files){
+  files = [...files];   // Kopie: die Dateiliste des Eingabefelds wird sonst nach dem ersten Bild geleert
   let n = 0;
-  for (const f of files){ const C = await loadImg(f); if (C){ pool.push(C); n++; } }
+  for (const f of files){ const C = await loadImg(f); if (C){ pool.push(C); n++; renderPool(); } }
   if (!n) colMsg('Quai n\'è nagin file da maletg.', true);
   renderPool();
 }
