@@ -31,9 +31,9 @@ const CSS = `.dbz-like{max-width:640px;margin:36px auto 8px;padding:0 16px;text-
 @media (max-width:480px){.dbz-toast{left:12px;right:12px;bottom:12px;width:auto}}
 /* Feedback (Propostas, giavischs, critica?) */
 .dbz-fb{margin:22px auto 0;max-width:480px;text-align:left}
-.dbz-fb summary{cursor:pointer;list-style:none;text-align:center;color:var(--muted,var(--mute,#9a9aa2));font-size:.9rem}
+.dbz-fb summary{cursor:pointer;list-style:none;text-align:center;color:var(--accent,var(--acc,#ff4d64));opacity:.7;font-size:.9rem;transition:opacity .15s}
 .dbz-fb summary::-webkit-details-marker{display:none}
-.dbz-fb summary:hover{color:var(--text,var(--ink,var(--fg,#ececef)))}
+.dbz-fb summary:hover,.dbz-fb summary:focus-visible,.dbz-fb[open] summary{opacity:1;outline:none}
 .dbz-fb summary span{border-bottom:1px dashed currentColor}
 .dbz-fb form{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .dbz-fb textarea,.dbz-fb input{width:100%;box-sizing:border-box;font:inherit;font-size:.92rem;color:var(--text,var(--ink,var(--fg,#ececef)));background:var(--mono,var(--card,#26262a));border:1px solid var(--line,var(--border,#2f2f34));border-radius:8px;padding:9px 11px}
