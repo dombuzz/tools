@@ -48,6 +48,8 @@ const NO_STATS = new Set(['stats']);
 const NO_STATS_SQL = `tool NOT IN (${[...NO_STATS].map(t => `'${t}'`).join(', ')})`;
 // Modus test: Einträge eines Geräts (cid) bis zum Zeitpunkt, an dem es den Testmodus zuletzt gemeldet hat, nicht zählen (auch rückwirkend)
 const EX = t => `NOT EXISTS (SELECT 1 FROM excl e WHERE e.cid = ${t}.cid AND ${t}.ts <= e.ts)`;
+// Seiten, die keine Tools sind (in /statsB-Stundenzahlen ausgelassen)
+const OTHER_PAGES = new Set(['index', 'game', 'top-popup', 'top', 'lab-index', '404']);
 const merge = rows => Object.values(rows.filter(r => !NO_STATS.has(r.tool)).reduce((m, r) => {
   const k = grp(r.tool) + (r.day ? '|' + r.day : '');
   (m[k] ||= { ...r, tool: grp(r.tool), count: 0 }).count += r.count; return m;
@@ -207,6 +209,26 @@ export default {
       if (request.method === 'GET' && parts[0] === 'likes' && parts.length === 1) {
         const { results } = await env.DB.prepare('SELECT tool, count FROM likes').all();
         return json(Object.fromEntries(merge(results).map(r => [r.tool, r.count])), request);
+      }
+
+      // Zahlen pro Stunde (UTC, 'YYYY-MM-DD HH') für /statsB: Wochenraster, Kurve der letzten 24 Stunden und Rekorde
+      // GET /hourly?range=…  -> {range, uses:[{h, n}], views:[{h, n}]} (Tools ohne Lab; gleiche Filter wie /ranking)
+      if (request.method === 'GET' && parts[0] === 'hourly' && parts.length === 1) {
+        await ensureViews(env);
+        const rq = url.searchParams.get('range') || '';
+        const range = ['all', 'today', 'week', '30d', 'month', 'lastmonth', '24h'].includes(rq) || /^\d{4}-(0[1-9]|1[0-2])$/.test(rq) ? rq : 'all';
+        const p = range === '24h' ? { from: sqlDate(new Date(Date.now() - 25 * 36e5)), to: null } : period(range);
+        const out = { range };
+        for (const tbl of ['uses', 'views']) {
+          const { results } = await env.DB
+            .prepare(`SELECT substr(ts, 1, 13) AS h, tool, COUNT(*) AS n FROM ${tbl} WHERE ts >= ?1 AND ts < ?2 AND ${NO_STATS_SQL} AND ${EX(tbl)} GROUP BY h, tool`)
+            .bind(p?.from ?? '0', p?.to ?? '9999').all();
+          const m = {};
+          // nur Tools: Lab und «Autras paginas» (Startseite, /top, /game, 404) zählen hier nicht
+          for (const r of results) { const t = grp(r.tool); if (t.startsWith('lab-') || OTHER_PAGES.has(t)) continue; m[r.h] = (m[r.h] || 0) + r.n; }
+          out[tbl] = Object.entries(m).sort((a, b) => a[0].localeCompare(b[0])).map(([h, n]) => ({ h, n }));
+        }
+        return json(out, request);
       }
 
       // Rangliste für einen Zeitraum
