@@ -72,6 +72,13 @@ td.n{color:var(--muted);font-variant-numeric:tabular-nums}
 tr.same td{opacity:.55}
 tr.neg td.t{color:var(--err)}
 @media (max-width:480px){.seg button{padding:7px 9px;font-size:.85rem}}
+.head2{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.xbtn{font:inherit;font-size:.8rem;font-weight:600;border:1px dashed var(--line);background:transparent;color:var(--muted);padding:5px 10px;border-radius:999px;cursor:pointer}
+.xbtn:hover{border-color:var(--accent);color:var(--ink)}
+.xbtn[aria-pressed="true"]{border-style:solid;border-color:var(--accent);color:var(--accent)}
+#m-shift{display:grid;gap:12px}
+.tc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tc input{text-align:center;font-variant-numeric:tabular-nums}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -80,7 +87,7 @@ tr.neg td.t{color:var(--err)}
   <div>
     <a class="homelink" href="/">← Tools</a>
     <h1>Spustar <span class="acc">temps</span></h1>
-    <p class="sub">Spustar ils suttitels enavant u enavos, midar la rata da maletgs u sincronisar cun dus puncts.</p>
+    <p class="sub">Spustar ils suttitels pli tard u pli baud – en uras, minutas, secundas e maletgs.</p>
   </div>
 
   <section class="card">
@@ -90,27 +97,39 @@ tr.neg td.t{color:var(--err)}
   </section>
 
   <section class="card" id="step2" hidden>
-    <h2><span class="num">2</span> Co spustar?</h2>
-    <div class="seg" id="mode" role="group" aria-label="Moda">
+    <div class="head2"><h2><span class="num">2</span> Co spustar?</h2>
+      <button type="button" class="xbtn" id="expert" aria-pressed="false">Modus expert</button></div>
+    <div class="seg" id="mode" role="group" aria-label="Moda" hidden>
       <button type="button" data-m="shift">Spustar</button>
       <button type="button" data-m="fps">Rata da maletgs</button>
       <button type="button" data-m="two">Dus puncts</button>
     </div>
 
-    <div id="m-shift" class="grid">
-      <label>Spustament <input id="off" value="+0" inputmode="text" autocomplete="off" spellcheck="false"></label>
-      <label>Maletgs per secunda <select id="fpsS"></select></label>
-      <label>A partir da la lingia <input id="from" type="number" min="1" value="1"></label>
-      <label>Fin a la lingia <input id="to" type="number" min="1" placeholder="fin"></label>
+    <div id="m-shift">
+      <div class="seg" id="dir" role="group" aria-label="Direcziun">
+        <button type="button" data-d="1">Pli tard (+)</button>
+        <button type="button" data-d="-1">Pli baud (−)</button>
+      </div>
+      <div class="tc">
+        <label>Uras <input id="oh" type="number" min="0" value="0" inputmode="numeric"></label>
+        <label>Minutas <input id="om" type="number" min="0" value="0" inputmode="numeric"></label>
+        <label>Secundas <input id="os" type="number" min="0" value="0" inputmode="numeric"></label>
+        <label>Maletgs <input id="of" type="number" min="0" value="0" inputmode="numeric"></label>
+      </div>
+      <div class="row">
+        <button class="btn" type="button" data-n="-1s">−1 s</button>
+        <button class="btn" type="button" data-n="-1f">−1 maletg</button>
+        <button class="btn" type="button" data-n="+1f">+1 maletg</button>
+        <button class="btn" type="button" data-n="+1s">+1 s</button>
+        <button class="btn" type="button" id="zero" title="Turnar a 0">↺ 0</button>
+        <span class="note" id="offInfo"></span>
+      </div>
+      <div class="grid">
+        <label>Maletgs per secunda <select id="fpsS"></select></label>
+        <label>A partir da la lingia <input id="from" type="number" min="1" value="1"></label>
+        <label>Fin a la lingia <input id="to" type="number" min="1" placeholder="fin"></label>
+      </div>
     </div>
-    <div id="m-shift2" class="row">
-      <button class="btn" type="button" data-n="-1000">−1 s</button>
-      <button class="btn" type="button" data-n="-1f">−1 maletg</button>
-      <button class="btn" type="button" data-n="+1f">+1 maletg</button>
-      <button class="btn" type="button" data-n="+1000">+1 s</button>
-      <span class="note" id="offInfo"></span>
-    </div>
-    <p class="note" id="m-shift3">Exempels: <b>+2,5</b> (secundas) · <b>-00:00:01,200</b> · <b>+12f</b> (maletgs). Cun «+» vegnan ils suttitels pli tard, cun «−» pli baud.</p>
 
     <div id="m-fps" class="grid" hidden>
       <label>Rata actuala <select id="fpsA"></select></label>
@@ -289,33 +308,41 @@ const SUB = (() => {
 const $ = id => document.getElementById(id);
 const FPS = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
 const KEY = 'dbz-spustar';
-let st = { mode: 'shift', fps: 25, fpsA: 23.976, fpsB: 25, out: 'same' };
+let st = { expert: false, mode: 'shift', fps: 25, fpsA: 23.976, fpsB: 25, out: null };
 try { st = Object.assign(st, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ mode: st.mode, fps: st.fps, fpsA: st.fpsA, fpsB: st.fpsB, out: st.out })); } catch (e) {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ expert: st.expert, mode: st.mode, fps: st.fps, fpsA: st.fpsA, fpsB: st.fpsB, out: st.out })); } catch (e) {} };
 
 let file = null, url = null; // { name, format, cues }
 const fmtF = v => String(v).replace('.', ',');
 for (const id of ['fpsS', 'fpsA', 'fpsB']) $(id).innerHTML = FPS.map(f => `<option value="${f}">${fmtF(f)}</option>`).join('');
 $('fpsS').value = st.fps; $('fpsA').value = st.fpsA; $('fpsB').value = st.fpsB;
 
-// Spustament lesen: +2,5 · -1.2 · +12f · -00:00:01,200 · +01:02,5
-function offset(s, fps) {
-  s = s.trim().replace(/\s+/g, '').replace('−', '-'); if (!s) return 0;
-  let sign = 1; if (s[0] === '-') { sign = -1; s = s.slice(1); } else if (s[0] === '+') s = s.slice(1);
-  let m = s.match(/^(\d+)f$/i); if (m) return sign * (+m[1]) * 1000 / fps;
-  m = s.match(/^\d+([.,]\d+)?$/); if (m) return sign * parseFloat(s.replace(',', '.')) * 1000;
-  const t = SUB.time(s, fps); return isNaN(t) ? NaN : sign * t;
+// Spustament aus den Feldern: Richtung × (Uras, Minutas, Secundas, Maletgs)
+let dir = 1;
+const num = id => Math.max(0, Math.floor(+$(id).value || 0));
+const offFrames = () => { const n = Math.round(st.fps); return ((num('oh') * 60 + num('om')) * 60 + num('os')) * n + num('of'); };
+// Frames (Vorzeichen inkl.) wieder auf die Felder verteilen
+function setFrames(total) {
+  const n = Math.round(st.fps); if (total) dir = total < 0 ? -1 : 1; let t = Math.abs(total);
+  $('of').value = t % n; t = Math.floor(t / n); $('os').value = t % 60; t = Math.floor(t / 60); $('om').value = t % 60; $('oh').value = Math.floor(t / 60);
+  showDir();
 }
-const signed = ms => (ms >= 0 ? '+' : '−') + (Math.abs(ms) / 1000).toFixed(3).replace('.', ',') + ' s';
+const showDir = () => $('dir').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.d === dir));
+// Spustament in ms (Secundas exact, Maletgs nach gewählter Rate)
+const offMs = () => { const n = Math.round(st.fps), f = offFrames(); return dir * (Math.floor(f / n) * 1000 + (f % n) * 1000 / st.fps); };
+function offText() {
+  const f = offFrames(); if (!f) return 'Nagin spustament';
+  const ms = offMs();
+  const a = Math.abs(ms);
+  return `= ${a < 60000 ? (a / 1000).toFixed(3).replace('.', ',') + ' s' : SUB.show(a)} ${dir > 0 ? 'pli tard' : 'pli baud'}`;
+}
 
 // Neue Zeiten berechnen
 function compute() {
   if (!file) return null; const c = file.cues, n = c.length; let f = null, err = '';
   if (st.mode === 'shift') {
-    const d = offset($('off').value, st.fps); $('off').classList.toggle('bad', isNaN(d));
-    if (isNaN(d)) { $('offInfo').textContent = 'Format betg enconuschent'; return null; }
-    const fps = st.fps, fr = d * fps / 1000;
-    $('offInfo').textContent = `= ${signed(d)}` + (Math.abs(fr - Math.round(fr)) < 0.01 && d ? ` (${Math.round(fr) > 0 ? '+' : ''}${Math.round(fr)} maletgs)` : '');
+    const d = offMs();
+    $('offInfo').textContent = offText();
     const a = Math.max(1, +$('from').value || 1), b = Math.min(n, +$('to').value || n);
     f = (t, i) => (i + 1 >= a && i + 1 <= b) ? t + d : t;
   } else if (st.mode === 'fps') {
@@ -361,7 +388,7 @@ function update() {
   $('rows').innerHTML = rows.join('');
   // Datei
   const fin = res.map(x => ({ start: Math.max(0, Math.round(x.start)), end: Math.max(0, Math.round(x.end)), lines: x.lines }));
-  const key = st.out === 'same' ? SUB.SAME[file.format] : st.out;
+  const key = st.out || (file.format === 'ttml' ? 'ttml' : 'srt');
   const w = SUB.write(fin, key);
   if (url) URL.revokeObjectURL(url);
   url = URL.createObjectURL(new Blob([w.text], { type: w.mime }));
@@ -372,37 +399,39 @@ function update() {
 
 // Modus
 const showMode = () => {
-  document.querySelectorAll('#mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === st.mode));
-  $('m-shift').hidden = $('m-shift2').hidden = $('m-shift3').hidden = st.mode !== 'shift';
+  if (!st.expert) st.mode = 'shift';
+  $('expert').setAttribute('aria-pressed', !!st.expert); $('mode').hidden = !st.expert;
+  $('expert').onclick = () => { st.expert = !st.expert; save(); showMode(); update(); };
+document.querySelectorAll('#mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === st.mode));
+  $('m-shift').hidden = st.mode !== 'shift';
   $('m-fps').hidden = $('m-fps2').hidden = st.mode !== 'fps';
   $('m-two').hidden = st.mode !== 'two';
 };
 document.querySelectorAll('#mode button').forEach(b => b.onclick = () => { st.mode = b.dataset.m; save(); showMode(); update(); });
 
 // Ausgabeformat
-const OUTS = [['same', "Sco l'original"], ['srt', 'SRT'], ['vtt', 'VTT'], ['ttml', 'TTML (RTR)'], ['avid', 'Avid (25 fps)']];
+const OUTS = [['srt', 'SRT'], ['ttml', 'TTML (RTR)']];
 $('out').innerHTML = OUTS.map(([k, l]) => `<button type="button" data-k="${k}">${l}</button>`).join('');
-const showOut = () => $('out').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === st.out));
+const showOut = () => $('out').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === (st.out || (file && file.format === 'ttml' ? 'ttml' : 'srt'))));
 $('out').querySelectorAll('button').forEach(b => b.onclick = () => { st.out = b.dataset.k; save(); showOut(); update(); });
-if (!OUTS.some(o => o[0] === st.out)) st.out = 'same';
+if (!OUTS.some(o => o[0] === st.out)) st.out = null; // noch keine Wahl: nach Eingabeformat
 showOut(); showMode();
 
 // Eingaben
-['off', 'from', 'to', 'aN', 'aT', 'bN', 'bT'].forEach(id => $(id).addEventListener('input', update));
-$('fpsS').onchange = () => { st.fps = +$('fpsS').value; save(); update(); };
+['oh', 'om', 'os', 'of', 'from', 'to', 'aN', 'aT', 'bN', 'bT'].forEach(id => $(id).addEventListener('input', update));
+['oh', 'om', 'os', 'of'].forEach(id => $(id).addEventListener('change', () => { setFrames(dir * offFrames()); update(); }));
+$('dir').querySelectorAll('button').forEach(b => b.onclick = () => { dir = +b.dataset.d; showDir(); update(); });
+$('zero').onclick = () => { setFrames(0); update(); };
+showDir();
+$('fpsS').onchange = () => { const ms = offMs(); st.fps = +$('fpsS').value; save(); const n = Math.round(st.fps), a = Math.abs(ms), sec = Math.floor(a / 1000); setFrames(Math.sign(ms) * (sec * n + Math.round((a - sec * 1000) * st.fps / 1000))); update(); };
 $('fpsA').onchange = () => { st.fpsA = +$('fpsA').value; save(); update(); };
 $('fpsB').onchange = () => { st.fpsB = +$('fpsB').value; save(); update(); };
 const fillTime = (nId, tId) => { const c = file && file.cues[(+$(nId).value || 1) - 1]; if (c) $(tId).value = SUB.tc(c.start, ','); };
 $('aN').addEventListener('change', () => { fillTime('aN', 'aT'); update(); });
 $('bN').addEventListener('change', () => { fillTime('bN', 'bT'); update(); });
-document.querySelectorAll('#m-shift2 [data-n]').forEach(b => b.onclick = () => {
-  const cur = offset($('off').value, st.fps) || 0, s = b.dataset.n;
-  const add = s.endsWith('f') ? (s[0] === '-' ? -1 : 1) * 1000 / st.fps : +s;
-  const v = Math.round((cur + add) * 1000) / 1000;
-  const fr = v * st.fps / 1000;
-  $('off').value = s.endsWith('f') && Math.abs(fr - Math.round(fr)) < 0.01 ? (fr >= 0 ? '+' : '-') + Math.abs(Math.round(fr)) + 'f'
-    : (v >= 0 ? '+' : '-') + (Math.abs(v) / 1000).toString().replace('.', ',');
-  update();
+document.querySelectorAll('#m-shift [data-n]').forEach(b => b.onclick = () => {
+  const k = b.dataset.n, step = k.endsWith('s') ? Math.round(st.fps) : 1;
+  setFrames(dir * offFrames() + (k[0] === '-' ? -step : step)); update();
 });
 
 // Datei laden
@@ -418,7 +447,7 @@ function load(f) {
     $('finfo').innerHTML = `<span class="tag">${SUB.FORMATS[format]}</span>${n === 1 ? '1 suttitel' : n + ' suttitels'} · ${SUB.show(cues[0].start)} – ${SUB.show(cues[n - 1].end)}`;
     $('to').max = $('from').max = $('aN').max = $('bN').max = n; $('to').placeholder = n;
     $('bN').value = n; fillTime('aN', 'aT'); fillTime('bN', 'bT');
-    $('step2').hidden = false; update();
+    $('step2').hidden = false; showOut(); update();
   });
 }
 const drop = $('drop');
