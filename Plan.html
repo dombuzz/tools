@@ -60,7 +60,13 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 section h3{font-size:1rem;margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
-.tw{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.wrap>*{min-width:0}
+#out{margin:0}
+/* ina emna: tut ils blocs scrollan ensemen sin il telefonin */
+.wk{overflow-x:auto}
+.wk>.tw{min-width:620px;overflow:visible}
+@media (max-width:640px){table tr>:first-child{width:104px}}
+.tw{max-width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
 table{table-layout:fixed;border-collapse:collapse;width:100%;min-width:620px;font-size:.85rem}
 th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:7px 8px;text-align:left;vertical-align:top}
 tr:last-child td,tr:last-child th{border-bottom:0}
@@ -399,7 +405,7 @@ function render(){
     };
     const h=ROWS.map((blk,bi)=>`<div class="tw${bi?' graf':''}${sparte==='newsdesk'&&blk.includes('Online 1')?' nd':''}"><table>${bi?'':head}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
     const sec=document.createElement('section');
-    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3>${h}`;
+    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="wk">${h}</div>`;
     out.appendChild(sec);
   }
   const anyInPlan=iso(end)>=plan.first&&iso(start)<=plan.last;
