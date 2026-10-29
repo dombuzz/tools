@@ -545,11 +545,12 @@
     hourRange.uses.forEach(x => { const d = hourDate(x.h); g[(d.getDay() + 6) % 7][d.getHours()] += x.n; });
     const gm = Math.max(1, ...g.flat()), tot = g.flat().reduce((a, b) => a + b, 0);
     let best = [0, 0, 0]; g.forEach((row, di) => row.forEach((n, hh) => { if (n > best[0]) best = [n, di, hh]; }));
-    const cell = (n, di, hh) => `<td title="${DAYS_L[di]} ${pad2(hh)}–${pad2((hh + 1) % 24)}: ${fmt(n)} ${n === 1 ? 'giada' : 'giadas'} duvrà" style="${n ? `background:rgba(255,77,100,${(.18 + n / gm * .82).toFixed(2)})` : ''}"></td>`;
+    const cell = (n, di, hh) => `<td data-d="${di}" data-h="${hh}" data-n="${n}" style="${n ? `background:rgba(255,77,100,${(.18 + n / gm * .82).toFixed(2)})` : ''}"></td>`;
     document.getElementById('heat').innerHTML = tot ? `<div class="heat"><table><thead><tr><th></th>${Array.from({ length: 24 }, (_, i) => `<th>${i % 6 === 0 ? pad2(i) : ''}</th>`).join('')}</tr></thead><tbody>
       ${g.map((row, di) => `<tr><th>${DAYS[di]}</th>${row.map((n, hh) => cell(n, di, hh)).join('')}</tr>`).join('')}</tbody></table></div>
       <div class="hm"><span>Il pli savens: ${DAYS_L[best[1]]} ${pad2(best[2])}–${pad2((best[2] + 1) % 24)}</span><span class="sc">pauc <i style="background:rgba(255,77,100,.2)"></i><i style="background:rgba(255,77,100,.55)"></i><i style="background:rgba(255,77,100,1)"></i> bler</span></div>`
       : '<div class="msg">Anc naginas datas en quest temp.</div>';
+    document.getElementById('heat').insertAdjacentHTML('beforeend', '<div class="tip" id="hmtip" hidden></div>');
     ticker();
   }
   // Tooltip der Aktivitätskurve: Hover (Maus) oder Tippen zeigt Zeit, Duvrà und Visitas
@@ -572,6 +573,24 @@
     box.style.position = 'relative';
     box.addEventListener('mouseover', e => { const r = e.target.closest('.sphit'); if (r) show(r); });
     box.addEventListener('click', e => { const r = e.target.closest('.sphit'); if (r) show(r); });
+    box.addEventListener('mouseleave', hide);
+  })();
+  // Tooltip im Wochenraster: zweizeilig (Zeit, Duvrà), nur bei Zellen mit Zahlen
+  (function () {
+    const box = document.getElementById('heat'); box.style.position = 'relative';
+    const hide = () => { const t = document.getElementById('hmtip'); if (t) t.hidden = true; };
+    const show = c => {
+      const t = document.getElementById('hmtip'), n = +c.dataset.n; if (!t) return;
+      if (!n) return hide();
+      const di = +c.dataset.d, hh = +c.dataset.h;
+      t.innerHTML = `<b>${DAYS_L[di]} ${pad2(hh)}–${pad2((hh + 1) % 24)}</b><br><span style="color:var(--accent)">${fmt(n)} ${n === 1 ? 'giada' : 'giadas'} duvrà</span>`;
+      t.hidden = false;
+      const br = box.getBoundingClientRect(), cr = c.getBoundingClientRect(), w = t.offsetWidth;
+      t.style.left = Math.max(0, Math.min(br.width - w, cr.left - br.left + cr.width / 2 - w / 2)) + 'px';
+      t.style.top = (cr.top - br.top - t.offsetHeight - 6) + 'px';
+    };
+    box.addEventListener('mouseover', e => { const c = e.target.closest('td[data-n]'); if (c) show(c); else hide(); });
+    box.addEventListener('click', e => { const c = e.target.closest('td[data-n]'); if (c) show(c); });
     box.addEventListener('mouseleave', hide);
   })();
   // Lauftext: Rekorde und Höhepunkte aus den echten Zahlen
