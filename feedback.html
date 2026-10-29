@@ -29,6 +29,8 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline
 button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;background:var(--accent);color:#121214;cursor:pointer}
 button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500;padding:5px 10px;font-size:.8rem}
 button.ghost:hover{color:var(--text)}
+button.ghost.danger{border-color:var(--accent);color:var(--accent)}
+button.ghost.danger:hover{background:rgba(255,77,100,.1);color:var(--accent)}
 label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
 .msg{font-size:.88rem;color:var(--muted);min-height:1.2em}
 .msg.err{color:var(--err)}
@@ -107,7 +109,7 @@ try { const s = localStorage.getItem('dbz-fb-tab'); if (LBL[s]) tab = s; } catch
 const card = (i, acts) => `<article class="item" data-id="${i.id}">
   <div class="meta"><b>${esc(i.toolName)}</b><span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${acts}</div></div>
   <div class="text">${esc(i.text)}</div></article>`;
-const btn = (act, label) => `<button type="button" class="ghost" data-act="${act}">${label}</button>`;
+const btn = (act, label) => `<button type="button" class="ghost${act === 'to:stizza' || act === 'purge' ? ' danger' : ''}" data-act="${act}">${label}</button>`;
 
 function render() {
   const st = i => LBL[i.status] ? i.status : (i.status === 'stizza' ? 'stizza' : 'nov');
