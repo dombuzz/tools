@@ -7,7 +7,7 @@
   // Version und Zeitpunkt des Deploys (für die Dashboard-Box «Detagls»)
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
   // Geplante Aufgaben (worker/index.js → scheduled): stündliche Kontrolle (Kontingent, Deploy, Backup → Teams) und Monatsbericht am 1. um 06:03 UTC
-  "triggers": { "crons": ["17 * * * *", "3 6 1 * *"] },
+  "triggers": { "crons": ["17 * * * *", "3 6 1 * *", "*/10 * * * *"] },
   "d1_databases": [
     {
       "binding": "DB",

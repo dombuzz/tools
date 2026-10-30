@@ -32,7 +32,7 @@ const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 const NAMES = { 'info': 'Infus & datas',
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
-  'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
+  'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
 };
@@ -303,6 +303,8 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
+import { searchArt, artStatus, crawlStep } from './artsearch.js';
+
 export default {
   async fetch(request, env, ctx) {
     const m = { r: 0, w: 0 }, raw = env.DB;
@@ -351,7 +353,8 @@ export default {
     const m = { r: 0, w: 0 }, raw = env.DB;
     env = { ...env, DB: meterDB(raw, m) };
     try {
-      if (event.cron === CRON_MONTHLY) await monthlyReport(env, ctx);
+      if (event.cron === CRON_ART) await crawlStep(env);
+      else if (event.cron === CRON_MONTHLY) await monthlyReport(env, ctx);
       else await hourlyChecks(env);
     } catch (e) { await reportError(env, 'cron ' + event.cron, e); }
     if (m.r || m.w) await recordUsage(raw, m);
@@ -360,7 +363,7 @@ export default {
 
 // ===== Schutz, Datensicherung, Warnungen, Monatsbericht =====
 const PROTECTED = new Set(['ranking', 'hourly', 'usage', 'insights', 'export']);
-const CRON_MONTHLY = '3 6 1 * *';
+const CRON_MONTHLY = '3 6 1 * *', CRON_ART = '*/10 * * * *';
 const DASH = 'https://tools.dombuzz.ch/dashboard';
 const ensureMeta = env => env.DB.prepare('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT, ts TEXT NOT NULL)').run();
 async function metaGet(env, k) { await ensureMeta(env); const { results: [r] } = await env.DB.prepare('SELECT v, ts FROM meta WHERE k = ?1').bind(k).all(); return r || null; }
@@ -467,7 +470,7 @@ async function exportData(request, env) {
   return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': `attachment; filename="dombuzz-backup-${data.created.slice(0, 10)}.json"`, 'Cache-Control': 'no-store', ...cors(request) } });
 }
 async function collectData(env) {
-  const { results: tabs } = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name <> 'cache' ORDER BY name").all();
+  const { results: tabs } = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name <> 'cache' AND name NOT LIKE 'art\\_%' ESCAPE '\\' AND name <> 'art' ORDER BY name").all();
   const data = { created: new Date().toISOString(), database: 'dombuzz-likes', tables: {} };
   for (const { name } of tabs) data.tables[name] = (await env.DB.prepare('SELECT * FROM "' + name.replace(/"/g, '') + '"').all()).results;
   return data;
@@ -519,6 +522,15 @@ async function handle(request, env, ctx) {
         if (!items.length) return Response.redirect('https://www.rtr.ch/novitads', 302);
         const pick = items[Math.floor(Math.random() * items.length)];
         return new Response(null, { status: 302, headers: { Location: pick, 'Cache-Control': 'no-store' } });
+      }
+
+      // Eigene Suche in rtr.ch (Tschertga): /art?q&from&to&section&sort&page, /art/status
+      if (request.method === 'GET' && parts[0] === 'art' && parts.length <= 2) {
+        if (parts[1] === 'status') return json(await artStatus(env), request);
+        if (parts[1]) return json({ error: 'notfound' }, request, 404);
+        const g = k => (url.searchParams.get(k) || '').slice(0, 200);
+        const out = await searchArt(env, { q: g('q'), from: g('from'), to: g('to'), section: g('section'), sort: g('sort'), page: g('page'), size: g('size') });
+        return json(out, request);
       }
 
       // «Links d'artitgels» (beta): /artitgel?u=<ID, URN-Link oder URL cun text>
