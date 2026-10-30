@@ -760,7 +760,7 @@
       if (d.clients) {
         tiles.push(tile('users', fmt(d.clients), d.clients === 1 ? 'visitader unic' : 'visitaders unics', 'Mintga browser dumbrà ina giada en quest temp.'));
         const rt = d.returning || 0;
-        tiles.push(tile('repeat', fmt(rt), rt === 1 ? 'visitader regular' : 'visitaders regulars', 'Èn stads qua a dus u plirs dis differents – entaifer quest temp.'));
+        tiles.push(tile('repeat', fmt(rt), rt === 1 ? 'visitader regular' : 'visitaders regulars', `Èn ${({ today: 'durant oz', week: 'durant quest\'emna', month: 'durant il mais actual', '30d': 'durant ils ultims 30 dis' })[range] || 'durant l\'entir temp'} stads qua durant dus u plirs dis differents.`));
         if (range === 'week' && d.newClients != null) {
           const nn = d.newClients, kn = Math.max(0, d.clients - nn);
           tiles.push(tile('plus', fmt(nn), "per l'emprima giada", "Èn stads qua quest'emna per l'emprima giada."));
