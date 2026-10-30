@@ -189,15 +189,14 @@
     'srt2ttml.html':       'SRT → TTML',
     'studio.html':         'Subtitle Studio',
     'data.html':           'Memorisar grafica Datawrapper',
-    'votgr.html':          'Chartas votaziuns GR',
-    'tschertga.html':      'Tschertga rtr.ch'
+    'votgr.html':          'Chartas votaziuns GR'
   };
 
   // Gruppen und Reihenfolge im Dropdown.
   const GROUPS = [
     // Ein Eintrag [Name, [...]] innerhalb einer Gruppe wird zur aufklappbaren Untergruppe.
     ['Maletgs',           ['rtr-picture.html', 'visual.html', 'maletgs.html', 'Resizer2000.html']],
-    ['Redacziun',         ['Plan.html', 'artitgel.html', 'tschertga.html']],
+    ['Redacziun',         ['Plan.html', 'artitgel.html']],
     ['Audio e suttitels', ['audio-recorder.html', 'srt2ttml.html', 'studio.html']],
     ['Grafica',           ['data.html', 'votgr.html']]
   ];
@@ -430,7 +429,7 @@
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', SHOW = 5;
   const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge',
-    'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'tschertga': 'Tschertga rtr.ch' };
+    'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('de-CH');
   const btn = document.getElementById('toplink'), pop = document.getElementById('pop');
