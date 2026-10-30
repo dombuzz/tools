@@ -20,6 +20,9 @@
     "FEEDBACK_TO": "dominik.hardegger@rtr.ch",
     "FEEDBACK_FROM": "dombuzz Tools <onboarding@resend.dev>",
     // Für das Log-Kontingent auf /stats (Token kommt als Secret CF_API_TOKEN dazu, nicht hier eintragen)
-    "CF_ACCOUNT_ID": "39da93a659736066e9818f5eba757d5e"
+    "CF_ACCOUNT_ID": "39da93a659736066e9818f5eba757d5e",
+    // Wöchentliches Backup in kDrive (Ordner dombuzz-backups); Token als Secret KDRIVE_TOKEN (Scope «drive»)
+    "KDRIVE_DRIVE_ID": "1649072",
+    "KDRIVE_DIR_ID": "12713"
   }
 }
