@@ -140,10 +140,33 @@
   .layers .add{ width:100%; }
   .nolayers{ font-size:0.85rem; color:var(--muted); margin:0 0 10px; }
   h1 .acc{ color:var(--accent); white-space:nowrap; }
-  .tabs{ display:flex; gap:4px; border-bottom:1px solid var(--border); margin:0 0 16px; overflow-x:auto; scrollbar-width:none; }
+  .tabrow{ display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--border); margin:0 0 16px; }
+  .tabs{ display:flex; gap:4px; flex:1 1 auto; min-width:0; overflow-x:auto; scrollbar-width:none; }
+  .histbar{ display:flex; gap:4px; margin-left:auto; padding-bottom:6px; }
+  .histbar .hb{ padding:6px 10px; font-size:.8rem; font-weight:600; line-height:1.2; }
+  .histbar .hb[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
+  .histbar .hb:disabled{ opacity:.35; }
+  @media (max-width:600px){ .histbar .hb span{ display:none; } .histbar .hb{ padding:6px 9px; font-size:.95rem; } }
+  .beforetag{ display:none; position:absolute; top:10px; left:10px; z-index:9; background:rgba(0,0,0,.72); color:#fff;
+    font-size:.75rem; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:6px; pointer-events:none; }
+  body.before .beforetag{ display:block; }
+  body.before .box, body.before #ghost{ display:none !important; }
+  .presets{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .pchip{ display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:999px; overflow:hidden; background:var(--mono); }
+  .pchip button{ background:transparent; color:var(--text); border:none; border-radius:0; padding:5px 10px; font-size:.8rem; font-weight:600; }
+  .pchip button:hover{ background:var(--accent); color:var(--on-sel,#fff); }
+  .pchip .pdel{ padding:5px 8px; color:var(--muted); font-weight:400; border-left:1px solid var(--border); }
+  .nopresets{ font-size:.8rem; color:var(--muted); margin:0 0 8px; }
+  .presetadd{ display:flex; gap:6px; }
+  .presetadd input{ flex:1; min-width:0; padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--mono); color:var(--text); font:inherit; font-size:.85rem; }
+  .presetadd input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .presetadd button{ padding:7px 12px; font-size:.82rem; }
+  .plink2{ display:block; margin-top:8px; background:none; border:none; padding:0; color:var(--accent); font-size:.8rem; font-weight:600; text-decoration:underline; cursor:pointer; text-align:left; }
+  .plink2:hover{ background:none; }
   .tabs::-webkit-scrollbar{ display:none; }
   .tabs button{ background:transparent; color:var(--muted); border:none; border-bottom:2px solid transparent; border-radius:0;
     padding:10px 14px; margin-bottom:-1px; font-size:0.92rem; white-space:nowrap; }
+  .tabrow .tabs button{ margin-bottom:-1px; }
   .tabs button:hover{ background:transparent; color:var(--text); }
   .tabs button[aria-selected="true"]{ color:var(--text); border-bottom-color:var(--accent); }
   .tabs em{ font-style:normal; color:var(--accent); }
@@ -271,16 +294,24 @@
       <button type="button" class="ghost" id="urlBtn">Chargiar</button>
     </div>
 
+    <div class="tabrow">
     <div class="tabs" role="tablist" aria-label="Elavuraziun">
       <button type="button" role="tab" data-tab="0" aria-selected="true">Clerezza <em>+</em> colurs</button>
       <button type="button" role="tab" data-tab="1" aria-selected="false">Rotar <em>+</em> drizzar</button>
       <button type="button" role="tab" data-tab="3" aria-selected="false">Collascha</button>
       <button type="button" role="tab" data-tab="2" aria-selected="false">Layers <span class="tcount" id="tcount"></span></button>
     </div>
+    <div class="histbar">
+      <button type="button" class="ghost hb" id="undoBtn" title="Revocar (Ctrl/Cmd+Z)" aria-label="Revocar" disabled>↶ <span>Revocar</span></button>
+      <button type="button" class="ghost hb" id="redoBtn" title="Repeter (Ctrl/Cmd+Shift+Z)" aria-label="Repeter" disabled>↷ <span>Repeter</span></button>
+      <button type="button" class="ghost hb" id="baBtn" aria-pressed="false" title="Tegnair smatgà per vesair il maletg avant l'elavuraziun (u tegnair smatgà la tasta A)" aria-label="Avant / suenter"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg> <span>Avant / suenter</span></button>
+    </div>
+    </div>
 
     <div class="work" id="layWork">
       <div>
         <div class="stage" id="stage" tabindex="0" aria-label="Surfatscha da lavur">
+          <div class="beforetag">Avant</div>
           <div class="frame" id="frame">
             <div class="frame-bg"></div>
             <canvas class="ghost-img" id="ghost" hidden></canvas>
@@ -308,11 +339,20 @@
           <div class="ctl"><div class="top"><label for="c_con">Cuntrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="c_con" data-c="con" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_hil">Clers</label><span class="val" data-for="hil" title="Reset">0</span></div><input type="range" id="c_hil" data-c="hil" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_sha">Stgirs</label><span class="val" data-for="sha" title="Reset">0</span></div><input type="range" id="c_sha" data-c="sha" min="-100" max="100" step="1" value="0"></div>
-            <h3>Colurs <button type="button" class="secreset" data-reset="sat,wb,hue" title="Reset saturaziun, balantscha da l'alv e nianza" aria-label="Reset saturaziun, balantscha da l'alv e nianza">↺</button></h3>
+            <h3>Colurs <button type="button" class="secreset" data-reset="sat,vib,wb,hue" title="Reset saturaziun, dinamica, balantscha da l'alv e nianza" aria-label="Reset saturaziun, dinamica, balantscha da l'alv e nianza">↺</button></h3>
           <div class="ctl"><div class="top"><label for="c_sat">Saturaziun</label><span class="val" data-for="sat" title="Reset">0</span></div><input type="range" id="c_sat" data-c="sat" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_vib">Dinamica</label><span class="wbhint">surtut colurs pallidas</span><span class="val" data-for="vib" title="Reset">0</span></div><input type="range" id="c_vib" data-c="vib" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_wb">WB Balantscha da l'alv</label><span class="wbhint">fraid ↔ chaud</span><span class="val" data-for="wb" title="Reset">0</span></div><input type="range" id="c_wb" data-c="wb" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_hue">Nianza da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="c_hue" data-c="hue" min="-180" max="180" step="1" value="0"></div>
             <button type="button" class="ghost" id="resetCol">Reset colurs</button>
+            <h3>Arcunar parameters</h3>
+            <div class="presets" id="presets"></div>
+            <p class="nopresets" id="noPresets">Anc nagins parameters arcunads. Arcunescha la clerezza e las colurs actualas cun in num, per las applitgar pli tard cun in clic.</p>
+            <div class="presetadd">
+              <input type="text" id="presetName" maxlength="40" placeholder="Num, p.ex. Il di saira" autocomplete="off" spellcheck="false">
+              <button type="button" class="ghost" id="presetSave">Arcunar</button>
+            </div>
+            <button type="button" class="plink2" id="presetAll">Applitgar questa clerezza e questas colurs a tut ils maletgs</button>
           </div>
         </div>
 
@@ -361,6 +401,7 @@
       <div class="work">
         <div>
           <div class="stage cstage" id="cStage" tabindex="0" aria-label="Collascha">
+            <div class="beforetag">Avant</div>
             <canvas id="cCanvas" width="1920" height="1080"></canvas>
           </div>
           <div class="cpool" id="cPool" aria-label="Parcadi">
@@ -434,6 +475,7 @@
 
 <script>
 const MAX = 5;
+let before = false;   // «Avant / suenter»: Original zeigen, solange gedrückt
 const $ = id => document.getElementById(id);
 const stage = $('stage'), frame = $('frame'), clip = $('clip'), ghost = $('ghost');
 const box = $('box'), empty = $('empty'), msg = $('msg'), list = $('list');
@@ -446,9 +488,9 @@ let nextId = 1;
 function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
 
 /* ---------- Farben (wie «Clerezza + colurs», pro Layer) ---------- */
-const CIDS = ['bri','con','hil','sha','sat','wb','hue'];
+const CIDS = ['bri','con','hil','sha','sat','vib','wb','hue'];
 const PREVIEW_MAX = 1600;
-const newCol = () => ({ bri:0, con:0, hil:0, sha:0, sat:0, wb:0, hue:0 });
+const newCol = () => ({ bri:0, con:0, hil:0, sha:0, sat:0, vib:0, wb:0, hue:0 });
 const isNeutral = col => CIDS.every(id => !col[id]);
 function mul(a, b){
   const r = [];
@@ -479,10 +521,10 @@ function params(col){
       T[i] = 110 * (sh * wS * (1 - L * 0.3) + hl * wH * (1 - (1 - L) * 0.3));
     }
   }
-  return { A, B, T };
+  return { A, B, T, V: (col.vib || 0) / 100 };
 }
 function applyColor(src, dst, P){
-  const s = src.data, d = dst.data, A = P.A, B = P.B, T = P.T;
+  const s = src.data, d = dst.data, A = P.A, B = P.B, T = P.T, V = P.V;
   for (let i = 0; i < s.length; i += 4){
     let r = A[0]*s[i] + A[1]*s[i+1] + A[2]*s[i+2] + A[3];
     let g = A[4]*s[i] + A[5]*s[i+1] + A[6]*s[i+2] + A[7];
@@ -492,9 +534,19 @@ function applyColor(src, dst, P){
       L = L < 0 ? 0 : L > 255 ? 255 : L;
       const dl = T[L]; r += dl; g += dl; b += dl;
     }
-    d[i]   = B[0]*r + B[1]*g + B[2]*b + B[3];
-    d[i+1] = B[4]*r + B[5]*g + B[6]*b + B[7];
-    d[i+2] = B[8]*r + B[9]*g + B[10]*b + B[11];
+    let r2 = B[0]*r + B[1]*g + B[2]*b + B[3];
+    let g2 = B[4]*r + B[5]*g + B[6]*b + B[7];
+    let b2 = B[8]*r + B[9]*g + B[10]*b + B[11];
+    if (V){
+      // Dinamica: schwach gesättigte Farben stärker anheben, Hauttöne schonen
+      const mx = r2 > g2 ? (r2 > b2 ? r2 : b2) : (g2 > b2 ? g2 : b2), mn = r2 < g2 ? (r2 < b2 ? r2 : b2) : (g2 < b2 ? g2 : b2);
+      const st = mx > 0 ? (mx - mn) / mx : 0;
+      let f = V > 0 ? V * (1 - st) * (1 - st) * 1.4 : V;
+      if (V > 0 && r2 > g2 && g2 > b2) f *= 0.45;
+      const lum = 0.2126*r2 + 0.7152*g2 + 0.0722*b2;
+      r2 = lum + (r2 - lum) * (1 + f); g2 = lum + (g2 - lum) * (1 + f); b2 = lum + (b2 - lum) * (1 + f);
+    }
+    d[i] = r2; d[i+1] = g2; d[i+2] = b2;
     d[i+3] = s[i+3];
   }
 }
@@ -738,7 +790,7 @@ function render(){
     el.style.left = L.x * f + 'px'; el.style.top = L.y * f + 'px';
     el.style.width = L.iw * L.s * f + 'px'; el.style.height = L.ih * L.s * f + 'px';
     el.style.zIndex = 2 * i + 2;
-    el.style.transform = L.ang ? `rotate(${L.ang}deg)` : '';
+    el.style.transform = L.ang && !before ? `rotate(${L.ang}deg)` : '';
     el.style.visibility = L.visible && L.blur !== 'only' ? 'visible' : 'hidden';
     if (L.bg){
       L.bg.hidden = !L.blur;
@@ -960,7 +1012,7 @@ function addFile(file, label){
       fitLayer(L);
       renderList(); render();
       setMsg(`${L.name}: ${L.iw} × ${L.ih} px` + (L.mode === 'cover' && coverS(L) > 1 ? ', vegn engrondì' : ''));
-      res(true);
+      res(true); hmark();
     };
     im.onerror = () => { URL.revokeObjectURL(url); setMsg('Il maletg n\'ha betg pudì vegnir legì.', true); res(false); };
     im.src = url;
@@ -1266,7 +1318,7 @@ function syncEdit(){
   $('tcount').textContent = layers.length ? `(${layers.length}/${MAX})` : '';
   if (A){
     $('flipH').setAttribute('aria-pressed', !!A.fh); $('flipV').setAttribute('aria-pressed', !!A.fv);
-    const vals = { ...A.col, ang: A.ang || 0, pv: A.pv || 0, ph: A.ph || 0 };
+    const vals = { ...newCol(), ...A.col, ang: A.ang || 0, pv: A.pv || 0, ph: A.ph || 0 };
     for (const id of [...CIDS, 'ang', 'pv', 'ph']){
       const el = $('c_' + id); if (+el.value !== vals[id]) el.value = vals[id];
       document.querySelector(`.val[data-for="${id}"]`).textContent = id === 'ang' ? (vals.ang > 0 ? '+' : '') + vals.ang.toFixed(1) + '°' : vals[id] + (id === 'hue' ? '°' : '');
@@ -1528,8 +1580,8 @@ function draw(ctx, W, H, preview){
     ctx.save(); path(ctx, P); ctx.clip();
     if (C){
       const g = geom(i, W, H);
-      const src = preview ? C.prev : scaled(cellFull(C), g.dw, g.dh);
-      ctx.translate(g.cx, g.cy); ctx.rotate(g.a);
+      const src = preview ? (before ? rawOf(C) : C.prev) : scaled(cellFull(C), g.dw, g.dh);
+      ctx.translate(g.cx, g.cy); ctx.rotate(before && preview ? 0 : g.a);
       ctx.drawImage(src, -g.dw / 2, -g.dh / 2, g.dw, g.dh);
     } else if (preview){
       ctx.fillStyle = i % 2 ? '#34343a' : '#3c3c43'; ctx.fillRect(R.x, R.y, R.w, R.h);
@@ -1685,6 +1737,7 @@ async function colAddFiles(files, start){
   colMsg(parked ? `${parked} ${parked === 1 ? 'maletg è vegnì parcà' : 'maletgs èn vegnids parcads'} en il parcadi.` : '');
   renderPool();
   paint();
+  hmark();
   return true;
 }
 const cPick = i => { target = i; $('cFile').click(); };
@@ -1852,7 +1905,7 @@ async function poolAddFiles(files){
   let n = 0;
   for (const f of files){ const C = await loadImg(f); if (C){ pool.push(C); n++; renderPool(); } }
   if (!n) colMsg('Quai n\'è nagin file da maletg.', true);
-  renderPool();
+  renderPool(); hmark();
 }
 $('cPoolAdd').onclick = () => { target = 'pool'; $('cFile').click(); };
 poolEl.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('Files')){ e.preventDefault(); e.stopPropagation(); poolEl.classList.add('over'); } });
@@ -1915,6 +1968,161 @@ $('cDl').onclick = () => {
 renderPool();
 paint();
 if (colOn()) colFromLayers();
+
+/* ---------- Revocar / repeter ---------- */
+// Momentaufnahmen der Einstellungen (Bilddaten werden nur referenziert, nicht kopiert)
+const HP = ['col', 'q', 'fh', 'fv', 'ang', 'pv', 'ph', 'gq', 'guides'];
+const LPK = [...HP, 'x', 'y', 's', 'mode', 'blur', 'visible', 'locked', 'name'], CPK = [...HP, 'z', 'fx', 'fy'];
+let uidN = 0;
+const uidOf = o => o.id != null ? 'L' + o.id : (o.uid ||= 'c' + (++uidN));
+const cp = v => v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+const pickP = (o, keys) => { const r = {}; for (const k of keys) r[k] = cp(o[k]); return r; };
+function snap(){
+  return {
+    layers: layers.map(L => ({ o: L, p: pickP(L, LPK) })), active,
+    cells: cells.map(C => C && { o: C, p: pickP(C, CPK) }),
+    pool: pool.map(C => ({ o: C, p: pickP(C, CPK) })),
+    cs: { ...cs }, sel
+  };
+}
+const keyOf = S => JSON.stringify([S.layers.map(e => [uidOf(e.o), e.p]), S.cells.map(e => e && [uidOf(e.o), e.p]), S.pool.map(e => [uidOf(e.o), e.p]), S.cs]);
+const undoS = [], redoS = [];
+let hcur = snap(), hkey = keyOf(hcur), restoring = false;
+function histUI(){ $('undoBtn').disabled = !undoS.length; $('redoBtn').disabled = !redoS.length; }
+function hmark(){
+  if (restoring || before) return;
+  const S = snap(), k = keyOf(S);
+  if (k === hkey){ hcur = S; return; }
+  undoS.push(hcur); if (undoS.length > 80) undoS.shift();
+  redoS.length = 0; hcur = S; hkey = k; histUI();
+}
+function applyP(o, p, isCell){
+  const geo = ['q', 'fh', 'fv'].some(k => !!o[k] !== !!p[k] || (k === 'q' && (o.q || 0) !== (p.q || 0)));
+  const warp = (o.pv || 0) !== (p.pv || 0) || (o.ph || 0) !== (p.ph || 0) || JSON.stringify(o.gq || null) !== JSON.stringify(p.gq || null);
+  const colCh = JSON.stringify(o.col) !== JSON.stringify(p.col), blurCh = o.blur !== p.blur;
+  for (const k in p) o[k] = cp(p[k]);
+  if (isCell){ if (geo || warp) cellOrient(o); else if (colCh) cellRecolor(o); return; }
+  if (geo) orient(o); else if (warp) reprev(o); else if (colCh) recolor(o);
+  else if (blurCh && o.blur) makeBlur(o);
+}
+function restore(S){
+  restoring = true;
+  try {
+    const keep = new Set(S.layers.map(e => e.o));
+    layers.forEach(L => { if (!keep.has(L)){ L.el.remove(); if (L.bg) L.bg.remove(); } });
+    layers.length = 0;
+    for (const { o: L, p } of S.layers){
+      if (!L.el.isConnected) clip.appendChild(L.el);
+      if (L.bg && !L.bg.isConnected) clip.insertBefore(L.bg, L.el);
+      applyP(L, p, false); layers.push(L);
+    }
+    active = S.active && keep.has(S.active) ? S.active : layers[layers.length - 1] || null;
+    for (let i = 0; i < cells.length; i++){ const e = S.cells[i]; cells[i] = e ? (applyP(e.o, e.p, true), e.o) : null; }
+    pool.length = 0; for (const e of S.pool){ applyP(e.o, e.p, true); pool.push(e.o); }
+    Object.assign(cs, S.cs); save();
+    for (const [id, key] of [['cFmt', 'fmt'], ['cLine', 'line'], ['cLw', 'lw']])
+      document.querySelectorAll(`#${id} button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v) === String(cs[key])));
+    buildLays();
+    sel = Math.min(S.sel, nParts() - 1);
+    refreshOrigFmt(); renderList(); render(); renderPool(); paint(); syncEdit();
+  } finally { restoring = false; }
+}
+function undo(){
+  hmark(); if (!undoS.length) return;
+  redoS.push(hcur); hcur = undoS.pop(); hkey = keyOf(hcur); restore(hcur); hcur = snap(); hkey = keyOf(hcur); histUI();   // Zustand nach dem Einpassen übernehmen
+}
+function redo(){
+  hmark(); if (!redoS.length) return;
+  undoS.push(hcur); hcur = redoS.pop(); hkey = keyOf(hcur); restore(hcur); hcur = snap(); hkey = keyOf(hcur); histUI();   // Zustand nach dem Einpassen übernehmen
+}
+$('undoBtn').onclick = undo; $('redoBtn').onclick = redo;
+// Nach jeder abgeschlossenen Handlung eine Momentaufnahme (gleiche Zustände werden zusammengefasst)
+const hsoon = () => setTimeout(hmark, 0);
+['pointerup', 'change', 'click', 'keyup', 'drop', 'dblclick'].forEach(t => document.addEventListener(t, hsoon));
+let wheelT = 0; document.addEventListener('wheel', () => { clearTimeout(wheelT); wheelT = setTimeout(hmark, 400); }, { passive:true });
+const typing = t => t && (t.isContentEditable || t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && !['range', 'button', 'checkbox', 'radio'].includes(t.type)));
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && (k === 'z' || k === 'y')){
+    if (typing(e.target)) return;
+    e.preventDefault();
+    if (!gModal.hidden){ if (k === 'z' && !e.shiftKey){ gLines.pop(); gDraw(); } return; }
+    if (k === 'y' || e.shiftKey) redo(); else undo();
+    return;
+  }
+  if (k === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && !typing(e.target) && gModal.hidden) setBefore(true);
+});
+document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'a') setBefore(false); });
+histUI();
+
+/* ---------- Avant / suenter ---------- */
+function rawOf(C){
+  const k = C.q + ',' + C.fh + ',' + C.fv;
+  if (C.rawK !== k){ C.raw = orientCanvas(C.orig, C.q, C.fh, C.fv, CPREV); C.rawK = k; }
+  return C.raw;
+}
+function setBefore(on){
+  if (on === before) return;
+  before = on;
+  document.body.classList.toggle('before', on);
+  $('baBtn').setAttribute('aria-pressed', on);
+  if ($('collage').hidden){
+    // Layers: Original ohne Farben, Perspektive und Begradigen
+    layers.forEach(L => {
+      if (on){ const el = L.el, x = el.getContext('2d'); x.clearRect(0, 0, el.width, el.height); x.drawImage(scaled(L.src, el.width, el.height), 0, 0, el.width, el.height); }
+      else { const v = L.ver; recolor(L); L.ver = v; }
+    });
+    render();
+  } else paint();
+}
+const ba = $('baBtn');
+ba.addEventListener('pointerdown', e => { e.preventDefault(); ba.setPointerCapture(e.pointerId); setBefore(true); });
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => ba.addEventListener(t, () => setBefore(false)));
+ba.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat){ e.preventDefault(); setBefore(true); } });
+ba.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') setBefore(false); });
+window.addEventListener('blur', () => setBefore(false));
+
+/* ---------- Arcunar parameters (Clerezza + colurs als Voreinstellung, nur in diesem Browser) ---------- */
+const PKEY = 'maletgs-presets';
+let presets = [];
+try { presets = (JSON.parse(localStorage.getItem(PKEY) || '[]') || []).filter(p => p && p.name && p.col); } catch(e){}
+const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch(e){} };
+const sayAny = (t, err) => ($('collage').hidden ? setMsg : colMsg)(t, err);
+function applyCol(A, col){
+  A.col = { ...newCol(), ...col };
+  if (isCell(A)) cellRecolor(A); else { recolor(A); updateThumb(A); }
+}
+function refreshAfterCol(){ if ($('collage').hidden) render(); else { paint(); renderPool(); } syncEdit(); }
+function renderPresets(){
+  const box = $('presets'); box.innerHTML = '';
+  presets.forEach((p, i) => {
+    const chip = document.createElement('span'); chip.className = 'pchip';
+    const a = document.createElement('button'); a.type = 'button'; a.textContent = p.name; a.title = 'Applitgar «' + p.name + '» al maletg tschernì';
+    a.onclick = () => { const A = editTarget(); if (!A || A.locked) return; applyCol(A, p.col); refreshAfterCol(); sayAny(`Applitgà «${p.name}».`); };
+    const d = document.createElement('button'); d.type = 'button'; d.className = 'pdel'; d.textContent = '×';
+    d.title = 'Stizzar «' + p.name + '»'; d.setAttribute('aria-label', d.title);
+    d.onclick = () => { presets.splice(i, 1); savePresets(); renderPresets(); };
+    chip.append(a, d); box.append(chip);
+  });
+  $('noPresets').hidden = presets.length > 0;
+}
+function savePreset(){
+  const A = editTarget(); if (!A) return;
+  const inp = $('presetName'), name = inp.value.trim() || 'Parameters ' + (presets.length + 1);
+  const col = { ...newCol(), ...A.col }, j = presets.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+  if (j >= 0) presets[j] = { name, col }; else presets.push({ name, col });
+  savePresets(); renderPresets(); inp.value = '';
+  sayAny(j >= 0 ? `«${name}» actualisà.` : `«${name}» arcunà.`);
+}
+$('presetSave').onclick = savePreset;
+$('presetName').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); savePreset(); } });
+$('presetAll').onclick = () => {
+  const A = editTarget(); if (!A) return;
+  const all = ectx === 'collage' ? [...cells.filter(Boolean), ...pool] : layers.filter(L => !L.locked);
+  all.forEach(o => { if (o !== A) applyCol(o, A.col); });
+  refreshAfterCol(); sayAny(`Applitgà a ${all.length} ${all.length === 1 ? 'maletg' : 'maletgs'}.`);
+};
+renderPresets();
 </script>
 <script src="/handoff.js"></script>
 <script src="/like.js" defer></script>
