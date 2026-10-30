@@ -253,7 +253,7 @@ async function cached(request, env, parts, url, compute) {
 // ---------- Feedback ----------
 // Formular «Propostas, giavischs, critica?» unten in den Tools (like.js). Nicht in Statistiken.
 // Lesen/Löschen nur mit Passwort: Secret FEEDBACK_PASSWORD (Cloudflare → Worker → Settings → Variables and Secrets).
-// Mail bei neuem Feedback: über Resend, Secret RESEND_API_KEY (Cloudflare → Worker → Settings → Variables and Secrets), Empfänger FEEDBACK_TO.
+// Hinweis bei neuem Feedback: Teams (Secret TEAMS_WEBHOOK_URL) und/oder Mail über Resend (Secret RESEND_API_KEY) – Cloudflare → Worker → Settings → Variables and Secrets.
 let fbReady;
 const ensureFeedback = env => fbReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tool TEXT NOT NULL, name TEXT, text TEXT NOT NULL, iph TEXT)'),
@@ -271,19 +271,32 @@ async function fbAuth(request, env) {
   return given && await sha256(given) === await sha256(env.FEEDBACK_PASSWORD) ? 'ok' : 'no';
 }
 async function fbMail(env, tool, name, text) {
-  // Versand über Resend (resend.com): Secret RESEND_API_KEY, Empfänger FEEDBACK_TO, Absender FEEDBACK_FROM
-  if (!env.RESEND_API_KEY || !env.FEEDBACK_TO) return;
-  const r = await fetch('https://api.resend.com/emails', {
+  const toolName = NAMES[tool] || tool, link = 'https://tools.dombuzz.ch/feedback';
+  const jobs = [];
+  // Microsoft Teams: Workflow «Bei Empfang einer Teams-Webhookanforderung» → Adaptive Card in Chat/Kanal; URL als Secret TEAMS_WEBHOOK_URL
+  if (env.TEAMS_WEBHOOK_URL) jobs.push(fetch(env.TEAMS_WEBHOOK_URL, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'message', attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', contentUrl: null, content: {
+      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json', type: 'AdaptiveCard', version: '1.4',
+      body: [
+        { type: 'TextBlock', text: 'Nov feedback: ' + toolName, weight: 'Bolder', size: 'Medium', wrap: true },
+        { type: 'FactSet', facts: [{ title: 'Tool', value: toolName }, { title: 'Num', value: name || 'anonim' }] },
+        { type: 'TextBlock', text: text, wrap: true },
+      ],
+      actions: [{ type: 'Action.OpenUrl', title: 'Avrir feedback', url: link }],
+    } }] }),
+  }).then(r => { if (!r.ok) throw new Error('teams ' + r.status); }));
+  // Mail über Resend (optional): Secret RESEND_API_KEY, Empfänger FEEDBACK_TO, Absender FEEDBACK_FROM
+  if (env.RESEND_API_KEY && env.FEEDBACK_TO) jobs.push(fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>',
-      to: [env.FEEDBACK_TO],
-      subject: 'Feedback: ' + (NAMES[tool] || tool),
-      text: `Nov feedback sin tools.dombuzz.ch\n\nTool: ${NAMES[tool] || tool}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: https://tools.dombuzz.ch/feedback\n`,
+      from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>', to: [env.FEEDBACK_TO],
+      subject: 'Feedback: ' + toolName,
+      text: `Nov feedback sin tools.dombuzz.ch\n\nTool: ${toolName}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: ${link}\n`,
     }),
-  });
-  if (!r.ok) throw new Error('resend ' + r.status);
+  }).then(r => { if (!r.ok) throw new Error('resend ' + r.status); }));
+  await Promise.allSettled(jobs);
 }
 
 export default {
