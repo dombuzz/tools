@@ -253,7 +253,7 @@ async function cached(request, env, parts, url, compute) {
 // ---------- Feedback ----------
 // Formular «Propostas, giavischs, critica?» unten in den Tools (like.js). Nicht in Statistiken.
 // Lesen/Löschen nur mit Passwort: Secret FEEDBACK_PASSWORD (Cloudflare → Worker → Settings → Variables and Secrets).
-// Mail bei neuem Feedback (optional): send_email-Binding FEEDBACK_MAIL, Absender FEEDBACK_FROM, Empfänger FEEDBACK_TO.
+// Mail bei neuem Feedback: über Resend, Secret RESEND_API_KEY (Cloudflare → Worker → Settings → Variables and Secrets), Empfänger FEEDBACK_TO.
 let fbReady;
 const ensureFeedback = env => fbReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tool TEXT NOT NULL, name TEXT, text TEXT NOT NULL, iph TEXT)'),
@@ -270,20 +270,20 @@ async function fbAuth(request, env) {
   const given = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
   return given && await sha256(given) === await sha256(env.FEEDBACK_PASSWORD) ? 'ok' : 'no';
 }
-const b64 = s => { const u = new TextEncoder().encode(s); let x = ''; for (const c of u) x += String.fromCharCode(c); return btoa(x); };
 async function fbMail(env, tool, name, text) {
-  if (!env.FEEDBACK_MAIL || !env.FEEDBACK_TO) return;
-  const { EmailMessage } = await import('cloudflare:email');
-  const from = env.FEEDBACK_FROM || 'feedback@dombuzz.ch', to = env.FEEDBACK_TO;
-  const body = `Nov feedback sin tools.dombuzz.ch\n\nTool: ${NAMES[tool] || tool}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: https://tools.dombuzz.ch/feedback\n`;
-  const raw = [
-    `From: dombuzz Tools <${from}>`, `To: <${to}>`,
-    `Subject: =?UTF-8?B?${b64('Feedback: ' + (NAMES[tool] || tool))}?=`,
-    `Message-ID: <${crypto.randomUUID()}@dombuzz.ch>`, `Date: ${new Date().toUTCString()}`,
-    'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '',
-    b64(body).replace(/.{76}/g, '$&\r\n'),
-  ].join('\r\n');
-  await env.FEEDBACK_MAIL.send(new EmailMessage(from, to, raw));
+  // Versand über Resend (resend.com): Secret RESEND_API_KEY, Empfänger FEEDBACK_TO, Absender FEEDBACK_FROM
+  if (!env.RESEND_API_KEY || !env.FEEDBACK_TO) return;
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>',
+      to: [env.FEEDBACK_TO],
+      subject: 'Feedback: ' + (NAMES[tool] || tool),
+      text: `Nov feedback sin tools.dombuzz.ch\n\nTool: ${NAMES[tool] || tool}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: https://tools.dombuzz.ch/feedback\n`,
+    }),
+  });
+  if (!r.ok) throw new Error('resend ' + r.status);
 }
 
 export default {
