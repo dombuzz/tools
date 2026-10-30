@@ -185,7 +185,7 @@
   /* Kachel «Cloudflare oz»: Verbrauch des Gratis-Kontingents (grün < 50 %, orange ab 50 %, rot ab 80 %) */
   :root{--cf:#f6821f;--cf-ok:#5fd29a;--cf-wa:#ffd54d;--cf-cr:#ff4d64}
   :root[data-theme="light"]{--cf:#d4650a;--cf-ok:#1f9d63;--cf-wa:#a88400;--cf-cr:#d22e47}
-  .cf{background:color-mix(in srgb,var(--cf) 6%,var(--card));border:1px solid color-mix(in srgb,var(--cf) 55%,transparent);border-radius:12px;padding:12px 14px;display:grid;gap:9px;min-width:0;margin:18px 0 4px}
+  .cf{background:color-mix(in srgb,var(--cf) 6%,var(--card));border:1px solid color-mix(in srgb,var(--cf) 55%,transparent);border-radius:12px;padding:12px 14px;display:grid;gap:9px;min-width:0;margin:10px 0 4px}
   .cf[hidden]{display:none}
   .cf.wa{border-color:var(--cf-wa)}.cf.cr{border-color:var(--cf-cr);box-shadow:0 0 0 3px rgba(255,77,100,.15)}
   .cf-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -234,14 +234,14 @@
   .out{display:flex;justify-content:center;margin:28px 0 0}
   .outbtn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 16px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
   .outbtn:hover{color:var(--accent);border-color:var(--accent)}
-  /* Box «Detagls»: Was ist live, Monats-Mail */
+  /* Box «Detagls admin»: Was ist live, Monats-Mail */
   .info{padding:4px 14px 12px}
   .ib{border-top:1px solid var(--line);padding:12px 0 2px}.ib:first-child{border-top:0}
   .ib h3{margin:0 0 8px;font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.02em}
   .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 12px;font-size:.86rem;align-items:baseline}
   .kv>span:nth-child(odd){color:var(--muted);font-size:.8rem}
   .kv code{font:600 .82rem var(--num,ui-monospace,monospace)}
-  .kv .cm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kv .cm{overflow-wrap:anywhere;line-height:1.4}.kv .cm small{display:block;color:var(--muted);font-size:.78rem}
   .st{font-weight:600}.st.ok{color:#5fd29a}.st.wa{color:#ffb86b}.st.cr{color:var(--accent)}
   :root[data-theme="light"] .st.ok{color:#1f9d63}:root[data-theme="light"] .st.wa{color:#a8650a}
   .note{font-size:.75rem;color:var(--muted);margin:8px 0 0}
@@ -296,16 +296,15 @@
   </details>
 
   <details class="fold" data-k="info" id="infofold">
-    <summary class="labh other">Detagls</summary>
+    <summary class="labh other">Detagls admin</summary>
     <div class="card info" id="info"><div class="msg">Chargel …</div></div>
+    <div class="cf" id="cfu" hidden></div>
   </details>
 
   <details class="fold" data-k="other">
     <summary class="labh other">Autras paginas</summary>
     <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
   </details>
-
-  <div class="cf" id="cfu" hidden></div>
 
   <details class="fold" data-k="lab">
     <summary class="labh">Lab <span>🧪</span></summary>
@@ -816,7 +815,7 @@
     load(b.dataset.r);
   });
 
-  // ----- Box «Detagls» (lädt beim Aufklappen, GitHub-Abfragen 2 Minuten zwischengespeichert) -----
+  // ----- Box «Detagls admin» (lädt beim Aufklappen, GitHub-Abfragen 2 Minuten zwischengespeichert) -----
   const GH = 'https://api.github.com/repos/dombuzz/tools';
   async function gh(path) {
     const k = 'dbz-gh-' + path;
@@ -850,7 +849,7 @@
         const day = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Zurich' }).format(new Date(d));
         const dates = commits.map(c => day(c.commit.committer.date)), last = commits[0];
         rows.push(['Versiun', `<code>v${dates[0].replace(/-/g, '')}_${dates.filter(d => d === dates[0]).length}</code>`]);
-        rows.push(['Ultim commit', `<span class="cm" title="${esc(last.commit.message)}">${dm(last.commit.committer.date)} · ${esc(last.commit.message.split('\n')[0])}</span>`]);
+        rows.push(['Ultim commit', `<span class="cm"><small>${dm(last.commit.committer.date)}</small>${esc(last.commit.message.split('\n')[0])}</span>`]);
         if (pages) {
           const cur = pages.sha === last.sha, ok = pages.state === 'success';
           rows.push(['Paginas', ok && cur ? '<span class="st ok">✓ online</span>' : pages.state === 'failure' || pages.state === 'error' ? '<span class="st cr">✗ publitgaziun fallida</span>' : '<span class="st wa">⏳ vegn publitgà …</span>']);
