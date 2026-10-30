@@ -78,6 +78,13 @@ export async function saveArticle(env, a) {
 // Ein Lauf: Sind Artikel vorgemerkt, werden bis zu PER_RUN davon geholt (neueste Monate zuerst).
 // Sonst wird eine Sitemap eingelesen: der aktuelle Monat (höchstens alle 30 Min.), sonst der nächste ältere Monat bis 2016.
 export async function crawlStep(env) {
+  let res;
+  try { res = await crawlInner(env); } catch (e) { res = { error: String(e && e.message || e) }; }
+  await stSet(env, 'last', JSON.stringify({ at: new Date().toISOString(), ...res })).catch(() => {});
+  if (res.error) throw new Error(res.error);
+  return res;
+}
+async function crawlInner(env) {
   await ensureArt(env);
   const { results: [u] } = await env.DB.prepare("SELECT w FROM usage WHERE day = date('now')").all().catch(() => ({ results: [] }));
   if (u && u.w > WRITE_PAUSE) return { paused: true };
@@ -156,5 +163,5 @@ export async function artStatus(env) {
   await ensureArt(env);
   const one = async q => (await env.DB.prepare(q).all()).results[0];
   const n = (await one('SELECT COUNT(*) n, MIN(d) a, MAX(d) b FROM art')), s = await one('SELECT COUNT(*) n, SUM(ok = 0 AND tries < 3) open FROM art_seen');
-  return { articles: n.n, oldest: n.a, newest: n.b, known: s.n, open: s.open || 0, back: await stGet(env, 'back'), complete: !!(await stGet(env, 'complete')) };
+  return { articles: n.n, oldest: n.a, newest: n.b, known: s.n, open: s.open || 0, back: await stGet(env, 'back'), last: JSON.parse((await stGet(env, 'last')) || 'null'), complete: !!(await stGet(env, 'complete')) };
 }
