@@ -313,6 +313,12 @@ export default {
         if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
         if (parts[0] === 'export') { res = await exportData(request, env); if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m)); return res; }
       }
+      // Sicherung sofort in kDrive auslösen (Dashboard-Knopf)
+      if (request.method === 'POST' && parts[0] === 'backup' && parts.length === 1) {
+        const a = await fbAuth(request, env);
+        if (a !== 'ok') return json({ error: 'auth' }, request, 401);
+        res = json(await backupToKdrive(env), request); if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m)); return res;
+      }
       // Öffentliche Kurzfassung der Rangliste für die Startseite (Pop-up) und /top: nur Nutzungen und Herzen pro Tool
       if (request.method === 'GET' && parts[0] === 'top' && parts.length === 1) {
         const rq = url.searchParams.get('range') || 'month', range = ['month', '30d', 'all', 'week'].includes(rq) ? rq : 'month';
@@ -390,7 +396,12 @@ async function reportError(env, where, e) {
 }
 
 async function hourlyChecks(env) {
-  const day = new Date().toISOString().slice(0, 10);
+  const day = new Date().toISOString().slice(0, 10), now = new Date();
+  // 0 Wöchentliche Sicherung in kDrive: sonntags um 03 UTC (einmal pro Woche)
+  if (env.KDRIVE_TOKEN && now.getUTCDay() === 0 && now.getUTCHours() === 3 && await once(env, 'backup:run:' + day)) {
+    const b = await backupToKdrive(env);
+    if (!b.ok) await teams(env, { title: '⚠ Backup en kDrive betg reussì', warn: true, text: String(b.error || '').slice(0, 300) });
+  }
   // 1 Cloudflare-Kontingent (D1 und Logs) ab 80 %
   await ensureViews(env);
   const { results: [u] } = await env.DB.prepare("SELECT r, w FROM usage WHERE day = date('now')").all();
@@ -410,6 +421,12 @@ async function hourlyChecks(env) {
         await teams(env, { title: '⚠ Il worker n\'è betg vegnì actualisà', warn: true, facts: [['Ultim commit', last.commit.message.split('\n')[0]], ['Deploy actual', dep.toISOString().slice(0, 16).replace('T', ' ') + ' UTC']], text: 'Controllar Cloudflare → Workers → fragrant-grass-c193 → Deployments/Builds.', url: 'https://dash.cloudflare.com/', button: 'Avrir Cloudflare' });
     }
   }
+  // 3a Datensicherung älter als 8 Tage (nur wenn kDrive eingerichtet ist)
+  if (env.KDRIVE_TOKEN) {
+    const bk = await metaGet(env, 'backup'), t = bk ? new Date(bk.ts.replace(' ', 'T') + 'Z') : null;
+    if ((!t || Date.now() - t > 8 * 864e5) && await once(env, 'alert:backup:' + day) && (t || now.getUTCDay() === 1))
+      await teams(env, { title: '⚠ Nagin backup actual', warn: true, facts: [['Ultim backup', t ? t.toISOString().slice(0, 10) : 'anc mai']], text: 'Il backup emnil en kDrive n\'è betg vegnì fatg. Controllar KDRIVE_TOKEN e la cartetta.' });
+  }
   // 3 GitHub Pages: letzte Veröffentlichung fehlgeschlagen
   const deps = await gh('deployments?environment=github-pages&per_page=1');
   if (deps && deps[0]) {
@@ -419,7 +436,7 @@ async function hourlyChecks(env) {
   }
 }
 
-// Monatsbericht am 1.: Teams-Karte und (falls Resend eingerichtet) Mail an FEEDBACK_TO
+// Monatsbericht am 1.: nur als Teams-Karte
 const MONTHS_RM = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
 async function monthlyReport(env, ctx) {
   const now = new Date(), y = now.getUTCMonth() ? now.getUTCFullYear() : now.getUTCFullYear() - 1, mo = (now.getUTCMonth() + 11) % 12;
@@ -433,18 +450,8 @@ async function monthlyReport(env, ctx) {
     const facts = [['Duvrà', d.usesTotal || 0], ['♥', d.total || 0], ['Visitas', d.viewsTotal || 0], ['Visitaders', d.clients || 0], ['Turnads (≥ 2 dis)', d.returning || 0]];
     const text = main.length ? main.map((x, i) => `${i + 1}. ${line(x)}`).join('\n\n') + (lab.length ? '\n\n**Lab:** ' + lab.map(line).join(' · ') : '') : 'Nagina utilisaziun quest mais.';
     const t = await teams(env, { title: 'Statistica tools.dombuzz.ch – ' + label, facts, text });
-    let mail = false;
-    if (env.RESEND_API_KEY && env.FEEDBACK_TO) {
-      const rows = main.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.name || x.tool)}</td><td align="right">${x.count}</td><td align="right">${x.likes || 0}</td><td align="right">${d.views?.[x.tool] || 0}</td></tr>`).join('');
-      const html = `<h2>Statistica tools.dombuzz.ch – ${label}</h2><p>${facts.map(([a, b]) => `<b>${a}:</b> ${b}`).join(' · ')}</p>
-        <table cellpadding="6" style="border-collapse:collapse"><tr><th>#</th><th align="left">Tool</th><th>Duvrà</th><th>♥</th><th>Visitas</th></tr>${rows || '<tr><td colspan="5">Nagina utilisaziun.</td></tr>'}</table>
-        ${lab.length ? `<p><b>Lab:</b> ${lab.map(x => esc(line(x))).join(' · ')}</p>` : ''}<p><a href="${DASH}">${DASH}</a></p>`;
-      const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>', to: [env.FEEDBACK_TO], subject: 'Statistica tools.dombuzz.ch – ' + label, html }) }).catch(() => null);
-      mail = !!(r && r.ok);
-    }
-    ok = t || mail;
-    await metaSet(env, 'mail', JSON.stringify({ status: ok ? 'ok' : 'fail', month: key, teams: t, mail }));
+    ok = t;
+    await metaSet(env, 'mail', JSON.stringify({ status: ok ? 'ok' : 'fail', month: key, teams: t }));
   } else await metaSet(env, 'mail', JSON.stringify({ status: 'fail', month: key }));
   return ok;
 }
@@ -452,12 +459,26 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<':
 
 // ---- Datensicherung: /export (nur mit Passwort) – alle Tabellen als JSON zum Herunterladen ----
 async function exportData(request, env) {
+  const data = await collectData(env), rows = Object.values(data.tables).reduce((t, a) => t + a.length, 0);
+  await metaSet(env, 'backup:download', JSON.stringify({ rows }));
+  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': `attachment; filename="dombuzz-backup-${data.created.slice(0, 10)}.json"`, 'Cache-Control': 'no-store', ...cors(request) } });
+}
+async function collectData(env) {
   const { results: tabs } = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name <> 'cache' ORDER BY name").all();
   const data = { created: new Date().toISOString(), database: 'dombuzz-likes', tables: {} };
   for (const { name } of tabs) data.tables[name] = (await env.DB.prepare('SELECT * FROM "' + name.replace(/"/g, '') + '"').all()).results;
-  const rows = Object.values(data.tables).reduce((t, a) => t + a.length, 0);
-  await metaSet(env, 'backup', JSON.stringify({ rows }));
-  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': `attachment; filename="dombuzz-backup-${data.created.slice(0, 10)}.json"`, 'Cache-Control': 'no-store', ...cors(request) } });
+  return data;
+}
+// Sicherung in kDrive (Infomaniak-API): Secret KDRIVE_TOKEN (Scope «drive»), Variablen KDRIVE_DRIVE_ID und KDRIVE_DIR_ID (Ordner)
+async function backupToKdrive(env) {
+  if (!env.KDRIVE_TOKEN || !env.KDRIVE_DRIVE_ID || !env.KDRIVE_DIR_ID) return { ok: false, error: 'unset' };
+  const data = await collectData(env), rows = Object.values(data.tables).reduce((t, a) => t + a.length, 0);
+  const body = new TextEncoder().encode(JSON.stringify(data)), name = 'dombuzz-backup-' + data.created.slice(0, 10) + '.json';
+  const q = new URLSearchParams({ directory_id: env.KDRIVE_DIR_ID, file_name: name, total_size: String(body.length), conflict: 'version' });
+  const r = await fetch(`https://api.infomaniak.com/3/drive/${env.KDRIVE_DRIVE_ID}/upload?` + q, { method: 'POST', headers: { Authorization: 'Bearer ' + env.KDRIVE_TOKEN, 'Content-Type': 'application/octet-stream' }, body }).catch(e => ({ ok: false, status: 0, text: async () => String(e) }));
+  if (!r.ok) { const t = await r.text().catch(() => ''); return { ok: false, error: (r.status || '') + ' ' + t.slice(0, 200) }; }
+  await metaSet(env, 'backup', JSON.stringify({ rows, bytes: body.length, file: name, where: 'kdrive' }));
+  return { ok: true, rows, file: name };
 }
 
 async function handle(request, env, ctx) {
@@ -484,7 +505,7 @@ async function handle(request, env, ctx) {
         let backup = null; if (bk) { try { backup = { ...JSON.parse(bk.v), ts: bk.ts }; } catch (e) {} }
         return json({
           worker: vm ? { id: vm.id, tag: vm.tag || '', deployed: vm.timestamp } : null,
-          mail, backup, teams: !!env.TEAMS_WEBHOOK_URL, resend: !!env.RESEND_API_KEY,
+          mail, backup, teams: !!env.TEAMS_WEBHOOK_URL, kdrive: !!(env.KDRIVE_TOKEN && env.KDRIVE_DRIVE_ID && env.KDRIVE_DIR_ID),
         }, request);
       }
 

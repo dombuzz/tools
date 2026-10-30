@@ -894,21 +894,21 @@
       } else rows.push(['Worker', '<span class="st wa">nagina infurmaziun</span>']);
       parts.push(`<div class="ib"><h3>Tge è online</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
     }
-    // 2 Monatsbericht (schickt der Worker am 1. um 06:03 UTC an Teams und – falls Resend eingerichtet – per Mail)
+    // 2 Monatsbericht (schickt der Worker am 1. um 06:03 UTC als Karte an Teams)
     {
       const m = ins && ins.mail, n = new Date(), next = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth() + 1, 1, 6, 3));
       const lab = mo => { const [y, mm] = (mo || '').split('-'); return mm ? MONTHS[+mm - 1] + ' ' + y : ''; };
-      const via = m ? [m.teams && 'Teams', m.mail && 'e-mail'].filter(Boolean).join(' + ') : '';
-      const rows = m ? [['Ultim', `${m.status === 'ok' ? '<span class="st ok">✓ tramess</span>' : '<span class="st cr">✗ betg reussì</span>'} ${dm(utc(m.ts))}${m.month ? ' · ' + lab(m.month) : ''}${via ? ' · ' + via : ''}`]]
+      const rows = m ? [['Ultim', `${m.status === 'ok' ? '<span class="st ok">✓ tramess</span>' : '<span class="st cr">✗ betg reussì</span>'} ${dm(utc(m.ts))}${m.month ? ' · ' + lab(m.month) : ''} · Teams`]]
         : [['Ultim', '<span class="st wa">anc nagin</span>']];
       rows.push(['Proxim', `${next.getDate()}. ${MONTHS[next.getMonth()]} ${next.getFullYear()}, ${pad2(next.getHours())}:${pad2(next.getMinutes())}`]);
-      if (ins) rows.push(['Chanals', [ins.teams ? 'Teams ✓' : 'Teams –', ins.resend ? 'e-mail ✓' : 'e-mail –'].join(' · ')]);
+      if (ins && !ins.teams) rows.push(['Teams', '<span class="st wa">betg configurà</span>']);
       parts.push(`<div class="ib"><h3>Rapport mensil</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
     }
-    // 3 Datensicherung (Download aller Daten als JSON)
+    // 3 Datensicherung: wöchentlich in kDrive (sonntags), zusätzlich Download als JSON
     {
       const b = ins && ins.backup, t = b && utc(b.ts), old = !t || Date.now() - t > 8 * 864e5;
       const rows = [['Ultim', b ? `<span class="st ${old ? 'wa' : 'ok'}">${old ? '⚠' : '✓'}</span> ${dm(t)} · ${fmt(b.rows || 0)} lingias` : '<span class="st wa">anc nagin</span>']];
+      rows.push(['kDrive', ins && ins.kdrive ? 'mintga dumengia · <a href="#" id="bk-kd">Backup ussa</a>' : '<span class="st wa">betg configurà</span>']);
       rows.push(['Datas', '<a href="#" id="bk-now">Telechargiar ussa (JSON)</a>']);
       parts.push(`<div class="ib"><h3>Backup</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div><p class="note" id="bk-msg"></p></div>`);
     }
@@ -917,6 +917,12 @@
   }
   // Backup: aktuelle Daten als JSON herunterladen (nur mit Passwort)
   const saveFile = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); };
+  document.addEventListener('click', async e => {
+    if (e.target.id !== 'bk-kd') return; e.preventDefault();
+    const msg = document.getElementById('bk-msg'); msg.textContent = 'Backup en kDrive …';
+    try { const r = await fetch(API + '/backup', { method: 'POST', ...AUTH() }).then(x => x.json()); msg.textContent = r.ok ? '✓ Memorisà en kDrive: ' + r.file : 'Betg reussì: ' + (r.error || ''); if (r.ok) setTimeout(loadInfo, 500); }
+    catch (x) { msg.textContent = 'Betg reussì.'; }
+  });
   document.addEventListener('click', async e => {
     if (e.target.id !== 'bk-now') return; e.preventDefault();
     const msg = document.getElementById('bk-msg'); msg.textContent = 'Chargiar …';
