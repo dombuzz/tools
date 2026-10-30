@@ -389,7 +389,7 @@
       </div>
     </div>
 
-    <p class="hint" id="layHint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Cliccar sin il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
+    <p class="hint" id="layHint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. Cun ils simbols →|← e ↓—↑ centreschas ti il layer orizontalmain u verticalmain. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «Blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Mo blur» mussa mo il fund blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Cliccar sin il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
 
     <div class="actions" id="layActions">
       <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
@@ -847,6 +847,8 @@ function renderList(){
         <button type="button" data-a="mode" title="Emplenir u liber">${L.mode === 'cover' ? 'Emplenir' : 'Liber'}</button>
         <button type="button" data-a="blur" aria-pressed="${!!L.blur}" title="Midar: nagin blur → Blur (cun maletg) → Mo blur">${L.blur === 'only' ? 'Mo blur' : 'Blur'}</button>
         <button type="button" data-a="lock" aria-pressed="${!!L.locked}" title="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}" aria-label="${L.locked ? 'Debloccar il layer' : 'Bloccar il layer'}">${L.locked ? '🔒' : '🔓'}</button>
+        <button type="button" data-a="cx" title="Centrar orizontalmain" aria-label="Centrar orizontalmain"><svg viewBox="0 0 20 16" width="18" height="14" aria-hidden="true" style="vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 1v14"/><path d="M1.5 8h5M4.5 5.5 7 8l-2.5 2.5M18.5 8h-5M15.5 5.5 13 8l2.5 2.5"/></svg></button>
+        <button type="button" data-a="cy" title="Centrar verticalmain" aria-label="Centrar verticalmain"><svg viewBox="0 0 16 20" width="14" height="18" aria-hidden="true" style="vertical-align:-4px" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 10h14"/><path d="M8 1.5v5M5.5 4.5 8 7l2.5-2.5M8 18.5v-5M5.5 15.5 8 13l2.5 2.5"/></svg></button>
         <button type="button" data-a="dup" title="Duplitgar il layer" aria-label="Duplitgar il layer">⧉</button>
         <button type="button" data-a="del" class="del" title="Stizzar il layer" aria-label="Stizzar il layer">✕</button>
       </div>`;
@@ -879,6 +881,8 @@ function renderList(){
         // Blur ergibt nur Sinn, wenn das Bild nicht schon alles bedeckt: dann auf «Liber» und ganz einpassen
         if (L.blur === 'with'){ makeBlur(L); if (L.mode === 'cover') L.mode = 'free'; fitLayer(L); }
       } }
+      else if (a === 'cx') { if (!L.locked) L.x = (W - L.iw * L.s) / 2; }
+      else if (a === 'cy') { if (!L.locked) L.y = (H - L.ih * L.s) / 2; }
       else if (a === 'del') { if (!L.locked) remove(L); return; }
       else if (a === 'dup') { duplicate(L); return; }
       active = L; renderList(); render();
