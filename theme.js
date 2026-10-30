@@ -73,18 +73,29 @@
     '.card,.step,.panel,.take,.tw{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border-color:var(--glass-line)!important}' +
     'h1 .acc,h1 em,.kw{background-image:var(--rgrad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}' +
     '.dbz-g{background-image:var(--rgrad)!important}.dbz-g:hover{filter:brightness(1.07)}' +
+    /* Einheitliche Ablagefelder (Trair qua … / u cliccar per tscherner) in allen Tools */
+    '.drop,#drop,#de-drop{border:2px dashed color-mix(in srgb,var(--muted,#9a9aa2) 45%,transparent)!important;border-radius:14px!important;padding:28px 16px!important;text-align:center!important;cursor:pointer;background-color:var(--glass)!important;color:var(--muted,#9a9aa2)!important;font-size:.85rem!important;line-height:1.45;transition:border-color .15s,background-color .15s}' +
+    '.drop>b,.drop>strong,#drop>b,#de-drop>b{display:block;font-size:1rem;font-weight:600;color:var(--text,#ececef);margin:0 0 3px}' +
+    '.drop>small,.drop>span,#drop>small,#de-drop>small{display:block;margin:0;color:var(--muted,#9a9aa2);font-size:.8rem}' +
+    '.drop:hover,.drop.over,.drop.drag,#drop:hover,#drop.over,#drop.drag,#de-drop:hover,#de-drop.over{border-color:var(--accent,#ff4d64)!important;background-color:color-mix(in srgb,var(--accent,#ff4d64) 7%,transparent)!important}' +
+    /* Download-Knöpfe: einheitlich mit ↓ */
+    '.dbz-dl::before{content:"↓";display:inline-block;margin-right:.4em;font-weight:700}' +
     '.seg button[aria-pressed="true"],.ratio-seg button.active,.ptab[aria-selected="true"],.tab[aria-selected="true"],.tabs button[aria-selected="true"],.ctog button[aria-pressed="true"],.wseg button[aria-pressed="true"],.tool[aria-pressed="true"],.seg input:checked+label{background-image:var(--rgrad)!important}' +
     '@media print{.themebtn{display:none}}';
   var s = d.createElement('style'); s.id = 'dbz-theme-css'; s.textContent = css; (d.head || r).appendChild(s);
   // Flächen in Akzentfarbe (Knöpfe, Nummern) bekommen den Rotverlauf: per Klasse dbz-g, weil CSS die Farbe nicht abfragen kann
   var acc = '', painting = 0;
-  function accent() { var p = d.createElement('i'); p.style.cssText = 'position:absolute;visibility:hidden;color:var(--accent)'; d.body.appendChild(p); var c = getComputedStyle(p).color; p.remove(); return c; }
+  // ein einziges, dauerhaftes Mess-Element (sonst löst jedes Messen den MutationObserver erneut aus)
+  var probe;
+  function accent() { if (!probe) { probe = d.createElement('i'); probe.setAttribute('aria-hidden', 'true'); probe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;color:var(--accent)'; d.body.appendChild(probe); } return getComputedStyle(probe).color; }
   function grad() {
     painting = 0; if (!d.body) return; acc = accent();
     d.querySelectorAll('button,a[class],.num,.btn,[class*="btn"]').forEach(function (el) {
       if (el.classList.contains('themebtn')) return;
-      var had = el.classList.contains('dbz-g'); if (had) el.classList.remove('dbz-g');
-      if (getComputedStyle(el).backgroundColor === acc) el.classList.add('dbz-g');
+      // nur ändern, wenn nötig – sonst entstünde über den Observer eine Endlosschleife
+      var g = getComputedStyle(el).backgroundColor === acc; if (g !== el.classList.contains('dbz-g')) el.classList.toggle('dbz-g', g);
+      // Knöpfe «Telechargiar …» bekommen einheitlich ein ↓
+      var dl = /^Telechargiar\b/.test((el.textContent || '').trim()); if (dl !== el.classList.contains('dbz-dl')) el.classList.toggle('dbz-dl', dl);
     });
   }
   window.dbzGrad = function () { if (!painting) painting = requestAnimationFrame(grad); };
