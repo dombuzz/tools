@@ -14,7 +14,7 @@
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000?c=<Zufalls-ID> -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
 //   POST /view/Resizer2000?t=light|dark&c=<Zufalls-ID> -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an; c = anonyme Kennung pro Browser)
-//   (geschützt: /ranking, /hourly, /usage, /insights, /export nur mit Authorization: Bearer <FEEDBACK_PASSWORD>; öffentlich: GET /top?range=month|30d|all|week)
+//   (geschützt: /ranking, /hourly, /usage, /insights, /export nur mit Authorization: Bearer <FEEDBACK_PASSWORD>; öffentlich: GET /top?range=month|30d|all|week|today, inkl. views pro Tool)
 //   GET  /ranking?range=all     -> Rangliste: all | today | week | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
@@ -323,12 +323,12 @@ export default {
       }
       // Öffentliche Kurzfassung der Rangliste für die Startseite (Pop-up) und /top: nur Nutzungen und Herzen pro Tool
       if (request.method === 'GET' && parts[0] === 'top' && parts.length === 1) {
-        const rq = url.searchParams.get('range') || 'month', range = ['month', '30d', 'all', 'week'].includes(rq) ? rq : 'month';
+        const rq = url.searchParams.get('range') || 'month', range = ['month', '30d', 'all', 'week', 'today'].includes(rq) ? rq : 'month';
         const inner = new Request(url.origin + '/ranking?range=' + range, { headers: request.headers });
         const full = await cached(inner, env, ['ranking'], new URL(inner.url), () => handle(inner, env, ctx));
         if (!full.ok) return full;
         const d = await full.json();
-        res = json({ range, usesTotal: d.usesTotal, total: d.total, items: d.items, uses: (d.uses || []).map(x => ({ tool: x.tool, name: x.name, count: x.count, likes: x.likes })) }, request);
+        res = json({ range, usesTotal: d.usesTotal, viewsTotal: d.viewsTotal || 0, views: d.views || {}, total: d.total, items: d.items, uses: (d.uses || []).map(x => ({ tool: x.tool, name: x.name, count: x.count, likes: x.likes })) }, request);
         if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m));
         return res;
       }
