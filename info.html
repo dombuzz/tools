@@ -66,6 +66,16 @@ td p:last-child{margin-bottom:0}
   td{padding:8px 12px}
   td::before{content:attr(data-l);display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:1px}
 }
+.fb{display:flex;flex-direction:column;gap:8px;margin-top:4px;max-width:480px}
+.fb textarea,.fb input{width:100%;font:inherit;font-size:.92rem;color:var(--text);background:var(--mono);border:1px solid var(--border);border-radius:8px;padding:9px 12px}
+.fb textarea{min-height:96px;resize:vertical}
+.fb textarea:focus,.fb input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.fb .frow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fb .frow input{flex:1 1 180px;width:auto}
+.fb button{font:inherit;font-weight:700;font-size:.9rem;background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:9px 18px;cursor:pointer}
+.fb button:disabled{opacity:.6;cursor:default}
+.fb .msg{font-size:.85rem;min-height:1.2em}
+.fb .msg.err{color:#ff6b7d}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
@@ -110,8 +120,33 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
   <section class="step">
     <h2><span class="num">4</span>Feedback</h2>
-    <p>Ils feedbacks èn opziunals. Il text e – sche ti vuls – in num vegnan memorisads sin nossa Worker (Cloudflare), tramess per e-mail ed inclus en ina copia da segirezza emnila. Mintgina e mintgin decida sez, sch'ella u el vul duvrar in num u betg.</p>
+    <p>Ils feedbacks èn opziunals. Il text e – sche ti vuls – in num vegnan pir lura memorisads. Per l'intent da plinavant far attent sin ils resuns vegnan questas indicaziuns tramess per e-mail ad ina adressa da mail @rtr.ch. Mintgina e mintgin decida sez, sch'ella u el vul duvrar in num u betg.</p>
+    <form id="fb" class="fb">
+      <textarea name="text" maxlength="1000" required placeholder="Tes messadi …" aria-label="Tes messadi"></textarea>
+      <div class="frow">
+        <input name="name" maxlength="60" placeholder="Num (opziunal)" aria-label="Num (opziunal)" autocomplete="off">
+        <button type="submit">Trametter</button>
+      </div>
+      <span class="msg" id="fbmsg" aria-live="polite"></span>
+    </form>
   </section>
 </div>
+<script>
+(() => {
+  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', f = document.getElementById('fb'), m = document.getElementById('fbmsg'), b = f.querySelector('button');
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const text = f.elements.text.value.trim(); if (!text) return;
+    b.disabled = true; m.className = 'msg'; m.textContent = 'Vegn tramess …';
+    try {
+      const r = await fetch(API + '/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool: 'info', text, name: f.elements.name.value.trim() }) });
+      if (r.status === 429) throw new Error('Ti has gia tramess plirs messadis oz – emprova damaun.');
+      if (!r.ok) throw new Error('Betg reussì – emprova pli tard.');
+      f.reset(); m.textContent = 'Grazia fitg! Tes messadi è arrivà.';
+    } catch (err) { m.className = 'msg err'; m.textContent = err.message || 'Betg reussì – emprova pli tard.'; }
+    b.disabled = false;
+  });
+})();
+</script>
 </body>
 </html>

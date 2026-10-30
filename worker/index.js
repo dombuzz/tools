@@ -29,7 +29,7 @@
 const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
-const NAMES = {
+const NAMES = { 'info': 'Info & datas',
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
   'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR',
