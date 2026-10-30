@@ -274,6 +274,7 @@
     background:var(--rgrad);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
   .archive::after{inset:-2px;padding:2px}
   .tabs.dbz-slide::before,.tab[aria-selected=true],.lock button,.fbl button{background-image:var(--rgrad)!important}
+  .kv a{color:inherit}
 </style>
 </head>
 <body>
@@ -364,6 +365,8 @@
 
 <script>
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
+  // Statistik-Abfragen brauchen das Passwort (wie /feedback); fbPw wird beim Login gesetzt
+  const AUTH = () => ({ headers: { Authorization: 'Bearer ' + (typeof fbPw === 'string' ? fbPw : '') } });
   // Anzeigenamen; Tools ohne Klick erscheinen mit 0
   const NAMES = {
     'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
@@ -474,7 +477,7 @@
     if (!silent) { lastRange = range; ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = ''; }
     upd.classList.add('busy');
     try {
-      const r = await fetch(`${API}/ranking?range=${range}`);
+      const r = await fetch(`${API}/ranking?range=${range}`, AUTH());
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();
       if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
@@ -564,7 +567,7 @@
   let hourAll = null, hourRange = null, hourRangeKey = null;
   async function loadHourly(range) {
     try {
-      const get = async q => { const r = await fetch(`${API}/hourly?range=${q}`); if (!r.ok) throw new Error(r.status); return r.json(); };
+      const get = async q => { const r = await fetch(`${API}/hourly?range=${q}`, AUTH()); if (!r.ok) throw new Error(r.status); return r.json(); };
       const [all, hr] = await Promise.all([get('all'), range === 'all' ? null : get(range)]);
       hourAll = all; hourRange = hr || all; hourRangeKey = range;
       drawHourly();
@@ -695,7 +698,7 @@
   async function loadUsage() {
     const el = document.getElementById('cfu');
     try {
-      const r = await fetch(`${API}/usage`); if (!r.ok) throw new Error(r.status);
+      const r = await fetch(`${API}/usage`, AUTH()); if (!r.ok) throw new Error(r.status);
       const u = await r.json();
       const lvl = p => p >= 80 ? 'cr' : p >= 50 ? 'wa' : 'ok';
       const big = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : fmt(n);
@@ -794,7 +797,7 @@
       body.hidden = false;
       ['alist', 'aotherlist', 'alablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>');
       try {
-        const r = await fetch(`${API}/ranking?range=${sel.value}&daily=1`);
+        const r = await fetch(`${API}/ranking?range=${sel.value}&daily=1`, AUTH());
         const d = await r.json();
         if (!r.ok || d.range !== sel.value) throw new Error('range');
         archData = d; archRange = sel.value; render();
@@ -860,7 +863,7 @@
     if (infoBusy) return; infoBusy = true;
     const el = document.getElementById('info');
     const [ins, commits, wCommits, cCommits, deps] = await Promise.all([
-      fetch(API + '/insights').then(r => r.json()).catch(() => null),
+      fetch(API + '/insights', AUTH()).then(r => r.json()).catch(() => null),
       gh('/commits?sha=main&per_page=100').catch(() => null),
       gh('/commits?sha=main&path=worker&per_page=1').catch(() => null),
       gh('/commits?sha=main&path=wrangler.jsonc&per_page=1').catch(() => null),
@@ -891,18 +894,35 @@
       } else rows.push(['Worker', '<span class="st wa">nagina infurmaziun</span>']);
       parts.push(`<div class="ib"><h3>Tge è online</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
     }
-    // 2 Monats-Mail
+    // 2 Monatsbericht (schickt der Worker am 1. um 06:03 UTC an Teams und – falls Resend eingerichtet – per Mail)
     {
-      const m = ins && ins.mail, n = new Date(), next = new Date(n.getFullYear(), n.getMonth() + 1, 1, 6, 50);
+      const m = ins && ins.mail, n = new Date(), next = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth() + 1, 1, 6, 3));
       const lab = mo => { const [y, mm] = (mo || '').split('-'); return mm ? MONTHS[+mm - 1] + ' ' + y : ''; };
-      const rows = m ? [['Ultima', `${m.status === 'ok' ? '<span class="st ok">✓ tramess</span>' : '<span class="st cr">✗ betg reussì</span>'} ${dm(utc(m.ts))}${m.month ? ' · ' + lab(m.month) : ''}`]]
-        : [['Ultima', '<span class="st wa">anc nagina annunzia</span>']];
-      rows.push(['Proxima', `${next.getDate()}. ${MONTHS[next.getMonth()]} ${next.getFullYear()}, 06:50`]);
-      parts.push(`<div class="ib"><h3>E-mail mensil</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
+      const via = m ? [m.teams && 'Teams', m.mail && 'e-mail'].filter(Boolean).join(' + ') : '';
+      const rows = m ? [['Ultim', `${m.status === 'ok' ? '<span class="st ok">✓ tramess</span>' : '<span class="st cr">✗ betg reussì</span>'} ${dm(utc(m.ts))}${m.month ? ' · ' + lab(m.month) : ''}${via ? ' · ' + via : ''}`]]
+        : [['Ultim', '<span class="st wa">anc nagin</span>']];
+      rows.push(['Proxim', `${next.getDate()}. ${MONTHS[next.getMonth()]} ${next.getFullYear()}, ${pad2(next.getHours())}:${pad2(next.getMinutes())}`]);
+      if (ins) rows.push(['Chanals', [ins.teams ? 'Teams ✓' : 'Teams –', ins.resend ? 'e-mail ✓' : 'e-mail –'].join(' · ')]);
+      parts.push(`<div class="ib"><h3>Rapport mensil</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
+    }
+    // 3 Datensicherung (Download aller Daten als JSON)
+    {
+      const b = ins && ins.backup, t = b && utc(b.ts), old = !t || Date.now() - t > 8 * 864e5;
+      const rows = [['Ultim', b ? `<span class="st ${old ? 'wa' : 'ok'}">${old ? '⚠' : '✓'}</span> ${dm(t)} · ${fmt(b.rows || 0)} lingias` : '<span class="st wa">anc nagin</span>']];
+      rows.push(['Datas', '<a href="#" id="bk-now">Telechargiar ussa (JSON)</a>']);
+      parts.push(`<div class="ib"><h3>Backup</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div><p class="note" id="bk-msg"></p></div>`);
     }
     el.innerHTML = parts.join('') || '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas.</div>';
     infoBusy = false;
   }
+  // Backup: aktuelle Daten als JSON herunterladen (nur mit Passwort)
+  const saveFile = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); };
+  document.addEventListener('click', async e => {
+    if (e.target.id !== 'bk-now') return; e.preventDefault();
+    const msg = document.getElementById('bk-msg'); msg.textContent = 'Chargiar …';
+    try { const r = await fetch(API + '/export', AUTH()); if (!r.ok) throw new Error(r.status); saveFile(await r.blob(), 'dombuzz-backup-' + new Date().toISOString().slice(0, 10) + '.json'); msg.textContent = ''; }
+    catch (x) { msg.textContent = 'Il backup n\'ha betg pudì vegnir chargià.'; }
+  });
   { const f = document.getElementById('infofold'); f.addEventListener('toggle', () => { if (f.open && started) loadInfo(); }); }
 
   // Kacheln mit Erklärung: Antippen zeigt/versteckt den Hinweis
