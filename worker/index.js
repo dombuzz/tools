@@ -321,25 +321,16 @@ async function handle(request, env, ctx) {
         return json({ ok: true }, request);
       }
 
-      // Dashboard-Box «Detagls»: Worker-Version, Monats-Mail, Treue pro Tool (30 Tage), neue Besucher (diese Woche)
+      // Dashboard-Box «Detagls»: Worker-Version und Monats-Mail
       if (request.method === 'GET' && parts[0] === 'insights' && parts.length === 1) {
         await ensureViews(env);
         await env.DB.prepare('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT, ts TEXT NOT NULL)').run();
         const { results: [mr] } = await env.DB.prepare("SELECT v, ts FROM meta WHERE k = 'mail'").all();
         let mail = null; if (mr) { try { mail = { ...JSON.parse(mr.v), ts: mr.ts }; } catch (e) {} }
-        const d30 = period('30d').from, wk = period('week').from;
-        const { results: loyalty } = await env.DB.prepare(
-          'SELECT tool, COUNT(*) AS users, SUM(CASE WHEN d > 1 THEN 1 ELSE 0 END) AS repeat FROM (SELECT tool, cid, COUNT(DISTINCT substr(ts, 1, 10)) AS d FROM uses WHERE cid IS NOT NULL AND ' + EX('uses') + ' AND ts >= ?1 GROUP BY tool, cid) GROUP BY tool ORDER BY users DESC, repeat DESC')
-          .bind(d30).all();
-        const { results: [nw] } = await env.DB.prepare(
-          'SELECT COUNT(*) AS total, SUM(CASE WHEN first >= ?1 THEN 1 ELSE 0 END) AS neu, MIN(first) AS since FROM (SELECT cid, MIN(ts) AS first, MAX(ts) AS last FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL GROUP BY cid) WHERE last >= ?1')
-          .bind(wk).all();
-        const { results: [first] } = await env.DB.prepare('SELECT MIN(ts) AS t FROM views WHERE cid IS NOT NULL').all();
         const vm = env.CF_VERSION_METADATA || null;
         return json({
           worker: vm ? { id: vm.id, tag: vm.tag || '', deployed: vm.timestamp } : null,
-          mail, loyalty: loyalty.map(x => ({ tool: x.tool, users: x.users, repeat: x.repeat || 0 })),
-          week: { from: wk, visitors: nw?.total || 0, new: nw?.neu || 0, known: (nw?.total || 0) - (nw?.neu || 0), countingSince: first?.t || null },
+          mail,
         }, request);
       }
 
@@ -432,6 +423,12 @@ async function handle(request, env, ctx) {
           .prepare('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const returning = retRows[0]?.n || 0;
+        // nur für «quest'emna»: wie viele Besucher dieser Woche zum ersten Mal da waren (Dashboard-Kacheln)
+        let newClients = null;
+        if (range === 'week') {
+          const { results: [nw] } = await env.DB.prepare('SELECT SUM(CASE WHEN first >= ?1 THEN 1 ELSE 0 END) AS n FROM (SELECT cid, MIN(ts) AS first, MAX(ts) AS last FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL GROUP BY cid) WHERE last >= ?1').bind(p.from).all();
+          newClients = nw?.n || 0;
+        }
         // Nutzungen pro Besucher: Durchschnitt unter den Besuchern, die mindestens eine Nutzung ausgelöst haben (nur Nutzungen mit Kennung)
         const { results: ucRows } = await env.DB
           .prepare('SELECT COUNT(*) AS n, COUNT(DISTINCT cid) AS c FROM uses WHERE ' + NO_STATS_SQL + ' AND ' + EX('uses') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
@@ -449,7 +446,7 @@ async function handle(request, env, ctx) {
         const { results: [fp] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(p?.from ?? '0', p?.to ?? '9999').all();
         const favsNow = Object.fromEntries(favNowRows.map(r => [r.tool, Math.max(0, r.n)]));
         const favsTotal = Object.values(favs).reduce((t, n) => t + n, 0);
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';
