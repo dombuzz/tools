@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar, curreger la perspectiva e las colurs. Collascha cun 2 u 3 maletgs. Export sco PNG.">
+<meta name="description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar, curreger la perspectiva e las colurs. Collascha cun 2 fin 5 maletgs. Export sco PNG.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Elavurar maletgs">
-<meta property="og:description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar, curreger la perspectiva e las colurs. Collascha cun 2 u 3 maletgs. Export sco PNG.">
+<meta property="og:description" content="Fin a 5 layers cun agens maletgs ed overlays. Rotar, drizzar, curreger la perspectiva e las colurs. Collascha cun 2 fin 5 maletgs. Export sco PNG.">
 <meta property="og:url" content="https://tools.dombuzz.ch/maletgs">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -234,6 +234,7 @@
   .lays svg{ display:block; height:24px; width:auto; }
   .crow{ display:flex; flex-wrap:wrap; gap:8px; }
   .lrow{ margin-top:8px; }
+  .cmore{ display:block; margin-top:8px; }
   .lrow:not(:has(button:not([hidden]))){ display:none; }
   .ghost.sm{ padding:6px 10px; font-size:.8rem; }
   .cpick{ position:relative; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; font-size:.82rem; font-weight:600; color:var(--muted); border-radius:7px; cursor:pointer; line-height:1.25; }
@@ -279,7 +280,7 @@
 <div class="container">
   <a class="homelink" href="/">← Tools</a>
   <h1>Elavurar <span class="acc">maletgs</span></h1>
-  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar, curreger la perspectiva e las colurs per layer. Collascha cun 2 u 3 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
+  <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar, curreger la perspectiva e las colurs per layer. Collascha cun 2 fin 5 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
 
   <div class="card">
     <div class="toolbar" id="layToolbar">
@@ -434,6 +435,7 @@
           </div>
           <h3>Disposiziun</h3>
           <div class="lays" id="cLays"></div>
+          <button type="button" class="ghost sm cmore" id="cMore" aria-expanded="false">Dapli maletgs ▾</button>
           <div class="crow lrow">
             <button type="button" class="ghost sm" id="cFlip" title="Spievlar la trav" hidden>⇋ Spievlar la trav</button>
             <button type="button" class="ghost sm" id="cSpReset" title="Lingias da separaziun puspè en il center" hidden>Reposiziunar las lingias</button>
@@ -1529,20 +1531,37 @@ renderList();
 <script>
 /* ---------- Collage: 2 u 3 maletgs en 16:9 u 1:1 ---------- */
 // r(a, b): Rechtecke in Abhängigkeit der verschiebbaren Trennlinien a, b (0–1); d = Standardpositionen
+// r(...sp): Rechtecke (x, y, b, h) aus den Trennlinien-Positionen sp (0–1); d = Standardpositionen
+// s(...sp): Trennlinien [j, 'x', x, y1, y2] bzw. [j, 'y', y, x1, x2]; ord: Linien derselben Richtung, die geordnet bleiben müssen
+// more: erst nach «Dapli maletgs» sichtbar; only: nur in diesem Format
 const CL = {
-  c2:  { n:2, d:[.5], r:a => [[0,0,a,1],[a,0,1-a,1]] },
-  r2:  { n:2, d:[.5], r:a => [[0,0,1,a],[0,a,1,1-a]] },
-  c3:  { n:3, d:[1/3,2/3], pair:true, r:(a,b) => [[0,0,a,1],[a,0,b-a,1],[b,0,1-b,1]] },
-  r3:  { n:3, d:[1/3,2/3], pair:true, r:(a,b) => [[0,0,1,a],[0,a,1,b-a],[0,b,1,1-b]] },
-  l12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,1-b]] },
-  l21: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,b],[0,b,a,1-b],[a,0,1-a,1]] },
-  t12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,1,a],[0,a,b,1-a],[b,a,1-b,1-a]] },
+  c2:  { n:2, d:[.5], r:a => [[0,0,a,1],[a,0,1-a,1]], s:a => [[0,'x',a,0,1]] },
+  r2:  { n:2, d:[.5], r:a => [[0,0,1,a],[0,a,1,1-a]], s:a => [[0,'y',a,0,1]] },
+  c3:  { n:3, d:[1/3,2/3], ord:[[0,1]], r:(a,b) => [[0,0,a,1],[a,0,b-a,1],[b,0,1-b,1]], s:(a,b) => [[0,'x',a,0,1],[1,'x',b,0,1]] },
+  r3:  { n:3, d:[1/3,2/3], ord:[[0,1]], r:(a,b) => [[0,0,1,a],[0,a,1,b-a],[0,b,1,1-b]], s:(a,b) => [[0,'y',a,0,1],[1,'y',b,0,1]] },
+  l12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,1-b]], s:(a,b) => [[0,'x',a,0,1],[1,'y',b,a,1]] },
+  l21: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,b],[0,b,a,1-b],[a,0,1-a,1]], s:(a,b) => [[0,'x',a,0,1],[1,'y',b,0,a]] },
+  t12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,1,a],[0,a,b,1-a],[b,a,1-b,1-a]], s:(a,b) => [[0,'y',a,0,1],[1,'x',b,a,1]] },
   s2:  { n:2, sl:true, d:[.5] },          // sbiec: Schnittkante schräg (oben weiter rechts, gespiegelt umgekehrt)
-  s3:  { n:3, sl:true, d:[1/3,2/3], pair:true },
+  s3:  { n:3, sl:true, d:[1/3,2/3], ord:[[0,1]] },
+  // 4 maletgs
+  g22: { n:4, more:true, d:[.5,.5], r:(a,b) => [[0,0,a,b],[a,0,1-a,b],[0,b,a,1-b],[a,b,1-a,1-b]], s:(a,b) => [[0,'x',a,0,1],[1,'y',b,0,1]] },
+  c4:  { n:4, more:true, only:'16:9', d:[.25,.5,.75], ord:[[0,1,2]], r:(a,b,c) => [[0,0,a,1],[a,0,b-a,1],[b,0,c-b,1],[c,0,1-c,1]], s:(a,b,c) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'x',c,0,1]] },
+  l13: { n:4, more:true, d:[.62,1/3,2/3], ord:[[1,2]], r:(a,b,c) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,c-b],[a,c,1-a,1-c]], s:(a,b,c) => [[0,'x',a,0,1],[1,'y',b,a,1],[2,'y',c,a,1]] },
+  t13: { n:4, more:true, d:[.62,1/3,2/3], ord:[[1,2]], r:(a,b,c) => [[0,0,1,a],[0,a,b,1-a],[b,a,c-b,1-a],[c,a,1-c,1-a]], s:(a,b,c) => [[0,'y',a,0,1],[1,'x',b,a,1],[2,'x',c,a,1]] },
+  br4: { n:4, more:true, d:[.5,.6,.4], r:(a,b,c) => [[0,0,b,a],[b,0,1-b,a],[0,a,c,1-a],[c,a,1-c,1-a]], s:(a,b,c) => [[0,'y',a,0,1],[1,'x',b,0,a],[2,'x',c,a,1]] },
+  s4:  { n:4, more:true, only:'16:9', sl:true, d:[.25,.5,.75], ord:[[0,1,2]] },
+  // 5 maletgs
+  t23: { n:5, more:true, d:[.55,.5,1/3,2/3], ord:[[2,3]], r:(a,b,c,d) => [[0,0,b,a],[b,0,1-b,a],[0,a,c,1-a],[c,a,d-c,1-a],[d,a,1-d,1-a]], s:(a,b,c,d) => [[0,'y',a,0,1],[1,'x',b,0,a],[2,'x',c,a,1],[3,'x',d,a,1]] },
+  l22: { n:5, more:true, d:[.5,.75,.5], ord:[[0,1]], r:(a,b,c) => [[0,0,a,1],[a,0,b-a,c],[b,0,1-b,c],[a,c,b-a,1-c],[b,c,1-b,1-c]], s:(a,b,c) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'y',c,a,1]] },
+  m5:  { n:5, more:true, d:[.25,.75,.5,.5], ord:[[0,1]], r:(a,b,c,d) => [[0,0,a,c],[0,c,a,1-c],[a,0,b-a,1],[b,0,1-b,d],[b,d,1-b,1-d]], s:(a,b,c,d) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'y',c,0,a],[3,'y',d,b,1]] },
+  t14: { n:5, more:true, d:[.56,.25,.5,.75], ord:[[1,2,3]], r:(a,b,c,d) => [[0,0,1,a],[0,a,b,1-a],[b,a,c-b,1-a],[c,a,d-c,1-a],[d,a,1-d,1-a]], s:(a,b,c,d) => [[0,'y',a,0,1],[1,'x',b,a,1],[2,'x',c,a,1],[3,'x',d,a,1]] },
+  c5:  { n:5, more:true, only:'16:9', d:[.2,.4,.6,.8], ord:[[0,1,2,3]], r:(a,b,c,d) => [[0,0,a,1],[a,0,b-a,1],[b,0,c-b,1],[c,0,d-c,1],[d,0,1-d,1]], s:(a,b,c,d) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'x',c,0,1],[3,'x',d,0,1]] },
+  s5:  { n:5, more:true, only:'16:9', sl:true, d:[.2,.4,.6,.8], ord:[[0,1,2,3]] },
 };
 const SL = 0.13;            // halbe horizontale Verschiebung der schrägen Kante, im Verhältnis zur Höhe
 const stageC = $('cStage'), cv = $('cCanvas'), cx2 = cv.getContext('2d'), cMsgEl = $('cMsg');
-const cells = [null, null, null];   // pro Part: { img, prev, iw, ih, name, z, fx, fy }
+const cells = [null, null, null, null, null];   // pro Part: { img, prev, iw, ih, name, z, fx, fy }
 const cs = { fmt:'16:9', lay:'c2', line:'', lw:5, sp:{}, flip:false };
 try { Object.assign(cs, JSON.parse(localStorage.getItem('collage-set') || '{}')); } catch(e){}
 if (!cs.sp || typeof cs.sp !== 'object') cs.sp = {};
@@ -1569,7 +1588,12 @@ function clampSp(L, v, W, H){
   let lo = .1, hi = .9;
   if (L.sl && W){ const m = SL * H / W + .04; lo = Math.max(lo, m); hi = Math.min(hi, 1 - m); }
   v = v.map(x => Math.max(lo, Math.min(hi, x)));
-  if (L.pair && v[1] - v[0] < .1){ const m = (v[0] + v[1]) / 2; v[0] = Math.max(lo, m - .05); v[1] = Math.min(hi, v[0] + .1); }
+  // geordnete Linien: mindestens 10 % Abstand
+  for (const g of L.ord || []){
+    for (let k = 1; k < g.length; k++) v[g[k]] = Math.max(v[g[k]], v[g[k - 1]] + .1);
+    v[g[g.length - 1]] = Math.min(v[g[g.length - 1]], hi);
+    for (let k = g.length - 1; k > 0; k--) v[g[k - 1]] = Math.min(v[g[k - 1]], v[g[k]] - .1);
+  }
   return v;
 }
 function polyOf(L, i, W, H, g, sp, flip){
@@ -1662,7 +1686,8 @@ function draw(ctx, W, H, preview){
       ctx.strokeStyle = '#ff4d64'; ctx.lineWidth = t * 1.6; ctx.stroke();
       if (sepHL.drag){
         const L = CL[cs.lay], sp = spOf(cs.lay, W, H), v = sp[S.j];
-        const parts = L.pair ? [sp[0], sp[1] - sp[0], 1 - sp[1]] : [v, 1 - v];
+        const grp = (L.ord || []).find(g => g.includes(S.j)), cuts = grp ? grp.map(j => sp[j]) : [v];
+        const parts = [...cuts, 1].map((x, k) => x - (k ? cuts[k - 1] : 0));
         const lab = parts.map(x => Math.round(x * 100)).join(' / ');
         const f = Math.round(H * 0.04), mx = (S.x1 + S.x2) / 2, my = (S.y1 + S.y2) / 2;
         ctx.font = `700 ${f}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1727,11 +1752,22 @@ function icon(L){
   return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">` + Array.from({ length: L.n }, (_, i) =>
     `<polygon points="${polyOf(L, i, W, H, 0.8, L.d, cs.flip).map(p => p.map(v => +v.toFixed(2)).join(',')).join(' ')}" fill="currentColor" stroke="currentColor" stroke-width=".6" stroke-linejoin="round"/>`).join('') + '</svg>';
 }
-const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart', s2:'2 parts cun lingia sbieca', s3:'3 parts cun lingias sbiecas' };
+let moreOpen = false;
+try { moreOpen = localStorage.getItem('collage-more') === '1'; } catch(e){}
+$('cMore').onclick = () => {
+  moreOpen = !(moreOpen || CL[cs.lay].more);
+  if (!moreOpen && CL[cs.lay].more){ cs.lay = 'c2'; sel = 0; overflowToPool(); save(); }   // zurück auf 2 Bilder, Rest ins Parcadi
+  try { localStorage.setItem('collage-more', moreOpen ? '1' : '0'); } catch(e){}
+  buildLays(); paint();
+};
+const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart', s2:'2 parts cun lingia sbieca', s3:'3 parts cun lingias sbiecas' , g22:'Gitter 2 × 2', c4:'4 colonnas', l13:'1 grond a sanestra, 3 a dretga', t13:'1 grond survart, 3 sutvart', br4:'Mir da quadrels', s4:'4 parts cun lingias sbiecas', t23:'2 survart, 3 sutvart', l22:'1 grond a sanestra, 2 × 2 a dretga', m5:'1 grond en il center, 2 da mintga vart', t14:'1 grond survart, 4 sutvart', c5:'5 colonnas', s5:'5 parts cun lingias sbiecas' };
 function buildLays(){
   const box = $('cLays'); box.innerHTML = '';
+  const showMore = moreOpen || CL[cs.lay].more;
+  $('cMore').setAttribute('aria-expanded', !!showMore);
+  $('cMore').textContent = showMore ? 'Damain maletgs ▴' : 'Dapli maletgs ▾';
   for (const k of Object.keys(CL)){
-    if (!okLay(k)) continue;
+    if (!okLay(k) || (CL[k].more && !showMore)) continue;
     const b = document.createElement('button'); b.type = 'button';
     b.title = LAYNAME[k]; b.setAttribute('aria-label', LAYNAME[k]);
     b.setAttribute('aria-pressed', k === cs.lay); b.innerHTML = icon(CL[k]);
@@ -1847,12 +1883,8 @@ let sepHL = null;   // { j, drag }
 function seps(W, H){
   const k = cs.lay, L = CL[k], sp = spOf(k, W, H), out = [];
   if (L.sl){ const d = SL * H * (cs.flip ? -1 : 1); sp.forEach((v, j) => out.push({ j, ax:'s', x1:v * W + d, y1:0, x2:v * W - d, y2:H })); return out; }
-  const [a, b] = sp, X = (j, x, y1, y2) => out.push({ j, ax:'x', x1:x * W, y1:y1 * H, x2:x * W, y2:y2 * H }), Y = (j, y, x1, x2) => out.push({ j, ax:'y', x1:x1 * W, y1:y * H, x2:x2 * W, y2:y * H });
-  if (k === 'c2' || k === 'c3') sp.forEach((v, j) => X(j, v, 0, 1));
-  else if (k === 'r2' || k === 'r3') sp.forEach((v, j) => Y(j, v, 0, 1));
-  else if (k === 'l12'){ X(0, a, 0, 1); Y(1, b, a, 1); }
-  else if (k === 'l21'){ X(0, a, 0, 1); Y(1, b, 0, a); }
-  else if (k === 't12'){ Y(0, a, 0, 1); X(1, b, a, 1); }
+  for (const [j, ax, p, q1, q2] of L.s(...sp))
+    out.push(ax === 'x' ? { j, ax, x1:p * W, y1:q1 * H, x2:p * W, y2:q2 * H } : { j, ax, x1:q1 * W, y1:p * H, x2:q2 * W, y2:p * H });
   return out;
 }
 function sepAt(px, py){
@@ -1869,8 +1901,10 @@ function sepAt(px, py){
 function moveSep(S, px, py){
   const [W, H] = dims(), L = CL[cs.lay], sp = spOf(cs.lay, W, H);
   let v = S.ax === 'x' ? px / W : S.ax === 'y' ? py / H : (px - SL * H * (cs.flip ? -1 : 1) * (1 - 2 * py / H)) / W;
-  for (const snapV of [1/3, .5, 2/3]) if (Math.abs(v - snapV) < .012) v = snapV;   // einrasten
-  if (L.pair){ if (S.j === 0) v = Math.min(v, sp[1] - .1); else v = Math.max(v, sp[0] + .1); }
+  for (const snapV of [.2, .25, 1/3, .4, .5, .6, 2/3, .75, .8]) if (Math.abs(v - snapV) < .012) v = snapV;   // einrasten
+  for (const g of L.ord || []){ const k = g.indexOf(S.j); if (k < 0) continue;
+    if (k > 0) v = Math.max(v, sp[g[k - 1]] + .1);
+    if (k < g.length - 1) v = Math.min(v, sp[g[k + 1]] - .1); }
   sp[S.j] = v;
   (cs.sp ||= {})[cs.lay] = clampSp(L, sp, W, H);
 }
