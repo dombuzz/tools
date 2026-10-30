@@ -55,7 +55,11 @@
   .gi:hover, .gi:focus-visible, .gi.sel { border-color: var(--accent); outline: none; }
   .gtip { margin: 10px 0 0; min-height: 2.9em; color: var(--muted); font-size: 13px; line-height: 1.45; }
   .gtip b { color: var(--text); font-weight: 600; }
-  .gtip span { display: block; color: var(--accent); font-size: 12px; font-weight: 600; }`;
+  .gtip span { display: block; color: var(--accent); font-size: 12px; font-weight: 600; }
+  /* Verlauf und Milchglas wie in den Tools (theme.js), hier in Blau: --rgrad wird aus der blauen Akzentfarbe berechnet */
+  .gcard { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-color: var(--glass-line); }
+  .gh b, .gtip span, .h1g, .gt.on::before { background-image: var(--rgrad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .gbar i { background: var(--rgrad); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent); }`;
   document.head.insertAdjacentHTML('beforeend', '<style>' + css + '</style>');
 
   // Unten kein «game»-Link; dafür zuoberst der Weg zurück zur Startseite (wie in den Tools)
