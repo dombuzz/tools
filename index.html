@@ -378,6 +378,8 @@
       g.addEventListener('click', e => { if (blockClick) { e.preventDefault(); e.stopPropagation(); } }, true);
       g.addEventListener('dragstart', e => e.preventDefault());
     }
+    const favList = () => fav.map(k => k === 'chatta' ? 'artitgel-challenge' : k.slice(1));
+    const favSig = () => [...favList()].sort().join(',');
     const save = () => { try { localStorage.setItem('dbz-favs', JSON.stringify(fav)); } catch (e) {} render(); };
     for (const k in info) {
       const el = info[k].el, s = document.createElement('button');
@@ -389,12 +391,22 @@
         // für /stats: ☆ gesetzt oder entfernt
         const t = k === 'chatta' ? 'artitgel-challenge' : k.slice(1), cid = window.dbzCid && dbzCid() ? '&c=' + dbzCid() : '';
         fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/fav/' + encodeURIComponent(t) + '?a=' + (add ? 1 : 0) + cid, { method: 'POST', keepalive: true }).catch(() => {});
+        try { localStorage.setItem('dbz-favsync', favSig()); } catch (e) {} // Server ist damit wieder auf dem aktuellen Stand
       });
       if (k === 'chatta') el.parentElement.append(s); // nach dem ⓘ, ganz rechts wie bei den übrigen Tools
       else { const t = document.createElement('span'); t.textContent = el.textContent; el.textContent = ''; el.classList.add('fv'); el.append(t, s); }
       info[k].star = s;
     }
     render();
+    // Einmaliger Abgleich: aktuelle ★ dieses Geräts an den Worker melden (nur Tool-Namen + anonyme ID), sobald sie vom gemeldeten Stand abweichen
+    addEventListener('load', () => {
+      const cid = window.dbzCid && dbzCid(); if (!cid) return;
+      let last = null; try { last = localStorage.getItem('dbz-favsync'); } catch (e) {}
+      if (last === favSig()) return;
+      const sig = favSig();
+      fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/favsync?c=' + encodeURIComponent(cid) + '&t=' + encodeURIComponent(favList().join(',')), { method: 'POST', keepalive: true })
+        .then(r => { if (r.ok) try { localStorage.setItem('dbz-favsync', sig); } catch (e) {} }).catch(() => {});
+    });
   }
 
   // nur sichtbare Einträge (Links und Untergruppen-Knöpfe) für die Pfeiltasten
