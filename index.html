@@ -428,7 +428,7 @@
   async function load() {
     const list = document.getElementById('plist');
     try {
-      const r = await fetch(`${API}/ranking?range=${range}`);
+      const r = await fetch(`${API}/top?range=${range}`);
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       const likes = Object.fromEntries((d.items || []).map(i => [i.tool, i.count]));

@@ -14,6 +14,7 @@
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000?c=<Zufalls-ID> -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
 //   POST /view/Resizer2000?t=light|dark&c=<Zufalls-ID> -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an; c = anonyme Kennung pro Browser)
+//   (geschützt: /ranking, /hourly, /usage, /insights, /export nur mit Authorization: Bearer <FEEDBACK_PASSWORD>; öffentlich: GET /top?range=month|30d|all|week)
 //   GET  /ranking?range=all     -> Rangliste: all | today | week | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
 //                                  {range, from, to, total, items:[Likes], usesTotal, uses:[{tool, name, count, likes}]}
 //                                  uses = Nutzungen pro Tool mit Anzeigename und Herzen (likes) im selben Zeitraum,
@@ -306,19 +307,158 @@ export default {
     const url = new URL(request.url), parts = url.pathname.split('/').filter(Boolean);
     let res;
     try {
+      // Statistik nur mit Passwort (Secret FEEDBACK_PASSWORD, wie /feedback); öffentlich bleibt nur /top (Rangliste ohne Besucherdaten)
+      if (request.method === 'GET' && PROTECTED.has(parts[0]) && parts.length === 1) {
+        const a = await fbAuth(request, env);
+        if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
+        if (parts[0] === 'export') { res = await exportData(request, env); if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m)); return res; }
+      }
+      // Öffentliche Kurzfassung der Rangliste für die Startseite (Pop-up) und /top: nur Nutzungen und Herzen pro Tool
+      if (request.method === 'GET' && parts[0] === 'top' && parts.length === 1) {
+        const rq = url.searchParams.get('range') || 'month', range = ['month', '30d', 'all', 'week'].includes(rq) ? rq : 'month';
+        const inner = new Request(url.origin + '/ranking?range=' + range, { headers: request.headers });
+        const full = await cached(inner, env, ['ranking'], new URL(inner.url), () => handle(inner, env, ctx));
+        if (!full.ok) return full;
+        const d = await full.json();
+        res = json({ range, usesTotal: d.usesTotal, total: d.total, items: d.items, uses: (d.uses || []).map(x => ({ tool: x.tool, name: x.name, count: x.count, likes: x.likes })) }, request);
+        if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m));
+        return res;
+      }
       // Verbrauch von heute (nicht zwischengespeichert, damit /stats immer den aktuellen Stand zeigt)
       if (request.method === 'GET' && parts[0] === 'usage' && parts.length === 1) {
         await ensureViews(env);
         const { results: [u] } = await env.DB.prepare("SELECT day, r, w FROM usage WHERE day = date('now')").all();
         res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE, logs: await logsToday(env) }, request);
       } else if (request.method === 'GET' && (parts[0] === 'ranking' || parts[0] === 'hourly' || parts[0] === 'insights') && parts.length === 1) {
-        res = await cached(request, env, parts, url, () => handle(request, env));
+        res = await cached(request, env, parts, url, () => handle(request, env, ctx));
       } else res = await handle(request, env, ctx);
-    } catch (e) { res = json({ error: 'server' }, request, 500); }
+    } catch (e) { ctx.waitUntil(reportError(env, url.pathname, e)); res = json({ error: 'server' }, request, 500); }
     if (m.r || m.w) ctx.waitUntil(recordUsage(raw, m));
     return res;
   },
+
+  // Geplante Aufgaben (wrangler.jsonc → triggers.crons): stündliche Kontrolle und Monatsbericht am 1. des Monats
+  async scheduled(event, env, ctx) {
+    const m = { r: 0, w: 0 }, raw = env.DB;
+    env = { ...env, DB: meterDB(raw, m) };
+    try {
+      if (event.cron === CRON_MONTHLY) await monthlyReport(env, ctx);
+      else await hourlyChecks(env);
+    } catch (e) { await reportError(env, 'cron ' + event.cron, e); }
+    if (m.r || m.w) await recordUsage(raw, m);
+  },
 };
+
+// ===== Schutz, Datensicherung, Warnungen, Monatsbericht =====
+const PROTECTED = new Set(['ranking', 'hourly', 'usage', 'insights', 'export']);
+const CRON_MONTHLY = '3 6 1 * *';
+const DASH = 'https://tools.dombuzz.ch/dashboard';
+const ensureMeta = env => env.DB.prepare('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT, ts TEXT NOT NULL)').run();
+async function metaGet(env, k) { await ensureMeta(env); const { results: [r] } = await env.DB.prepare('SELECT v, ts FROM meta WHERE k = ?1').bind(k).all(); return r || null; }
+async function metaSet(env, k, v) { await ensureMeta(env); await env.DB.prepare("INSERT INTO meta (k, v, ts) VALUES (?1, ?2, datetime('now')) ON CONFLICT(k) DO UPDATE SET v = ?2, ts = datetime('now')").bind(k, v).run(); }
+// einmal pro Schlüssel melden (z. B. pro Tag oder pro Commit)
+async function once(env, k) { if (await metaGet(env, k)) return false; await metaSet(env, k, '1'); return true; }
+
+// Adaptive Card an den Teams-Workflow (Secret TEAMS_WEBHOOK_URL)
+async function teams(env, { title, text, facts = [], url = DASH, button = 'Avrir dashboard', warn = false }) {
+  if (!env.TEAMS_WEBHOOK_URL) return false;
+  const r = await fetch(env.TEAMS_WEBHOOK_URL, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'message', attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', contentUrl: null, content: {
+      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json', type: 'AdaptiveCard', version: '1.4',
+      body: [
+        { type: 'TextBlock', text: title, weight: 'Bolder', size: 'Medium', wrap: true, color: warn ? 'Attention' : 'Default' },
+        ...(facts.length ? [{ type: 'FactSet', facts: facts.map(([t, v]) => ({ title: t, value: String(v) })) }] : []),
+        ...(text ? [{ type: 'TextBlock', text, wrap: true }] : []),
+      ],
+      actions: [{ type: 'Action.OpenUrl', title: button, url }],
+    } }] }),
+  }).catch(() => null);
+  return !!(r && r.ok);
+}
+
+// Fehler im Worker: höchstens eine Meldung pro Stunde, mit Zahl der Fehler seither
+async function reportError(env, where, e) {
+  try {
+    const now = Date.now(), r = await metaGet(env, 'err');
+    let st = { last: 0, n: 0 }; try { if (r) st = JSON.parse(r.v); } catch (x) {}
+    st.n++;
+    if (now - st.last < 3600e3) { await metaSet(env, 'err', JSON.stringify(st)); return; }
+    await teams(env, { title: '⚠ Errur en il worker', warn: true, facts: [['Nua', where], ['Errurs dapi l\'ultima annunzia', st.n]], text: String(e && e.message || e).slice(0, 400) });
+    await metaSet(env, 'err', JSON.stringify({ last: now, n: 0 }));
+  } catch (x) {}
+}
+
+async function hourlyChecks(env) {
+  const day = new Date().toISOString().slice(0, 10);
+  // 1 Cloudflare-Kontingent (D1 und Logs) ab 80 %
+  await ensureViews(env);
+  const { results: [u] } = await env.DB.prepare("SELECT r, w FROM usage WHERE day = date('now')").all();
+  const L = await logsToday(env);
+  const p = { 'Lingias legidas': (u?.r || 0) / LIMIT_READ * 100, 'Lingias scrittas': (u?.w || 0) / LIMIT_WRITE * 100, 'Logs': L.bytes && L.limitBytes ? L.bytes / L.limitBytes * 100 : 0 };
+  const hot = Object.entries(p).filter(([, v]) => v >= 80);
+  if (hot.length && await once(env, 'alert:quota:' + day))
+    await teams(env, { title: '⚠ Contingent Cloudflare quasi cuntanschì', warn: true, facts: hot.map(([k, v]) => [k, Math.round(v) + ' %']), text: 'Il contingent gratuit vegn renovà a las 00:00 UTC. Sche 100 % èn cuntanschids, na vegnan las datas betg pli memorisadas fin lura.' });
+  // 2 Worker-Deploy hinter dem letzten Commit (worker/ oder wrangler.jsonc) – mehr als 30 Minuten
+  const vm = env.CF_VERSION_METADATA, gh = p => fetch('https://api.github.com/repos/dombuzz/tools/' + p, { headers: { 'User-Agent': 'dombuzz-worker', Accept: 'application/vnd.github+json' } }).then(r => r.ok ? r.json() : null).catch(() => null);
+  if (vm && vm.timestamp) {
+    const [a, b] = await Promise.all([gh('commits?sha=main&path=worker&per_page=1'), gh('commits?sha=main&path=wrangler.jsonc&per_page=1')]);
+    const last = [...(a || []), ...(b || [])].sort((x, y) => new Date(y.commit.committer.date) - new Date(x.commit.committer.date))[0];
+    if (last) {
+      const t = new Date(last.commit.committer.date), dep = new Date(vm.timestamp);
+      if (t - dep > 60e3 && Date.now() - t > 30 * 60e3 && await once(env, 'alert:deploy:' + last.sha))
+        await teams(env, { title: '⚠ Il worker n\'è betg vegnì actualisà', warn: true, facts: [['Ultim commit', last.commit.message.split('\n')[0]], ['Deploy actual', dep.toISOString().slice(0, 16).replace('T', ' ') + ' UTC']], text: 'Controllar Cloudflare → Workers → fragrant-grass-c193 → Deployments/Builds.', url: 'https://dash.cloudflare.com/', button: 'Avrir Cloudflare' });
+    }
+  }
+  // 3 GitHub Pages: letzte Veröffentlichung fehlgeschlagen
+  const deps = await gh('deployments?environment=github-pages&per_page=1');
+  if (deps && deps[0]) {
+    const st = await gh('deployments/' + deps[0].id + '/statuses?per_page=1');
+    if (st && st[0] && (st[0].state === 'failure' || st[0].state === 'error') && await once(env, 'alert:pages:' + deps[0].id))
+      await teams(env, { title: '⚠ Publitgaziun da las paginas fallida', warn: true, text: 'GitHub Pages n\'ha betg pudì publitgar l\'ultima versiun da tools.dombuzz.ch.', url: 'https://github.com/dombuzz/tools/actions', button: 'Avrir GitHub Actions' });
+  }
+}
+
+// Monatsbericht am 1.: Teams-Karte und (falls Resend eingerichtet) Mail an FEEDBACK_TO
+const MONTHS_RM = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
+async function monthlyReport(env, ctx) {
+  const now = new Date(), y = now.getUTCMonth() ? now.getUTCFullYear() : now.getUTCFullYear() - 1, mo = (now.getUTCMonth() + 11) % 12;
+  const key = `${y}-${String(mo + 1).padStart(2, '0')}`, label = MONTHS_RM[mo] + ' ' + y;
+  const res = await handle(new Request('https://worker/ranking?range=' + key), env, ctx);
+  const d = res.ok ? await res.json() : null;
+  let ok = false;
+  if (d) {
+    const main = (d.uses || []).filter(x => !x.tool.startsWith('lab-') && (x.count || x.likes)), lab = (d.uses || []).filter(x => x.tool.startsWith('lab-') && (x.count || x.likes));
+    const line = x => `${x.name || x.tool}: ${x.count} duvrà · ♥ ${x.likes || 0} · ${d.views?.[x.tool] || 0} visitas`;
+    const facts = [['Duvrà', d.usesTotal || 0], ['♥', d.total || 0], ['Visitas', d.viewsTotal || 0], ['Visitaders', d.clients || 0], ['Turnads (≥ 2 dis)', d.returning || 0]];
+    const text = main.length ? main.map((x, i) => `${i + 1}. ${line(x)}`).join('\n\n') + (lab.length ? '\n\n**Lab:** ' + lab.map(line).join(' · ') : '') : 'Nagina utilisaziun quest mais.';
+    const t = await teams(env, { title: 'Statistica tools.dombuzz.ch – ' + label, facts, text });
+    let mail = false;
+    if (env.RESEND_API_KEY && env.FEEDBACK_TO) {
+      const rows = main.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.name || x.tool)}</td><td align="right">${x.count}</td><td align="right">${x.likes || 0}</td><td align="right">${d.views?.[x.tool] || 0}</td></tr>`).join('');
+      const html = `<h2>Statistica tools.dombuzz.ch – ${label}</h2><p>${facts.map(([a, b]) => `<b>${a}:</b> ${b}`).join(' · ')}</p>
+        <table cellpadding="6" style="border-collapse:collapse"><tr><th>#</th><th align="left">Tool</th><th>Duvrà</th><th>♥</th><th>Visitas</th></tr>${rows || '<tr><td colspan="5">Nagina utilisaziun.</td></tr>'}</table>
+        ${lab.length ? `<p><b>Lab:</b> ${lab.map(x => esc(line(x))).join(' · ')}</p>` : ''}<p><a href="${DASH}">${DASH}</a></p>`;
+      const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>', to: [env.FEEDBACK_TO], subject: 'Statistica tools.dombuzz.ch – ' + label, html }) }).catch(() => null);
+      mail = !!(r && r.ok);
+    }
+    ok = t || mail;
+    await metaSet(env, 'mail', JSON.stringify({ status: ok ? 'ok' : 'fail', month: key, teams: t, mail }));
+  } else await metaSet(env, 'mail', JSON.stringify({ status: 'fail', month: key }));
+  return ok;
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+// ---- Datensicherung: /export (nur mit Passwort) – alle Tabellen als JSON zum Herunterladen ----
+async function exportData(request, env) {
+  const { results: tabs } = await env.DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name <> 'cache' ORDER BY name").all();
+  const data = { created: new Date().toISOString(), database: 'dombuzz-likes', tables: {} };
+  for (const { name } of tabs) data.tables[name] = (await env.DB.prepare('SELECT * FROM "' + name.replace(/"/g, '') + '"').all()).results;
+  const rows = Object.values(data.tables).reduce((t, a) => t + a.length, 0);
+  await metaSet(env, 'backup', JSON.stringify({ rows }));
+  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': `attachment; filename="dombuzz-backup-${data.created.slice(0, 10)}.json"`, 'Cache-Control': 'no-store', ...cors(request) } });
+}
 
 async function handle(request, env, ctx) {
     const url = new URL(request.url);
@@ -340,10 +480,11 @@ async function handle(request, env, ctx) {
         await env.DB.prepare('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT, ts TEXT NOT NULL)').run();
         const { results: [mr] } = await env.DB.prepare("SELECT v, ts FROM meta WHERE k = 'mail'").all();
         let mail = null; if (mr) { try { mail = { ...JSON.parse(mr.v), ts: mr.ts }; } catch (e) {} }
-        const vm = env.CF_VERSION_METADATA || null;
+        const vm = env.CF_VERSION_METADATA || null, bk = await metaGet(env, 'backup');
+        let backup = null; if (bk) { try { backup = { ...JSON.parse(bk.v), ts: bk.ts }; } catch (e) {} }
         return json({
           worker: vm ? { id: vm.id, tag: vm.tag || '', deployed: vm.timestamp } : null,
-          mail,
+          mail, backup, teams: !!env.TEAMS_WEBHOOK_URL, resend: !!env.RESEND_API_KEY,
         }, request);
       }
 
@@ -585,6 +726,7 @@ async function handle(request, env, ctx) {
 
       return json({ error: 'not found' }, request, 404);
     } catch (e) {
+      if (ctx) ctx.waitUntil(reportError(env, url.pathname, e));
       return json({ error: 'server' }, request, 500);
     }
 }
