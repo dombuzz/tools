@@ -66,8 +66,32 @@
     '.themebtn:focus-visible{outline-offset:2px}' +
     /* Wer am Gerät «Bewegung reduzieren» eingestellt hat, bekommt keine Animationen */
     '@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}' +
+    /* Stil «Rotverlauf + Milchglas» für alle Tools: Verlauf von etwas dunklerer Akzentfarbe zur Akzentfarbe, Karten halbdurchsichtig */
+    ':root{--bar0:color-mix(in srgb,var(--accent,#ff4d64) 82%,#000);--rgrad:linear-gradient(90deg,var(--bar0),var(--accent,#ff4d64) 70%);--glass:rgba(255,255,255,.045);--glass-line:rgba(255,255,255,.09)}' +
+    ':root[data-theme="light"]{--bar0:color-mix(in srgb,var(--accent,#d02843) 85%,#000);--glass:rgba(255,255,255,.62);--glass-line:rgba(28,28,32,.09)}' +
+    'body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(55% 35% at 0% 0%,color-mix(in srgb,var(--accent,#ff4d64) 13%,transparent),transparent 70%),radial-gradient(45% 30% at 100% 35%,color-mix(in srgb,var(--accent,#ff4d64) 7%,transparent),transparent 70%),radial-gradient(60% 35% at 40% 100%,color-mix(in srgb,var(--accent,#ff4d64) 8%,transparent),transparent 70%)}' +
+    '.card,.step,.panel,.take,.tw{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border-color:var(--glass-line)!important}' +
+    'h1 .acc,h1 em,.kw{background-image:var(--rgrad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}' +
+    '.dbz-g{background-image:var(--rgrad)!important}.dbz-g:hover{filter:brightness(1.07)}' +
+    '.seg button[aria-pressed="true"],.ratio-seg button.active,.ptab[aria-selected="true"],.tab[aria-selected="true"],.tabs button[aria-selected="true"],.ctog button[aria-pressed="true"],.wseg button[aria-pressed="true"],.tool[aria-pressed="true"],.seg input:checked+label{background-image:var(--rgrad)!important}' +
     '@media print{.themebtn{display:none}}';
   var s = d.createElement('style'); s.id = 'dbz-theme-css'; s.textContent = css; (d.head || r).appendChild(s);
+  // Flächen in Akzentfarbe (Knöpfe, Nummern) bekommen den Rotverlauf: per Klasse dbz-g, weil CSS die Farbe nicht abfragen kann
+  var acc = '', painting = 0;
+  function accent() { var p = d.createElement('i'); p.style.cssText = 'position:absolute;visibility:hidden;color:var(--accent)'; d.body.appendChild(p); var c = getComputedStyle(p).color; p.remove(); return c; }
+  function grad() {
+    painting = 0; if (!d.body) return; acc = accent();
+    d.querySelectorAll('button,a[class],.num,.btn,[class*="btn"]').forEach(function (el) {
+      if (el.classList.contains('themebtn')) return;
+      var had = el.classList.contains('dbz-g'); if (had) el.classList.remove('dbz-g');
+      if (getComputedStyle(el).backgroundColor === acc) el.classList.add('dbz-g');
+    });
+  }
+  window.dbzGrad = function () { if (!painting) painting = requestAnimationFrame(grad); };
+  var startGrad = function () { grad(); new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) if (ms[i].type === 'childList' || ms[i].attributeName !== 'style') { dbzGrad(); return; } })
+    .observe(d.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'disabled', 'aria-pressed', 'aria-selected'] }); };
+  if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', startGrad); else startGrad();
+  window.addEventListener('dbz-theme', function () { dbzGrad(); });
 
   var SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   var MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
