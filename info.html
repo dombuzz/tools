@@ -51,7 +51,8 @@ th:last-child,td:last-child{border-right:0}
 thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;background:var(--mono)}
 tbody th{font-weight:600;width:28%}
 .none{color:var(--accent);font-weight:700}
-td ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:6px}
+td p{margin:0 0 8px}
+td p:last-child{margin-bottom:0}
 .note{font-size:.82rem;color:var(--muted);margin:0}
 @media (max-width:640px){
   .tw{overflow:visible;border:0}
@@ -95,7 +96,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <tr><th><a href="/rtr-picture">RTR Picture-downloader</a></th><td data-l="Tge vegn tschiffà?">Maletgs publics</td><td data-l="Tge vegn tramess?">Il browser tschiffa il maletg directamain da la funtauna publica</td></tr>
         <tr><th><a href="/data">Memorisar grafica Datawrapper</a></th><td data-l="Tge vegn tschiffà?">Grafica publica da Datawrapper</td><td data-l="Tge vegn tramess?">Il browser tschiffa la grafica directamain da Datawrapper</td></tr>
         <tr><th><a href="/votgr">Chartas votaziuns GR</a></th><td data-l="Tge vegn tschiffà?">Datas publicas da votaziuns</td><td data-l="Tge vegn tramess?">Il browser tschiffa las datas directamain dal chantun via abstimmungen.gr.ch</td></tr>
-        <tr><th><a href="/artitgel">Links d'artitgels</a></th><td data-l="Tge vegn tschiffà?">Artitgels publicads sin rtr.ch</td><td data-l="Tge vegn tramess?"><ul><li>Enconuscher la Text-URL sin basa da la artitgel-ID capita via in Worker (Cloudflare) che chargia la pagina publitgada e vegn uschia via titel sin quella URL.</li><li>La ID da l'artitgel chatta il Worker en il code da funtauna da l'artitgel publitgà sin rtr.ch.</li></ul></td></tr>
+        <tr><th><a href="/artitgel">Links d'artitgels</a></th><td data-l="Tge vegn tschiffà?">Artitgels publicads sin rtr.ch</td><td data-l="Tge vegn tramess?"><p>Enconuscher la Text-URL sin basa da la artitgel-ID capita via in Worker (Cloudflare) che chargia la pagina publitgada e vegn uschia via titel sin quella URL.</p><p>La ID da l'artitgel chatta il Worker en il code da funtauna da l'artitgel publitgà sin rtr.ch.</p></td></tr>
       </tbody>
     </table></div>
     <p class="note">Las paginas sezzas vegnan servidas da Cloudflare (be il code dals tools, nagins plans).</p>
