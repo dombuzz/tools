@@ -73,6 +73,7 @@ const ensureViews = env => viewsReady ||= env.DB.batch([
 ]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
   .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
   .then(() => env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {})) // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
+  .then(() => env.DB.prepare('ALTER TABLE favs ADD COLUMN sync INTEGER').run().catch(() => {})) // 1 = beim Abgleich nachgetragen (zählt für «aktuell», nicht als «im Zeitraum gesetzt»)
   .catch(e => { viewsReady = null; throw e; });
 
 function cors(request) {
@@ -614,13 +615,13 @@ async function handle(request, env, ctx) {
         const usesPerClient = usingClients ? Math.round((ucRows[0].n / usingClients) * 10) / 10 : 0;
         // Favurits: wie oft ☆ im Zeitraum gesetzt wurde (favs) und wie viele aktuell markiert sind (favsNow = gesetzt − entfernt, gesamthaft)
         const { results: favRows } = await env.DB
-          .prepare('SELECT tool, SUM(added) AS adds FROM favs WHERE ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
+          .prepare('SELECT tool, SUM(added) AS adds FROM favs WHERE COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const { results: favNowRows } = await env.DB.prepare('SELECT tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS n FROM favs WHERE ' + EX('favs') + ' GROUP BY tool').all();
         const favs = Object.fromEntries(favRows.filter(r => r.adds).map(r => [r.tool, r.adds]));
         // Geräte mit Favoriten: aktuell (mindestens ein ★ gesetzt) und im Zeitraum (mindestens ein ★ gesetzt)
         const { results: [fc] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM (SELECT cid, tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS k FROM favs WHERE cid IS NOT NULL AND ' + EX('favs') + ' GROUP BY cid, tool HAVING k > 0)').all();
-        const { results: [fp] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const { results: [fp] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(p?.from ?? '0', p?.to ?? '9999').all();
         const favsNow = Object.fromEntries(favNowRows.map(r => [r.tool, Math.max(0, r.n)]));
         const favsTotal = Object.values(favs).reduce((t, n) => t + n, 0);
         const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
@@ -675,6 +676,26 @@ async function handle(request, env, ctx) {
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null;
         await env.DB.prepare("INSERT INTO favs (tool, ts, cid, added) VALUES (?1, datetime('now'), ?2, ?3)").bind(tool, cid, url.searchParams.get('a') === '0' ? 0 : 1).run();
         return json({ ok: true }, request);
+      }
+
+      // Favoriten abgleichen: das Gerät meldet seine aktuellen ★ (?t=a,b,c). Der Worker trägt nur die Differenz zu seinem Stand nach
+      // (sync = 1), damit «actualmain» den echten Stand zeigt – auch für Favoriten, die vor der Zählung gesetzt wurden.
+      if (request.method === 'POST' && parts[0] === 'favsync' && parts.length === 1) {
+        const origin = request.headers.get('Origin') || '';
+        if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
+        const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null;
+        if (!cid) return json({ error: 'cid' }, request, 400);
+        const want = [...new Set((url.searchParams.get('t') || '').split(',').filter(Boolean))];
+        if (want.length > 40 || want.some(t => !TOOL_NAME.test(t))) return json({ error: 'tool' }, request, 400);
+        await ensureViews(env);
+        const { results: cur } = await env.DB.prepare('SELECT tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS n FROM favs WHERE cid = ?1 GROUP BY tool').bind(cid).all();
+        const net = Object.fromEntries(cur.map(r => [r.tool, r.n]));
+        const ins = [];
+        const add = (tool, added, times) => { for (let i = 0; i < Math.min(times, 5); i++) ins.push(env.DB.prepare("INSERT INTO favs (tool, ts, cid, added, sync) VALUES (?1, datetime('now'), ?2, ?3, 1)").bind(tool, cid, added)); };
+        for (const t of want) if ((net[t] || 0) < 1) add(t, 1, 1 - (net[t] || 0));
+        for (const t of Object.keys(net)) if (!want.includes(t) && net[t] > 0) add(t, 0, net[t]);
+        if (ins.length) await env.DB.batch(ins);
+        return json({ ok: true, changed: ins.length }, request);
       }
 
       // Eine Nutzung zählen (like.js schickt das höchstens einmal pro Seitenaufruf)
