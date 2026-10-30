@@ -187,8 +187,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="/vendor/pdfjs/pdf.min.js"></script>
 <script>
 // pages: [{width, items:[{str,x,y,w}]}]  (y grows upward, PDF coords)
 function parsePlan(pages, SVC){
@@ -340,7 +339,7 @@ function setPlan(p,save){
 }
 async function pdfEntries(file){
   if(!window.pdfjsLib) throw new Error("La biblioteca da PDF n'ha betg pudì vegnir chargiada. Chargia danovamain la pagina ed emprova anc ina giada.");
-  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  pdfjsLib.GlobalWorkerOptions.workerSrc="/vendor/pdfjs/pdf.worker.min.js";
   const doc=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
   const pages=[];
   for(let i=1;i<=doc.numPages;i++){
