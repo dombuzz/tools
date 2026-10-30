@@ -262,6 +262,9 @@
   .row.zero .bar{background:var(--line);box-shadow:none}
   .spglow{filter:drop-shadow(0 0 2.5px var(--accent))}:root[data-theme="light"] .spglow{filter:drop-shadow(0 0 1.5px color-mix(in srgb,var(--accent) 50%,transparent))}
   /* Rotverlauf (dunkelrot → Akzent) für alle roten Elemente: Texte, Rahmen, Flächen */
+  /* gleiche Werte wie theme.js – hier nochmals, damit die Seite auch mit einer älteren, zwischengespeicherten theme.js richtig aussieht */
+  :root{--bar0:color-mix(in srgb,var(--accent) 82%,#000);--rgrad:linear-gradient(90deg,var(--bar0),var(--accent) 70%);--glass:rgba(255,255,255,.045);--glass-line:rgba(255,255,255,.09)}
+  :root[data-theme="light"]{--bar0:color-mix(in srgb,var(--accent) 85%,#000);--glass:rgba(255,255,255,.62);--glass-line:rgba(28,28,32,.09)}
   h1 .acc,.archive .archh,.kz-hrt,.hrt,.row.m .c[data-f="h"],.ticker span,.updbtn,.zarr,.hd .arr,.fold>summary::before,.fbi .m b,.st.cr,.lock .err{
     background-image:var(--rgrad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .row.zero .hrt,.row.zero .c[data-f="h"]{background-image:none;-webkit-text-fill-color:currentColor}
