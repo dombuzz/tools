@@ -234,7 +234,7 @@
   .out{display:flex;justify-content:center;margin:28px 0 0}
   .outbtn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 16px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
   .outbtn:hover{color:var(--accent);border-color:var(--accent)}
-  /* Box «Detagls»: Was ist live, Monats-Mail, Treue pro Tool, neue Besucher */
+  /* Box «Detagls»: Was ist live, Monats-Mail */
   .info{padding:4px 14px 12px}
   .ib{border-top:1px solid var(--line);padding:12px 0 2px}.ib:first-child{border-top:0}
   .ib h3{margin:0 0 8px;font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.02em}
@@ -244,13 +244,6 @@
   .kv .cm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .st{font-weight:600}.st.ok{color:#5fd29a}.st.wa{color:#ffb86b}.st.cr{color:var(--accent)}
   :root[data-theme="light"] .st.ok{color:#1f9d63}:root[data-theme="light"] .st.wa{color:#a8650a}
-  .ly{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:.86rem;padding:5px 0}
-  .ly small{color:var(--muted);font-size:.78rem;text-align:right;white-space:nowrap}
-  .ly .bar{grid-column:1/-1;height:5px;border-radius:3px;background:var(--field);overflow:hidden}
-  .ly .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
-  .nv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-  .nv div{background:var(--field);border-radius:10px;padding:8px 10px}
-  .nv b{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums}.nv span{font-size:.75rem;color:var(--muted)}
   .note{font-size:.75rem;color:var(--muted);margin:8px 0 0}
 </style>
 </head>
@@ -728,6 +721,8 @@
         users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
         repeat: '<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
         eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+        plus: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+        known: '<path d="M20 6L9 17l-5-5"/>',
         bars: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'
       };
       const ic = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
@@ -737,6 +732,11 @@
         tiles.push(tile('users', fmt(d.clients), d.clients === 1 ? 'visitader unic' : 'visitaders unics'));
         const rt = d.returning || 0;
         tiles.push(tile('repeat', fmt(rt), rt === 1 ? 'visitader regular' : 'visitaders regulars', 'Visitaders che èn stads là a ≥ 2 dis'));
+        if (range === 'week' && d.newClients != null) {
+          const nn = d.newClients, kn = Math.max(0, d.clients - nn);
+          tiles.push(tile('plus', fmt(nn), "per l'emprima giada", "Visitaders da quest'emna ch'èn stads qua per l'emprima giada"));
+          tiles.push(tile('known', fmt(kn), kn === 1 ? 'enconuschent' : 'enconuschents', "Visitaders da quest'emna ch'eran gia stads qua pli baud"));
+        }
       }
       tiles.push(tile('eye', fmt(d.viewsTotal || 0), 'visitas'));
       if (d.usingClients) tiles.push(tile('bars', String(d.usesPerClient).replace('.', ','), 'Ø per visitader activ', 'Ø giadas duvrà per visitader che ha duvrà in tool'));
@@ -873,18 +873,6 @@
         : [['Ultima', '<span class="st wa">anc nagina annunzia</span>']];
       rows.push(['Proxima', `${next.getDate()}. ${MONTHS[next.getMonth()]} ${next.getFullYear()}, 06:50`]);
       parts.push(`<div class="ib"><h3>E-mail mensil</h3><div class="kv">${rows.map(([a, b]) => `<span>${a}</span><span>${b}</span>`).join('')}</div></div>`);
-    }
-    // 3 Treue pro Tool
-    if (ins && Array.isArray(ins.loyalty)) {
-      const L = ins.loyalty.filter(x => x.users), name = t => NAMES[t] || LAB[t] || t;
-      parts.push(`<div class="ib"><h3>Fidelitad · ultims 30 dis</h3>${L.length ? L.map(x => { const p = Math.round(x.repeat / x.users * 100);
-        return `<div class="ly"><span>${esc(name(x.tool))}</span><small>${fmt(x.repeat)} da ${fmt(x.users)} ${x.users === 1 ? 'utilisader' : 'utilisaders'} turnads · ${p} %</small><div class="bar"><i style="width:${p}%"></i></div></div>`; }).join('')
-        : '<p class="note">Anc naginas datas.</p>'}<p class="note">Turnads = han duvrà il tool a dus u plirs dis differents.</p></div>`);
-    }
-    // 4 Neu vs. bekannt
-    if (ins && ins.week) {
-      const w = ins.week, since = utc(w.countingSince), from = utc(w.from);
-      parts.push(`<div class="ib"><h3>Novs ed enconuschents · quest'emna</h3><div class="nv"><div><b>${fmt(w.visitors)}</b><span>visitaders</span></div><div><b>${fmt(w.new)}</b><span>per l'emprima giada</span></div><div><b>${fmt(w.known)}</b><span>enconuschents</span></div></div>${since && from && since > new Date(from - 28 * 864e5) ? `<p class="note">Visitaders vegnan dumbrads pir dapi ils ${since.getDate()}.${since.getMonth() + 1}.${since.getFullYear()} – «novs» è anc pli aut che la realitad.</p>` : ''}</div>`);
     }
     el.innerHTML = parts.join('') || '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas.</div>';
     infoBusy = false;
