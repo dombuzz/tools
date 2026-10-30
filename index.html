@@ -46,9 +46,9 @@
   .head { position: relative; }
   .pop { position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: min(340px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,.55); overflow: hidden; opacity: 0; transform: translateY(-6px); pointer-events: none; visibility: hidden; transition: opacity .15s, transform .15s, visibility .15s; }
   .pop.on { opacity: 1; transform: none; pointer-events: auto; visibility: visible; }
-  .pop-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .pop-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
   .pop-h b { font-size: .95rem; } .pop-h b span { color: var(--accent); }
-  .ptabs { display: flex; gap: 4px; }
+  .ptabs { display: flex; flex-wrap: wrap; gap: 4px; }
   .ptab { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 2px 9px; font: inherit; font-size: .75rem; font-weight: 600; cursor: pointer; }
   .ptab[aria-selected=true] { background: var(--accent); border-color: var(--accent); color:var(--on-accent); }
   .prow { display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center; padding: 9px 14px; border-top: 1px solid var(--line); color: inherit; text-decoration: none; }
@@ -161,7 +161,7 @@
     </a>
     <div class="pop" id="pop" role="dialog" aria-label="top Tools">
       <div class="pop-h"><b>top <span>Tools</span></b>
-        <div class="ptabs"><button class="ptab" data-r="month" aria-selected="true">mais</button><button class="ptab" data-r="30d" aria-selected="false">30 dis</button><button class="ptab" data-r="all" aria-selected="false">tut</button></div></div>
+        <div class="ptabs"><button class="ptab" data-r="today" aria-selected="false">oz</button><button class="ptab" data-r="week" aria-selected="false">emna</button><button class="ptab" data-r="month" aria-selected="true">mais</button><button class="ptab" data-r="30d" aria-selected="false">30 dis</button><button class="ptab" data-r="all" aria-selected="false">tut</button></div></div>
       <div id="plist"><div class="pmsg">Chargel …</div></div>
       <div class="pfoot" id="pmeta"></div>
     </div>
@@ -423,7 +423,7 @@
   const btn = document.getElementById('toplink'), pop = document.getElementById('pop');
   const tabs = [...pop.querySelectorAll('.ptab')];
   let range = 'month', loadedAt = 0;
-  try { const r = localStorage.getItem('dbz-widget-range'); if (['month', '30d', 'all'].includes(r)) range = r; } catch (e) {}
+  try { const r = localStorage.getItem('dbz-widget-range'); if (['today', 'week', 'month', '30d', 'all'].includes(r)) range = r; } catch (e) {}
   tabs.forEach(b => b.setAttribute('aria-selected', b.dataset.r === range));
   async function load() {
     const list = document.getElementById('plist');
@@ -431,14 +431,20 @@
       const r = await fetch(`${API}/top?range=${range}`);
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
-      const likes = Object.fromEntries((d.items || []).map(i => [i.tool, i.count]));
-      const rows = (d.uses || []).filter(x => !x.tool.startsWith('lab-') && (x.count || x.likes)).slice(0, SHOW);
+      const likes = Object.fromEntries((d.items || []).map(i => [i.tool, i.count])), views = d.views || {};
+      // wie /top: ohne Lab, nach Nutzungen, dann Visitas, dann Likes
+      const byTool = Object.fromEntries((d.uses || []).map(x => [x.tool, x]));
+      const rows = [...new Set([...Object.keys(byTool), ...Object.keys(likes), ...Object.keys(views)])].filter(t => !t.startsWith('lab-'))
+        .map(t => ({ tool: t, name: (byTool[t] || {}).name, count: (byTool[t] || {}).count || 0, likes: (byTool[t] || {}).likes || likes[t] || 0, views: views[t] || 0 }))
+        .filter(x => x.count || x.likes || x.views)
+        .sort((a, b) => b.count - a.count || b.views - a.views || b.likes - a.likes || (PN[a.tool] || a.tool).localeCompare(PN[b.tool] || b.tool, 'de'))
+        .slice(0, SHOW);
       const max = Math.max(1, ...rows.map(x => x.count));
       list.innerHTML = rows.length ? rows.map((x, i) => `<a class="prow" href="/${encodeURIComponent(x.tool)}"><span class="prank">${i + 1}</span>
         <div><div class="pname">${esc(PN[x.tool] || x.name || x.tool)}</div><div class="pbar" style="width:${x.count / max * 100}%"></div></div>
-        <span class="pcnt">${fmt(x.count)}<small><i>♥</i> ${fmt(x.likes || likes[x.tool] || 0)}</small></span></a>`).join('')
+        <span class="pcnt">${fmt(x.count)}<small>${fmt(x.views)} visitas · <i>♥</i> ${fmt(x.likes)}</small></span></a>`).join('')
         : '<div class="pmsg">Anc nagins resultats en quest temp.</div>';
-      document.getElementById('pmeta').textContent = `${fmt(d.usesTotal || 0)} giadas duvrà`;
+      document.getElementById('pmeta').textContent = `${fmt(d.usesTotal || 0)} giadas duvrà · ${fmt(d.viewsTotal || 0)} visitas`;
       loadedAt = Date.now();
     } catch (e) { list.innerHTML = '<div class="pmsg">Las datas n\'han betg pudì vegnir chargiadas.</div>'; }
   }
