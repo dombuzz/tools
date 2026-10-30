@@ -287,16 +287,18 @@ async function fbMail(env, tool, name, text) {
       actions: [{ type: 'Action.OpenUrl', title: 'Avrir feedback', url: link }],
     } }] }),
   }).then(r => { if (!r.ok) throw new Error('teams ' + r.status); }));
-  // Mail über Resend (optional): Secret RESEND_API_KEY, Empfänger FEEDBACK_TO, Absender FEEDBACK_FROM
-  if (env.RESEND_API_KEY && env.FEEDBACK_TO) jobs.push(fetch('https://api.resend.com/emails', {
+  // Mail über Resend (optional): Secret RESEND_API_KEY, Empfänger FEEDBACK_TO (mehrere mit Komma), Absender FEEDBACK_FROM.
+  // Eine Mail pro Empfänger: solange die Domain bei Resend nicht bestätigt ist, nimmt Resend nur die Konto-Adresse an –
+  // so scheitert eine nicht erlaubte Adresse allein und blockiert die andere nicht.
+  if (env.RESEND_API_KEY && env.FEEDBACK_TO) for (const to of env.FEEDBACK_TO.split(',').map(x => x.trim()).filter(Boolean)) jobs.push(fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>', to: [env.FEEDBACK_TO],
+      from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>', to: [to],
       subject: 'Feedback: ' + toolName,
       text: `Nov feedback sin tools.dombuzz.ch\n\nTool: ${toolName}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: ${link}\n`,
     }),
-  }).then(r => { if (!r.ok) throw new Error('resend ' + r.status); }));
+  }).then(r => { if (!r.ok) throw new Error('resend ' + to + ' ' + r.status); }));
   await Promise.allSettled(jobs);
 }
 
