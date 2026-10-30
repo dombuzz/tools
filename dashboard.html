@@ -155,8 +155,8 @@
   .archive .subh{margin:22px 0 8px}
 
   /* Lauftext, Kurve 24 h, Wochenraster (aus /statsB) */
-  :root{--num:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;--tick:#ff7a6e}
-  :root[data-theme="light"]{--tick:#c2334a}
+  :root{--num:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;--tick:var(--accent)}
+  :root[data-theme="light"]{--tick:var(--accent)}
   .row.m .c[data-f="h"]{color:var(--accent)}.row.zero .c[data-f="h"]{color:var(--dim)}
   .ticker{overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--tick);font:500 .82rem var(--num);padding:8px 0;margin:12px 0 0}
   .ticker[hidden]{display:none}
@@ -291,6 +291,13 @@
 
   <p class="upd" id="upd"><button type="button" class="updbtn" id="updbtn" title="Actualisar ussa (automatic mintga 5 minutas)" aria-label="Actualisar ussa">⟳</button> <span id="updt">–</span></p>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
+  <details class="fold" data-k="other">
+    <summary class="labh other">Autras paginas</summary>
+    <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
+    <p class="subh lab">Lab <span>🧪</span></p>
+    <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
+    <p class="meta" id="labmeta"></p>
+  </details>
   <div class="ticker" id="ticker" hidden aria-live="off"><span id="tickt"></span></div>
   <div class="metarow"><div class="meta" id="meta"></div><div class="thbar" id="themeBar" hidden></div></div>
 
@@ -308,16 +315,6 @@
     <div class="card info"><div id="info"><div class="msg">Chargel …</div></div><div class="ib cfb" id="cfu" hidden></div></div>
   </details>
 
-  <details class="fold" data-k="other">
-    <summary class="labh other">Autras paginas</summary>
-    <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
-  </details>
-
-  <details class="fold" data-k="lab">
-    <summary class="labh">Lab <span>🧪</span></summary>
-    <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
-    <p class="meta" id="labmeta"></p>
-  </details>
 
   <section class="archive" id="archive">
   <h2 class="archh"><span aria-hidden="true">🗄</span> Archiv</h2>
