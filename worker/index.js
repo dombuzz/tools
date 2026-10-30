@@ -526,7 +526,12 @@ async function handle(request, env, ctx) {
 
       // Eigene Suche in rtr.ch (Tschertga): /art?q&from&to&section&sort&page, /art/status
       if (request.method === 'GET' && parts[0] === 'art' && parts.length <= 2) {
-        if (parts[1] === 'status') return json(await artStatus(env), request);
+        if (parts[1] === 'status') {
+          const st = await artStatus(env);
+          // Falls der Cron nicht läuft: Aufruf der Seite stösst höchstens alle 5 Minuten einen Crawl-Lauf an
+          if (!st.last || Date.now() - Date.parse(st.last.at) > 5 * 60e3) ctx.waitUntil(crawlStep(env).catch(() => {}));
+          return json(st, request);
+        }
         if (parts[1]) return json({ error: 'notfound' }, request, 404);
         const g = k => (url.searchParams.get(k) || '').slice(0, 200);
         const out = await searchArt(env, { q: g('q'), from: g('from'), to: g('to'), section: g('section'), sort: g('sort'), page: g('page'), size: g('size') });
