@@ -265,6 +265,16 @@
   .card.lab .bar{background:linear-gradient(90deg,#6b3a0e,var(--lab));box-shadow:none}
   .row.zero .bar{background:var(--line);box-shadow:none}
   .spglow{filter:drop-shadow(0 0 2.5px var(--accent))}:root[data-theme="light"] .spglow{filter:drop-shadow(0 0 1.5px color-mix(in srgb,var(--accent) 50%,transparent))}
+  /* Rotverlauf (dunkelrot → Akzent) für alle roten Elemente: Texte, Rahmen, Flächen */
+  :root{--rgrad:linear-gradient(90deg,var(--bar0),var(--accent))}
+  h1 .acc,.archive .archh,.kz-hrt,.hrt,.row.m .c[data-f="h"],.ticker span,.updbtn,.zarr,.hd .arr,.fold>summary::before,.fbi .m b,.st.cr,.lock .err{
+    background-image:var(--rgrad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .row.zero .hrt,.row.zero .c[data-f="h"]{background-image:none;-webkit-text-fill-color:currentColor}
+  .kz-hero,.adm,.archive{position:relative;border-color:transparent!important}
+  .kz-hero::after,.adm::after,.archive::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+    background:var(--rgrad);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+  .archive::after{inset:-2px;padding:2px}
+  .tabs.dbz-slide::before,.tab[aria-selected=true],.lock button,.fbl button{background-image:var(--rgrad)!important}
 </style>
 </head>
 <body>
