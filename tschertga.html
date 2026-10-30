@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark light">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Tschertgar artitgels da rtr.ch cun filter da data (da–fin, onn, temps) e zavrar tenor data u relevanza.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Tschertga rtr.ch">
+<meta property="og:description" content="Tschertgar artitgels da rtr.ch cun filter da data (da–fin, onn, temps) e zavrar tenor data u relevanza.">
+<meta property="og:url" content="https://tools.dombuzz.ch/tschertga">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>Tschertga rtr.ch</title>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--ink:#ececef;--mute:#9a9aa2;--line:#2f2f34;--acc:#ff4d64;--acc2:#d93a50;--link:#ff4d64;color-scheme:dark}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:820px;margin:0 auto;padding:28px 16px 60px}
+  h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+  p.sub{color:var(--mute);margin:0 0 20px}
+  a{color:var(--link)}
+  input,select,button{font:inherit;color:var(--ink)}
+  .q{display:flex;gap:8px}
+  .q input{flex:1;min-width:0;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--field)}
+  .q input:focus{outline:none;border-color:var(--acc)}
+  .go{padding:0 18px;border:0;border-radius:10px;background:var(--acc);color:var(--on-accent,#fff);font-weight:700;cursor:pointer}
+  .row{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:12px}
+  .row label{color:var(--mute);font-size:14px;display:flex;align-items:center;gap:6px}
+  .row input[type=date],.row select{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+  .pill{padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:none;font-size:14px;cursor:pointer;color:var(--mute)}
+  .pill:hover{color:var(--ink);border-color:var(--ink)}
+  .pill.on{background:var(--acc);border-color:var(--acc);color:var(--on-accent,#fff)}
+  .pill small{opacity:.7;margin-left:4px}
+  .sep{width:100%;height:0}
+  #meta{color:var(--mute);font-size:14px;margin:18px 0 6px}
+  .r{padding:14px 0;border-top:1px solid var(--line)}
+  .r .m{color:var(--mute);font-size:13px}
+  .r a.t{color:var(--ink);display:block;font-weight:600;font-size:17px;line-height:1.3;margin:2px 0 4px;text-decoration:none}
+  .r a.t:hover{text-decoration:underline}
+  .r a.t .k{color:var(--mute);font-weight:500}
+  .r p{margin:0;color:var(--ink);opacity:.85;font-size:15px}
+  mark{background:rgba(255,77,100,.28);color:inherit;border-radius:3px;padding:0 1px}
+  #more{display:block;margin:16px auto 0}
+  #st{color:var(--mute);font-size:13px;margin-top:28px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Tschertga rtr.ch</h1>
+  <p class="sub">Artitgels da rtr.ch – cun filter da data e zavrar tenor data u relevanza.</p>
+  <form class="q" id="f"><input id="q" type="search" placeholder="Tschertgar …" autocomplete="off" enterkeyhint="search"><button class="go" type="submit">Tschertgar</button></form>
+  <div class="row" id="spans"></div>
+  <div class="row">
+    <label>da <input type="date" id="from"></label>
+    <label>fin <input type="date" id="to"></label>
+    <label>Zavrar <select id="sort"><option value="date_desc">Data (nov → vegl)</option><option value="date_asc">Data (vegl → nov)</option><option value="rel">Relevanza</option></select></label>
+    <label>Rubrica <select id="sec"><option value="">Tut</option></select></label>
+  </div>
+  <div class="row" id="years"></div>
+  <div id="meta"></div>
+  <div id="res"></div>
+  <button class="pill" id="more" hidden>Dapli</button>
+  <div id="st"></div>
+</main>
+<script>
+(() => {
+  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev/art';
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const MON = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
+  const fmt = s => { const [y, m, d] = s.split('-'); return +d + '. ' + MON[+m - 1] + ' ' + y; };
+  let page = 0, busy = false, sectionsDone = false;
+
+  // Zeitspannen
+  const SPANS = [['oz', 0], ['emna', 7], ['mais', 'month'], ['30 dis', 30], ['12 mais', 365]];
+  const spanRange = v => { const t = new Date(), e = new Date(t); if (v === 'month') e.setDate(1); else e.setDate(e.getDate() - v); return [iso(e), iso(t)]; };
+  function drawSpans() {
+    $('spans').innerHTML = '';
+    for (const [lbl, v] of SPANS) {
+      const [a, b] = spanRange(v), on = $('from').value === a && $('to').value === b;
+      const p = document.createElement('button'); p.type = 'button'; p.className = 'pill' + (on ? ' on' : ''); p.textContent = lbl;
+      p.onclick = () => { if (on) { $('from').value = $('to').value = ''; } else { $('from').value = a; $('to').value = b; } run(); };
+      $('spans').append(p);
+    }
+  }
+  function drawYears(ys) {
+    $('years').innerHTML = '';
+    for (const { y, n } of ys) {
+      const a = y + '-01-01', b = y + '-12-31', on = $('from').value === a && $('to').value === b;
+      const p = document.createElement('button'); p.type = 'button'; p.className = 'pill' + (on ? ' on' : ''); p.innerHTML = esc(y) + '<small>' + n + '</small>';
+      p.onclick = () => { if (on) { $('from').value = $('to').value = ''; } else { $('from').value = a; $('to').value = b; } run(); };
+      $('years').append(p);
+    }
+  }
+  const snip = s => esc(s).replace(/\n+/g, ' ').replace(/\x02/g, '<mark>').replace(/\x03/g, '</mark>');
+  const params = pg => new URLSearchParams({ q: $('q').value.trim(), from: $('from').value, to: $('to').value, section: $('sec').value, sort: $('sort').value, page: pg });
+
+  async function run(more) {
+    if (busy) return; busy = true;
+    if (!more) { page = 0; $('res').innerHTML = ''; }
+    $('meta').textContent = more ? $('meta').textContent : 'Tschertgar …';
+    try {
+      const r = await fetch(API + '?' + params(page)), d = await r.json();
+      if (!r.ok) throw 0;
+      if (!more) {
+        const tot = d.years.reduce((t, y) => t + y.n, 0);
+        $('meta').textContent = d.items.length ? (d.years.length ? tot + (tot === 1 ? ' artitgel' : ' artitgels') + ' en tut (sensa filter da data)' : '') : 'Nagins resultats.';
+        drawYears(d.years);
+        if (!sectionsDone || $('q').value) {
+          const cur = $('sec').value; $('sec').innerHTML = '<option value="">Tut</option>' + d.sections.map(s => '<option>' + esc(s.s) + '</option>').join(''); $('sec').value = cur; sectionsDone = true;
+        }
+      }
+      const q = $('q').value.trim();
+      for (const it of d.items) {
+        const el = document.createElement('div'); el.className = 'r';
+        el.innerHTML = '<div class="m">' + fmt(it.d) + (it.section ? ' · ' + esc(it.section) : '') + '</div>'
+          + '<a class="t" href="' + esc(it.url) + '" target="_blank" rel="noopener">' + (it.kicker ? '<span class="k">' + esc(it.kicker) + ' – </span>' : '') + esc(it.title) + '</a>'
+          + '<p>' + (q && it.snip ? snip(it.snip) : esc(it.descr)) + '</p>';
+        $('res').append(el);
+      }
+      $('more').hidden = !d.more; page++;
+      drawSpans();
+      history.replaceState(null, '', '?' + params(0).toString().replace(/&page=0$/, '').replace(/(^|&)\w+=(&|$)/g, '$1'));
+    } catch (e) { $('meta').textContent = 'Errur: la tschertga n\'ha betg funcziunà.'; }
+    busy = false;
+  }
+  async function status() {
+    try {
+      const d = await fetch(API + '/status').then(r => r.json());
+      $('st').textContent = d.articles ? 'Index: ' + d.articles.toLocaleString('de-CH') + ' artitgels (' + fmt(d.oldest) + ' – ' + fmt(d.newest) + ')' + (d.complete && !d.open ? '' : ' · vegn anc completà') : 'L\'index vegn construì …';
+    } catch (e) {}
+  }
+  $('f').onsubmit = e => { e.preventDefault(); run(); };
+  for (const id of ['from', 'to', 'sort', 'sec']) $(id).onchange = () => run();
+  $('more').onclick = () => run(true);
+  const u = new URLSearchParams(location.search);
+  for (const [k, id] of [['q', 'q'], ['from', 'from'], ['to', 'to'], ['sort', 'sort']]) if (u.get(k)) $(id).value = u.get(k);
+  drawSpans(); status(); run().then(() => { if (u.get('section')) { $('sec').value = u.get('section'); } });
+})();
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>
