@@ -1316,6 +1316,7 @@ function setTab(i){
   panes.forEach(p => p.hidden = p.dataset.pane !== String(i));
   ['layToolbar', 'layWork', 'layHint', 'layActions'].forEach(id => $(id).hidden = colView);
   $('collage').hidden = !colView;
+  $('baBtn').hidden = i === 3;   // «Avant / suenter» nicht in der Collascha-Ansicht
   $('cSide').hidden = i !== 3;
   // Regler-Bereiche an die richtige Arbeitsfläche hängen
   const p2 = panes.find(p => p.dataset.pane === '2');
@@ -2196,7 +2197,7 @@ document.addEventListener('keydown', e => {
     if (k === 'y' || e.shiftKey) redo(); else undo();
     return;
   }
-  if (k === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && !typing(e.target) && gModal.hidden) setBefore(true);
+  if (k === 'a' && curTab !== 3 && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && !typing(e.target) && gModal.hidden) setBefore(true);
 });
 document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'a') setBefore(false); });
 histUI();
