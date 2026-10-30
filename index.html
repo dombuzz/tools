@@ -144,6 +144,12 @@
   .ver a { color: var(--accent); text-decoration: none; }
   .ver a:hover, .ver a:focus-visible { text-decoration: underline; outline: none; }
   #vnum:not(:empty)::after { content: " · "; }
+  /* Stil wie in den Tools (theme.js): Rotverlauf für rote Texte, Milchglas für Kacheln und Menü */
+  h1 span, .favh, .mg { background-image: var(--rgrad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .favcard, .sel-btn { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-color: var(--glass-line); }
+  .menu { background: rgba(28,28,31,.78); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); border-color: var(--glass-line); }
+  :root[data-theme="light"] .menu { background: rgba(255,255,255,.82); }
+  .favcard:hover, .favcard:focus-visible, .sel-btn:hover, .sel-btn:focus-visible, .sel-btn[aria-expanded=true] { border-color: var(--accent); }
 </style>
 </head>
 <body>
