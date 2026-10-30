@@ -131,6 +131,47 @@
   if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
 })();
 
+// Kurze Hilfe pro Tool: «?» neben dem Titel, Text klappt darunter auf. Texte hier zentral pflegen (Rumantsch Grischun).
+// Schlüssel = Pfad der Seite; Aliase zeigen auf denselben Text. Seiten mit eigener Hilfe (#help) bleiben unverändert.
+(function () {
+  var HELP = {
+    '/rtr-picture': ['Sin rtr.ch: clic dretg sin il maletg → «Copiar l’adressa dal maletg», u simplamain copiar il link da l’artitgel.', 'Integrar il link qua – il tool tschertga sez la versiun la pli gronda e la mussa en la prevista.', 'Tip: En il tab «Plirs maletgs» pos ti integrar in link d’artitgel u plirs links ina giada e chargiar giu tut ils maletgs.'],
+    '/visual': ['Tscherner il visual: Magazin, Il di u #mument (format aut 1080 × 1350).', 'Trair la foto en la surfatscha, integrar cun Ctrl/Cmd+V u inditgar in link da maletg RTR.', 'Spustar e zoomar la foto, lura «Telechargiar il maletg». Tip: La foto emplenescha adina l’entira surfatscha.'],
+    '/maletgs': ['«Clerezza + colurs» curregia clerezza e colurs, «Rotar + drizzar» drizza l’orizont e la perspectiva.', '«Collascha» unescha 2 u 3 maletgs en 16:9 u 1:1, «Layers» metta overlays e logos sur il maletg.', 'Tip: Ils maletgs chargiads restan en il «Parcadi» e stattan a disposiziun en tut ils tabs.'],
+    '/Resizer2000': ['Trair in u plirs maletgs en la surfatscha u tutgar per tscherner.', 'Tscherner format e qualitad – ils maletgs vegnan reducids sin 2000 px a la vart lunga e telechargiads.', 'Tip: Maletgs che èn gia pli pitschens na vegnan betg engrondids.'],
+    '/Plan': ['Chargiar il plan da lavur actual (PDF) – dal computer u cun il bookmarklet directamain da SharePoint.', 'Tscherner la redacziun e la perioda; opziunalmain marcar ina persuna per vesair ses servetschs.', 'Il plan na vegn betg memorisà – chargiar mintga giada la versiun actuala.'],
+    '/artitgel': ['Integrar in link dal CMS, in link URN u l’URL d’in artitgel publitgà.', 'Il tool mussa ils auters links – era per artitgels che n’èn anc betg publitgads.', 'Tip: Uschia pos ti trametter links che funcziunan per il newsletter u social media gia avant la publicaziun.'],
+    '/audio-recorder': ['Tscherner la funtauna: in tab dal browser, il tun dal sistem u in apparat audio, lura «Colliar la funtauna».', 'Mono u stereo tscherner e cumenzar la registraziun – ella vegn arcunada sco WAV (48 kHz, 16 bit).', 'Tip: Tar in tab dal browser en il dialog activar «Tab-Audio teilen» e betg serrar il tab durant la registraziun.'],
+    '/srt2ttml': ['Trair in file SRT en la surfatscha u tutgar per tscherner.', 'Il tool convertescha il file en TTML tenor il model da RTR (sco en Subtitle Edit) e ta dat el per telechargiar.'],
+    '/studio': ['«Spustar temps» sposta tut ils suttitels per in temp fix (uras, minutas, secundas u maletgs).', '«Cumparegliar» mussa differenzas tranter dus files (A e B): temps, suttitels che mancan.', '«RM → DE» unescha ils suttitels a frasas, ti translateschas en ALAS e l’integreschas – il tool reparta il text sin ils timecodes.'],
+    '/data': ['Integrar il link d’ina grafica Datawrapper u d’in artitgel RTR cun grafica.', 'Tscherner format, resoluziun e tge che duai esser visibel (titel, descripziun, byline, funtauna).', 'Lura telechargiar sco PNG – per Magazin e Il di è 16:9 il format adattà.'],
+    '/votgr': ['Tscherner la votaziun – las chartas da las vischnancas vegnan chargiadas directamain dad abstimmungen.gr.ch.', 'Telechargiar sco PNG en 4K (16:9). Era per votaziuns futuras, senza tschertgar links.']
+  };
+  var ALIAS = { '/mument': '/visual', '/layers': '/maletgs', '/collascha': '/maletgs', '/colurs': '/maletgs', '/rotar': '/maletgs', '/spustar': '/studio', '/cumparegliar': '/studio', '/subs': '/studio' };
+  function mount() {
+    var d = document, k = location.pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/';
+    k = ALIAS[k] || k; var t = HELP[k], h1 = d.querySelector('h1');
+    if (!t || !h1 || d.getElementById('help') || h1.querySelector('.dbz-help')) return;
+    var b = d.createElement('button'); b.type = 'button'; b.className = 'dbz-help'; b.textContent = '?';
+    b.setAttribute('aria-expanded', 'false'); b.title = 'Co funcziuna quai?'; b.setAttribute('aria-label', 'Co funcziuna quai?');
+    var box = d.createElement('div'); box.className = 'dbz-helpbox'; box.hidden = true; box.id = 'dbz-helpbox'; b.setAttribute('aria-controls', box.id);
+    box.innerHTML = '<ol>' + t.filter(function (x) { return x.indexOf('Tip:') !== 0; }).map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol>' +
+      t.filter(function (x) { return x.indexOf('Tip:') === 0; }).map(function (x) { return '<p><b>Tip:</b>' + x.slice(4) + '</p>'; }).join('');
+    // Tipps können auch am Ende eines Schritts stehen («… Tip: …»): abtrennen
+    box.querySelectorAll('li').forEach(function (li) { var i = li.innerHTML.indexOf(' Tip: '); if (i > 0) { var p = d.createElement('p'); p.innerHTML = '<b>Tip:</b> ' + li.innerHTML.slice(i + 6); li.innerHTML = li.innerHTML.slice(0, i); box.appendChild(p); } });
+    h1.appendChild(b);
+    var after = h1.nextElementSibling && h1.nextElementSibling.tagName === 'P' ? h1.nextElementSibling : h1;
+    after.insertAdjacentElement('afterend', box);
+    b.addEventListener('click', function () { box.hidden = !box.hidden; b.setAttribute('aria-expanded', !box.hidden); });
+  }
+  var css = '.dbz-help{display:inline-grid;place-items:center;width:24px;height:24px;margin-left:10px;padding:0;border-radius:50%;border:1px solid var(--line,var(--border,#2f2f34));background:transparent!important;color:var(--muted,#9a9aa2);font:600 13px/1 system-ui,sans-serif;vertical-align:5px;cursor:pointer;-webkit-text-fill-color:currentColor}' +
+    '.dbz-help:hover,.dbz-help[aria-expanded="true"]{color:var(--text,#ececef);border-color:var(--accent,#ff4d64)}' +
+    '.dbz-helpbox{margin:4px 0 18px;padding:12px 16px;border:1px solid color-mix(in srgb,var(--accent,#ff4d64) 40%,transparent);border-radius:12px;background:var(--glass,rgba(255,255,255,.045));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:.88rem;line-height:1.5;color:var(--text,#ececef);max-width:640px}' +
+    '.dbz-helpbox[hidden]{display:none}.dbz-helpbox ol{margin:0;padding-left:1.2em}.dbz-helpbox li{margin:2px 0}.dbz-helpbox p{margin:8px 0 0;color:var(--muted,#9a9aa2)}.dbz-helpbox b{color:var(--text,#ececef)}';
+  var st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+})();
+
 // Anonyme Zufalls-Kennung pro Browser (nur zum Zählen verschiedener Besucher; gilt für alle Seiten gemeinsam)
 window.dbzCid = function () {
   var c = ''; try {
