@@ -345,9 +345,10 @@ p.sub{margin:0;color:var(--muted)}
 
 <section class="step" id="de-s3" hidden>
   <h2><span class="num">3</span> Integrar la translaziun</h2>
-  <p class="muted">Integrar qua tut ils blocs in suenter l'auter. Il dumber da lingias sto correspunder al dumber da frasas.</p>
+  <p class="muted">Copiar en ALAS la translaziun e turnar qua: «Integrar dal clipboard» la agiunta. Cun plirs blocs repeter per mintga bloc. Uschespert ch'il dumber da lingias correspunda, vegn il text reparti automaticamain.</p>
   <textarea id="de-paste" rows="8" placeholder="Translaziun tudestga dad ALAS…"></textarea>
   <div class="row" style="margin-top:8px">
+    <button id="de-clip" type="button">Integrar dal clipboard</button>
     <button class="primary" id="de-apply">Surpigliar &amp; reparter</button>
     <span id="de-pasteCount" class="muted"></span>
   </div>
@@ -889,8 +890,10 @@ function renderChunks(){
     const d=document.createElement('div'); d.className='chunk';
     const txt=c.join('\n');
     d.innerHTML=`<strong>Block ${i+1}/${chunks.length}</strong><span class="muted">${c.length} frasas · ${txt.length} caracters</span>`;
-    const b=document.createElement('button'); b.textContent='Copiar';
-    b.onclick=async()=>{ try{ await navigator.clipboard.writeText(txt); }catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } b.textContent='✓ Copià'; d.classList.add('done'); };
+    const b=document.createElement('button'); b.textContent='Copiar & avrir ALAS';
+    // kopiert den Block und öffnet ALAS immer im selben Tab (Name «alas»), damit nicht viele Tabs entstehen
+    b.onclick=async()=>{ try{ await navigator.clipboard.writeText(txt); }catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+      window.open('https://alas.liarumantscha.ch/','alas'); b.textContent='✓ Copià – integrar en ALAS'; d.classList.add('done'); };
     d.appendChild(b); box.appendChild(d);
   });
 }
@@ -1038,7 +1041,17 @@ drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over'); if(e.dataTrans
 $('chunkMax').onchange=()=>{saveSettings(); if(segs.length) renderChunks();};
 const pasteLines=()=>$('paste').value.replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
 function updateCount(){ const n=pasteLines().length; $('pasteCount').textContent = segs.length ? `${n} / ${segs.length} lingias` : ''; $('pasteCount').style.color = n===segs.length ? 'var(--ok)' : ''; }
-$('paste').oninput=updateCount;
+$('paste').oninput=()=>{ updateCount(); autoApply(); };
+// Sobald alle Frasas da sind, automatisch verteilen (nur einmal pro Inhalt)
+let lastAuto='';
+function autoApply(){ const v=$('paste').value; if (segs.length && pasteLines().length===segs.length && v!==lastAuto){ lastAuto=v; $('apply').click(); } }
+// Translaziun aus der Zwischenablage anhängen (Block für Block)
+$('clip').onclick=async()=>{
+  let t=''; try{ t=await navigator.clipboard.readText(); }catch(e){ $('pasteMsg').innerHTML='<div class="notice warn">Il browser na lubescha betg da leger il clipboard – integrar cun Ctrl/Cmd+V en il champ.</div>'; $('paste').focus(); return; }
+  t=(t||'').replace(/\r/g,'').trim(); if(!t){ $('pasteMsg').innerHTML='<div class="notice warn">Il clipboard è vid.</div>'; return; }
+  const cur=$('paste').value.replace(/\s+$/,''); $('paste').value = cur ? cur+'\n'+t : t;
+  updateCount(); $('pasteMsg').innerHTML=''; autoApply();
+};
 
 $('apply').onclick=()=>{
   const lines=pasteLines();
