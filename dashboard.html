@@ -42,7 +42,7 @@
   .name{font-weight:600;font-size:.95rem;min-width:0}
   .name a{color:inherit;text-decoration:none}.name a:hover{color:var(--accent)}
   .row[data-t="game"] .name, .row[data-t="game"] .name a{color:#5aa6ff}:root[data-theme="light"] .row[data-t="game"] .name, :root[data-theme="light"] .row[data-t="game"] .name a{color:#1f6fd1} /* /game in Blau wie dort */
-  .bar{height:6px;border-radius:3px;background:var(--accent);margin-top:6px;min-width:3px;transition:width .3s}
+  .bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--bar0),var(--accent));box-shadow:0 0 8px color-mix(in srgb,var(--accent) 35%,transparent);margin-top:6px;min-width:3px;transition:width .3s}
   .row.zero .bar{background:var(--line)}.row.zero .name{color:var(--muted)}
   .cnt{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
   .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;white-space:nowrap}
@@ -205,7 +205,7 @@
   .cf-p.wa{color:var(--cf-wa);background:color-mix(in srgb,var(--cf-wa) 15%,transparent)}
   .cf-p.cr{color:var(--cf-cr);background:color-mix(in srgb,var(--cf-cr) 18%,transparent)}
   /* Admin: Feedback-Eingang und Modus test (früher eigene Seite /dashboard) */
-  .adm{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:14px 0 18px;display:grid;gap:10px}
+  .adm{background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;margin:14px 0 18px;display:grid;gap:10px}
   .adm-h{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600}
   .adm-h a.more{margin-left:auto;font-size:.8rem;font-weight:500;color:var(--muted);text-decoration:none}
   .adm-h a.more:hover{color:var(--accent)}
@@ -234,7 +234,7 @@
   .out{display:flex;justify-content:center;margin:28px 0 0}
   .outbtn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 16px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
   .outbtn:hover{color:var(--accent);border-color:var(--accent)}
-  /* Box «Detagls admin»: Was ist live, Monats-Mail */
+  /* Box «Sistem»: Was ist live, Monats-Mail */
   .info{padding:4px 14px 12px}
   .ib{border-top:1px solid var(--line);padding:12px 0 2px}.ib:first-child{border-top:0}
   .ib h3{margin:0 0 8px;font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.02em}
@@ -254,6 +254,17 @@
   .kz-t .tipx[hidden]{display:none}
   .kz-t .tipx{display:block;margin-top:6px;font-size:.75rem;line-height:1.35;color:var(--muted);font-style:normal}
   .kz-h{font-size:1.05rem;font-weight:600;margin:30px 0 4px;color:var(--text)}
+  /* Milchglas: halbdurchsichtige Kacheln mit Unschärfe über leicht leuchtendem Hintergrund */
+  :root{--bar0:#5c0d1b;--glass:rgba(255,255,255,.045);--glass-line:rgba(255,255,255,.09)}
+  :root[data-theme="light"]{--bar0:#f2a7b3;--glass:rgba(255,255,255,.62);--glass-line:rgba(28,28,32,.09)}
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(55% 35% at 0% 0%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%),radial-gradient(45% 30% at 100% 35%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%),radial-gradient(60% 35% at 40% 100%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 70%)}
+  .card,.kz-t,.kz-hero,.pan,.adm,.tabs,.archive{background:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}
+  .card,.kz-t,.pan,.tabs{border-color:var(--glass-line)}
+  .card.lab{border-color:rgba(255,154,60,.35)}
+  .card.lab .bar{background:linear-gradient(90deg,#6b3a0e,var(--lab));box-shadow:none}
+  .row.zero .bar{background:var(--line);box-shadow:none}
+  .spglow{filter:drop-shadow(0 0 2.5px var(--accent))}:root[data-theme="light"] .spglow{filter:drop-shadow(0 0 1.5px color-mix(in srgb,var(--accent) 50%,transparent))}
 </style>
 </head>
 <body>
@@ -312,7 +323,7 @@
   </details>
 
   <details class="fold" data-k="info" id="infofold">
-    <summary class="labh other">Detagls admin</summary>
+    <summary class="labh other">Sistem</summary>
     <div class="card info"><div id="info"><div class="msg">Chargel …</div></div><div class="ib cfb" id="cfu" hidden></div></div>
   </details>
 
@@ -582,9 +593,11 @@
     document.getElementById('spark').innerHTML = `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Activitad ${ttl}">
       ${[.25, .5, .75].map(f => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" style="stroke:var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`).join('')}
       <path d="${path(v)}" fill="none" style="stroke:var(--muted)" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>
-      <path d="${path(u)} L${W} ${H} L0 ${H} Z" fill="rgba(255,77,100,.15)"/>
-      <path d="${path(u)}" fill="none" style="stroke:var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/>
-      <circle cx="${lu[0] - 3}" cy="${lu[1]}" r="3.5" style="fill:var(--accent)"/>
+      <defs><linearGradient id="spg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0"><stop offset="0" style="stop-color:var(--bar0)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient>
+        <linearGradient id="spf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>
+      <path d="${path(u)} L${W} ${H} L0 ${H} Z" fill="url(#spf)"/>
+      <path d="${path(u)}" fill="none" stroke="url(#spg)" stroke-width="2.2" vector-effect="non-scaling-stroke" class="spglow"/>
+      <circle cx="${lu[0] - 3}" cy="${lu[1]}" r="3.5" style="fill:var(--accent);filter:drop-shadow(0 0 4px var(--accent))"/>
       <line id="sphl" x1="0" x2="0" y1="0" y2="${H}" style="stroke:var(--muted)" stroke-width="1" vector-effect="non-scaling-stroke" visibility="hidden"/>
       ${slots.map((_, i) => `<rect class="sphit" data-i="${i}" x="${Math.max(0, (i - .5) / N * W)}" y="0" width="${W / N}" height="${H}" fill="transparent"/>`).join('')}</svg>
       <div class="tip sptip" id="sptip" hidden></div>
@@ -820,7 +833,7 @@
     load(b.dataset.r);
   });
 
-  // ----- Box «Detagls admin» (lädt beim Aufklappen, GitHub-Abfragen 2 Minuten zwischengespeichert) -----
+  // ----- Box «Sistem» (lädt beim Aufklappen, GitHub-Abfragen 2 Minuten zwischengespeichert) -----
   const GH = 'https://api.github.com/repos/dombuzz/tools';
   async function gh(path) {
     const k = 'dbz-gh-' + path;
