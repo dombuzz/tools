@@ -528,8 +528,8 @@ async function handle(request, env, ctx) {
       if (request.method === 'GET' && parts[0] === 'art' && parts.length <= 2) {
         if (parts[1] === 'status') {
           const st = await artStatus(env);
-          // Falls der Cron nicht läuft: Aufruf der Seite stösst höchstens alle 5 Minuten einen Crawl-Lauf an
-          if (!st.last || Date.now() - Date.parse(st.last.at) > 5 * 60e3) ctx.waitUntil(crawlStep(env).catch(() => {}));
+          // Falls der Cron nicht läuft: Aufruf der Seite stösst höchstens jede Minute einen Crawl-Lauf an
+          if (!st.last || Date.now() - Date.parse(st.last.at) > 60e3) ctx.waitUntil(crawlStep(env).catch(() => {}));
           return json(st, request);
         }
         if (parts[1]) return json({ error: 'notfound' }, request, 404);
