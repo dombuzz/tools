@@ -17,7 +17,7 @@
   ],
   // Mail bei neuem Feedback (worker/index.js → fbMail) über Resend; aktiv, sobald das Secret RESEND_API_KEY gesetzt ist.
   "vars": {
-    "FEEDBACK_TO": "dominik.hardegger@rtr.ch",
+    "FEEDBACK_TO": "hei@dombuzz.ch",
     "FEEDBACK_FROM": "dombuzz Tools <onboarding@resend.dev>",
     // Für das Log-Kontingent auf /stats (Token kommt als Secret CF_API_TOKEN dazu, nicht hier eintragen)
     "CF_ACCOUNT_ID": "39da93a659736066e9818f5eba757d5e",
