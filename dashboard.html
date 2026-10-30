@@ -253,6 +253,7 @@
   .kz-t[data-tip]::after{content:"i";position:absolute;top:9px;right:10px;width:15px;height:15px;border-radius:50%;border:1px solid var(--line);color:var(--muted);font:600 .62rem/13px system-ui;text-align:center}
   .kz-t .tipx[hidden]{display:none}
   .kz-t .tipx{display:block;margin-top:6px;font-size:.75rem;line-height:1.35;color:var(--muted);font-style:normal}
+  .kz-h{font-size:1.05rem;font-weight:600;margin:30px 0 4px;color:var(--text)}
 </style>
 </head>
 <body>
@@ -743,7 +744,7 @@
       }
       tiles.push(tile('eye', fmt(d.viewsTotal || 0), 'visitas'));
       if (d.usingClients) tiles.push(tile('bars', String(d.usesPerClient).replace('.', ','), 'Ø per visitader activ', 'Ø giadas duvrà per visitader che ha duvrà almain in tool.'));
-      meta.innerHTML = `<div class="kz-label">${esc(label)}</div><div class="kz">
+      meta.innerHTML = `${ids[3] === 'meta' ? '<h2 class="kz-h">Ulteriuras cifras</h2>' : ''}<div class="kz-label">${esc(label)}</div><div class="kz">
         <div class="kz-hero"><div><div class="kz-big">${fmt(main.n)}</div><div class="kz-sub">${ic('zap')}${main.n === 1 ? 'giada' : 'giadas'} duvrà</div></div><div class="kz-hrt">♥ ${fmt(main.h)}</div></div>
         <div class="kz-grid">${tiles.join('')}</div></div>`;
       document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;
