@@ -17,7 +17,7 @@
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
     var m = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
-    if (m === 'POST' && /\.workers\.dev\//.test(url) && !/\/feedback(\/|$)/.test(url)) // Feedback ist keine Statistik und geht auch im Testmodus durch
+    if (m === 'POST' && /\.workers\.dev\//.test(url) && !/\/(feedback|backup)(\/|$|\?)/.test(url)) // Feedback und Backup sind keine Statistik und gehen auch im Testmodus durch
       return Promise.resolve(new Response('{"ok":true,"test":true}', { headers: { 'Content-Type': 'application/json' } }));
     return f.apply(this, arguments);
   };
