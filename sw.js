@@ -1,7 +1,7 @@
 // Offline-Hilfe für tools.dombuzz.ch: Seiten werden beim Besuch gemerkt und laufen danach auch ohne Netz.
-// Strategie: zuerst Netz (damit Änderungen sofort da sind), bei Fehler oder langsamem Netz die gemerkte Version.
+// Strategie: zuerst Netz, immer frisch beim Server nachgefragt (damit Änderungen sofort da sind), bei Fehler oder langsamem Netz die gemerkte Version.
 // Nur Seiten und Dateien von tools.dombuzz.ch; Anfragen an den Worker (Likes, Statistik) laufen nie darüber.
-const CACHE = 'dbz-v1';
+const CACHE = 'dbz-v2';
 const CORE = ['/', '/theme.js', '/motion.js', '/like.js', '/apple-touch-icon.png', '/audio-recorder', '/Resizer2000', '/srt2ttml'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
@@ -16,7 +16,8 @@ self.addEventListener('fetch', e => {
     const cache = await caches.open(CACHE), hit = await cache.match(r, { ignoreSearch: true });
     try {
       const ctl = new AbortController(), t = hit ? setTimeout(() => ctl.abort(), 4000) : 0;
-      const res = await fetch(r, { signal: ctl.signal }); clearTimeout(t);
+      // cache: 'no-cache' fragt immer beim Server nach (nur 304, wenn unverändert) – sonst liefert der Browser bis zu 10 Min. alte Dateien
+      const res = await fetch(r, { signal: ctl.signal, cache: 'no-cache' }); clearTimeout(t);
       if (res.ok && res.type === 'basic') cache.put(r, res.clone());
       return res;
     } catch (err) {
