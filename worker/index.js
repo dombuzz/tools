@@ -51,7 +51,7 @@ const NO_STATS_SQL = `tool NOT IN (${[...NO_STATS].map(t => `'${t}'`).join(', ')
 // Modus test: Einträge eines Geräts (cid) bis zum Zeitpunkt, an dem es den Testmodus zuletzt gemeldet hat, nicht zählen (auch rückwirkend)
 const EX = t => `NOT EXISTS (SELECT 1 FROM excl e WHERE e.cid = ${t}.cid AND ${t}.ts <= e.ts)`;
 // Seiten, die keine Tools sind (in /statsB-Stundenzahlen ausgelassen)
-const OTHER_PAGES = new Set(['index', 'game', 'top-popup', 'top', 'lab-index', '404']);
+const OTHER_PAGES = new Set(['index', 'game', 'top-popup', 'top', 'info', 'lab-index', '404']);
 const merge = rows => Object.values(rows.filter(r => !NO_STATS.has(r.tool)).reduce((m, r) => {
   const k = grp(r.tool) + (r.day ? '|' + r.day : '');
   (m[k] ||= { ...r, tool: grp(r.tool), count: 0 }).count += r.count; return m;

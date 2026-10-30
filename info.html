@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Tge datas vegnan tractadas en ils tools da dombuzz – e tge na vegn betg tractà.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Info &amp; datas">
+<meta property="og:description" content="Tge datas vegnan tractadas en ils tools da dombuzz – e tge na vegn betg tractà.">
+<meta property="og:url" content="https://tools.dombuzz.ch/info">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<meta name="color-scheme" content="dark light">
+<title>Info &amp; datas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='%23ff4d64' stroke-width='9'/%3E%3Ccircle cx='50' cy='31' r='6' fill='%23ff4d64'/%3E%3Crect x='44' y='43' width='12' height='28' rx='4' fill='%23ff4d64'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+/* Layout wie die übrigen Tools: dunkle Karten, Systemschrift, Akzent Koralle */
+:root{
+  --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+  --accent:#ff4d64; --border:#2f2f34; --mono:#26262a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 16px;padding-block:40px 56px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
+h1 .acc{color:var(--accent)}
+.lead{color:var(--muted);margin:0;font-size:.9rem;max-width:65ch}
+.step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.step h2{margin:0;font-size:.95rem;display:flex;gap:10px;align-items:center}
+.num{font-size:.8rem;font-weight:700;background:var(--accent);color:var(--on-accent);border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.step p{margin:0;font-size:.92rem;max-width:68ch}
+.step a{color:var(--accent)}
+.key{border-left:3px solid var(--accent);padding-left:12px}
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.85rem}
+th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:9px 10px;text-align:left;vertical-align:top}
+tr:last-child td{border-bottom:0}
+th:last-child,td:last-child{border-right:0}
+thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;background:var(--mono)}
+tbody th{font-weight:600;width:28%}
+.none{color:var(--accent);font-weight:700}
+.note{font-size:.82rem;color:var(--muted);margin:0}
+@media (max-width:640px){
+  .tw{overflow:visible;border:0}
+  table,tbody,tr,th,td{display:block;min-width:0;width:100%}
+  thead{display:none}
+  table{min-width:0}
+  tr{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  tr:last-child{margin-bottom:0}
+  th,td{border:0!important}
+  tbody th{width:100%;background:var(--mono);padding:9px 12px}
+  td{padding:8px 12px}
+  td::before{content:attr(data-l);display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:1px}
+}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="homelink" href="/">← Tools</a>
+    <h1>Info <span class="acc">&amp; datas</span></h1>
+    <p class="lead">Tge datas vegnan tractadas en ils tools da dombuzz – e tge na vegn betg tractà. Curt e cler.</p>
+  </header>
+
+  <section class="step">
+    <h2><span class="num">1</span>Plans da teams</h2>
+    <p class="key"><a href="/Plan">Plans da teams</a> na va betg sur in server, mabain capita be en il browser. Ils PDFs vegnan legids sin tes apparat; nagut na vegn chargià si u memorisà. Cur che ti serras la pagina, èn ils plans puspè davent.</p>
+    <p>Ils plans da lavur èn gea atgnamain be tabellas. Cun quest tool vegnan be transponids ils servetschs correspundents per redacziun al lieu – atgnamain nagut auter che filters, sco ch'ins po er drizzar en en Excel cun gruppas e categorias.</p>
+    <p>Dad entschatta enneu è stà impurtant che naginas indicaziuns u datas da fatschenta vegnan deponidas insanua sin in server betg SRG.</p>
+    <p>Il tool ha ina Schnittstelle cun SharePoint per surprender ils plans da là. Per quai dovri dentant emprim in apparat liberà ed in login individual sco user per insumma vegnir là (ins po testar quai en il modus Inkognito).</p>
+    <p>Sin il telefonin pon ins agiuntar la pagina cun «Zum Home-Bildschirm» al visur da partenza ed avrir ella lura quasi sco ina app. Là pon ins tscherner ils PDFs ch'ins ha memorisà localmain, ed ils servetschs vegnan transponids en las singulas redacziuns. Quai funcziuna er senza colliaziun d'internet, cun la cundiziun che la pagina è gia vegnida averta ina giada.</p>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span>Colliaziuns cun l'internet</h2>
+    <p>Sch'i dat insanua ina colliaziun da tools.dombuzz.ch cun il rest da l'internet, lura èsi per ir per datas publicas:</p>
+    <div class="tw"><table>
+      <thead><tr><th>Tool</th><th>Tge vegn tschiffà?</th><th>Tge vegn tramess?</th></tr></thead>
+      <tbody>
+        <tr><th><a href="/Plan">Plans da teams</a></th><td data-l="Tge vegn tschiffà?">PDFs localmain; opziunal ils plans da SharePoint (cun agen login)</td><td data-l="Tge vegn tramess?"><span class="none">Nagut</span> – tut resta en il browser</td></tr>
+        <tr><th><a href="/rtr-picture">RTR Picture-downloader</a></th><td data-l="Tge vegn tschiffà?">Maletgs publics</td><td data-l="Tge vegn tramess?">Il browser tschiffa il maletg directamain da la funtauna publica</td></tr>
+        <tr><th><a href="/data">Memorisar grafica Datawrapper</a></th><td data-l="Tge vegn tschiffà?">Grafica publica da Datawrapper</td><td data-l="Tge vegn tramess?">Il browser tschiffa la grafica directamain</td></tr>
+        <tr><th><a href="/votgr">Chartas votaziuns GR</a></th><td data-l="Tge vegn tschiffà?">Datas publicas da votaziuns</td><td data-l="Tge vegn tramess?">Il browser tschiffa las datas directamain (e nagut n'è hosted tar nus)</td></tr>
+        <tr><th><a href="/artitgel">Links d'artitgels</a></th><td data-l="Tge vegn tschiffà?">Artitgels publicads sin rtr.ch</td><td data-l="Tge vegn tramess?">La dumonda va sur nossa Worker, che tschiffa il text public da rtr.ch</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Las paginas sezzas vegnan servidas da Cloudflare (be il code dals tools, nagins plans).</p>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">3</span>Cifras</h2>
+    <p>En ils tools vegnan rimnadas cifras per savair tge che vegn duvrà quant savens: quant savens ch'in tool ha fatg sia funcziun (<i>giadas duvrà</i>), quants cors (♥) ch'el ha survegnì e quantas giadas che la pagina è vegnida guardada (<i>visitas</i>).</p>
+    <p>Per quest intent survegn mintga browser ina ID casuala ed anonima – nagin num, nagins datas dals plans. Uschia sa ins quants apparats differents che duvran ils tools e quants che turnan. Plinavant vegn memorisà sche la pagina è vegnida averta en moda clera u stgira.</p>
+    <p>Ils resultats èn publics: <a href="/top">Top</a>.</p>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">4</span>Feedback</h2>
+    <p>Ils feedbacks èn opziunals. Il text e – sche ti vuls – in num vegnan memorisads sin nossa Worker (Cloudflare), tramess per e-mail ed inclus en ina copia da segirezza emnila. Mintgina e mintgin decida sez, sch'ella u el vul duvrar in num u betg.</p>
+  </section>
+</div>
+</body>
+</html>

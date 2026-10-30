@@ -1,8 +1,8 @@
 // Offline-Hilfe für tools.dombuzz.ch: Seiten werden beim Besuch gemerkt und laufen danach auch ohne Netz.
 // Strategie: zuerst Netz, immer frisch beim Server nachgefragt (damit Änderungen sofort da sind), bei Fehler oder langsamem Netz die gemerkte Version.
 // Nur Seiten und Dateien von tools.dombuzz.ch; Anfragen an den Worker (Likes, Statistik) laufen nie darüber.
-const CACHE = 'dbz-v3';
-const CORE = ['/', '/theme.js', '/motion.js', '/like.js', '/apple-touch-icon.png', '/audio-recorder', '/Resizer2000', '/srt2ttml', '/Plan', '/vendor/pdfjs/pdf.min.js', '/vendor/pdfjs/pdf.worker.min.js'];
+const CACHE = 'dbz-v4';
+const CORE = ['/', '/theme.js', '/motion.js', '/like.js', '/apple-touch-icon.png', '/audio-recorder', '/Resizer2000', '/srt2ttml', '/info', '/Plan', '/vendor/pdfjs/pdf.min.js', '/vendor/pdfjs/pdf.worker.min.js'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(CORE.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
