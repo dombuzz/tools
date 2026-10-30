@@ -223,7 +223,7 @@
   /* Collage */
   .cstage{ padding:24px 4%; }
   .cstage canvas{ display:block; width:100%; height:auto; margin:0 auto; cursor:grab; touch-action:none; }
-  .cstage.sq canvas{ width:min(100%, 62vh); }
+
   .cstage canvas.drag{ cursor:grabbing; }
   #collage .side h3{ font-size:0.85rem; margin:16px 0 8px; }
   #collage .side h3:first-child{ margin-top:4px; }
@@ -233,6 +233,9 @@
   .lays button[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
   .lays svg{ display:block; height:24px; width:auto; }
   .crow{ display:flex; flex-wrap:wrap; gap:8px; }
+  #cFmt{ display:grid; grid-template-columns:repeat(4, 1fr); width:100%; }
+  #cFmt button{ padding:6px 4px; }
+  #cFmt small{ white-space:nowrap; font-size:.66rem; }
   .lrow{ margin-top:8px; }
   .cmore{ display:block; margin-top:8px; }
   .lrow:not(:has(button:not([hidden]))){ display:none; }
@@ -430,8 +433,10 @@
           <div id="cSide">
           <h3>Format</h3>
           <div class="sizeseg" role="group" aria-label="Format" id="cFmt">
-            <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920 × 1080</small></button>
-            <button type="button" data-v="1:1" aria-pressed="false">1:1<small>1080 × 1080</small></button>
+            <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920×1080</small></button>
+            <button type="button" data-v="1:1" aria-pressed="false">1:1<small>1080×1080</small></button>
+            <button type="button" data-v="4:5" aria-pressed="false">4:5<small>1080×1350</small></button>
+            <button type="button" data-v="9:16" aria-pressed="false">9:16<small>1080×1920</small></button>
           </div>
           <h3>Disposiziun</h3>
           <div class="lays" id="cLays"></div>
@@ -1533,31 +1538,38 @@ renderList();
 // r(a, b): Rechtecke in Abhängigkeit der verschiebbaren Trennlinien a, b (0–1); d = Standardpositionen
 // r(...sp): Rechtecke (x, y, b, h) aus den Trennlinien-Positionen sp (0–1); d = Standardpositionen
 // s(...sp): Trennlinien [j, 'x', x, y1, y2] bzw. [j, 'y', y, x1, x2]; ord: Linien derselben Richtung, die geordnet bleiben müssen
-// more: erst nach «Dapli maletgs» sichtbar; only: nur in diesem Format
+// more: erst nach «Dapli maletgs» sichtbar; f: nur in diesen Formaten (sonst in allen); sl:'h' = schräge Linien quer
 const CL = {
   c2:  { n:2, d:[.5], r:a => [[0,0,a,1],[a,0,1-a,1]], s:a => [[0,'x',a,0,1]] },
   r2:  { n:2, d:[.5], r:a => [[0,0,1,a],[0,a,1,1-a]], s:a => [[0,'y',a,0,1]] },
-  c3:  { n:3, d:[1/3,2/3], ord:[[0,1]], r:(a,b) => [[0,0,a,1],[a,0,b-a,1],[b,0,1-b,1]], s:(a,b) => [[0,'x',a,0,1],[1,'x',b,0,1]] },
+  c3:  { n:3, f:['16:9','1:1','4:5'], d:[1/3,2/3], ord:[[0,1]], r:(a,b) => [[0,0,a,1],[a,0,b-a,1],[b,0,1-b,1]], s:(a,b) => [[0,'x',a,0,1],[1,'x',b,0,1]] },
   r3:  { n:3, d:[1/3,2/3], ord:[[0,1]], r:(a,b) => [[0,0,1,a],[0,a,1,b-a],[0,b,1,1-b]], s:(a,b) => [[0,'y',a,0,1],[1,'y',b,0,1]] },
   l12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,1-b]], s:(a,b) => [[0,'x',a,0,1],[1,'y',b,a,1]] },
   l21: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,b],[0,b,a,1-b],[a,0,1-a,1]], s:(a,b) => [[0,'x',a,0,1],[1,'y',b,0,a]] },
   t12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,1,a],[0,a,b,1-a],[b,a,1-b,1-a]], s:(a,b) => [[0,'y',a,0,1],[1,'x',b,a,1]] },
-  s2:  { n:2, sl:true, d:[.5] },          // sbiec: Schnittkante schräg (oben weiter rechts, gespiegelt umgekehrt)
-  s3:  { n:3, sl:true, d:[1/3,2/3], ord:[[0,1]] },
+  s2:  { n:2, f:['16:9','1:1','4:5'], sl:true, d:[.5] },          // sbiec: Schnittkante schräg (oben weiter rechts, gespiegelt umgekehrt)
+  s3:  { n:3, f:['16:9','1:1'], sl:true, d:[1/3,2/3], ord:[[0,1]] },
+  sr2: { n:2, f:['1:1','4:5','9:16'], sl:'h', d:[.5] },
+  sr3: { n:3, f:['4:5','9:16'], sl:'h', d:[1/3,2/3], ord:[[0,1]] },
   // 4 maletgs
   g22: { n:4, more:true, d:[.5,.5], r:(a,b) => [[0,0,a,b],[a,0,1-a,b],[0,b,a,1-b],[a,b,1-a,1-b]], s:(a,b) => [[0,'x',a,0,1],[1,'y',b,0,1]] },
-  c4:  { n:4, more:true, only:'16:9', d:[.25,.5,.75], ord:[[0,1,2]], r:(a,b,c) => [[0,0,a,1],[a,0,b-a,1],[b,0,c-b,1],[c,0,1-c,1]], s:(a,b,c) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'x',c,0,1]] },
-  l13: { n:4, more:true, d:[.62,1/3,2/3], ord:[[1,2]], r:(a,b,c) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,c-b],[a,c,1-a,1-c]], s:(a,b,c) => [[0,'x',a,0,1],[1,'y',b,a,1],[2,'y',c,a,1]] },
+  c4:  { n:4, more:true, f:['16:9'], d:[.25,.5,.75], ord:[[0,1,2]], r:(a,b,c) => [[0,0,a,1],[a,0,b-a,1],[b,0,c-b,1],[c,0,1-c,1]], s:(a,b,c) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'x',c,0,1]] },
+  r4:  { n:4, more:true, f:['1:1','4:5','9:16'], d:[.25,.5,.75], ord:[[0,1,2]], r:(a,b,c) => [[0,0,1,a],[0,a,1,b-a],[0,b,1,c-b],[0,c,1,1-c]], s:(a,b,c) => [[0,'y',a,0,1],[1,'y',b,0,1],[2,'y',c,0,1]] },
+  l13: { n:4, more:true, f:['16:9','1:1','4:5'], d:[.62,1/3,2/3], ord:[[1,2]], r:(a,b,c) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,c-b],[a,c,1-a,1-c]], s:(a,b,c) => [[0,'x',a,0,1],[1,'y',b,a,1],[2,'y',c,a,1]] },
   t13: { n:4, more:true, d:[.62,1/3,2/3], ord:[[1,2]], r:(a,b,c) => [[0,0,1,a],[0,a,b,1-a],[b,a,c-b,1-a],[c,a,1-c,1-a]], s:(a,b,c) => [[0,'y',a,0,1],[1,'x',b,a,1],[2,'x',c,a,1]] },
   br4: { n:4, more:true, d:[.5,.6,.4], r:(a,b,c) => [[0,0,b,a],[b,0,1-b,a],[0,a,c,1-a],[c,a,1-c,1-a]], s:(a,b,c) => [[0,'y',a,0,1],[1,'x',b,0,a],[2,'x',c,a,1]] },
-  s4:  { n:4, more:true, only:'16:9', sl:true, d:[.25,.5,.75], ord:[[0,1,2]] },
+  s4:  { n:4, more:true, f:['16:9'], sl:true, d:[.25,.5,.75], ord:[[0,1,2]] },
+  sr4: { n:4, more:true, f:['4:5','9:16'], sl:'h', d:[.25,.5,.75], ord:[[0,1,2]] },
   // 5 maletgs
   t23: { n:5, more:true, d:[.55,.5,1/3,2/3], ord:[[2,3]], r:(a,b,c,d) => [[0,0,b,a],[b,0,1-b,a],[0,a,c,1-a],[c,a,d-c,1-a],[d,a,1-d,1-a]], s:(a,b,c,d) => [[0,'y',a,0,1],[1,'x',b,0,a],[2,'x',c,a,1],[3,'x',d,a,1]] },
-  l22: { n:5, more:true, d:[.5,.75,.5], ord:[[0,1]], r:(a,b,c) => [[0,0,a,1],[a,0,b-a,c],[b,0,1-b,c],[a,c,b-a,1-c],[b,c,1-b,1-c]], s:(a,b,c) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'y',c,a,1]] },
-  m5:  { n:5, more:true, d:[.25,.75,.5,.5], ord:[[0,1]], r:(a,b,c,d) => [[0,0,a,c],[0,c,a,1-c],[a,0,b-a,1],[b,0,1-b,d],[b,d,1-b,1-d]], s:(a,b,c,d) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'y',c,0,a],[3,'y',d,b,1]] },
-  t14: { n:5, more:true, d:[.56,.25,.5,.75], ord:[[1,2,3]], r:(a,b,c,d) => [[0,0,1,a],[0,a,b,1-a],[b,a,c-b,1-a],[c,a,d-c,1-a],[d,a,1-d,1-a]], s:(a,b,c,d) => [[0,'y',a,0,1],[1,'x',b,a,1],[2,'x',c,a,1],[3,'x',d,a,1]] },
-  c5:  { n:5, more:true, only:'16:9', d:[.2,.4,.6,.8], ord:[[0,1,2,3]], r:(a,b,c,d) => [[0,0,a,1],[a,0,b-a,1],[b,0,c-b,1],[c,0,d-c,1],[d,0,1-d,1]], s:(a,b,c,d) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'x',c,0,1],[3,'x',d,0,1]] },
-  s5:  { n:5, more:true, only:'16:9', sl:true, d:[.2,.4,.6,.8], ord:[[0,1,2,3]] },
+  l22: { n:5, more:true, f:['16:9','1:1','4:5'], d:[.5,.75,.5], ord:[[0,1]], r:(a,b,c) => [[0,0,a,1],[a,0,b-a,c],[b,0,1-b,c],[a,c,b-a,1-c],[b,c,1-b,1-c]], s:(a,b,c) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'y',c,a,1]] },
+  mv5: { n:5, more:true, f:['1:1','4:5','9:16'], d:[.27,.73,.5,.5], ord:[[0,1]], r:(a,b,c,d) => [[0,0,c,a],[c,0,1-c,a],[0,a,1,b-a],[0,b,d,1-b],[d,b,1-d,1-b]], s:(a,b,c,d) => [[0,'y',a,0,1],[1,'y',b,0,1],[2,'x',c,0,a],[3,'x',d,b,1]] },
+  m5:  { n:5, more:true, f:['16:9','1:1'], d:[.25,.75,.5,.5], ord:[[0,1]], r:(a,b,c,d) => [[0,0,a,c],[0,c,a,1-c],[a,0,b-a,1],[b,0,1-b,d],[b,d,1-b,1-d]], s:(a,b,c,d) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'y',c,0,a],[3,'y',d,b,1]] },
+  t14: { n:5, more:true, f:['16:9','1:1','4:5'], d:[.56,.25,.5,.75], ord:[[1,2,3]], r:(a,b,c,d) => [[0,0,1,a],[0,a,b,1-a],[b,a,c-b,1-a],[c,a,d-c,1-a],[d,a,1-d,1-a]], s:(a,b,c,d) => [[0,'y',a,0,1],[1,'x',b,a,1],[2,'x',c,a,1],[3,'x',d,a,1]] },
+  r5:  { n:5, more:true, f:['4:5','9:16'], d:[.2,.4,.6,.8], ord:[[0,1,2,3]], r:(a,b,c,d) => [[0,0,1,a],[0,a,1,b-a],[0,b,1,c-b],[0,c,1,d-c],[0,d,1,1-d]], s:(a,b,c,d) => [[0,'y',a,0,1],[1,'y',b,0,1],[2,'y',c,0,1],[3,'y',d,0,1]] },
+  c5:  { n:5, more:true, f:['16:9'], d:[.2,.4,.6,.8], ord:[[0,1,2,3]], r:(a,b,c,d) => [[0,0,a,1],[a,0,b-a,1],[b,0,c-b,1],[c,0,d-c,1],[d,0,1-d,1]], s:(a,b,c,d) => [[0,'x',a,0,1],[1,'x',b,0,1],[2,'x',c,0,1],[3,'x',d,0,1]] },
+  s5:  { n:5, more:true, f:['16:9'], sl:true, d:[.2,.4,.6,.8], ord:[[0,1,2,3]] },
+  sr5: { n:5, more:true, f:['9:16'], sl:'h', d:[.2,.4,.6,.8], ord:[[0,1,2,3]] },
 };
 const SL = 0.13;            // halbe horizontale Verschiebung der schrägen Kante, im Verhältnis zur Höhe
 const stageC = $('cStage'), cv = $('cCanvas'), cx2 = cv.getContext('2d'), cMsgEl = $('cMsg');
@@ -1568,14 +1580,16 @@ if (!cs.sp || typeof cs.sp !== 'object') cs.sp = {};
 if (cs.lay === 'l12w'){ cs.lay = 'l12'; cs.sp.l12 = [1/3, .5]; }   // frühere Disposiziun «1 stretg + 2 lads» = l12 mit verschobener Linie
 if (!CL[cs.lay]) cs.lay = 'c2';
 if (!cs.sp || typeof cs.sp !== 'object') cs.sp = {};
-const okLay = k => !CL[k].only || CL[k].only === cs.fmt;
+const okLay = k => !CL[k].f || CL[k].f.includes(cs.fmt);
 if (!okLay(cs.lay)) cs.lay = 'l12';
 let sel = 0, target = 0, hov = -1;
 const pool = [];                    // Parcadi
 const seen = new Set();             // Layers, che èn gia vegnids surpigliads (id)
 function colMsg(t, err){ cMsgEl.textContent = t; cMsgEl.classList.toggle('err', !!err); }
 const save = () => { try { localStorage.setItem('collage-set', JSON.stringify(cs)); } catch(e){} };
-const dims = () => cs.fmt === '1:1' ? [1080, 1080] : [1920, 1080];
+const FMTS = { '16:9':[1920, 1080], '1:1':[1080, 1080], '4:5':[1080, 1350], '9:16':[1080, 1920] };
+if (!FMTS[cs.fmt]) cs.fmt = '16:9';
+const dims = () => FMTS[cs.fmt];
 const nParts = () => CL[cs.lay].n;
 
 /* Fläche einer Part als Polygon in Pixeln; an inneren Schnittkanten um die halbe Linienbreite (g) eingerückt */
@@ -1586,7 +1600,7 @@ function spOf(k, W, H){
 }
 function clampSp(L, v, W, H){
   let lo = .1, hi = .9;
-  if (L.sl && W){ const m = SL * H / W + .04; lo = Math.max(lo, m); hi = Math.min(hi, 1 - m); }
+  if (L.sl && W){ const m = (L.sl === 'h' ? SL * W / H : SL * H / W) + .04; lo = Math.max(lo, m); hi = Math.min(hi, 1 - m); }
   v = v.map(x => Math.max(lo, Math.min(hi, x)));
   // geordnete Linien: mindestens 10 % Abstand
   for (const g of L.ord || []){
@@ -1599,6 +1613,13 @@ function clampSp(L, v, W, H){
 function polyOf(L, i, W, H, g, sp, flip){
   const e = 1e-6;
   sp = sp || L.d;
+  if (L.sl === 'h'){
+    // schräge Linien quer: links tiefer als rechts (gespiegelt umgekehrt)
+    const d = SL * W * (flip ? -1 : 1), hs = g * Math.hypot(2 * d, W) / W, n = L.n, cut = j => sp[j - 1] * H;
+    const tl = i ? cut(i) + d + hs : 0, tr = i ? cut(i) - d + hs : 0;
+    const bl = i < n - 1 ? cut(i + 1) + d - hs : H, br = i < n - 1 ? cut(i + 1) - d - hs : H;
+    return [[0, tl], [W, tr], [W, br], [0, bl]];
+  }
   if (L.sl){
     const d = SL * H * (flip ? -1 : 1), hs = g * Math.hypot(2 * d, H) / H, n = L.n, cut = j => sp[j - 1] * W;
     const lt = i ? cut(i) + d + hs : 0, lb = i ? cut(i) - d + hs : 0;
@@ -1715,7 +1736,7 @@ function draw(ctx, W, H, preview){
 function paint(){
   const [W, H] = dims();
   if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
-  stageC.classList.toggle('sq', W === H);
+  cv.style.width = W > H ? '' : `min(100%, ${Math.round(62 * W / H)}vh)`;   // Quadrat und Hochformat nicht höher als ca. 62 % des Fensters
   draw(cx2, W, H, true);
   const n = nParts(), filled = cells.slice(0, n).filter(Boolean).length;
   $('cDl').disabled = !filled;
@@ -1748,7 +1769,7 @@ function seg(id, key, num){
   sync();
 }
 function icon(L){
-  const [W, H] = cs.fmt === '1:1' ? [18, 18] : [32, 18];
+  const [W, H] = { '16:9':[32, 18], '1:1':[18, 18], '4:5':[18, 22.5], '9:16':[18, 32] }[cs.fmt];
   return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">` + Array.from({ length: L.n }, (_, i) =>
     `<polygon points="${polyOf(L, i, W, H, 0.8, L.d, cs.flip).map(p => p.map(v => +v.toFixed(2)).join(',')).join(' ')}" fill="currentColor" stroke="currentColor" stroke-width=".6" stroke-linejoin="round"/>`).join('') + '</svg>';
 }
@@ -1760,7 +1781,7 @@ $('cMore').onclick = () => {
   try { localStorage.setItem('collage-more', moreOpen ? '1' : '0'); } catch(e){}
   buildLays(); paint();
 };
-const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart', s2:'2 parts cun lingia sbieca', s3:'3 parts cun lingias sbiecas' , g22:'Gitter 2 × 2', c4:'4 colonnas', l13:'1 grond a sanestra, 3 a dretga', t13:'1 grond survart, 3 sutvart', br4:'Mir da quadrels', s4:'4 parts cun lingias sbiecas', t23:'2 survart, 3 sutvart', l22:'1 grond a sanestra, 2 × 2 a dretga', m5:'1 grond en il center, 2 da mintga vart', t14:'1 grond survart, 4 sutvart', c5:'5 colonnas', s5:'5 parts cun lingias sbiecas' };
+const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart', s2:'2 parts cun lingia sbieca', s3:'3 parts cun lingias sbiecas' , g22:'Gitter 2 × 2', c4:'4 colonnas', l13:'1 grond a sanestra, 3 a dretga', t13:'1 grond survart, 3 sutvart', br4:'Mir da quadrels', s4:'4 parts cun lingias sbiecas', t23:'2 survart, 3 sutvart', l22:'1 grond a sanestra, 2 × 2 a dretga', m5:'1 grond en il center, 2 da mintga vart', t14:'1 grond survart, 4 sutvart', c5:'5 colonnas', s5:'5 parts cun lingias sbiecas' , sr2:'2 parts cun lingia sbieca a traviers', sr3:'3 parts cun lingias sbiecas a traviers', r4:'4 lingias', sr4:'4 parts cun lingias sbiecas a traviers', mv5:'1 grond en il center, 2 survart e 2 sutvart', r5:'5 lingias', sr5:'5 parts cun lingias sbiecas a traviers' };
 function buildLays(){
   const box = $('cLays'); box.innerHTML = '';
   const showMore = moreOpen || CL[cs.lay].more;
@@ -1882,6 +1903,7 @@ function zoomPart(i, z, px, py){
 let sepHL = null;   // { j, drag }
 function seps(W, H){
   const k = cs.lay, L = CL[k], sp = spOf(k, W, H), out = [];
+  if (L.sl === 'h'){ const d = SL * W * (cs.flip ? -1 : 1); sp.forEach((v, j) => out.push({ j, ax:'sh', x1:0, y1:v * H + d, x2:W, y2:v * H - d })); return out; }
   if (L.sl){ const d = SL * H * (cs.flip ? -1 : 1); sp.forEach((v, j) => out.push({ j, ax:'s', x1:v * W + d, y1:0, x2:v * W - d, y2:H })); return out; }
   for (const [j, ax, p, q1, q2] of L.s(...sp))
     out.push(ax === 'x' ? { j, ax, x1:p * W, y1:q1 * H, x2:p * W, y2:q2 * H } : { j, ax, x1:q1 * W, y1:p * H, x2:q2 * W, y2:p * H });
@@ -1900,7 +1922,7 @@ function sepAt(px, py){
 }
 function moveSep(S, px, py){
   const [W, H] = dims(), L = CL[cs.lay], sp = spOf(cs.lay, W, H);
-  let v = S.ax === 'x' ? px / W : S.ax === 'y' ? py / H : (px - SL * H * (cs.flip ? -1 : 1) * (1 - 2 * py / H)) / W;
+  let v = S.ax === 'x' ? px / W : S.ax === 'y' ? py / H : S.ax === 'sh' ? (py - SL * W * (cs.flip ? -1 : 1) * (1 - 2 * px / W)) / H : (px - SL * H * (cs.flip ? -1 : 1) * (1 - 2 * py / H)) / W;
   for (const snapV of [.2, .25, 1/3, .4, .5, .6, 2/3, .75, .8]) if (Math.abs(v - snapV) < .012) v = snapV;   // einrasten
   for (const g of L.ord || []){ const k = g.indexOf(S.j); if (k < 0) continue;
     if (k > 0) v = Math.max(v, sp[g[k - 1]] + .1);
@@ -1908,7 +1930,7 @@ function moveSep(S, px, py){
   sp[S.j] = v;
   (cs.sp ||= {})[cs.lay] = clampSp(L, sp, W, H);
 }
-const sepCursor = S => !S ? '' : S.ax === 'x' ? 'col-resize' : S.ax === 'y' ? 'row-resize' : 'ew-resize';
+const sepCursor = S => !S ? '' : S.ax === 'x' ? 'col-resize' : S.ax === 'y' ? 'row-resize' : S.ax === 'sh' ? 'ns-resize' : 'ew-resize';
 let sepDrag = null;
 cv.addEventListener('pointermove', e => {
   if (ptrs.size || sepDrag) return;
