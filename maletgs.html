@@ -1534,7 +1534,6 @@ const CL = {
   c3:  { n:3, d:[1/3,2/3], pair:true, r:(a,b) => [[0,0,a,1],[a,0,b-a,1],[b,0,1-b,1]] },
   r3:  { n:3, d:[1/3,2/3], pair:true, r:(a,b) => [[0,0,1,a],[0,a,1,b-a],[0,b,1,1-b]] },
   l12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,1-b]] },
-  l12w:{ n:3, d:[1/3,.5], r:(a,b) => [[0,0,a,1],[a,0,1-a,b],[a,b,1-a,1-b]], only:'16:9' },
   l21: { n:3, d:[.5,.5], r:(a,b) => [[0,0,a,b],[0,b,a,1-b],[a,0,1-a,1]] },
   t12: { n:3, d:[.5,.5], r:(a,b) => [[0,0,1,a],[0,a,b,1-a],[b,a,1-b,1-a]] },
   s2:  { n:2, sl:true, d:[.5] },          // sbiec: Schnittkante schräg (oben weiter rechts, gespiegelt umgekehrt)
@@ -1545,6 +1544,8 @@ const stageC = $('cStage'), cv = $('cCanvas'), cx2 = cv.getContext('2d'), cMsgEl
 const cells = [null, null, null];   // pro Part: { img, prev, iw, ih, name, z, fx, fy }
 const cs = { fmt:'16:9', lay:'c2', line:'', lw:5, sp:{}, flip:false };
 try { Object.assign(cs, JSON.parse(localStorage.getItem('collage-set') || '{}')); } catch(e){}
+if (!cs.sp || typeof cs.sp !== 'object') cs.sp = {};
+if (cs.lay === 'l12w'){ cs.lay = 'l12'; cs.sp.l12 = [1/3, .5]; }   // frühere Disposiziun «1 stretg + 2 lads» = l12 mit verschobener Linie
 if (!CL[cs.lay]) cs.lay = 'c2';
 if (!cs.sp || typeof cs.sp !== 'object') cs.sp = {};
 const okLay = k => !CL[k].only || CL[k].only === cs.fmt;
@@ -1725,7 +1726,7 @@ function icon(L){
   return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">` + Array.from({ length: L.n }, (_, i) =>
     `<polygon points="${polyOf(L, i, W, H, 0.8, L.d, cs.flip).map(p => p.map(v => +v.toFixed(2)).join(',')).join(' ')}" fill="currentColor" stroke="currentColor" stroke-width=".6" stroke-linejoin="round"/>`).join('') + '</svg>';
 }
-const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l12w:'1 stretg a sanestra, 2 lads a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart', s2:'2 parts cun lingia sbieca', s3:'3 parts cun lingias sbiecas' };
+const LAYNAME = { c2:'2 colonnas', r2:'2 lingias', c3:'3 colonnas', r3:'3 lingias', l12:'1 grond a sanestra, 2 a dretga', l21:'2 a sanestra, 1 grond a dretga', t12:'1 grond survart, 2 sutvart', s2:'2 parts cun lingia sbieca', s3:'3 parts cun lingias sbiecas' };
 function buildLays(){
   const box = $('cLays'); box.innerHTML = '';
   for (const k of Object.keys(CL)){
@@ -1848,7 +1849,7 @@ function seps(W, H){
   const [a, b] = sp, X = (j, x, y1, y2) => out.push({ j, ax:'x', x1:x * W, y1:y1 * H, x2:x * W, y2:y2 * H }), Y = (j, y, x1, x2) => out.push({ j, ax:'y', x1:x1 * W, y1:y * H, x2:x2 * W, y2:y * H });
   if (k === 'c2' || k === 'c3') sp.forEach((v, j) => X(j, v, 0, 1));
   else if (k === 'r2' || k === 'r3') sp.forEach((v, j) => Y(j, v, 0, 1));
-  else if (k === 'l12' || k === 'l12w'){ X(0, a, 0, 1); Y(1, b, a, 1); }
+  else if (k === 'l12'){ X(0, a, 0, 1); Y(1, b, a, 1); }
   else if (k === 'l21'){ X(0, a, 0, 1); Y(1, b, 0, a); }
   else if (k === 't12'){ Y(0, a, 0, 1); X(1, b, a, 1); }
   return out;
