@@ -93,7 +93,7 @@
   .ms[aria-expanded=true]::after { transform: rotate(45deg); }
   .msub { display: none; margin: 0 0 2px 14px; padding-left: 4px; border-left: 2px solid var(--line); }
   .msub.on { display: block; }
-  .mi.lab { color: var(--lab); font-weight: 700; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; padding-top: 12px; }
+  .mi.lab { color: var(--lab); font-weight: 500; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; padding-top: 12px; }
   .msg { color: var(--muted); margin-top: 16px; }
   .msg a, footer a { color: var(--link); }
   footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
@@ -275,7 +275,7 @@
     if (label === 'Redacziun') menu.append(chattaBox);
   }
   // ganz unten: Link ins Lab (Experimente)
-  menu.append(mk('Lab 🧪', '/lab/', 'lab'));
+  menu.append(mk('Lab', '/lab/', 'lab'));
 
   // Favurits: ☆ bei jedem Tool im Dropdown, «★ Mes favurits» als Kacheln unter dem Dropdown (nur in diesem Browser gespeichert)
   {
