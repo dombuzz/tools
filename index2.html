@@ -83,7 +83,189 @@
   }
   .select.open .menu { display: block; }
   
-  /* Standard Group Header */
+  /* Collapsible Group Headers */
   .mg { 
     margin: 10px 6px 2px; padding: 6px 8px; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); 
-    display: block;
+    display: flex; align-items: center; justify-content: space-between; border-radius: 8px; cursor: pointer; background: transparent; transition: background .15s;
+    border: none; width: calc(100% - 12px); text-align: left; font-family: inherit;
+  }
+  .mg:hover { background: var(--field); }
+  .mg::after { content: ""; width: 6px; height: 6px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .15s; margin-right: 4px; }
+  .mg.collapsed::after { transform: rotate(-135deg); }
+  .group-content { display: block; transition: max-height .2s ease; overflow: hidden; }
+  .group-content.collapsed { display: none; }
+
+  .mi { display: block; padding: 8px 12px; border-radius: 9px; color: var(--text); text-decoration: none; font-weight: 500; }
+  .mi:hover, .mi:focus-visible { background: var(--field); outline: none; }
+  
+  /* aufklappbare Untergruppe innerhalb einer Gruppe */
+  .ms { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 8px 12px; border: 0; border-radius: 9px; background: transparent; color: var(--text); font: inherit; font-weight: 500; text-align: left; cursor: pointer; }
+  .ms { text-decoration: underline dashed 0.5px var(--accent); text-underline-offset: 5px; }
+  .ms:hover, .ms:focus-visible { background: var(--field); outline: none; }
+  .ms::after { content: ""; width: 7px; height: 7px; margin-right: 4px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; }
+  .ms[aria-expanded=true]::after { transform: rotate(45deg); }
+  .msub { display: none; margin: 0 0 2px 14px; padding-left: 4px; border-left: 2px solid var(--line); }
+  .msub.on { display: block; }
+  
+  /* Lab thin font style */
+  .mi.lab { color: var(--lab); font-weight: 300; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; padding-top: 12px; }
+  
+  .msg { color: var(--muted); margin-top: 16px; }
+  .msg a, footer a { color: var(--link); }
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+  /* top-Tools-Knopf neben dem Hell/Dunkel-Umschalter (oben rechts, fixiert) */
+  .toplink { position: fixed; top: 12px; right: 52px; z-index: 50; width: 32px; height: 32px; padding: 0; border-radius: 50%; background: var(--card); opacity: .7; transition: opacity .15s, border-color .15s, background .15s; }
+  .toplink svg { width: 16px; height: 16px; }
+  @media (max-width: 600px) { .toplink { width: 32px; height: 32px; border-radius: 50%; } .toplink svg { width: 16px; height: 16px; } }
+  .toplink:hover, .toplink:focus-visible, .toplink[aria-expanded="true"] { opacity: 1; border-color: var(--accent); background: var(--field); }
+  .pop { position: fixed; z-index: 60; right: 12px; top: 52px; }
+  /* «Chattas sbagls?» im Dropdown: gestrichelter Rahmen, Hinweis per ⓘ */
+  .mchatta { margin: 4px 2px 2px; border: 0.5px dashed var(--accent); border-radius: 10px; }
+  .mchatta-r { display: flex; align-items: center; }
+  .mchatta .mi { flex: 1; }
+  .chatta-i { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; margin-right: 0; padding: 0; border: 0; background: none; color: var(--muted); cursor: help; border-radius: 50%; }
+  .chatta-i svg { width: 16px; height: 16px; }
+  .chatta-i:hover, .chatta-i:focus-visible, .mchatta.tip .chatta-i { color: var(--accent); outline: none; }
+  .chatta-tip { display: none; margin: 0; padding: 0 12px 10px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .mchatta.tip .chatta-tip { display: block; }
+  /* Favurits: Stern im Dropdown, Kacheln unter dem Dropdown (pro Browser gespeichert) */
+  .mi.fv { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .star { flex: none; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; margin: -4px -6px -4px 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 17px; line-height: 1; cursor: pointer; }
+  .mchatta .star { margin: 0 6px 0 0; }
+  .star:hover, .star:focus-visible { color: var(--accent); outline: none; }
+  .star.on { color: var(--accent); }
+  .favs { margin-top: 20px; }
+  .favh { margin: 0 0 10px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .favgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .favcard { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); text-decoration: none; transition: border-color .15s; }
+  .favcard:hover, .favcard:focus-visible { border-color: var(--accent); outline: none; }
+  .favcard img { flex: none; width: 22px; height: 22px; }
+  .favcard span { min-width: 0; display: flex; flex-direction: column; }
+  .favcard b { font-size: 14px; font-weight: 600; line-height: 1.25; }
+  .favcard small { color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+  .favhint { color: var(--muted); font-size: 13px; }
+  .favcard { position: relative; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  .favcard img { pointer-events: none; }
+  .favgrid.sorting .favcard { transition: transform .12s; }
+  .favcard.dragging { border-color: var(--accent); box-shadow: 0 8px 22px rgba(0,0,0,.35); transform: scale(1.03); z-index: 2; cursor: grabbing; }
+  .favsort { margin-top: 8px; color: var(--muted); font-size: 12px; }
+  /* «nov»: neue oder geänderte Tools, bis man sie geöffnet hat (pro Browser) */
+  .nov { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #121214); font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; vertical-align: 2px; line-height: 1.5; }
+  .novcnt { display: inline-block; margin-left: 10px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); font-size: 11px; font-weight: 700; vertical-align: 2px; }
+  .favcard .dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  /* Versionsnummer ganz unten: v<Datum letzter Commit>_<Anzahl Commits an dem Tag>, live aus GitHub */
+  body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  main { width: 100%; }
+  .ver { margin: auto 0 0; padding: 0 16px 14px; text-align: center; color: var(--muted); font-size: 11px; letter-spacing: .04em; opacity: .35; }
+  .ver a { color: var(--accent); text-decoration: none; }
+  .ver a:hover, .ver a:focus-visible { text-decoration: underline; outline: none; }
+  #vnum:not(:empty)::after { content: " · "; }
+  /* Stil wie in den Tools (theme.js): Rotverlauf für rote Texte, Milchglas für Kacheln und Menü */
+  h1 span, .favh, .mg { background-image: var(--rgrad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .favcard, .sel-btn { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-color: var(--glass-line); }
+  .menu { background: rgba(28,28,31,.78); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); border-color: var(--glass-line); }
+  :root[data-theme="light"] .menu { background: rgba(255,255,255,.82); }
+  .favcard:hover, .favcard:focus-visible, .sel-btn:hover, .sel-btn:focus-visible, .sel-btn[aria-expanded=true] { border-color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <h1>dombuzz <span>Tools</span></h1>
+    <a class="toplink" id="toplink" href="/top" title="top Tools" aria-label="top Tools" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="12 14 76 76" aria-hidden="true"><g fill="#ff4d64"><rect x="18" y="52" width="18" height="32" rx="3" fill-opacity=".55"/><rect x="41" y="22" width="18" height="62" rx="3"/><rect x="64" y="40" width="18" height="44" rx="3" fill-opacity=".75"/></g></svg>
+    </a>
+    <div class="pop" id="pop" role="dialog" aria-label="top Tools">
+      <div class="pop-h"><b>top <span>Tools</span></b>
+        <div class="ptabs"><button class="ptab" data-r="today" aria-selected="false">oz</button><button class="ptab" data-r="week" aria-selected="false">emna</button><button class="ptab" data-r="month" aria-selected="true">mais</button><button class="ptab" data-r="30d" aria-selected="false">30 dis</button><button class="ptab" data-r="all" aria-selected="false">tut</button></div></div>
+      <div id="plist"><div class="pmsg">Chargel …</div></div>
+      <div class="pfoot" id="pmeta"></div>
+    </div>
+  </div>
+  <p class="sub">Pitschens tools per la lavur da mintgadi tar RTR. Senza installaziun – tut funcziuna en il browser e vegn elavurà be localmain.<br>Tscherner in tool, el s'avra directamain.</p>
+  <div class="select" id="selwrap">
+    <button type="button" class="sel-btn" id="selbtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu">Tscherner in tool …</button>
+    <div class="menu" id="menu" role="menu"></div>
+  </div>
+</main>
+<footer class="ver" aria-label="Versiun"><a href="/info">Infus &amp; datas</a> · <span id="vnum"></span><a href="/game" id="vgame">game</a></footer>
+
+<script>
+  // Anzeigenamen im Dropdown (Dateiname -> Name).
+  const NAMES = {
+    'rtr-picture.html':    'RTR Picture-downloader',
+    'visual.html':         'Magazin / Il di / #mument',
+    'maletgs.html':        'Colurar, rotar e cumbinar',
+    'colurs.html':         'Clerezza + colurs',
+    'rotar.html':          'Rotar + drizzar',
+    'Resizer2000.html':    'Resizer 2000',
+    'Plan.html':           'Plans da teams',
+    'artitgel.html':       "Links d'artitgels",
+    'audio-recorder.html': 'Audio-Recorder',
+    'srt2ttml.html':       'SRT → TTML',
+    'studio.html':         'Subtitle Studio',
+    'data.html':           'Memorisar grafica Datawrapper',
+    'votgr.html':          'Chartas votaziuns GR'
+  };
+
+  // Gruppen und Reihenfolge im Dropdown.
+  const GROUPS = [
+    ['Maletgs',           ['rtr-picture.html', 'visual.html', 'maletgs.html', 'Resizer2000.html']],
+    ['Redacziun',         ['Plan.html', 'artitgel.html']],
+    ['Audio e suttitels', ['audio-recorder.html', 'srt2ttml.html', 'studio.html']],
+    ['Grafica',           ['data.html', 'votgr.html']]
+  ];
+
+  const wrap = document.getElementById('selwrap'), btn0 = document.getElementById('selbtn'), menu = document.getElementById('menu');
+  
+  // Render dropdown groups dynamically with collapsible functionality
+  function renderMenu() {
+    menu.innerHTML = '';
+    GROUPS.forEach(([groupName, items]) => {
+      const groupBtn = document.createElement('button');
+      groupBtn.type = 'button';
+      groupBtn.className = 'mg';
+      groupBtn.textContent = groupName;
+      groupBtn.setAttribute('aria-expanded', 'true');
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'group-content';
+
+      groupBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const expanded = groupBtn.getAttribute('aria-expanded') === 'true';
+        groupBtn.setAttribute('aria-expanded', !expanded);
+        groupBtn.classList.toggle('collapsed', expanded);
+        contentDiv.classList.toggle('collapsed', expanded);
+      });
+
+      items.forEach(item => {
+        const a = document.createElement('a');
+        a.className = 'mi';
+        a.href = '/' + item.replace(/\.html?$/i, '');
+        a.textContent = NAMES[item] || item;
+        a.setAttribute('role', 'menuitem');
+        contentDiv.appendChild(a);
+      });
+
+      menu.appendChild(groupBtn);
+      menu.appendChild(contentDiv);
+    });
+  }
+  renderMenu();
+
+  // Toggle dropdown behavior
+  btn0.addEventListener('click', () => {
+    const isOpen = wrap.classList.toggle('open');
+    btn0.setAttribute('aria-expanded', isOpen);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) {
+      wrap.classList.remove('open');
+      btn0.setAttribute('aria-expanded', 'false');
+    }
+  });
+</script>
+</body>
+</html>
