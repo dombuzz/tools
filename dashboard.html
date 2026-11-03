@@ -719,7 +719,7 @@
       el.innerHTML = '<table class="art"><thead><tr><th></th><th title="dapi glindesdi">emna</th><th title="mais actual">mais</th><th title="ultims 30 dis">30 dis</th><th title="quest onn">onn</th></tr></thead><tbody>' +
         R.map(([s, n]) => `<tr><td><a href="https://www.rtr.ch/${s}" target="_blank" rel="noopener">${n}</a></td>${C.map(k => `<td>${f(d.counts[s][k])}</td>`).join('')}</tr>`).join('') +
         `<tr class="tot"><td>Total</td>${C.map(k => `<td>${f(sum(k))}</td>`).join('')}</tr></tbody></table>` +
-        `<p class="artm">Dapi glindesdi ${dm(d.from.week)} · ultim artitgel en l'index: ${dm(d.newest)}</p>`;
+        `<p class="artm">Dapi glindesdi ${dm(d.from.week)} · «Il di» dumbrà sco 1 artitgel per di · ultim artitgel en l'index: ${dm(d.newest)}</p>`;
     } catch (e) { el.innerHTML = '<div class="msg">Chargiar betg reussì</div>'; }
   }
 

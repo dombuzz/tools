@@ -166,7 +166,7 @@ export async function artStatus(env) {
   return { articles: n.n, oldest: n.a, newest: n.b, known: s.n, open: s.open || 0, back: await stGet(env, 'back'), last: JSON.parse((await stGet(env, 'last')) || 'null'), complete: !!(await stGet(env, 'complete')) };
 }
 
-// Zähler fürs Dashboard: Anzahl Artikel unter rtr.ch/novitads, /sport, /cultura (nach URL-Pfad)
+// Zähler fürs Dashboard: Anzahl Artikel unter rtr.ch/novitads, /sport, /cultura (nach URL-Pfad); «Il di» zählt 1× pro Tag
 // für quest'emna (ab Montag), mais actual, ultims 30 dis (inkl. heute) und quest onn – Daten in Schweizer Zeit
 export async function countArt(env) {
   await ensureArt(env);
@@ -176,8 +176,10 @@ export async function countArt(env) {
   const start = [from.year, from['30d']].sort()[0]; // Anfang Januar reichen die 30 Tage ins Vorjahr
   const { results } = await env.DB.prepare(
     "SELECT CASE WHEN path LIKE '/novitads/%' THEN 'novitads' WHEN path LIKE '/sport/%' THEN 'sport' ELSE 'cultura' END s," +
-    " SUM(d >= ?1) week, SUM(d >= ?2) month, SUM(d >= ?3) d30, SUM(d >= ?4) year" +
-    " FROM art WHERE d >= ?5 AND d <= ?6 AND (path LIKE '/novitads/%' OR path LIKE '/sport/%' OR path LIKE '/cultura/%') GROUP BY s"
+    " COUNT(DISTINCT CASE WHEN d >= ?1 THEN k END) week, COUNT(DISTINCT CASE WHEN d >= ?2 THEN k END) month," +
+    " COUNT(DISTINCT CASE WHEN d >= ?3 THEN k END) d30, COUNT(DISTINCT CASE WHEN d >= ?4 THEN k END) year" +
+    // «Il di» ist ein einziger Artikel pro Tag, der laufend neue URLs erhält: zählt als 1 pro Tag
+    " FROM (SELECT path, d, CASE WHEN path LIKE '/novitads/il-di/%' THEN 'ildi:' || d ELSE url END k FROM art) WHERE d >= ?5 AND d <= ?6 AND (path LIKE '/novitads/%' OR path LIKE '/sport/%' OR path LIKE '/cultura/%') GROUP BY s"
   ).bind(from.week, from.month, from['30d'], from.year, start, today).all();
   const out = {};
   for (const s of ['novitads', 'sport', 'cultura']) {
