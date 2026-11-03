@@ -154,7 +154,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
     const own = fresh.filter(a => mine.includes(a.url)).length;
     const t = document.createElement('div'); t.className = 'updtoast'; t.setAttribute('role', 'status');
     t.innerHTML = '<b>✨</b><span>' + (fresh.length === 1 ? '1 artitgel actualisà' : fresh.length + ' artitgels actualisads') + ' suenter avrir en challenge' +
-      '<small>' + (own ? (fresh.length === 1 ? 'Ti l\'has avert – grazia fitg!' : own === 1 ? 'In da quels has ti avert – grazia!' : own + ' da quels has ti avert – grazia!') : 'Grazia a tuts che leggian e curregian!') + '</small></span>';
+      '<small>' + (own ? (fresh.length === 1 ? 'Ti l\'has avert – grazia fitg!' : own === 1 ? 'In da quels has ti avert – grazia!' : own + ' da quels has ti avert – grazia!') : 'Grazia a tuts che legian e curregian!') + '</small></span>';
     document.body.append(t);
     const off = () => { t.classList.remove('on'); setTimeout(() => t.remove(), 500); };
     t.addEventListener('click', off);
