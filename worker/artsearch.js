@@ -165,3 +165,25 @@ export async function artStatus(env) {
   const n = (await one('SELECT COUNT(*) n, MIN(d) a, MAX(d) b FROM art')), s = await one('SELECT COUNT(*) n, SUM(ok = 0 AND tries < 3) open FROM art_seen');
   return { articles: n.n, oldest: n.a, newest: n.b, known: s.n, open: s.open || 0, back: await stGet(env, 'back'), last: JSON.parse((await stGet(env, 'last')) || 'null'), complete: !!(await stGet(env, 'complete')) };
 }
+
+// Zähler fürs Dashboard: Anzahl Artikel unter rtr.ch/novitads, /sport, /cultura (nach URL-Pfad)
+// für quest'emna (ab Montag), mais actual, ultims 30 dis (inkl. heute) und quest onn – Daten in Schweizer Zeit
+export async function countArt(env) {
+  await ensureArt(env);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(new Date()); // YYYY-MM-DD
+  const t = new Date(today + 'T00:00:00Z'), day = n => new Date(t.getTime() - n * 864e5).toISOString().slice(0, 10);
+  const from = { week: day((t.getUTCDay() + 6) % 7), month: today.slice(0, 8) + '01', '30d': day(29), year: today.slice(0, 5) + '01-01' };
+  const start = [from.year, from['30d']].sort()[0]; // Anfang Januar reichen die 30 Tage ins Vorjahr
+  const { results } = await env.DB.prepare(
+    "SELECT CASE WHEN path LIKE '/novitads/%' THEN 'novitads' WHEN path LIKE '/sport/%' THEN 'sport' ELSE 'cultura' END s," +
+    " SUM(d >= ?1) week, SUM(d >= ?2) month, SUM(d >= ?3) d30, SUM(d >= ?4) year" +
+    " FROM art WHERE d >= ?5 AND d <= ?6 AND (path LIKE '/novitads/%' OR path LIKE '/sport/%' OR path LIKE '/cultura/%') GROUP BY s"
+  ).bind(from.week, from.month, from['30d'], from.year, start, today).all();
+  const out = {};
+  for (const s of ['novitads', 'sport', 'cultura']) {
+    const r = results.find(x => x.s === s) || {};
+    out[s] = { week: r.week || 0, month: r.month || 0, '30d': r.d30 || 0, year: r.year || 0 };
+  }
+  const { results: [nw] } = await env.DB.prepare('SELECT MAX(d) d FROM art').all();
+  return { today, from, counts: out, newest: nw && nw.d };
+}

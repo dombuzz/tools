@@ -303,7 +303,7 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
-import { searchArt, artStatus, crawlStep } from './artsearch.js';
+import { searchArt, artStatus, crawlStep, countArt } from './artsearch.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -532,6 +532,7 @@ async function handle(request, env, ctx) {
           if (!st.last || Date.now() - Date.parse(st.last.at) > 60e3) ctx.waitUntil(crawlStep(env).catch(() => {}));
           return json(st, request);
         }
+        if (parts[1] === 'count') return json(await countArt(env), request);
         if (parts[1]) return json({ error: 'notfound' }, request, 404);
         const g = k => (url.searchParams.get(k) || '').slice(0, 200);
         const out = await searchArt(env, { q: g('q'), from: g('from'), to: g('to'), section: g('section'), sort: g('sort'), page: g('page'), size: g('size') });

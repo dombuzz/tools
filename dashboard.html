@@ -172,6 +172,15 @@
   .sp-sum{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:6px}
   .sp-sum b{color:var(--text);font-variant-numeric:tabular-nums}
   .sp-sum i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  /* Artitgels rtr.ch: publitgads per rubrica */
+  .art{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .art th,.art td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line);font-size:.9rem}
+  .art th{font-size:.72rem;font-weight:600;color:var(--muted)}
+  .art th:first-child,.art td:first-child{text-align:left}
+  .art td:first-child a{color:var(--text);text-decoration:none}
+  .art td:first-child a:hover{color:var(--accent)}
+  .art tr.tot td{border-bottom:0;font-weight:700}
+  .artm{font-size:.72rem;color:var(--muted);margin:8px 0 0}
   .heat{overflow-x:auto}
   .heat table{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed;min-width:300px}
   .heat td{height:14px;border-radius:3px;padding:0;background:var(--field)}
@@ -325,6 +334,7 @@
 
   <section class="pan"><p class="sec" id="sparkh">Activitad · ultimas 24 uras</p><div id="spark"><div class="msg">Chargel …</div></div></section>
   <section class="pan"><p class="sec">Cura vegnan ils tools duvrads</p><div id="heat"><div class="msg">Chargel …</div></div></section>
+  <section class="pan"><p class="sec">Artitgels online sin rtr.ch</p><div id="artc"><div class="msg">Chargel …</div></div></section>
 
   <details class="fold" data-k="favs">
     <summary class="labh other">Favurits <span>★</span></summary>
@@ -485,7 +495,7 @@
       if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
       const before = silent && lastData ? snap(lastData) : null;
       lastData = d; lastRange = range;
-      render(); stamp(); loadHourly(range); loadUsage();
+      render(); stamp(); loadHourly(range); loadUsage(); loadArt();
       if (silent) playFx(before, snap(d));
     } catch (e) {
       if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
@@ -697,6 +707,22 @@
   }
 
   // Kachel «Cloudflare oz»: gelesene/geschriebene Zeilen von heute gegenüber dem Gratis-Kontingent
+  // Artitgels publitgads sin rtr.ch/novitads, /sport e /cultura (ord l'agen index da rtr.ch)
+  async function loadArt() {
+    const el = document.getElementById('artc');
+    try {
+      const d = await fetch(API + '/art/count', { cache: 'no-store' }).then(r => r.json());
+      const R = [['novitads', 'Novitads'], ['sport', 'Sport'], ['cultura', 'Cultura']], C = ['week', 'month', '30d', 'year'];
+      const f = n => n.toLocaleString('de-CH');
+      const sum = k => R.reduce((a, [s]) => a + (d.counts[s][k] || 0), 0);
+      const dm = s => s ? s.slice(8, 10).replace(/^0/, '') + '.' + s.slice(5, 7).replace(/^0/, '') + '.' : '';
+      el.innerHTML = '<table class="art"><thead><tr><th></th><th title="dapi glindesdi">emna</th><th title="mais actual">mais</th><th title="ultims 30 dis">30 dis</th><th title="quest onn">onn</th></tr></thead><tbody>' +
+        R.map(([s, n]) => `<tr><td><a href="https://www.rtr.ch/${s}" target="_blank" rel="noopener">${n}</a></td>${C.map(k => `<td>${f(d.counts[s][k])}</td>`).join('')}</tr>`).join('') +
+        `<tr class="tot"><td>Total</td>${C.map(k => `<td>${f(sum(k))}</td>`).join('')}</tr></tbody></table>` +
+        `<p class="artm">Dapi glindesdi ${dm(d.from.week)} · ultim artitgel en l'index: ${dm(d.newest)}</p>`;
+    } catch (e) { el.innerHTML = '<div class="msg">Chargiar betg reussì</div>'; }
+  }
+
   async function loadUsage() {
     const el = document.getElementById('cfu');
     try {
