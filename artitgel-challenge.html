@@ -57,6 +57,22 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .it .t{flex:1;min-width:0}
 .it a{color:var(--text);text-decoration:none;font-weight:600}
 .it .upd{color:var(--ok);font-weight:600}
+/* «actualisà suenter avrir en challenge»: Zeile mit grünem Rand links, Pille unter den Angaben */
+.it.updr{position:relative;margin:0 -10px;padding:10px 10px 10px 12px;border-radius:10px;background:linear-gradient(90deg,rgba(95,210,154,.12),rgba(95,210,154,0) 70%);box-shadow:inset 3px 0 0 var(--ok)}
+.it.updr + .it{border-top-color:transparent}
+.updp{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:3px 10px 3px 8px;border-radius:999px;background:rgba(95,210,154,.14);border:1px solid rgba(95,210,154,.45);color:var(--ok);font-size:.75rem;font-weight:700;letter-spacing:.01em}
+.updp svg{width:13px;height:13px;flex:none}
+.it.updr .ck{text-shadow:0 0 10px rgba(95,210,154,.7)}
+/* erster Anblick in diesem Browser: kurzes Aufleuchten */
+.it.updnew{animation:updglow 1.6s ease-out 3}
+.it.updnew .updp{animation:updpop .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes updglow{0%{box-shadow:inset 3px 0 0 var(--ok),0 0 0 0 rgba(95,210,154,.55)}70%{box-shadow:inset 3px 0 0 var(--ok),0 0 0 10px rgba(95,210,154,0)}100%{box-shadow:inset 3px 0 0 var(--ok),0 0 0 0 rgba(95,210,154,0)}}
+@keyframes updpop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.updtoast{position:fixed;left:50%;top:16px;z-index:50;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:10px 16px 10px 12px;border:1px solid rgba(95,210,154,.5);border-radius:14px;background:var(--card);color:var(--text);font-size:.9rem;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 24px rgba(95,210,154,.18);transform:translate(-50%,-150%);transition:transform .45s cubic-bezier(.2,1.4,.4,1);cursor:pointer}
+.updtoast.on{transform:translate(-50%,0)}
+.updtoast b{font-size:1.3rem;line-height:1}
+.updtoast small{display:block;color:var(--muted);font-weight:500;font-size:.78rem}
+@media (prefers-reduced-motion:reduce){.it.updnew,.it.updnew .updp{animation:none}.updtoast{transition:none}}
 .it .k{display:block;margin-bottom:1px;font-size:.78rem;color:var(--accent)}
 .it a:hover,.it a:focus-visible{color:var(--accent)}
 .it .m{display:block;margin-top:2px;font-size:.78rem;color:var(--muted)}
@@ -122,11 +138,31 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   // Geöffnete: Titel -> Artikel auf rtr.ch, ✓. Noch nicht geöffnete: Titel und ⬏ -> CMS (öffnen zählt als «avert»).
   const row = (a, done) => {
     const href = done ? a.url : cms(a), tip = done ? '' : ' title="Avrir en il CMS (be cun login)"';
-    return `<li class="it"><div class="t">${a.kicker ? `<span class="k">${esc(a.kicker)}</span>` : ''}<a href="${esc(href)}" target="_blank" rel="noopener" data-u="${esc(a.url)}"${tip}>${esc(a.title)}</a>` +
-      `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}${done && a.mod ? ` · <span class="upd" title="Il text da l'artitgel è vegnì midà suenter ch'el è vegnì avert (constatà ${esc(when(a.mod))})">actualisà suenter avrir en challenge</span>` : ''}</span></div>` +
+    const upd = done && a.mod, isNew = upd && !modSeen.includes(a.url);
+    return `<li class="it${upd ? ' updr' : ''}${isNew ? ' updnew' : ''}"><div class="t">${a.kicker ? `<span class="k">${esc(a.kicker)}</span>` : ''}<a href="${esc(href)}" target="_blank" rel="noopener" data-u="${esc(a.url)}"${tip}>${esc(a.title)}</a>` +
+      `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}</span>${upd ? `<span class="updp" title="Il text da l'artitgel è vegnì midà suenter ch'el è vegnì avert (constatà ${esc(when(a.mod))})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>actualisà suenter avrir en challenge</span>` : ''}</div>` +
       (done ? '<span class="ck" title="Avert" aria-label="Avert">✓</span>'
             : `<a class="cms" href="${esc(cms(a))}" target="_blank" rel="noopener" data-u="${esc(a.url)}" title="Avrir en il CMS (be cun login)" aria-label="Avrir en il CMS">⬏</a>`) + '</li>';
   };
+
+  // Aktualisierte Artikel, die dieser Browser schon gesehen hat (für das einmalige Aufleuchten und den Hinweis oben)
+  const SK = 'dbz-chall-modseen';
+  let modSeen = []; try { modSeen = JSON.parse(localStorage.getItem(SK) || '[]') || []; } catch (e) {}
+  function announce() {
+    const fresh = items.filter(a => a.opened && a.mod && !modSeen.includes(a.url));
+    if (!fresh.length) return;
+    const own = fresh.filter(a => mine.includes(a.url)).length;
+    const t = document.createElement('div'); t.className = 'updtoast'; t.setAttribute('role', 'status');
+    t.innerHTML = '<b>✨</b><span>' + (fresh.length === 1 ? '1 artitgel actualisà' : fresh.length + ' artitgels actualisads') + ' suenter avrir en challenge' +
+      '<small>' + (own ? (fresh.length === 1 ? 'Ti l\'has avert – grazia fitg!' : own === 1 ? 'In da quels has ti avert – grazia!' : own + ' da quels has ti avert – grazia!') : 'Grazia a tuts che leggian e curregian!') + '</small></span>';
+    document.body.append(t);
+    const off = () => { t.classList.remove('on'); setTimeout(() => t.remove(), 500); };
+    t.addEventListener('click', off);
+    setTimeout(() => t.classList.add('on'), 400); setTimeout(off, 6000);
+    // als gesehen merken (das Aufleuchten in der Liste läuft im aktuellen Aufruf noch fertig)
+    modSeen = [...modSeen, ...fresh.map(a => a.url)].slice(-2000);
+    try { localStorage.setItem(SK, JSON.stringify(modSeen)); } catch (e) {}
+  }
 
   const unopened = () => items.filter(a => !a.opened);
   let next = null;
@@ -184,7 +220,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
     try {
       const d = await fetch(API + '/chatta/overview', { cache: 'no-store' }).then(r => r.json());
       items = d.items || [];
-      render(); pickNext();
+      render(); pickNext(); announce();
       $('foot').textContent = items.length + ' artitgels da rtr.ch/novitads, /cultura e /sport dapi ils ' + ddmm(d.from) + ' · «Il di» sco 1 artitgel per di';
     } catch (e) { $('gohint').textContent = 'Chargiar betg reussì – emprova pli tard anc ina giada.'; }
   }
