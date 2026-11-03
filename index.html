@@ -100,6 +100,11 @@
   button.mg[aria-expanded=true] .mgc { transform: rotate(45deg); }
   .mgbox { display: none; }
   .mgbox.on { display: block; }
+  /* Lab als aufklappbare Kategorie, in Orange */
+  .mgsep { margin: 8px 0 0; border-top: 1px solid var(--line); padding-top: 4px; }
+  button.mg.mglab { background-image: none; color: var(--lab); -webkit-text-fill-color: var(--lab); }
+  button.mg.mglab .mgc { border-color: var(--lab); }
+  .mi.laball { color: var(--lab); }
   .mi.lab { color: var(--lab); font-weight: 500; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; padding-top: 12px; }
   .msg { color: var(--muted); margin-top: 16px; }
   .msg a, footer a { color: var(--link); }
@@ -297,8 +302,23 @@
     }
     if (label === 'Redacziun') menu.append(chattaBox);
   }
-  // ganz unten: Link ins Lab (Experimente)
-  menu.append(mk('Lab', '/lab/', 'lab'));
+  // ganz unten: Lab (Experimente) als aufklappbare Kategorie in Orange – Liste wie in lab/index.html
+  {
+    const LAB = [['csv', 'CSV-Analisa'], ['hockey', 'Hockey regiunal'], ['profil', 'Höhenprofil'], ['plan2geo', 'Plan → GeoJSON'], ['idioms', 'Pleds en ils idioms']];
+    const id = 'mgbox' + (++subN), key = 'grp:Lab';
+    const sep = document.createElement('div'); sep.className = 'mgsep';
+    const h = document.createElement('button'); h.type = 'button'; h.className = 'mg mgt mglab'; h.setAttribute('aria-controls', id);
+    const t = document.createElement('span'); t.textContent = 'Lab';
+    const c = document.createElement('span'); c.className = 'mgc'; c.setAttribute('aria-hidden', 'true');
+    h.append(t, c);
+    const box = document.createElement('div'); box.className = 'mgbox'; box.id = id;
+    for (const [f, n] of LAB) box.append(mk(n, '/lab/' + f, 'labi'));
+    box.append(mk('Tut il lab →', '/lab/', 'labi laball'));
+    const set = o => { box.classList.toggle('on', o); h.setAttribute('aria-expanded', o); };
+    set(!!subOpen[key]);
+    h.addEventListener('click', e => { e.stopPropagation(); const o = !box.classList.contains('on'); set(o); subOpen[key] = o; saveSub(); });
+    sep.append(h); menu.append(sep, box);
+  }
 
   // Favurits: ☆ bei jedem Tool im Dropdown, «★ Mes favurits» als Kacheln unter dem Dropdown (nur in diesem Browser gespeichert)
   {
@@ -317,7 +337,7 @@
     let group = '';
     for (const el of menu.querySelectorAll('.mg, a.mi')) {
       if (el.classList.contains('mg')) { group = el.textContent; continue; }
-      if (el.classList.contains('lab')) continue;
+      if (el.classList.contains('lab') || el.classList.contains('labi')) continue;
       const key = el.dataset.fav || el.getAttribute('href');
       info[key] = { name: el.textContent, group: group.charAt(0) + group.slice(1).toLowerCase(), el };
     }
