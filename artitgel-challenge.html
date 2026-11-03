@@ -34,6 +34,11 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .go[aria-disabled=true]{opacity:.45;pointer-events:none}
 .gohint{margin:8px 0 24px;font-size:.8rem;color:var(--muted);min-height:1.2em}
 .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 16px;margin:0 0 18px}
+.box.done{background:linear-gradient(rgba(95,210,154,.08),rgba(95,210,154,.08)),var(--card);border-color:rgba(95,210,154,.35)}
+.box.todo{background:linear-gradient(rgba(255,77,100,.07),rgba(255,77,100,.07)),var(--card);border-color:rgba(255,77,100,.3)}
+.it .tl{flex:none;display:flex;align-items:center;gap:10px}
+.it a.cms{color:var(--muted);font-weight:400;font-size:1.05rem;line-height:1.4;padding:0 2px}
+.it a.cms:hover,.it a.cms:focus-visible{color:var(--accent)}
 .bh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:12px 0 4px;font-size:.95rem;font-weight:700}
 .bh .n{font-size:.8rem;font-weight:600;color:var(--muted)}
 .list{list-style:none;margin:0;padding:0}
@@ -60,13 +65,13 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   <a class="go" id="go" href="#" target="_blank" rel="noopener" aria-disabled="true">Avrir in artitgel</a>
   <p class="gohint" id="gohint">Chargel …</p>
 
-  <section class="box">
+  <section class="box done">
     <div class="bh">Ultims artitgels averts en l'artitgel-challenge <span class="n" id="n1"></span></div>
     <ul class="list" id="opened"><li class="empty">Chargel …</li></ul>
     <button type="button" class="more" id="more1" hidden></button>
   </section>
 
-  <section class="box">
+  <section class="box todo">
     <div class="bh">Anc betg averts <span class="n" id="n2"></span></div>
     <ul class="list" id="fresh"><li class="empty">Chargel …</li></ul>
     <button type="button" class="more" id="more2" hidden></button>
@@ -76,7 +81,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 </main>
 <script>
 (() => {
-  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
+  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', NORA = 'https://nora.srfdigital.ch';
   const $ = id => document.getElementById(id);
   const RUB = { novitads: 'Novitads', cultura: 'Cultura', sport: 'Sport' };
   const DAYS = ['dumengia', 'glindesdi', 'mardi', 'mesemna', 'gievgia', 'venderdi', 'sonda'];
@@ -94,11 +99,11 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   };
   const pubInfo = a => {
     const wd = DAYS[new Date(a.d + 'T12:00:00Z').getUTCDay()];
-    return [wd + ' ' + ddmm(a.d), a.ildi ? 'Il di' : RUB[a.rub] || a.rub, a.ildi ? '' : a.kicker].filter(Boolean).map(esc).join(' · ');
+    return [wd + ' ' + ddmm(a.d), RUB[a.rub] || a.rub].map(esc).join(' · ');
   };
 
   const row = (a, done) => `<li class="it"><div class="t"><a href="${esc(a.url)}" target="_blank" rel="noopener" data-u="${esc(a.url)}">${esc(a.title)}</a>` +
-    `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}</span></div>${done ? '<span class="ck" title="Avert" aria-label="Avert">✓</span>' : ''}</li>`;
+    `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}</span></div>${done ? '<span class="tl">' + (a.aid ? `<a class="cms" href="${NORA}/ui/rtr_${esc(a.rub)}/articles/${esc(a.aid)}" target="_blank" rel="noopener" title="Avrir en il CMS (be cun login)" aria-label="Avrir en il CMS">⬏</a>` : '') + '<span class="ck" title="Avert" aria-label="Avert">✓</span></span>' : ''}</li>`;
 
   const unopened = () => items.filter(a => !a.opened);
   let next = null;
@@ -119,7 +124,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
     $('fresh').innerHTML = fr.length ? fr.slice(0, show2).map(a => row(a, false)).join('') : '<li class="empty">Tut ils artitgels dals ultims 30 dis èn avert. Grazia fitg!</li>';
     const more = (el, total, shown) => { el.hidden = total <= shown; el.textContent = 'Mussar dapli (' + (total - shown) + ')'; };
     more($('more1'), op.length, show1); more($('more2'), fr.length, show2);
-    $('gohint').textContent = fr.length ? fr.length + (fr.length === 1 ? ' artitgel betg anc avert' : ' artitgels betg anc averts') + ' – il buttun avra in da quels per casualitad.' : '';
+    $('gohint').textContent = fr.length ? fr.length + (fr.length === 1 ? ' artitgel betg anc avert – il buttun l\'avra.' : ' artitgels betg anc averts – il buttun avra randomly in da quels.') : '';
   }
 
   // Ein Artikel wurde über die Challenge geöffnet: für alle markieren (Worker) und als Nutzung zählen

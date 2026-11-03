@@ -31,7 +31,7 @@ export function parseArticle(html, url) {
   let path = new URL(url).pathname;
   try { const c = new URL(unesc(canon || ''), url); if (/^(www\.)?rtr\.ch$/i.test(c.hostname) && !/^\/article\//.test(c.pathname) && c.pathname.length > 1) path = c.pathname; } catch (e) {}
   return {
-    id: meta(html, 'srf:content:id') || path,
+    id: meta(html, 'meta-srf:content:id') || meta(html, 'srf:content:id') || path,
     url: 'https://www.rtr.ch' + path,
     title, kicker,
     descr: meta(html, 'description') || lead,
@@ -223,13 +223,22 @@ export async function chattaOverview(env) {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(new Date());
   const from = new Date(Date.parse(today + 'T00:00:00Z') - 29 * 864e5).toISOString().slice(0, 10);
   const { results } = await env.DB.prepare(
-    "SELECT a.url, a.title, a.kicker, a.d, a.pub, a.path, o.last_at opened, o.n FROM art a LEFT JOIN chatta_open o ON o.url = a.url" +
+    "SELECT a.id, a.aid, a.url, a.title, a.kicker, a.d, a.pub, a.path, o.last_at opened, o.n FROM art a LEFT JOIN chatta_open o ON o.url = a.url" +
     " WHERE a.d >= ?1 AND (a.path LIKE '/novitads/%' OR a.path LIKE '/cultura/%' OR a.path LIKE '/sport/%')" +
     " AND (a.path NOT LIKE '/novitads/il-di/%' OR a.id = (SELECT MAX(b.id) FROM art b WHERE b.d = a.d AND b.path LIKE '/novitads/il-di/%'))" +
     " ORDER BY a.pub DESC, a.id DESC"
   ).bind(from).all();
-  const items = results.map(r => ({ url: r.url, title: r.title, kicker: r.kicker, d: r.d, pub: r.pub, rub: r.path.split('/')[1], ildi: r.path.startsWith('/novitads/il-di/'), opened: r.opened || null, n: r.n || 0 }));
+  // Artikel-ID (für den CMS-Link) fehlt bei älteren Einträgen: für geöffnete Artikel nachholen (höchstens 5 pro Aufruf)
+  const miss = results.filter(r => r.opened && !UUID.test(r.aid || '')).slice(0, 5);
+  await Promise.all(miss.map(async r => { const id = await fetchAid(r.url); if (id) { r.aid = id; await env.DB.prepare('UPDATE art SET aid = ?2 WHERE id = ?1').bind(r.id, id).run(); } }));
+  const items = results.map(r => ({ url: r.url, title: r.title, kicker: r.kicker, d: r.d, pub: r.pub, rub: r.path.split('/')[1], ildi: r.path.startsWith('/novitads/il-di/'), aid: UUID.test(r.aid || '') ? r.aid.toLowerCase() : null, opened: r.opened || null, n: r.n || 0 }));
   return { from, today, items };
+}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function fetchAid(url) {
+  const r = await getText(url).catch(() => null);
+  const m = r && r.ok && r.text.match(/urn:rtr:article:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+  return m ? m[1].toLowerCase() : null;
 }
 export async function chattaOpen(env, u) {
   await ensureArt(env); await ensureChatta(env);
