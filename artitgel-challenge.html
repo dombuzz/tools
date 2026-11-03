@@ -32,6 +32,9 @@ h1 .acc{color:var(--accent)}
 p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .go{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:1rem;border:0;background:var(--accent);color:var(--on-accent);padding:11px 22px;border-radius:999px;cursor:pointer;text-decoration:none}
 .go[aria-disabled=true]{opacity:.45;pointer-events:none}
+.gorow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.mine{display:inline-flex;align-items:baseline;gap:6px;padding:7px 14px;border:1px solid rgba(95,210,154,.35);border-radius:999px;background:rgba(95,210,154,.06);font-size:.85rem;color:var(--muted)}
+.mine b{color:var(--ok);font-size:1.05rem}
 .gohint{margin:8px 0 24px;font-size:.8rem;color:var(--muted);min-height:1.2em}
 .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 16px;margin:0 0 18px}
 .box.done{--bc:95,210,154;background:linear-gradient(rgba(var(--bc),.045),rgba(var(--bc),.045)),var(--card);border-color:rgba(var(--bc),.32);box-shadow:0 0 22px rgba(var(--bc),.13),inset 0 0 18px rgba(var(--bc),.04)}
@@ -70,7 +73,10 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   <h1>Artitgel-<span class="acc">challenge</span></h1>
   <p class="sub">Cun cliccar qua sut s'avra in artitgel che è vegnì publitgà durant ils ultims 30 dis. Per plaschair leger attentamain e controllar sch'i dat sbagls u passaschas nunchapiblas.</p>
 
-  <a class="go" id="go" href="#" target="_blank" rel="noopener" aria-disabled="true">Avrir in artitgel</a>
+  <div class="gorow">
+    <a class="go" id="go" href="#" target="_blank" rel="noopener" aria-disabled="true">Avrir in artitgel</a>
+    <span class="mine" id="mine" title="Artitgels che ti has avert en l'artitgel-challenge (en quest browser)"><b id="minen">0</b><span id="minet">artitgels avert da tai</span></span>
+  </div>
   <p class="gohint" id="gohint">Chargel …</p>
 
   <section class="box done" data-k="done">
@@ -144,7 +150,15 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   }
 
   // Ein Artikel wurde über die Challenge geöffnet: für alle markieren (Worker) und als Nutzung zählen
+  // Eigener Zähler: welche Artikel dieser Browser über die Challenge geöffnet hat (nur lokal gespeichert)
+  const MK = 'dbz-chall-mine';
+  let mine = []; try { mine = JSON.parse(localStorage.getItem(MK) || '[]') || []; } catch (e) {}
+  const paintMine = () => { const n = mine.length; $('minen').textContent = n.toLocaleString('de-CH'); $('minet').textContent = n === 1 ? 'artitgel avert da tai' : 'artitgels averts da tai'; };
+  const addMine = u => { if (mine.includes(u)) return; mine.push(u); if (mine.length > 5000) mine = mine.slice(-5000); try { localStorage.setItem(MK, JSON.stringify(mine)); } catch (e) {} paintMine(); };
+  paintMine();
+
   function opened(u) {
+    addMine(u);
     const a = items.find(x => x.url === u); if (!a) return;
     a.opened = new Date().toISOString(); a.n = (a.n || 0) + 1;
     fetch(API + '/chatta/open?u=' + encodeURIComponent(u), { method: 'POST', keepalive: true }).catch(() => {});
