@@ -36,11 +36,17 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 16px;margin:0 0 18px}
 .box.done{--bc:95,210,154;background:linear-gradient(rgba(var(--bc),.045),rgba(var(--bc),.045)),var(--card);border-color:rgba(var(--bc),.32);box-shadow:0 0 22px rgba(var(--bc),.13),inset 0 0 18px rgba(var(--bc),.04)}
 .box.todo{--bc:255,77,100;background:linear-gradient(rgba(var(--bc),.04),rgba(var(--bc),.04)),var(--card);border-color:rgba(var(--bc),.28);box-shadow:0 0 22px rgba(var(--bc),.12),inset 0 0 18px rgba(var(--bc),.035)}
-.bh .bt{text-decoration:underline;text-decoration-color:rgba(var(--bc),.6);text-decoration-thickness:1.5px;text-underline-offset:5px}
+.bh .bt{text-decoration:underline;text-decoration-color:rgba(var(--bc),.9);text-decoration-thickness:1px;text-underline-offset:5px}
 .it .tl{flex:none;display:flex;align-items:center;gap:10px}
 .it a.cms{color:var(--muted);font-weight:400;font-size:1.05rem;line-height:1.4;padding:0 2px}
 .it a.cms:hover,.it a.cms:focus-visible{color:var(--accent)}
-.bh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:12px 0 4px;font-size:.95rem;font-weight:700}
+.bh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;margin:12px 0 4px;padding:0;border:0;background:none;color:inherit;font:inherit;font-size:.95rem;font-weight:700;text-align:left;cursor:pointer}
+.bh:focus-visible{outline:1px dashed rgba(var(--bc),.8);outline-offset:4px;border-radius:4px}
+.bh .bt{flex:1}
+.bh .chev{flex:none;width:7px;height:7px;margin:0 3px 0 4px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.box.shut .bh .chev{transform:translateY(1px) rotate(-45deg)}
+.box.shut .list,.box.shut .more{display:none!important}
+.box.shut .bh{margin-bottom:12px}
 .bh .n{font-size:.8rem;font-weight:600;color:var(--muted)}
 .list{list-style:none;margin:0;padding:0}
 .it{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
@@ -67,14 +73,14 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   <a class="go" id="go" href="#" target="_blank" rel="noopener" aria-disabled="true">Avrir in artitgel</a>
   <p class="gohint" id="gohint">Chargel …</p>
 
-  <section class="box done">
-    <div class="bh"><span class="bt">Ultims artitgels averts en l'artitgel-challenge</span> <span class="n" id="n1"></span></div>
+  <section class="box done" data-k="done">
+    <button type="button" class="bh" aria-expanded="true" aria-controls="opened"><span class="bt">Ultims artitgels averts en l'artitgel-challenge</span><span class="n" id="n1"></span><span class="chev" aria-hidden="true"></span></button>
     <ul class="list" id="opened"><li class="empty">Chargel …</li></ul>
     <button type="button" class="more" id="more1" hidden></button>
   </section>
 
-  <section class="box todo">
-    <div class="bh"><span class="bt">Anc betg averts</span> <span class="n" id="n2"></span></div>
+  <section class="box todo" data-k="todo">
+    <button type="button" class="bh" aria-expanded="true" aria-controls="fresh"><span class="bt">Anc betg averts</span><span class="n" id="n2"></span><span class="chev" aria-hidden="true"></span></button>
     <ul class="list" id="fresh"><li class="empty">Chargel …</li></ul>
     <button type="button" class="more" id="more2" hidden></button>
   </section>
@@ -104,8 +110,16 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
     return [wd + ' ' + ddmm(a.d), RUB[a.rub] || a.rub].map(esc).join(' · ');
   };
 
-  const row = (a, done) => `<li class="it"><div class="t">${a.kicker ? `<span class="k">${esc(a.kicker)}</span>` : ''}<a href="${esc(a.url)}" target="_blank" rel="noopener" data-u="${esc(a.url)}">${esc(a.title)}</a>` +
-    `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}</span></div>${done ? '<span class="tl">' + (a.aid ? `<a class="cms" href="${NORA}/ui/rtr_${esc(a.rub)}/articles/${esc(a.aid)}" target="_blank" rel="noopener" title="Avrir en il CMS (be cun login)" aria-label="Avrir en il CMS">⬏</a>` : '') + '<span class="ck" title="Avert" aria-label="Avert">✓</span></span>' : ''}</li>`;
+  // Bearbeitungslink im CMS (wie «Links d'artitgels»): nora.srfdigital.ch/ui/rtr_<portal>/articles/<ID>
+  const cms = a => a.aid ? `${NORA}/ui/rtr_${RUB[a.rub] ? a.rub : 'novitads'}/articles/${a.aid}` : a.url;
+  // Geöffnete: Titel -> Artikel auf rtr.ch, ✓. Noch nicht geöffnete: Titel und ⬏ -> CMS (öffnen zählt als «avert»).
+  const row = (a, done) => {
+    const href = done ? a.url : cms(a), tip = done ? '' : ' title="Avrir en il CMS (be cun login)"';
+    return `<li class="it"><div class="t">${a.kicker ? `<span class="k">${esc(a.kicker)}</span>` : ''}<a href="${esc(href)}" target="_blank" rel="noopener" data-u="${esc(a.url)}"${tip}>${esc(a.title)}</a>` +
+      `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}</span></div>` +
+      (done ? '<span class="ck" title="Avert" aria-label="Avert">✓</span>'
+            : `<a class="cms" href="${esc(cms(a))}" target="_blank" rel="noopener" data-u="${esc(a.url)}" title="Avrir en il CMS (be cun login)" aria-label="Avrir en il CMS">⬏</a>`) + '</li>';
+  };
 
   const unopened = () => items.filter(a => !a.opened);
   let next = null;
@@ -141,6 +155,13 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   $('go').addEventListener('click', () => { if (next) opened(next.url); });
   document.addEventListener('click', e => { const l = e.target.closest('a[data-u]'); if (l) opened(l.dataset.u); });
   document.addEventListener('auxclick', e => { const l = e.target.closest('a[data-u]'); if (l && e.button === 1) opened(l.dataset.u); });
+  // Boxen auf- und zuklappen (pro Browser gemerkt)
+  for (const box of document.querySelectorAll('.box[data-k]')) {
+    const k = 'dbz-chall-shut-' + box.dataset.k, h = box.querySelector('.bh');
+    const set = shut => { box.classList.toggle('shut', shut); h.setAttribute('aria-expanded', !shut); };
+    try { set(localStorage.getItem(k) === '1'); } catch (e) {}
+    h.addEventListener('click', () => { const shut = !box.classList.contains('shut'); set(shut); try { localStorage.setItem(k, shut ? '1' : '0'); } catch (e) {} });
+  }
   $('more1').addEventListener('click', () => { show1 += STEP * 2; render(); });
   $('more2').addEventListener('click', () => { show2 += STEP * 2; render(); });
 
