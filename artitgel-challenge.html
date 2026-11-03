@@ -33,9 +33,9 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .go{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:1rem;border:0;background:var(--accent);color:var(--on-accent);padding:11px 22px;border-radius:999px;cursor:pointer;text-decoration:none}
 .go[aria-disabled=true]{opacity:.45;pointer-events:none}
 .gorow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
-.mine{display:inline-flex;align-items:baseline;gap:6px;padding:7px 14px;border:1px solid rgba(95,210,154,.35);border-radius:999px;background:rgba(95,210,154,.06);font-size:.85rem;color:var(--muted)}
-.mine b{color:var(--ok);font-size:1.05rem}
-.gohint{margin:8px 0 24px;font-size:.8rem;color:var(--muted);min-height:1.2em}
+.mine{margin:0 2px 8px;text-align:right;font-size:.85rem;color:var(--muted)}
+.mine b{color:var(--text);font-weight:700}
+.gohint{margin:8px 0 14px;font-size:.8rem;color:var(--muted);min-height:1.2em}
 .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 16px;margin:0 0 18px}
 .box.done{--bc:95,210,154;background:linear-gradient(rgba(var(--bc),.045),rgba(var(--bc),.045)),var(--card);border-color:rgba(var(--bc),.32);box-shadow:0 0 22px rgba(var(--bc),.13),inset 0 0 18px rgba(var(--bc),.04)}
 .box.todo{--bc:255,77,100;background:linear-gradient(rgba(var(--bc),.04),rgba(var(--bc),.04)),var(--card);border-color:rgba(var(--bc),.28);box-shadow:0 0 22px rgba(var(--bc),.12),inset 0 0 18px rgba(var(--bc),.035)}
@@ -76,9 +76,9 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 
   <div class="gorow">
     <a class="go" id="go" href="#" target="_blank" rel="noopener" aria-disabled="true">Avrir in artitgel</a>
-    <span class="mine" id="mine" title="Artitgels che ti has avert en l'artitgel-challenge (en quest browser)"><b id="minen">0</b><span id="minet">artitgels avert da tai</span></span>
   </div>
   <p class="gohint" id="gohint">Chargel …</p>
+  <p class="mine" id="mine" title="Artitgels che ti has avert en l'artitgel-challenge (en quest browser)"><b id="minen">0</b> <span id="minet">artitgels averts da tai</span></p>
 
   <section class="box done" data-k="done">
     <button type="button" class="bh" aria-expanded="true" aria-controls="opened"><span class="bt">Ultims artitgels averts en l'artitgel-challenge</span><span class="n" id="n1"></span><span class="chev" aria-hidden="true"></span></button>
@@ -123,7 +123,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   const row = (a, done) => {
     const href = done ? a.url : cms(a), tip = done ? '' : ' title="Avrir en il CMS (be cun login)"';
     return `<li class="it"><div class="t">${a.kicker ? `<span class="k">${esc(a.kicker)}</span>` : ''}<a href="${esc(href)}" target="_blank" rel="noopener" data-u="${esc(a.url)}"${tip}>${esc(a.title)}</a>` +
-      `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}${done && a.mod ? ` · <span class="upd" title="Il text da l'artitgel è vegnì midà suenter ch'el è vegnì avert (constatà ${esc(when(a.mod))})">actualisà suenter l'avertura</span>` : ''}</span></div>` +
+      `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}${done && a.mod ? ` · <span class="upd" title="Il text da l'artitgel è vegnì midà suenter ch'el è vegnì avert (constatà ${esc(when(a.mod))})">actualisà suenter avrir en challenge</span>` : ''}</span></div>` +
       (done ? '<span class="ck" title="Avert" aria-label="Avert">✓</span>'
             : `<a class="cms" href="${esc(cms(a))}" target="_blank" rel="noopener" data-u="${esc(a.url)}" title="Avrir en il CMS (be cun login)" aria-label="Avrir en il CMS">⬏</a>`) + '</li>';
   };
