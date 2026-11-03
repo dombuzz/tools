@@ -304,6 +304,7 @@ async function fbMail(env, tool, name, text) {
 }
 
 import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck } from './artsearch.js';
+import { gameRoute, gameAggregate } from './game.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -353,7 +354,7 @@ export default {
     const m = { r: 0, w: 0 }, raw = env.DB;
     env = { ...env, DB: meterDB(raw, m) };
     try {
-      if (event.cron === CRON_ART) { await chattaRecheck(env).catch(e => reportError(env, 'chatta recheck', e)); await crawlStep(env); }
+      if (event.cron === CRON_ART) { await chattaRecheck(env).catch(e => reportError(env, 'chatta recheck', e)); await crawlStep(env); await gameAggregate(env, GROUP).catch(e => reportError(env, 'game aggregate', e)); }
       else if (event.cron === CRON_MONTHLY) await monthlyReport(env, ctx);
       else await hourlyChecks(env);
     } catch (e) { await reportError(env, 'cron ' + event.cron, e); }
@@ -515,9 +516,16 @@ async function handle(request, env, ctx) {
         }, request);
       }
 
+      // /game: Profile (Name + Wiederherstellungscode) und Rangliste
+      if (parts[0] === 'game') {
+        if (request.method === 'POST' && !ALLOWED_ORIGINS.includes(request.headers.get('Origin') || '')) return json({ error: 'origin' }, request, 403);
+        const r = await gameRoute(request, env, url, parts, GROUP);
+        if (r) return json(r.data, request, r.status);
+      }
+
       // «Artitgel-challenge»: Übersicht (GET /chatta/overview) und «geöffnet» melden (POST /chatta/open?u=<URL>)
       if (request.method === 'GET' && parts[0] === 'chatta' && parts[1] === 'overview' && parts.length === 2) return json(await chattaOverview(env), request);
-      if (request.method === 'POST' && parts[0] === 'chatta' && parts[1] === 'open' && parts.length === 2) return json(await chattaOpen(env, url.searchParams.get('u')), request);
+      if (request.method === 'POST' && parts[0] === 'chatta' && parts[1] === 'open' && parts.length === 2) return json(await chattaOpen(env, url.searchParams.get('u'), url.searchParams.get('c')), request);
 
       // «Chatta Schweiz»: Liste (?list=1) oder direkt Weiterleitung auf einen Zufallsartikel
       if (request.method === 'GET' && parts[0] === 'chatta' && parts.length === 1) {
@@ -669,6 +677,7 @@ async function handle(request, env, ctx) {
         if (!c || !/^[A-Za-z0-9-]{8,40}$/.test(c)) return json({ error: 'cid' }, request, 400);
         await ensureViews(env);
         await env.DB.prepare("INSERT INTO excl (cid, ts) VALUES (?1, datetime('now')) ON CONFLICT(cid) DO UPDATE SET ts = datetime('now')").bind(c).run();
+        await env.DB.prepare('DELETE FROM gday WHERE cid = ?1').bind(c).run().catch(() => {}); await env.DB.prepare('DELETE FROM chatta_log WHERE cid = ?1').bind(c).run().catch(() => {});
         return json({ ok: true }, request);
       }
 

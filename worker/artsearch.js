@@ -276,7 +276,7 @@ async function fetchAid(url) {
   const m = r && r.ok && r.text.match(/urn:rtr:article:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
   return m ? m[1].toLowerCase() : null;
 }
-export async function chattaOpen(env, u) {
+export async function chattaOpen(env, u, cid) {
   await ensureArt(env); await ensureChatta(env);
   const { results: [a] } = await env.DB.prepare('SELECT url, d FROM art WHERE url = ?1').bind(String(u || '').slice(0, 500)).all();
   if (!a) return { ok: false, error: 'unknown' };
@@ -286,5 +286,10 @@ export async function chattaOpen(env, u) {
   await env.DB.prepare('INSERT INTO chatta_open (url, first_at, last_at, n) VALUES (?1, ?2, ?2, 1) ON CONFLICT(url) DO UPDATE SET last_at = ?2, n = n + 1').bind(a.url, now).run();
   // Textstand beim ersten Öffnen festhalten (Vergleichsbasis für «actualisà suenter l'avertura»)
   if (!o || !o.h0) { const h = /\/novitads\/il-di\//.test(a.url) && a.d >= today ? null : await textHash(a.url); if (h) await env.DB.prepare('UPDATE chatta_open SET h0 = ?2, chk_at = ?3 WHERE url = ?1 AND h0 IS NULL').bind(a.url, h, now).run(); }
+  // pro Gerät festhalten (Rangliste in /game); Geräte im Modus test zählen nicht
+  if (/^[A-Za-z0-9-]{8,40}$/.test(cid || '')) {
+    const ex = await env.DB.prepare('SELECT 1 x FROM excl WHERE cid = ?1').bind(cid).all().catch(() => ({ results: [] }));
+    if (!ex.results.length) await env.DB.prepare('CREATE TABLE IF NOT EXISTS chatta_log (cid TEXT NOT NULL, url TEXT NOT NULL, ts TEXT NOT NULL, PRIMARY KEY (cid, url))').run().then(() => env.DB.prepare('INSERT OR IGNORE INTO chatta_log (cid, url, ts) VALUES (?1, ?2, ?3)').bind(cid, a.url, now).run());
+  }
   return { ok: true };
 }

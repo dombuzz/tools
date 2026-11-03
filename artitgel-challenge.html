@@ -198,7 +198,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
     addMine(u);
     const a = items.find(x => x.url === u); if (!a) return;
     a.opened = new Date().toISOString(); a.n = (a.n || 0) + 1;
-    fetch(API + '/chatta/open?u=' + encodeURIComponent(u), { method: 'POST', keepalive: true }).catch(() => {});
+    fetch(API + '/chatta/open?u=' + encodeURIComponent(u) + '&c=' + encodeURIComponent((window.dbzCid && window.dbzCid()) || ''), { method: 'POST', keepalive: true }).catch(() => {});
     window.dispatchEvent(new Event('dbz-success'));
     setTimeout(() => { render(); pickNext(); }, 0);
   }

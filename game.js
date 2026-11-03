@@ -4,7 +4,7 @@
 //   dbz-days          Tage mit Tool-Nutzung (JJJJ-MM-TT)
 //   dbz-best          längste Serie
 //   dbz-acts          Aktionen (Downloads usw.): { total, month, m }
-// Keine Ranglisten, nichts wird an andere Personen gezeigt.
+// Rangliste: nur mit eigenem Profil (Name + Wiederherstellungscode, Worker /game/*). Ohne Profil bleibt alles lokal und niemand sieht etwas.
 (() => {
   const ls = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
   const lj = (k, d) => { try { return JSON.parse(ls(k, '')) ?? d; } catch (e) { return d; } };
@@ -59,7 +59,31 @@
   /* Verlauf und Milchglas wie in den Tools (theme.js), hier in Blau: --rgrad wird aus der blauen Akzentfarbe berechnet */
   .gcard { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-color: var(--glass-line); }
   .gh b, .gtip span, .h1g, .gt.on::before { background-image: var(--rgrad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .gbar i { background: var(--rgrad); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent); }`;
+  .gbar i { background: var(--rgrad); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .gp { display: grid; gap: 8px; }
+  .gp p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  .gp form { display: flex; flex-wrap: wrap; gap: 6px; }
+  .gp input { font: inherit; font-size: 14px; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--field); color: var(--text); min-width: 0; flex: 1 1 140px; }
+  .gp input:focus-visible { outline: none; border-color: var(--accent); }
+  .gb { font: inherit; font-size: 13px; padding: 7px 12px; border-radius: 9px; border: 1px solid var(--accent); background: none; color: var(--accent); cursor: pointer; }
+  .gb.q { border-color: var(--line); color: var(--muted); }
+  .gb:hover, .gb:focus-visible { background: color-mix(in srgb, var(--accent) 14%, transparent); outline: none; }
+  .gcode { font-family: ui-monospace, monospace; font-size: 22px; letter-spacing: .12em; padding: 8px 12px; border: 1px dashed var(--accent); border-radius: 10px; width: fit-content; user-select: all; }
+  .gerr { color: #ff7a7a; font-size: 13px; min-height: 1em; }
+  .grk { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .grk th { text-align: right; color: var(--muted); font-weight: 600; font-size: 11.5px; padding: 4px 6px; cursor: pointer; white-space: nowrap; }
+  .grk th:nth-child(2) { text-align: left; }
+  .grk th.on { color: var(--accent); }
+  .grk td { padding: 6px; border-top: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+  .grk td:nth-child(1) { text-align: left; color: var(--muted); width: 1%; }
+  .grk td:nth-child(2) { text-align: left; }
+  .grk tr.me td { background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 600; }
+  .grk td.pt { font-weight: 700; }
+  .gper { display: flex; gap: 6px; }
+  .gper button { font: inherit; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--muted); cursor: pointer; }
+  .gper button.on { border-color: var(--accent); color: var(--accent); }
+  .grules { margin-top: 8px; font-size: 12.5px; color: var(--muted); } .grules summary { cursor: pointer; } .grules ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.5; }
+  .gx { display: flex; gap: 6px; flex-wrap: wrap; }`;
   document.head.insertAdjacentHTML('beforeend', '<style>' + css + '</style>');
 
   // Unten kein «game»-Link; dafür zuoberst der Weg zurück zur Startseite (wie in den Tools)
@@ -147,6 +171,78 @@
     el.addEventListener('focus', () => showTip(i));
     el.addEventListener('click', () => { pinned = pinned === i ? -1 : i; showTip(pinned < 0 ? i : pinned); });
   });
+
+  // ---- Profil und Rangliste (Worker) ----
+  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
+  const cid = (window.dbzCid && window.dbzCid()) || '';
+  const call = (path, body) => fetch(API + path, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ c: cid, ...body }) })
+    .then(r => r.json().then(d => ({ ok: r.ok, ...d }))).catch(() => ({ ok: false, error: 'net' }));
+  const ERR = { name: 'Num: 2–24 caracters (bustabs, tschiffras, spazi, . _ - ’).', taken: 'Quest num exista gia.', already: 'Quest apparat ha gia in profil.', login: 'Num u code èn sbagliads.', limit: 'Memia blers empruvs. Spetga in mument.', full: 'Il dumber maximal da profils è cuntanschì.', net: 'Nagina colliaziun cun il server.', origin: 'Betg permess.', cid: 'Nagina identificaziun dal apparat.' };
+  const pcard = document.createElement('div'), rcard = document.createElement('div');
+  pcard.className = rcard.className = 'gcard';
+  sec.append(pcard, rcard);
+  const fmt = n => (+n).toLocaleString('de-CH');
+  let me = null, per = 'month', sortK = 'pts', cache = {};
+
+  const drawProfile = (code) => {
+    if (!cid) { pcard.innerHTML = '<div class="gh"><b>Profil</b></div><p class="gnote">Memorisaziun localmain bloccada.</p>'; return; }
+    if (me) {
+      pcard.innerHTML = `<div class="gh"><b>Profil</b><span>${esc(me.name)}</span></div><div class="gp">
+        ${code ? `<p>Tes code da recuperaziun (vegn mussà be questa giada – serva-lo bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la glista da rang.</p>'}
+        <div class="gx"><button class="gb q" data-a="code">Nov code</button><button class="gb q" data-a="out">Ir or</button><button class="gb q" data-a="del">Stizzar profil</button></div><div class="gerr"></div></div>`;
+    } else {
+      pcard.innerHTML = `<div class="gh"><b>Profil</b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
+        <p>Fa in profil (be in num, nagina e-mail) per participar a la glista da rang. Il code da recuperaziun survegn ti ina giada.</p>
+        <form data-f="reg"><input name="name" maxlength="24" placeholder="Tes num" autocomplete="nickname" required><button class="gb">Crear profil</button></form>
+        <form data-f="log"><input name="name" maxlength="24" placeholder="Num" autocomplete="off" required><input name="code" maxlength="12" placeholder="Code (XXXX-XXXX)" autocomplete="off" required><button class="gb q">Avrir profil</button></form>
+        <div class="gerr"></div></div>`;
+    }
+  };
+  pcard.addEventListener('submit', async e => {
+    e.preventDefault();
+    const f = e.target, d = Object.fromEntries(new FormData(f)), er = pcard.querySelector('.gerr');
+    const r = await call('/game/' + (f.dataset.f === 'reg' ? 'register' : 'login'), d);
+    if (!r.ok) { er.textContent = ERR[r.error] || 'Errur.'; return; }
+    me = { name: r.name }; cache = {}; drawProfile(r.code); loadRank();
+  });
+  pcard.addEventListener('click', async e => {
+    const a = e.target.closest('[data-a]'); if (!a) return; const er = pcard.querySelector('.gerr');
+    if (a.dataset.a === 'code') { if (!confirm('Generar in nov code? Il vegl code na vala lura betg pli.')) return; const r = await call('/game/code', {}); if (r.ok) drawProfile(r.code); else er.textContent = 'Errur.'; }
+    if (a.dataset.a === 'out') { await call('/game/logout', {}); me = null; cache = {}; drawProfile(); drawRank(); }
+    if (a.dataset.a === 'del') { if (!confirm('Stizzar il profil definitivamain?')) return; const r = await call('/game/delete', {}); if (r.ok) { me = null; cache = {}; drawProfile(); drawRank(); } else er.textContent = 'Errur.'; }
+  });
+
+  const COLS = [['pts', 'Puncts'], ['seria', 'Seria'], ['coll', 'Collecziun'], ['acts', 'Acziuns'], ['art', 'Artitgels']];
+  const PN = { month: 'Quest mais', year: 'Quest onn', all: 'Tut' };
+  const RULES = `<details class="grules"><summary>Sco vegnan ils puncts calculads?</summary><ul>
+    <li><b>5</b> puncts per di cun tool duvrà</li><li><b>1</b> punct per acziun (max. 20 per di)</li>
+    <li><b>10</b> puncts per tool scuvrì (ina giada)</li><li><b>3</b> puncts per artitgel avert en l’Artitgel-challenge (max. 3 per di)</li>
+    <li><b>20</b> puncts per badge</li><li>Bonus per la megliera seria: <b>15</b> (3 dis), <b>40</b> (7 dis), <b>150</b> (30 dis)</li>
+    <li>Sonda e dumengia na rumpan la seria. Apparats en il modus test na vegnan betg quintads.</li></ul></details>`;
+  const drawRank = (d) => {
+    if (!me) { rcard.innerHTML = '<div class="gh"><b>Glista da rang</b></div><p class="gnote">Crea in profil per vesair la glista da rang.</p>'; return; }
+    if (!d) { rcard.innerHTML = '<div class="gh"><b>Glista da rang</b></div><p class="gnote">Chargia …</p>'; return; }
+    const rows = d.rows.slice().sort((a, b) => b[sortK] - a[sortK] || b.pts - a.pts || a.name.localeCompare(b.name));
+    rcard.innerHTML = `<div class="gh"><b>Glista da rang</b><span>${rows.length} ${rows.length === 1 ? 'persuna' : 'persunas'}</span></div>
+      <div class="gper">${Object.entries(PN).map(([k, v]) => `<button data-p="${k}" class="${k === per ? 'on' : ''}">${v}</button>`).join('')}</div>
+      <table class="grk"><thead><tr><th></th><th>Num</th>${COLS.map(([k, v]) => `<th data-s="${k}" class="${k === sortK ? 'on' : ''}">${v}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}</td><td>${esc(r.name)}</td>${COLS.map(([k]) => `<td class="${k === 'pts' ? 'pt' : ''}">${fmt(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>${RULES}`;
+  };
+  rcard.addEventListener('click', e => {
+    const p = e.target.closest('[data-p]'), s2 = e.target.closest('[data-s]');
+    if (p) { per = p.dataset.p; loadRank(); }
+    if (s2) { sortK = s2.dataset.s; drawRank(cache[per]); }
+  });
+  const loadRank = async () => {
+    if (!me) return drawRank();
+    if (cache[per] && Date.now() - cache[per].t < 6e4) return drawRank(cache[per].d);
+    drawRank();
+    const r = await call('/game/ranking?c=' + encodeURIComponent(cid) + '&p=' + per);
+    if (!r.ok) { rcard.querySelector('.gnote').textContent = 'Glista betg chargiabla.'; return; }
+    cache[per] = { t: Date.now(), d: r }; drawRank(r);
+  };
+  drawProfile(); drawRank();
+  fetch(API + '/game/me?c=' + encodeURIComponent(cid)).then(r => r.json()).then(d => { me = d.profile || null; drawProfile(); loadRank(); }).catch(() => {});
 
   // Balken einblenden
   requestAnimationFrame(() => setTimeout(() => {
