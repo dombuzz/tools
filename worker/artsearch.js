@@ -26,7 +26,10 @@ export function parseArticle(html, url) {
   if (!title) return null;
   const lead = strip((html.match(/<p[^>]+class="article-lead"[^>]*>([\s\S]*?)<\/p>/) || [])[1] || '');
   const paras = [...html.matchAll(/<p[^>]+class="article-paragraph"[^>]*>([\s\S]*?)<\/p>/g)].map(m => strip(m[1])).filter(Boolean);
-  const path = new URL(url).pathname;
+  // Adresse: kanonische URL der Seite (bei umbenannten Artikeln die aktuelle), sonst die abgerufene
+  const canon = (html.match(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i) || html.match(/<link[^>]+href=["']([^"']+)["'][^>]*rel=["']canonical["']/i) || [])[1] || meta(html, 'og:url');
+  let path = new URL(url).pathname;
+  try { const c = new URL(unesc(canon || ''), url); if (/^(www\.)?rtr\.ch$/i.test(c.hostname) && !/^\/article\//.test(c.pathname) && c.pathname.length > 1) path = c.pathname; } catch (e) {}
   return {
     id: meta(html, 'srf:content:id') || path,
     url: 'https://www.rtr.ch' + path,
@@ -44,6 +47,7 @@ export async function ensureArt(env) {
   await env.DB.batch([
     env.DB.prepare('CREATE TABLE IF NOT EXISTS art (id INTEGER PRIMARY KEY, aid TEXT, url TEXT UNIQUE NOT NULL, title TEXT, kicker TEXT, descr TEXT, section TEXT, path TEXT, d TEXT NOT NULL, pub TEXT)'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS art_d ON art (d)'),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS art_aid ON art (aid)'),
     env.DB.prepare("CREATE VIRTUAL TABLE IF NOT EXISTS art_fts USING fts5(title, kicker, descr, body, tokenize = \"unicode61 remove_diacritics 2\")"),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS art_seen (url TEXT PRIMARY KEY, ym TEXT, ok INTEGER NOT NULL DEFAULT 0, tries INTEGER NOT NULL DEFAULT 0)'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS art_state (k TEXT PRIMARY KEY, v TEXT)'),
@@ -60,19 +64,32 @@ async function getText(url) {
   return { ok: r.ok, status: r.status, text: r.ok ? await r.text() : '' };
 }
 
+// Ein Artikel = eine Zeile. Gleiche Artikel-ID (srf:content:id) mit neuer Adresse (Titel geändert) ersetzt den alten Eintrag.
 export async function saveArticle(env, a) {
-  const old = await env.DB.prepare('SELECT id FROM art WHERE url = ?1').bind(a.url).all();
+  const numeric = /^\d+$/.test(a.id);
+  const found = (await env.DB.prepare('SELECT id FROM art WHERE url = ?1' + (numeric ? ' OR aid = ?2' : '') + ' ORDER BY id').bind(...(numeric ? [a.url, a.id] : [a.url])).all()).results;
   const st = [];
-  if (old.results.length) {
-    const id = old.results[0].id;
+  if (found.length) {
+    const id = found[0].id;
+    for (const r of found.slice(1)) { st.push(env.DB.prepare('DELETE FROM art_fts WHERE rowid = ?1').bind(r.id)); st.push(env.DB.prepare('DELETE FROM art WHERE id = ?1').bind(r.id)); }
     st.push(env.DB.prepare('DELETE FROM art_fts WHERE rowid = ?1').bind(id));
-    st.push(env.DB.prepare('UPDATE art SET aid=?2, title=?3, kicker=?4, descr=?5, section=?6, path=?7, d=?8, pub=?9 WHERE id = ?1').bind(id, a.id, a.title, a.kicker, a.descr, a.section, a.path, a.d, a.pub));
+    st.push(env.DB.prepare('UPDATE art SET aid=?2, url=?10, title=?3, kicker=?4, descr=?5, section=?6, path=?7, d=?8, pub=?9 WHERE id = ?1').bind(id, a.id, a.title, a.kicker, a.descr, a.section, a.path, a.d, a.pub, a.url));
     st.push(env.DB.prepare('INSERT INTO art_fts (rowid, title, kicker, descr, body) VALUES (?1, ?2, ?3, ?4, ?5)').bind(id, a.title, a.kicker, a.descr, a.body));
   } else {
     st.push(env.DB.prepare('INSERT INTO art (aid, url, title, kicker, descr, section, path, d, pub) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9)').bind(a.id, a.url, a.title, a.kicker, a.descr, a.section, a.path, a.d, a.pub));
     st.push(env.DB.prepare('INSERT INTO art_fts (rowid, title, kicker, descr, body) VALUES (last_insert_rowid(), ?1, ?2, ?3, ?4)').bind(a.title, a.kicker, a.descr, a.body));
   }
   await env.DB.batch(st);
+}
+// Einmalig: bereits gespeicherte Doppelte (gleiche Artikel-ID) entfernen, das zuletzt gespeicherte bleibt
+async function dedupeOnce(env) {
+  if (await stGet(env, 'dedup1')) return;
+  const sub = "SELECT id FROM art WHERE aid GLOB '[0-9]*' AND id NOT IN (SELECT MAX(id) FROM art WHERE aid GLOB '[0-9]*' GROUP BY aid)";
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM art_fts WHERE rowid IN (' + sub + ')'),
+    env.DB.prepare('DELETE FROM art WHERE id IN (' + sub.replace('SELECT id FROM art WHERE', 'SELECT id FROM art WHERE') + ')'),
+  ]);
+  await stSet(env, 'dedup1', '1');
 }
 
 // Ein Lauf: Sind Artikel vorgemerkt, werden bis zu PER_RUN davon geholt (neueste Monate zuerst).
@@ -86,6 +103,7 @@ export async function crawlStep(env) {
 }
 async function crawlInner(env) {
   await ensureArt(env);
+  await dedupeOnce(env);
   const { results: [u] } = await env.DB.prepare("SELECT w FROM usage WHERE day = date('now')").all().catch(() => ({ results: [] }));
   if (u && u.w > WRITE_PAUSE) return { paused: true };
   const rows = (await env.DB.prepare('SELECT url FROM art_seen WHERE ok = 0 AND tries < ?1 ORDER BY ym DESC, rowid ASC LIMIT ?2').bind(MAX_TRIES, PER_RUN).all()).results;
