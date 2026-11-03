@@ -217,13 +217,43 @@ export async function countArt(env) {
 // «Il di» erhält laufend neue URLs: pro Tag nur die neueste Fassung.
 async function ensureChatta(env) {
   await env.DB.prepare('CREATE TABLE IF NOT EXISTS chatta_open (url TEXT PRIMARY KEY, first_at TEXT NOT NULL, last_at TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 1)').run();
+  // Spalten für «actualisà suenter l'avertura»: Text-Fingerabdruck beim Öffnen (h0), zuletzt geprüft (chk_at), Änderung erkannt (mod_at)
+  const { results: cols } = await env.DB.prepare('PRAGMA table_info(chatta_open)').all();
+  const have = new Set(cols.map(c => c.name));
+  for (const [c, t] of [['h0', 'TEXT'], ['chk_at', 'TEXT'], ['mod_at', 'TEXT']]) if (!have.has(c)) await env.DB.prepare(`ALTER TABLE chatta_open ADD COLUMN ${c} ${t}`).run().catch(() => {});
+}
+// Fingerabdruck des sichtbaren Artikeltexts (Titel, Lead, Absätze) – ändert sich, sobald jemand den Text korrigiert
+async function textHash(url) {
+  const r = await getText(url).catch(() => null);
+  if (!r || !r.ok) return null;
+  const a = parseArticle(r.text, url); if (!a) return null;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode([a.kicker, a.title, a.body].join('\n')));
+  return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+// Geöffnete Artikel regelmässig nachprüfen (Cron alle 10 Min., höchstens 8 Abrufe): stündlich in den ersten 3 Tagen, danach alle 12 Std., bis 30 Tage nach dem Öffnen.
+// «Il di» wird ausgelassen (wechselt laufend Inhalt und URL).
+export async function chattaRecheck(env) {
+  await ensureChatta(env);
+  const { results } = await env.DB.prepare(
+    "SELECT url, h0, first_at FROM chatta_open WHERE mod_at IS NULL AND url NOT LIKE '%/novitads/il-di/%' AND first_at >= strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-30 days')" +
+    " AND (chk_at IS NULL OR chk_at < CASE WHEN first_at >= strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 days') THEN strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-55 minutes') ELSE strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-12 hours') END)" +
+    " ORDER BY chk_at IS NOT NULL, chk_at LIMIT 8"
+  ).all();
+  for (const r of results) {
+    const h = await textHash(r.url), now = new Date().toISOString();
+    if (!h) { await env.DB.prepare('UPDATE chatta_open SET chk_at = ?2 WHERE url = ?1').bind(r.url, now).run(); continue; }
+    if (!r.h0) await env.DB.prepare('UPDATE chatta_open SET h0 = ?2, chk_at = ?3 WHERE url = ?1').bind(r.url, h, now).run();
+    else if (h !== r.h0) await env.DB.prepare('UPDATE chatta_open SET mod_at = ?2, chk_at = ?2 WHERE url = ?1').bind(r.url, now).run();
+    else await env.DB.prepare('UPDATE chatta_open SET chk_at = ?2 WHERE url = ?1').bind(r.url, now).run();
+  }
+  return { checked: results.length };
 }
 export async function chattaOverview(env) {
   await ensureArt(env); await ensureChatta(env);
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(new Date());
   const from = new Date(Date.parse(today + 'T00:00:00Z') - 29 * 864e5).toISOString().slice(0, 10);
   const { results } = await env.DB.prepare(
-    "SELECT a.id, a.aid, a.url, a.title, a.kicker, a.d, a.pub, a.path, o.last_at opened, o.n FROM art a LEFT JOIN chatta_open o ON o.url = a.url" +
+    "SELECT a.id, a.aid, a.url, a.title, a.kicker, a.d, a.pub, a.path, o.last_at opened, o.n, o.mod_at FROM art a LEFT JOIN chatta_open o ON o.url = a.url" +
     " WHERE a.d >= ?1 AND (a.path LIKE '/novitads/%' OR a.path LIKE '/cultura/%' OR a.path LIKE '/sport/%')" +
     " AND (a.path NOT LIKE '/novitads/il-di/%' OR a.id = (SELECT MAX(b.id) FROM art b WHERE b.d = a.d AND b.path LIKE '/novitads/il-di/%'))" +
     " ORDER BY a.pub DESC, a.id DESC"
@@ -236,7 +266,7 @@ export async function chattaOverview(env) {
   // Artikel-ID (für den CMS-Link) fehlt bei älteren Einträgen: für geöffnete Artikel nachholen (höchstens 5 pro Aufruf)
   const miss = results.filter(r => r.opened && !UUID.test(r.aid || '')).slice(0, 5);
   await Promise.all(miss.map(async r => { const id = await fetchAid(r.url); if (id) { r.aid = id; await env.DB.prepare('UPDATE art SET aid = ?2 WHERE id = ?1').bind(r.id, id).run(); } }));
-  const items = results.map(r => ({ url: r.url, title: r.title, kicker: r.kicker, d: r.d, pub: r.pub, rub: r.path.split('/')[1], ildi: r.path.startsWith('/novitads/il-di/'), aid: UUID.test(r.aid || '') ? r.aid.toLowerCase() : null, opened: r.opened || null, n: r.n || 0 }));
+  const items = results.map(r => ({ url: r.url, title: r.title, kicker: r.kicker, d: r.d, pub: r.pub, rub: r.path.split('/')[1], ildi: r.path.startsWith('/novitads/il-di/'), aid: UUID.test(r.aid || '') ? r.aid.toLowerCase() : null, opened: r.opened || null, n: r.n || 0, mod: r.mod_at || null }));
   return { from, today, items };
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -250,6 +280,9 @@ export async function chattaOpen(env, u) {
   const { results: [a] } = await env.DB.prepare('SELECT url FROM art WHERE url = ?1').bind(String(u || '').slice(0, 500)).all();
   if (!a) return { ok: false, error: 'unknown' };
   const now = new Date().toISOString();
+  const { results: [o] } = await env.DB.prepare('SELECT h0 FROM chatta_open WHERE url = ?1').bind(a.url).all();
   await env.DB.prepare('INSERT INTO chatta_open (url, first_at, last_at, n) VALUES (?1, ?2, ?2, 1) ON CONFLICT(url) DO UPDATE SET last_at = ?2, n = n + 1').bind(a.url, now).run();
+  // Textstand beim ersten Öffnen festhalten (Vergleichsbasis für «actualisà suenter l'avertura»)
+  if (!o || !o.h0) { const h = /\/novitads\/il-di\//.test(a.url) ? null : await textHash(a.url); if (h) await env.DB.prepare('UPDATE chatta_open SET h0 = ?2, chk_at = ?3 WHERE url = ?1 AND h0 IS NULL').bind(a.url, h, now).run(); }
   return { ok: true };
 }

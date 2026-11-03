@@ -303,7 +303,7 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
-import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen } from './artsearch.js';
+import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck } from './artsearch.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -353,7 +353,7 @@ export default {
     const m = { r: 0, w: 0 }, raw = env.DB;
     env = { ...env, DB: meterDB(raw, m) };
     try {
-      if (event.cron === CRON_ART) await crawlStep(env);
+      if (event.cron === CRON_ART) { await chattaRecheck(env).catch(e => reportError(env, 'chatta recheck', e)); await crawlStep(env); }
       else if (event.cron === CRON_MONTHLY) await monthlyReport(env, ctx);
       else await hourlyChecks(env);
     } catch (e) { await reportError(env, 'cron ' + event.cron, e); }
