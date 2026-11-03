@@ -58,7 +58,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .it a{color:var(--text);text-decoration:none;font-weight:600}
 .it .upd{color:var(--ok);font-weight:600}
 /* «actualisà suenter avrir en challenge»: Zeile mit grünem Rand links, Pille unter den Angaben */
-.it.updr{position:relative;margin:0 -10px;padding:10px 10px 10px 12px;border-radius:10px;background:linear-gradient(90deg,rgba(95,210,154,.12),rgba(95,210,154,0) 70%);box-shadow:inset 3px 0 0 var(--ok)}
+.it.updr{position:relative;margin:0 -10px;padding:10px 10px 10px 12px;border-radius:10px;background:linear-gradient(90deg,rgba(95,210,154,.12),rgba(95,210,154,0) 70%);box-shadow:inset 1px 0 0 var(--ok)}
 .it.updr + .it{border-top-color:transparent}
 .updp{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:3px 10px 3px 8px;border-radius:999px;background:rgba(95,210,154,.14);border:1px solid rgba(95,210,154,.45);color:var(--ok);font-size:.75rem;font-weight:700;letter-spacing:.01em}
 .updp svg{width:13px;height:13px;flex:none}
@@ -66,7 +66,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 /* erster Anblick in diesem Browser: kurzes Aufleuchten */
 .it.updnew{animation:updglow 1.6s ease-out 3}
 .it.updnew .updp{animation:updpop .5s cubic-bezier(.2,1.6,.4,1) both}
-@keyframes updglow{0%{box-shadow:inset 3px 0 0 var(--ok),0 0 0 0 rgba(95,210,154,.55)}70%{box-shadow:inset 3px 0 0 var(--ok),0 0 0 10px rgba(95,210,154,0)}100%{box-shadow:inset 3px 0 0 var(--ok),0 0 0 0 rgba(95,210,154,0)}}
+@keyframes updglow{0%{box-shadow:inset 1px 0 0 var(--ok),0 0 0 0 rgba(95,210,154,.55)}70%{box-shadow:inset 1px 0 0 var(--ok),0 0 0 10px rgba(95,210,154,0)}100%{box-shadow:inset 1px 0 0 var(--ok),0 0 0 0 rgba(95,210,154,0)}}
 @keyframes updpop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
 .updtoast{position:fixed;left:50%;top:16px;z-index:50;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:10px 16px 10px 12px;border:1px solid rgba(95,210,154,.5);border-radius:14px;background:var(--card);color:var(--text);font-size:.9rem;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 24px rgba(95,210,154,.18);transform:translate(-50%,-150%);transition:transform .45s cubic-bezier(.2,1.4,.4,1);cursor:pointer}
 .updtoast.on{transform:translate(-50%,0)}
