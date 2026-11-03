@@ -83,6 +83,7 @@
   .gper button { font: inherit; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--muted); cursor: pointer; }
   .gper button.on { border-color: var(--accent); color: var(--accent); }
   .grules { margin-top: 8px; font-size: 12.5px; color: var(--muted); } .grules summary { cursor: pointer; } .grules ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.5; }
+  .gl { font-size: 12.5px !important; } .gl b { color: var(--text); font-weight: 600; }
   .gx { display: flex; gap: 6px; flex-wrap: wrap; }
   .gtp { position: relative; display: inline-block; margin-left: 6px; width: 15px; height: 15px; line-height: 14px; text-align: center; border: 1px solid var(--line); border-radius: 50%; font-size: 10px; font-weight: 700; font-style: normal; color: var(--muted); cursor: help; vertical-align: 1px; text-transform: none; letter-spacing: 0; -webkit-text-fill-color: currentColor; }
   .gtp::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%); width: 230px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--glass-line, var(--line)); background: var(--card); box-shadow: 0 6px 20px rgba(0,0,0,.35); color: var(--text); font-size: 12.5px; font-weight: 400; line-height: 1.4; text-align: left; opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 5; }
@@ -197,8 +198,10 @@
     } else {
       pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
         <p>Fa in profil (be in num, nagina e-mail) per participar a la glista da rang. Il code da recuperaziun survegn ti ina giada.</p>
-        <form data-f="reg"><input name="name" maxlength="24" placeholder="Tes num" autocomplete="nickname" required><button class="gb">Crear profil</button></form>
-        <form data-f="log"><input name="name" maxlength="24" placeholder="Num" autocomplete="off" required><input name="code" maxlength="12" placeholder="Code (XXXX-XXXX)" autocomplete="off" required><button class="gb q">Avrir profil</button></form>
+        <p class="gl"><b>Nov profil:</b> «Tes num» è il num che las autras persunas vesan en la glista da rang. Ti pos eleger el libramain (2–24 caracters), el na dastga anc betg exister.</p>
+        <form data-f="reg"><input name="name" maxlength="24" placeholder="Tes num" title="Tes nov num da visur en la glista da rang (anc betg occupà)" autocomplete="nickname" required><button class="gb">Crear profil</button></form>
+        <p class="gl"><b>Gia in profil?</b> «Num» è il num dal profil existent, ensemen cun il code da recuperaziun. Uschia avras ti il medem profil sin in auter apparat.</p>
+        <form data-f="log"><input name="name" maxlength="24" placeholder="Num" title="Num dal profil existent (betg in nov num)" autocomplete="off" required><input name="code" maxlength="12" placeholder="Code (XXXX-XXXX)" autocomplete="off" required><button class="gb q">Avrir profil</button></form>
         <div class="gerr"></div></div>`;
     }
   };
