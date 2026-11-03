@@ -228,6 +228,11 @@ export async function chattaOverview(env) {
     " AND (a.path NOT LIKE '/novitads/il-di/%' OR a.id = (SELECT MAX(b.id) FROM art b WHERE b.d = a.d AND b.path LIKE '/novitads/il-di/%'))" +
     " ORDER BY a.pub DESC, a.id DESC"
   ).bind(from).all();
+  // «Il di» erhält im Lauf des Tages neue URLs: «geöffnet» gilt für den ganzen Tag, egal welche Fassung geöffnet wurde
+  const { results: ildi } = await env.DB.prepare(
+    "SELECT a.d, MAX(o.last_at) opened, SUM(o.n) n FROM chatta_open o JOIN art a ON a.url = o.url WHERE a.d >= ?1 AND a.path LIKE '/novitads/il-di/%' GROUP BY a.d"
+  ).bind(from).all();
+  for (const r of results) if (r.path.startsWith('/novitads/il-di/')) { const x = ildi.find(y => y.d === r.d); if (x && (!r.opened || x.opened > r.opened)) { r.opened = x.opened; r.n = x.n; } }
   // Artikel-ID (für den CMS-Link) fehlt bei älteren Einträgen: für geöffnete Artikel nachholen (höchstens 5 pro Aufruf)
   const miss = results.filter(r => r.opened && !UUID.test(r.aid || '')).slice(0, 5);
   await Promise.all(miss.map(async r => { const id = await fetchAid(r.url); if (id) { r.aid = id; await env.DB.prepare('UPDATE art SET aid = ?2 WHERE id = ?1').bind(r.id, id).run(); } }));
