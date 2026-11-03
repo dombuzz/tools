@@ -156,7 +156,7 @@
     <div class="gcard">
       <div class="gh"><b>Badges</b><span>${INS.filter(x => x.on).length} da ${INS.length}</span></div>
       <div class="gins">${INS.map((b, i) => `<button type="button" class="gi${b.on ? ' on' : ''}" data-i="${i}" title="${esc(b.rule + ' – ' + b.state)}" aria-describedby="gtip"><em>${b.e}</em>${b.n}</button>`).join('')}</div>
-      <p class="gtip" id="gtip" aria-live="polite">Tippa sin in badge per vesair la cundiziun.</p>
+      <p class="gtip" id="gtip" aria-live="polite">Tippar sin in badge per vesair las cundiziuns.</p>
     </div>`;
   const anchor = document.querySelector('.favs') || document.getElementById('selwrap');
   anchor.after(sec);
@@ -193,7 +193,7 @@
     if (!cid) { pcard.innerHTML = '<div class="gh"><b>Profil</b></div><p class="gnote">Memorisaziun localmain bloccada.</p>'; return; }
     if (me) {
       pcard.innerHTML = `<div class="gh"><b>Profil</b><span>${esc(me.name)}</span></div><div class="gp">
-        ${code ? `<p>Tes code da recuperaziun (vegn mussà be questa giada – serva-lo bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la glista da rang.</p>'}
+        ${code ? `<p>Tes code da restaurar e «re-annunziar» (vegn mussà be questa giada – al arcunescha bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la glista da rang.</p>'}
         <div class="gx"><button class="gb q" data-a="code">Nov code</button><button class="gb q" data-a="out">Ir or</button><button class="gb q" data-a="del">Stizzar profil</button></div><div class="gerr"></div></div>`;
     } else {
       pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
