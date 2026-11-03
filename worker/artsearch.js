@@ -4,7 +4,7 @@
 
 const UA = 'Mozilla/5.0 (compatible; dombuzz-tools; +https://tools.dombuzz.ch/info)';
 const SKIP = /\/(interpresa\/organisaziun|uffants\/lexicon)\//;
-const PER_RUN = 25, MAX_TRIES = 3, WRITE_PAUSE = 70000, FIRST_YM = "2016_01";
+const PER_RUN = 25, MAX_TRIES = 3, WRITE_PAUSE = 70000, FIRST_YM = "2016_01", CUR_EVERY = 9 * 60e3;
 
 export const unesc = s => (s || '').replace(/&#0?39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
   .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&amp;/g, '&');
@@ -93,7 +93,8 @@ async function dedupeOnce(env) {
 }
 
 // Ein Lauf: Sind Artikel vorgemerkt, werden bis zu PER_RUN davon geholt (neueste Monate zuerst).
-// Sonst wird eine Sitemap eingelesen: der aktuelle Monat (höchstens alle 30 Min.), sonst der nächste ältere Monat bis 2016.
+// Die Sitemap des aktuellen Monats wird etwa alle 10 Min. neu gelesen (neue Artikel kommen so zuvorderst in die Warteschlange);
+// ist die Warteschlange leer, wird der nächste ältere Monat bis 2016 eingelesen.
 export async function crawlStep(env) {
   let res;
   try { res = await crawlInner(env); } catch (e) { res = { error: String(e && e.message || e) }; }
@@ -106,8 +107,11 @@ async function crawlInner(env) {
   await dedupeOnce(env);
   const { results: [u] } = await env.DB.prepare("SELECT w FROM usage WHERE day = date('now')").all().catch(() => ({ results: [] }));
   if (u && u.w > WRITE_PAUSE) return { paused: true };
+  // Aktueller Monat zuerst: dessen Sitemap alle CUR_EVERY neu lesen, auch wenn noch ältere Artikel in der Warteschlange sind
+  let fresh = null;
+  if (Date.now() - Number(await stGet(env, 'cur_ts') || 0) >= CUR_EVERY) fresh = await sitemapStep(env, true);
   const rows = (await env.DB.prepare('SELECT url FROM art_seen WHERE ok = 0 AND tries < ?1 ORDER BY ym DESC, rowid ASC LIMIT ?2').bind(MAX_TRIES, PER_RUN).all()).results;
-  if (!rows.length) return sitemapStep(env);
+  if (!rows.length) return fresh || sitemapStep(env);
   let done = 0, failed = 0;
   for (const { url } of rows) {
     const r = await getText(url).catch(() => ({ ok: false, status: 0 }));
@@ -124,10 +128,10 @@ async function crawlInner(env) {
   }
   return { done, failed };
 }
-async function sitemapStep(env) {
+async function sitemapStep(env, forceCur) {
   const cur = ymOf(new Date()), lastCur = Number(await stGet(env, 'cur_ts') || 0);
   let ym = cur;
-  if (Date.now() - lastCur < 30 * 60e3) {
+  if (!forceCur && Date.now() - lastCur < CUR_EVERY) {
     if (await stGet(env, 'complete')) return { idle: true };
     ym = (await stGet(env, 'back')) || prevYm(cur);
   }
