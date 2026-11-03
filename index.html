@@ -93,6 +93,13 @@
   .ms[aria-expanded=true]::after { transform: rotate(45deg); }
   .msub { display: none; margin: 0 0 2px 14px; padding-left: 4px; border-left: 2px solid var(--line); }
   .msub.on { display: block; }
+  /* aufklappbare Kategorien (FOLD) */
+  button.mg { display: flex; align-items: center; gap: 8px; width: calc(100% - 20px); padding: 4px 0; border: 0; background-color: transparent; font-family: inherit; text-align: left; cursor: pointer; }
+  button.mg:focus-visible { outline: 1px dashed var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .mgc { width: 6px; height: 6px; margin-left: 2px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); transition: transform .15s; }
+  button.mg[aria-expanded=true] .mgc { transform: rotate(45deg); }
+  .mgbox { display: none; }
+  .mgbox.on { display: block; }
   .mi.lab { color: var(--lab); font-weight: 500; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; padding-top: 12px; }
   .msg { color: var(--muted); margin-top: 16px; }
   .msg a, footer a { color: var(--link); }
@@ -258,10 +265,26 @@
       fetch(API + '/use/artitgel-challenge?' + cid.slice(1), { method: 'POST', keepalive: true }).catch(() => {});
     };
   }
+  // Nur diese Kategorien sind auf- und zuklappbar (Zustand pro Browser gemerkt, anfangs zu)
+  const FOLD = ['Audio e suttitels', 'Grafica'];
   for (const [label, paths] of GROUPS) {
-    const h = document.createElement('div'); h.className = 'mg'; h.textContent = label; menu.append(h);
+    let dest = menu;
+    if (FOLD.includes(label)) {
+      const id = 'mgbox' + (++subN), key = 'grp:' + label;
+      const h = document.createElement('button'); h.type = 'button'; h.className = 'mg mgt'; h.setAttribute('aria-controls', id);
+      const t = document.createElement('span'); t.textContent = label;
+      const c = document.createElement('span'); c.className = 'mgc'; c.setAttribute('aria-hidden', 'true');
+      h.append(t, c);
+      const box = document.createElement('div'); box.className = 'mgbox'; box.id = id;
+      const set = o => { box.classList.toggle('on', o); h.setAttribute('aria-expanded', o); };
+      set(!!subOpen[key]);
+      h.addEventListener('click', e => { e.stopPropagation(); const o = !box.classList.contains('on'); set(o); subOpen[key] = o; saveSub(); });
+      menu.append(h, box); dest = box;
+    } else {
+      const h = document.createElement('div'); h.className = 'mg'; h.textContent = label; menu.append(h);
+    }
     for (const p of paths) {
-      if (!Array.isArray(p)) { menu.append(toolLink(p)); continue; }
+      if (!Array.isArray(p)) { dest.append(toolLink(p)); continue; }
       const [sub, subPaths] = p, id = 'msub' + (++subN);
       const t = document.createElement('button');
       t.type = 'button'; t.className = 'ms'; t.textContent = sub; t.setAttribute('aria-controls', id);
@@ -270,7 +293,7 @@
       const set = o => { box.classList.toggle('on', o); t.setAttribute('aria-expanded', o); };
       set(!!subOpen[sub]);
       t.addEventListener('click', e => { e.stopPropagation(); const o = !box.classList.contains('on'); set(o); subOpen[sub] = o; saveSub(); });
-      menu.append(t, box);
+      dest.append(t, box);
     }
     if (label === 'Redacziun') menu.append(chattaBox);
   }
@@ -410,7 +433,7 @@
   }
 
   // nur sichtbare Einträge (Links und Untergruppen-Knöpfe) für die Pfeiltasten
-  const items = () => [...menu.querySelectorAll('.mi, .ms')].filter(el => el.offsetParent !== null);
+  const items = () => [...menu.querySelectorAll('.mi, .ms, .mgt')].filter(el => el.offsetParent !== null);
   const setOpen = o => { wrap.classList.toggle('open', o); btn0.setAttribute('aria-expanded', o); };
   btn0.addEventListener('click', () => setOpen(!wrap.classList.contains('open')));
   document.addEventListener('click', e => { if (!wrap.contains(e.target)) setOpen(false); });
