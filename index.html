@@ -102,9 +102,10 @@
   .mgbox.on { display: block; }
   /* Lab als aufklappbare Kategorie, in Orange */
   .mgsep { margin: 8px 0 0; border-top: 1px solid var(--line); padding-top: 4px; }
-  button.mg.mglab { background-image: none; color: var(--lab); -webkit-text-fill-color: var(--lab); }
-  button.mg.mglab .mgc { border-color: var(--lab); }
-  .mi.laball { color: var(--lab); }
+  a.mg.mglab { display: flex; align-items: center; gap: 8px; width: fit-content; padding: 4px 0; text-decoration: none; }
+  a.mg.mglab:focus-visible { outline: 1px dashed var(--lab); outline-offset: 2px; border-radius: 4px; }
+  .mg.mglab { background-image: none; color: var(--lab); -webkit-text-fill-color: var(--lab); }
+  .mg.mglab .mgc { border-color: var(--lab); }
   .mi.lab { color: var(--lab); font-weight: 500; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; padding-top: 12px; }
   .msg { color: var(--muted); margin-top: 16px; }
   .msg a, footer a { color: var(--link); }
@@ -302,22 +303,13 @@
     }
     if (label === 'Redacziun') menu.append(chattaBox);
   }
-  // ganz unten: Lab (Experimente) als aufklappbare Kategorie in Orange – Liste wie in lab/index.html
+  // ganz unten: Lab (Experimente) – sieht aus wie eine Kategorie, in Orange, führt direkt auf /lab/
   {
-    const LAB = [['csv', 'CSV-Analisa'], ['hockey', 'Hockey regiunal'], ['profil', 'Höhenprofil'], ['plan2geo', 'Plan → GeoJSON'], ['idioms', 'Pleds en ils idioms']];
-    const id = 'mgbox' + (++subN), key = 'grp:Lab';
     const sep = document.createElement('div'); sep.className = 'mgsep';
-    const h = document.createElement('button'); h.type = 'button'; h.className = 'mg mgt mglab'; h.setAttribute('aria-controls', id);
+    const h = document.createElement('a'); h.className = 'mg mgt mglab'; h.href = '/lab/'; h.setAttribute('role', 'menuitem');
     const t = document.createElement('span'); t.textContent = 'Lab';
     const c = document.createElement('span'); c.className = 'mgc'; c.setAttribute('aria-hidden', 'true');
-    h.append(t, c);
-    const box = document.createElement('div'); box.className = 'mgbox'; box.id = id;
-    for (const [f, n] of LAB) box.append(mk(n, '/lab/' + f, 'labi'));
-    box.append(mk('Tut il lab →', '/lab/', 'labi laball'));
-    const set = o => { box.classList.toggle('on', o); h.setAttribute('aria-expanded', o); };
-    set(!!subOpen[key]);
-    h.addEventListener('click', e => { e.stopPropagation(); const o = !box.classList.contains('on'); set(o); subOpen[key] = o; saveSub(); });
-    sep.append(h); menu.append(sep, box);
+    h.append(t, c); sep.append(h); menu.append(sep);
   }
 
   // Favurits: ☆ bei jedem Tool im Dropdown, «★ Mes favurits» als Kacheln unter dem Dropdown (nur in diesem Browser gespeichert)
