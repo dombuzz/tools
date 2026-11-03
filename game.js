@@ -83,7 +83,11 @@
   .gper button { font: inherit; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--muted); cursor: pointer; }
   .gper button.on { border-color: var(--accent); color: var(--accent); }
   .grules { margin-top: 8px; font-size: 12.5px; color: var(--muted); } .grules summary { cursor: pointer; } .grules ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.5; }
-  .gx { display: flex; gap: 6px; flex-wrap: wrap; }`;
+  .gx { display: flex; gap: 6px; flex-wrap: wrap; }
+  .gtp { position: relative; display: inline-block; margin-left: 6px; width: 15px; height: 15px; line-height: 14px; text-align: center; border: 1px solid var(--line); border-radius: 50%; font-size: 10px; font-weight: 700; font-style: normal; color: var(--muted); cursor: help; vertical-align: 1px; text-transform: none; letter-spacing: 0; -webkit-text-fill-color: currentColor; }
+  .gtp::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%); width: 230px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--glass-line, var(--line)); background: var(--card); box-shadow: 0 6px 20px rgba(0,0,0,.35); color: var(--text); font-size: 12.5px; font-weight: 400; line-height: 1.4; text-align: left; opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 5; }
+  .gtp:hover::after, .gtp:focus-visible::after { opacity: 1; }
+  .gtp:hover, .gtp:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }`;
   document.head.insertAdjacentHTML('beforeend', '<style>' + css + '</style>');
 
   // Unten kein «game»-Link; dafür zuoberst der Weg zurück zur Startseite (wie in den Tools)
@@ -191,7 +195,7 @@
         ${code ? `<p>Tes code da recuperaziun (vegn mussà be questa giada – serva-lo bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la glista da rang.</p>'}
         <div class="gx"><button class="gb q" data-a="code">Nov code</button><button class="gb q" data-a="out">Ir or</button><button class="gb q" data-a="del">Stizzar profil</button></div><div class="gerr"></div></div>`;
     } else {
-      pcard.innerHTML = `<div class="gh"><b>Profil</b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
+      pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
         <p>Fa in profil (be in num, nagina e-mail) per participar a la glista da rang. Il code da recuperaziun survegn ti ina giada.</p>
         <form data-f="reg"><input name="name" maxlength="24" placeholder="Tes num" autocomplete="nickname" required><button class="gb">Crear profil</button></form>
         <form data-f="log"><input name="name" maxlength="24" placeholder="Num" autocomplete="off" required><input name="code" maxlength="12" placeholder="Code (XXXX-XXXX)" autocomplete="off" required><button class="gb q">Avrir profil</button></form>
@@ -220,10 +224,10 @@
     <li><b>20</b> puncts per badge</li><li>Bonus per la megliera seria: <b>15</b> (3 dis), <b>40</b> (7 dis), <b>150</b> (30 dis)</li>
     <li>Sonda e dumengia na rumpan la seria. Apparats en il modus test na vegnan betg quintads.</li></ul></details>`;
   const drawRank = (d) => {
-    if (!me) { rcard.innerHTML = '<div class="gh"><b>Glista da rang</b></div><p class="gnote">Crea in profil per vesair la glista da rang.</p>'; return; }
-    if (!d) { rcard.innerHTML = '<div class="gh"><b>Glista da rang</b></div><p class="gnote">Chargia …</p>'; return; }
+    if (!me) { rcard.innerHTML = '<div class="gh"><b>Glista da rang<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b></div><p class="gnote">Crea in profil per vesair la glista da rang.</p>'; return; }
+    if (!d) { rcard.innerHTML = '<div class="gh"><b>Glista da rang<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b></div><p class="gnote">Chargia …</p>'; return; }
     const rows = d.rows.slice().sort((a, b) => b[sortK] - a[sortK] || b.pts - a.pts || a.name.localeCompare(b.name));
-    rcard.innerHTML = `<div class="gh"><b>Glista da rang</b><span>${rows.length} ${rows.length === 1 ? 'persuna' : 'persunas'}</span></div>
+    rcard.innerHTML = `<div class="gh"><b>Glista da rang<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b><span>${rows.length} ${rows.length === 1 ? 'persuna' : 'persunas'}</span></div>
       <div class="gper">${Object.entries(PN).map(([k, v]) => `<button data-p="${k}" class="${k === per ? 'on' : ''}">${v}</button>`).join('')}</div>
       <table class="grk"><thead><tr><th></th><th>Num</th>${COLS.map(([k, v]) => `<th data-s="${k}" class="${k === sortK ? 'on' : ''}">${v}</th>`).join('')}</tr></thead>
       <tbody>${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}</td><td>${esc(r.name)}</td>${COLS.map(([k]) => `<td class="${k === 'pts' ? 'pt' : ''}">${fmt(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>${RULES}`;
