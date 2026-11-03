@@ -46,6 +46,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .it:first-child{border-top:0}
 .it .t{flex:1;min-width:0}
 .it a{color:var(--text);text-decoration:none;font-weight:600}
+.it .k{display:block;margin-bottom:1px;font-size:.78rem;color:var(--accent)}
 .it a:hover,.it a:focus-visible{color:var(--accent)}
 .it .m{display:block;margin-top:2px;font-size:.78rem;color:var(--muted)}
 .ck{flex:none;color:var(--ok);font-weight:700;font-size:1.05rem;line-height:1.4}
@@ -102,7 +103,7 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
     return [wd + ' ' + ddmm(a.d), RUB[a.rub] || a.rub].map(esc).join(' · ');
   };
 
-  const row = (a, done) => `<li class="it"><div class="t"><a href="${esc(a.url)}" target="_blank" rel="noopener" data-u="${esc(a.url)}">${esc(a.title)}</a>` +
+  const row = (a, done) => `<li class="it"><div class="t">${a.kicker ? `<span class="k">${esc(a.kicker)}</span>` : ''}<a href="${esc(a.url)}" target="_blank" rel="noopener" data-u="${esc(a.url)}">${esc(a.title)}</a>` +
     `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}</span></div>${done ? '<span class="tl">' + (a.aid ? `<a class="cms" href="${NORA}/ui/rtr_${esc(a.rub)}/articles/${esc(a.aid)}" target="_blank" rel="noopener" title="Avrir en il CMS (be cun login)" aria-label="Avrir en il CMS">⬏</a>` : '') + '<span class="ck" title="Avert" aria-label="Avert">✓</span></span>' : ''}</li>`;
 
   const unopened = () => items.filter(a => !a.opened);
