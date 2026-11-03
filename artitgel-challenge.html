@@ -34,8 +34,9 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
 .go[aria-disabled=true]{opacity:.45;pointer-events:none}
 .gohint{margin:8px 0 24px;font-size:.8rem;color:var(--muted);min-height:1.2em}
 .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 16px;margin:0 0 18px}
-.box.done{background:linear-gradient(rgba(95,210,154,.08),rgba(95,210,154,.08)),var(--card);border-color:rgba(95,210,154,.35)}
-.box.todo{background:linear-gradient(rgba(255,77,100,.07),rgba(255,77,100,.07)),var(--card);border-color:rgba(255,77,100,.3)}
+.box.done{--bc:95,210,154;background:linear-gradient(rgba(var(--bc),.045),rgba(var(--bc),.045)),var(--card);border-color:rgba(var(--bc),.32);box-shadow:0 0 22px rgba(var(--bc),.13),inset 0 0 18px rgba(var(--bc),.04)}
+.box.todo{--bc:255,77,100;background:linear-gradient(rgba(var(--bc),.04),rgba(var(--bc),.04)),var(--card);border-color:rgba(var(--bc),.28);box-shadow:0 0 22px rgba(var(--bc),.12),inset 0 0 18px rgba(var(--bc),.035)}
+.bh .bt{text-decoration:underline;text-decoration-color:rgba(var(--bc),.6);text-decoration-thickness:1.5px;text-underline-offset:5px}
 .it .tl{flex:none;display:flex;align-items:center;gap:10px}
 .it a.cms{color:var(--muted);font-weight:400;font-size:1.05rem;line-height:1.4;padding:0 2px}
 .it a.cms:hover,.it a.cms:focus-visible{color:var(--accent)}
@@ -67,13 +68,13 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
   <p class="gohint" id="gohint">Chargel …</p>
 
   <section class="box done">
-    <div class="bh">Ultims artitgels averts en l'artitgel-challenge <span class="n" id="n1"></span></div>
+    <div class="bh"><span class="bt">Ultims artitgels averts en l'artitgel-challenge</span> <span class="n" id="n1"></span></div>
     <ul class="list" id="opened"><li class="empty">Chargel …</li></ul>
     <button type="button" class="more" id="more1" hidden></button>
   </section>
 
   <section class="box todo">
-    <div class="bh">Anc betg averts <span class="n" id="n2"></span></div>
+    <div class="bh"><span class="bt">Anc betg averts</span> <span class="n" id="n2"></span></div>
     <ul class="list" id="fresh"><li class="empty">Chargel …</li></ul>
     <button type="button" class="more" id="more2" hidden></button>
   </section>
