@@ -211,3 +211,31 @@ export async function countArt(env) {
   const { results: [nw] } = await env.DB.prepare('SELECT MAX(d) d FROM art').all();
   return { today, from, counts: out, newest: nw && nw.d };
 }
+
+// «Artitgel-challenge»: Übersicht aller Artikel der letzten 30 Tage unter /novitads, /cultura, /sport
+// mit dem Zeitpunkt, an dem ein Artikel zuletzt über die Challenge geöffnet wurde (für alle gemeinsam).
+// «Il di» erhält laufend neue URLs: pro Tag nur die neueste Fassung.
+async function ensureChatta(env) {
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS chatta_open (url TEXT PRIMARY KEY, first_at TEXT NOT NULL, last_at TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 1)').run();
+}
+export async function chattaOverview(env) {
+  await ensureArt(env); await ensureChatta(env);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(new Date());
+  const from = new Date(Date.parse(today + 'T00:00:00Z') - 29 * 864e5).toISOString().slice(0, 10);
+  const { results } = await env.DB.prepare(
+    "SELECT a.url, a.title, a.kicker, a.d, a.pub, a.path, o.last_at opened, o.n FROM art a LEFT JOIN chatta_open o ON o.url = a.url" +
+    " WHERE a.d >= ?1 AND (a.path LIKE '/novitads/%' OR a.path LIKE '/cultura/%' OR a.path LIKE '/sport/%')" +
+    " AND (a.path NOT LIKE '/novitads/il-di/%' OR a.id = (SELECT MAX(b.id) FROM art b WHERE b.d = a.d AND b.path LIKE '/novitads/il-di/%'))" +
+    " ORDER BY a.pub DESC, a.id DESC"
+  ).bind(from).all();
+  const items = results.map(r => ({ url: r.url, title: r.title, kicker: r.kicker, d: r.d, pub: r.pub, rub: r.path.split('/')[1], ildi: r.path.startsWith('/novitads/il-di/'), opened: r.opened || null, n: r.n || 0 }));
+  return { from, today, items };
+}
+export async function chattaOpen(env, u) {
+  await ensureArt(env); await ensureChatta(env);
+  const { results: [a] } = await env.DB.prepare('SELECT url FROM art WHERE url = ?1').bind(String(u || '').slice(0, 500)).all();
+  if (!a) return { ok: false, error: 'unknown' };
+  const now = new Date().toISOString();
+  await env.DB.prepare('INSERT INTO chatta_open (url, first_at, last_at, n) VALUES (?1, ?2, ?2, 1) ON CONFLICT(url) DO UPDATE SET last_at = ?2, n = n + 1').bind(a.url, now).run();
+  return { ok: true };
+}

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Artitgels da rtr.ch dals ultims 30 dis – leger attentamain e controllar sch'i dat sbagls u passaschas nunchapiblas.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Artitgel-challenge">
+<meta property="og:url" content="https://tools.dombuzz.ch/artitgel-challenge">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>Artitgel-challenge</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#121214; --card:#1c1c1f; --field:#26262a; --text:#ececef; --muted:#9a9aa2; --line:#2f2f34;
+  --accent:#ff4d64; --on-accent:#121214; --ok:#5fd29a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
+.go{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:1rem;border:0;background:var(--accent);color:var(--on-accent);padding:11px 22px;border-radius:999px;cursor:pointer;text-decoration:none}
+.go[aria-disabled=true]{opacity:.45;pointer-events:none}
+.gohint{margin:8px 0 24px;font-size:.8rem;color:var(--muted);min-height:1.2em}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 16px;margin:0 0 18px}
+.bh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:12px 0 4px;font-size:.95rem;font-weight:700}
+.bh .n{font-size:.8rem;font-weight:600;color:var(--muted)}
+.list{list-style:none;margin:0;padding:0}
+.it{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.it:first-child{border-top:0}
+.it .t{flex:1;min-width:0}
+.it a{color:var(--text);text-decoration:none;font-weight:600}
+.it a:hover,.it a:focus-visible{color:var(--accent)}
+.it .m{display:block;margin-top:2px;font-size:.78rem;color:var(--muted)}
+.ck{flex:none;color:var(--ok);font-weight:700;font-size:1.05rem;line-height:1.4}
+.empty{padding:12px 0;color:var(--muted);font-size:.9rem}
+.more{display:block;width:100%;margin:2px 0 10px;padding:8px;font:inherit;font-size:.85rem;color:var(--muted);background:transparent;border:1px dashed var(--line);border-radius:10px;cursor:pointer}
+.more:hover{color:var(--accent);border-color:var(--accent)}
+.foot{margin:6px 0 0;font-size:.78rem;color:var(--muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <a class="homelink" href="/">← Tools</a>
+  <h1>Artitgel-<span class="acc">challenge</span></h1>
+  <p class="sub">Cun cliccar qua sut s'avra in artitgel che è vegnì publitgà durant ils ultims 30 dis. Per plaschair leger attentamain e controllar sch'i dat sbagls u passaschas nunchapiblas.</p>
+
+  <a class="go" id="go" href="#" target="_blank" rel="noopener" aria-disabled="true">Avrir in artitgel</a>
+  <p class="gohint" id="gohint">Chargel …</p>
+
+  <section class="box">
+    <div class="bh">Ultims artitgels averts en l'artitgel-challenge <span class="n" id="n1"></span></div>
+    <ul class="list" id="opened"><li class="empty">Chargel …</li></ul>
+    <button type="button" class="more" id="more1" hidden></button>
+  </section>
+
+  <section class="box">
+    <div class="bh">Anc betg averts <span class="n" id="n2"></span></div>
+    <ul class="list" id="fresh"><li class="empty">Chargel …</li></ul>
+    <button type="button" class="more" id="more2" hidden></button>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</main>
+<script>
+(() => {
+  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
+  const $ = id => document.getElementById(id);
+  const RUB = { novitads: 'Novitads', cultura: 'Cultura', sport: 'Sport' };
+  const DAYS = ['dumengia', 'glindesdi', 'mardi', 'mesemna', 'gievgia', 'venderdi', 'sonda'];
+  const STEP = 15;
+  let items = [], show1 = STEP, show2 = STEP;
+
+  const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const ddmm = d => +d.slice(8, 10) + '.' + +d.slice(5, 7) + '.';
+  const hm = t => new Date(t).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
+  const dayOf = t => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich' }).format(new Date(t));
+  const today = () => dayOf(Date.now());
+  const when = t => { // «oz 13:20», «ier 09:05», «29.10. 16:40»
+    const d = dayOf(t), td = today(), yd = dayOf(Date.now() - 864e5);
+    return (d === td ? 'oz' : d === yd ? 'ier' : ddmm(d)) + ' ' + hm(t);
+  };
+  const pubInfo = a => {
+    const wd = DAYS[new Date(a.d + 'T12:00:00Z').getUTCDay()];
+    return [wd + ' ' + ddmm(a.d), a.ildi ? 'Il di' : RUB[a.rub] || a.rub, a.ildi ? '' : a.kicker].filter(Boolean).map(esc).join(' · ');
+  };
+
+  const row = (a, done) => `<li class="it"><div class="t"><a href="${esc(a.url)}" target="_blank" rel="noopener" data-u="${esc(a.url)}">${esc(a.title)}</a>` +
+    `<span class="m">${pubInfo(a)}${done ? ' · avert ' + esc(when(a.opened)) : ''}</span></div>${done ? '<span class="ck" title="Avert" aria-label="Avert">✓</span>' : ''}</li>`;
+
+  const unopened = () => items.filter(a => !a.opened);
+  let next = null;
+  const pickNext = () => {
+    const pool = unopened();
+    next = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+    const go = $('go');
+    if (next) { go.href = next.url; go.setAttribute('aria-disabled', 'false'); go.textContent = 'Avrir in artitgel'; }
+    else { go.removeAttribute('href'); go.setAttribute('aria-disabled', 'true'); go.textContent = 'Tut avert 🎉'; }
+  };
+
+  function render() {
+    const op = items.filter(a => a.opened).sort((a, b) => b.opened.localeCompare(a.opened));
+    const fr = unopened(); // neuste Publikation zuoberst (so liefert sie der Worker)
+    $('n1').textContent = op.length ? op.length : '';
+    $('n2').textContent = fr.length ? fr.length : '';
+    $('opened').innerHTML = op.length ? op.slice(0, show1).map(a => row(a, true)).join('') : '<li class="empty">Anc nagin artitgel avert.</li>';
+    $('fresh').innerHTML = fr.length ? fr.slice(0, show2).map(a => row(a, false)).join('') : '<li class="empty">Tut ils artitgels dals ultims 30 dis èn avert. Grazia fitg!</li>';
+    const more = (el, total, shown) => { el.hidden = total <= shown; el.textContent = 'Mussar dapli (' + (total - shown) + ')'; };
+    more($('more1'), op.length, show1); more($('more2'), fr.length, show2);
+    $('gohint').textContent = fr.length ? fr.length + (fr.length === 1 ? ' artitgel betg anc avert' : ' artitgels betg anc averts') + ' – il buttun avra in da quels per casualitad.' : '';
+  }
+
+  // Ein Artikel wurde über die Challenge geöffnet: für alle markieren (Worker) und als Nutzung zählen
+  function opened(u) {
+    const a = items.find(x => x.url === u); if (!a) return;
+    a.opened = new Date().toISOString(); a.n = (a.n || 0) + 1;
+    fetch(API + '/chatta/open?u=' + encodeURIComponent(u), { method: 'POST', keepalive: true }).catch(() => {});
+    window.dispatchEvent(new Event('dbz-success'));
+    setTimeout(() => { render(); pickNext(); }, 0);
+  }
+
+  $('go').addEventListener('click', () => { if (next) opened(next.url); });
+  document.addEventListener('click', e => { const l = e.target.closest('a[data-u]'); if (l) opened(l.dataset.u); });
+  document.addEventListener('auxclick', e => { const l = e.target.closest('a[data-u]'); if (l && e.button === 1) opened(l.dataset.u); });
+  $('more1').addEventListener('click', () => { show1 += STEP * 2; render(); });
+  $('more2').addEventListener('click', () => { show2 += STEP * 2; render(); });
+
+  async function load() {
+    try {
+      const d = await fetch(API + '/chatta/overview', { cache: 'no-store' }).then(r => r.json());
+      items = d.items || [];
+      render(); pickNext();
+      $('foot').textContent = items.length + ' artitgels da rtr.ch/novitads, /cultura e /sport dapi ils ' + ddmm(d.from) + ' · «Il di» sco 1 artitgel per di';
+    } catch (e) { $('gohint').textContent = 'Chargiar betg reussì – emprova pli tard anc ina giada.'; }
+  }
+  load();
+  // beim Zurückkehren auf den Tab neu laden (andere haben unterdessen evtl. Artikel geöffnet)
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+})();
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>

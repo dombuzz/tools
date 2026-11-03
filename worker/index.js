@@ -303,7 +303,7 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
-import { searchArt, artStatus, crawlStep, countArt } from './artsearch.js';
+import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen } from './artsearch.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -514,6 +514,10 @@ async function handle(request, env, ctx) {
           mail, backup, teams: !!env.TEAMS_WEBHOOK_URL, kdrive: !!(env.KDRIVE_TOKEN && env.KDRIVE_DRIVE_ID && env.KDRIVE_DIR_ID),
         }, request);
       }
+
+      // «Artitgel-challenge»: Übersicht (GET /chatta/overview) und «geöffnet» melden (POST /chatta/open?u=<URL>)
+      if (request.method === 'GET' && parts[0] === 'chatta' && parts[1] === 'overview' && parts.length === 2) return json(await chattaOverview(env), request);
+      if (request.method === 'POST' && parts[0] === 'chatta' && parts[1] === 'open' && parts.length === 2) return json(await chattaOpen(env, url.searchParams.get('u')), request);
 
       // «Chatta Schweiz»: Liste (?list=1) oder direkt Weiterleitung auf einen Zufallsartikel
       if (request.method === 'GET' && parts[0] === 'chatta' && parts.length === 1) {
