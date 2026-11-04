@@ -224,7 +224,7 @@
     if (me) {
       pcard.innerHTML = `<div class="gh"><b>Profil</b><span>${esc(me.name)}</span></div><div class="gp">
         ${code ? `<p>Tes code da restaurar e «re-annunziar» (vegn mussà be questa giada – al arcunescha bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la rangaziun.</p>'}
-        <div class="gx"><button class="gb q" data-a="code">Nov code</button><button class="gb q" data-a="out">Ir or</button><button class="gb q" data-a="del">Stizzar profil</button></div><div class="gerr"></div></div>`;
+        <div class="gx"><button class="gb q" data-a="code">Nov code</button><button class="gb q" data-a="out">Log out</button><button class="gb q" data-a="del">Stizzar profil</button></div><div class="gerr"></div></div>`;
     } else {
       pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha in profil vesa la rangaziun \u2013 e be profils cumparan qua." aria-label="Be tgi che ha in profil vesa la rangaziun \u2013 e be profils cumparan qua.">i</i></b><span>sut profil na vesas ti nagina rangaziun</span></div><div class="gp">
         <p>Fa in profil (be in num, nagina e-mail) per participar a la rangaziun. Il code per reconstruir il profil survegns ti ina giada.</p>
