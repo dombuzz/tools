@@ -254,6 +254,7 @@ export async function gameRanking(env, GROUP, cid, period) {
 export async function gameRoute(request, env, url, parts, GROUP) {
   if (parts[0] !== 'game') return null;
   const g = request.method === 'GET', body = async () => { try { return (await request.json()) || {}; } catch (e) { return {}; } };
+  if (g && parts[1] === 'count') { await ensure(env); const { results: [c] } = await env.DB.prepare('SELECT COUNT(*) n FROM gprofile').all(); return { status: 200, data: { n: c.n } }; }
   if (g && parts[1] === 'me') return gameMe(env, url.searchParams.get('c') || '');
   if (g && parts[1] === 'ranking') return gameRanking(env, GROUP, url.searchParams.get('c') || '', url.searchParams.get('p') || 'month');
   if (request.method === 'POST') {

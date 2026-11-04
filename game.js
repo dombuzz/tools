@@ -187,7 +187,7 @@
   pcard.className = rcard.className = 'gcard';
   sec.append(pcard, rcard);
   const fmt = n => (+n).toLocaleString('de-CH');
-  let me = null, per = 'month', sortK = 'pts', cache = {};
+  let me = null, nProf = null, per = 'month', sortK = 'pts', cache = {};
 
   const drawProfile = (code) => {
     if (!cid) { pcard.innerHTML = '<div class="gh"><b>Profil</b></div><p class="gnote">Memorisaziun localmain bloccada.</p>'; return; }
@@ -196,7 +196,7 @@
         ${code ? `<p>Tes code da restaurar e «re-annunziar» (vegn mussà be questa giada – al arcunescha bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la rangaziun.</p>'}
         <div class="gx"><button class="gb q" data-a="code">Nov code</button><button class="gb q" data-a="out">Ir or</button><button class="gb q" data-a="del">Stizzar profil</button></div><div class="gerr"></div></div>`;
     } else {
-      pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
+      pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>sut profil na vesas ti nagina rangaziun</span></div><div class="gp">
         <p>Fa in profil (be in num, nagina e-mail) per participar a la rangaziun. Il code per reconstruir il profil survegns ti ina giada.</p>
         <p class="gl"><b>Nov profil:</b> «Tes num» è il num che las autras persunas vesan en la rangaziun. Ti pos eleger el libramain (2–24 caracters), el na dastga anc betg exister.</p>
         <form data-f="reg"><input name="name" maxlength="24" placeholder="Tes num" title="Tes nov num da visur en la rangaziun (anc betg occupà)" autocomplete="nickname" required><button class="gb">Crear profil</button></form>
@@ -210,13 +210,13 @@
     const f = e.target, d = Object.fromEntries(new FormData(f)), er = pcard.querySelector('.gerr');
     const r = await call('/game/' + (f.dataset.f === 'reg' ? 'register' : 'login'), d);
     if (!r.ok) { er.textContent = ERR[r.error] || 'Errur.'; return; }
-    me = { name: r.name }; cache = {}; drawProfile(r.code); loadRank();
+    me = { name: r.name }; cache = {}; if (f.dataset.f === 'reg' && nProf != null) nProf++; drawProfile(r.code); loadRank();
   });
   pcard.addEventListener('click', async e => {
     const a = e.target.closest('[data-a]'); if (!a) return; const er = pcard.querySelector('.gerr');
     if (a.dataset.a === 'code') { if (!confirm('Generar in nov code? Il vegl code na vala lura betg pli.')) return; const r = await call('/game/code', {}); if (r.ok) drawProfile(r.code); else er.textContent = 'Errur.'; }
     if (a.dataset.a === 'out') { await call('/game/logout', {}); me = null; cache = {}; drawProfile(); drawRank(); }
-    if (a.dataset.a === 'del') { if (!confirm('Stizzar il profil definitivamain?')) return; const r = await call('/game/delete', {}); if (r.ok) { me = null; cache = {}; drawProfile(); drawRank(); } else er.textContent = 'Errur.'; }
+    if (a.dataset.a === 'del') { if (!confirm('Stizzar il profil definitivamain?')) return; const r = await call('/game/delete', {}); if (r.ok) { me = null; cache = {}; if (nProf) nProf--; drawProfile(); drawRank(); } else er.textContent = 'Errur.'; }
   });
 
   const COLS = [['pts', 'Puncts'], ['seria', 'Seria'], ['coll', 'Collecziun'], ['acts', 'Acziuns'], ['art', 'Artitgels']];
@@ -226,11 +226,12 @@
     <li><b>10</b> puncts per tool scuvrì (ina giada)</li><li><b>3</b> puncts per artitgel avert en l’Artitgel-challenge (max. 3 per di)</li>
     <li><b>20</b> puncts per badge</li><li>Bonus per la meglra seria: <b>15</b> (3 dis), <b>40</b> (7 dis), <b>150</b> (30 dis)</li>
     <li>Sonda e dumengia n’interrumpan betg la seria.</li></ul></details>`;
+  const cnt = n => n == null ? '' : `${fmt(n)} ${n === 1 ? 'persuna è' : 'persunas èn'} da la partida`;
   const drawRank = (d) => {
-    if (!me) { rcard.innerHTML = '<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b></div><p class="gnote">Crea in profil per vesair la rangaziun.</p>'; return; }
-    if (!d) { rcard.innerHTML = '<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b></div><p class="gnote">Chargia …</p>'; return; }
+    if (!me) { rcard.innerHTML = `<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>${cnt(nProf)}</span></div><p class="gnote">Crea in profil per vesair la rangaziun.</p>`; return; }
+    if (!d) { rcard.innerHTML = `<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>${cnt(nProf)}</span></div><p class="gnote">Chargia …</p>`; return; }
     const rows = d.rows.slice().sort((a, b) => b[sortK] - a[sortK] || b.pts - a.pts || a.name.localeCompare(b.name));
-    rcard.innerHTML = `<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>${rows.length} ${rows.length === 1 ? 'persuna' : 'persunas'}</span></div>
+    rcard.innerHTML = `<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>${cnt(rows.length)}</span></div>
       <div class="gper">${Object.entries(PN).map(([k, v]) => `<button data-p="${k}" class="${k === per ? 'on' : ''}">${v}</button>`).join('')}</div>
       <table class="grk"><thead><tr><th></th><th>Num</th>${COLS.map(([k, v]) => `<th data-s="${k}" class="${k === sortK ? 'on' : ''}">${v}</th>`).join('')}</tr></thead>
       <tbody>${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}</td><td>${esc(r.name)}</td>${COLS.map(([k]) => `<td class="${k === 'pts' ? 'pt' : ''}">${fmt(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>${RULES}`;
@@ -249,6 +250,7 @@
     cache[per] = { t: Date.now(), d: r }; drawRank(r);
   };
   drawProfile(); drawRank();
+  fetch(API + '/game/count').then(r => r.json()).then(d => { nProf = d.n; drawRank(me ? cache[per] && cache[per].d : undefined); }).catch(() => {});
   fetch(API + '/game/me?c=' + encodeURIComponent(cid)).then(r => r.json()).then(d => { me = d.profile || null; drawProfile(); loadRank(); }).catch(() => {});
 
   // Balken einblenden
