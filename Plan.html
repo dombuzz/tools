@@ -128,7 +128,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
     <div class="btns">
       <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf?d=w5571474005224f84be64292d66631c8c&amp;csf=1&amp;web=1&amp;e=9z2lKX" target="_blank" rel="noopener">Plan da lavur actual - radio/online</a>
       <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/2_televisiun_ondemand.pdf?d=wad4cfb28bf9343db86fe8ab039ef7b17&amp;csf=1&amp;web=1&amp;e=aQtI74" target="_blank" rel="noopener">Plan da lavur actual - televisiun/ondemand</a>
-      <button class="btn-sm" id="aliasbtn" type="button" title="Aliase laden">Aliase</button>
+      <button class="btn-sm" id="aliasbtn" type="button" hidden title="Aliase laden">Aliase</button>
     </div>
   </header>
 
@@ -312,9 +312,9 @@ async function loadAliases(code){
   if(!r.ok) throw new Error("Aliase nicht verfügbar");
   const d=await r.json(); store.set("plan-alias",JSON.stringify({map:d.map||{},rules:d.rules||[]})); store.set("plan-alias-code",code);
 }
-async function refreshAliases(){ // beim Start still mit gespeichertem Code aktualisieren
-  const c=store.get("plan-alias-code"); if(!c) return;
-  try{await loadAliases(c); if(plan) setPlan(plan,false)}catch(e){}
+async function refreshAliases(){ // beim Start automatisch laden (mit gespeichertem Code, falls der Worker einen verlangt)
+  try{await loadAliases(store.get("plan-alias-code")||""); if(plan) setPlan(plan,false); $("aliasbtn").hidden=true}
+  catch(e){if(e.message==="Code falsch") $("aliasbtn").hidden=false}
 }
 async function askAliases(){
   const c=prompt("Zugangscode für Aliase (bei Dominik erfragen):"); if(!c) return;
