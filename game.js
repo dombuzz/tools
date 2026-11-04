@@ -99,7 +99,10 @@
   if (head) head.insertAdjacentHTML('beforebegin', '<a class="homelink" href="/">← Tools</a>');
 
   const h1 = document.querySelector('h1');
-  if (h1) h1.insertAdjacentHTML('beforeend', '<span class="h1g">game</span>');
+  if (h1) h1.insertAdjacentHTML('beforeend', '<span class="h1g">the game</span>');
+  // Beschreibung spielerisch statt des Startseiten-Textes
+  const sub = document.querySelector('.sub');
+  if (sub) sub.innerHTML = 'Scuvra tut ils tools, tegna viva ta seria, collecziuna badges \u2013 e mesira tes puncts cun ils auters.<br>Tscherner in tool, el s\'avra directamain.';
 
   // alle Tools aus dem Dropdown (ohne Lab und externe Links)
   const tools = [...document.querySelectorAll('#menu a.mi:not(.lab)')]
