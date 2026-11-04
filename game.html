@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark light">
-<title>dombuzz Tools · game</title>
+<title>dombuzz · Game</title>
+<link rel="icon" type="image/png" href="/favicon-game.png">
 <style>html,body{margin:0;background:#121214}</style>
 </head>
 <body>
@@ -22,7 +23,8 @@
   ]).then(([html, js]) => {
       html = html
         .replace(/ff4d64/gi, '5aa6ff')
-        .replace('<title>dombuzz Tools</title>', '<title>dombuzz Tools · game</title>')
+        .replace('<title>dombuzz Tools</title>', '<title>dombuzz · Game</title>')
+        .replace(/<link rel="icon"[^>]*>/, '<link rel="icon" type="image/png" href="/favicon-game.png">')
         .replace('/view/index?', '/view/game?')
         .replace(/<\/body>(?![\s\S]*<\/body>)/, () => '<script>' + js.replace(/<\/script/gi, '<\\/script') + '<\/script></body>');
       document.open(); document.write(html); document.close();
