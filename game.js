@@ -146,7 +146,7 @@
     <div class="gcard">
       <div class="gh"><b>Seria</b><span>Record: ${best} ${best === 1 ? 'di' : 'dis'}</span></div>
       <div class="gbig"><strong>${cur ? '🔥 ' + cur : '–'}</strong><small>${cur ? (cur === 1 ? 'di' : 'dis a la lunga') : 'Avra in tool per cumenzar ina seria.'}</small></div>
-      <p class="gnote">Sonda e dumengia na rumpan betg la seria.</p>
+      <p class="gnote">Sonda e dumengia n’interrumpan betg la seria.</p>
     </div>
     <div class="gcard">
       <div class="gh"><b>Acziuns</b><span>Quest mais: ${mon}</span></div>
@@ -193,13 +193,13 @@
     if (!cid) { pcard.innerHTML = '<div class="gh"><b>Profil</b></div><p class="gnote">Memorisaziun localmain bloccada.</p>'; return; }
     if (me) {
       pcard.innerHTML = `<div class="gh"><b>Profil</b><span>${esc(me.name)}</span></div><div class="gp">
-        ${code ? `<p>Tes code da restaurar e «re-annunziar» (vegn mussà be questa giada – al arcunescha bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la glista da rang.</p>'}
+        ${code ? `<p>Tes code da restaurar e «re-annunziar» (vegn mussà be questa giada – al arcunescha bain!):</p><div class="gcode">${esc(code)}</div><p>Cun num + code pos ti avrir tes profil sin in auter apparat.</p>` : '<p>Ti es en la rangaziun.</p>'}
         <div class="gx"><button class="gb q" data-a="code">Nov code</button><button class="gb q" data-a="out">Ir or</button><button class="gb q" data-a="del">Stizzar profil</button></div><div class="gerr"></div></div>`;
     } else {
-      pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
-        <p>Fa in profil (be in num, nagina e-mail) per participar a la glista da rang. Il code da recuperaziun survegn ti ina giada.</p>
-        <p class="gl"><b>Nov profil:</b> «Tes num» è il num che las autras persunas vesan en la glista da rang. Ti pos eleger el libramain (2–24 caracters), el na dastga anc betg exister.</p>
-        <form data-f="reg"><input name="name" maxlength="24" placeholder="Tes num" title="Tes nov num da visur en la glista da rang (anc betg occupà)" autocomplete="nickname" required><button class="gb">Crear profil</button></form>
+      pcard.innerHTML = `<div class="gh"><b>Profil<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>sut profil na vesas ti nagina glista</span></div><div class="gp">
+        <p>Fa in profil (be in num, nagina e-mail) per participar a la rangaziun. Il code da recuperaziun survegn ti ina giada.</p>
+        <p class="gl"><b>Nov profil:</b> «Tes num» è il num che las autras persunas vesan en la rangaziun. Ti pos eleger el libramain (2–24 caracters), el na dastga anc betg exister.</p>
+        <form data-f="reg"><input name="name" maxlength="24" placeholder="Tes num" title="Tes nov num da visur en la rangaziun (anc betg occupà)" autocomplete="nickname" required><button class="gb">Crear profil</button></form>
         <p class="gl"><b>Gia in profil?</b> «Num» è il num dal profil existent, ensemen cun il code da recuperaziun. Uschia avras ti il medem profil sin in auter apparat.</p>
         <form data-f="log"><input name="name" maxlength="24" placeholder="Num" title="Num dal profil existent (betg in nov num)" autocomplete="off" required><input name="code" maxlength="12" placeholder="Code (XXXX-XXXX)" autocomplete="off" required><button class="gb q">Avrir profil</button></form>
         <div class="gerr"></div></div>`;
@@ -221,16 +221,16 @@
 
   const COLS = [['pts', 'Puncts'], ['seria', 'Seria'], ['coll', 'Collecziun'], ['acts', 'Acziuns'], ['art', 'Artitgels']];
   const PN = { month: 'Quest mais', year: 'Quest onn', all: 'Tut' };
-  const RULES = `<details class="grules"><summary>Sco vegnan ils puncts calculads?</summary><ul>
+  const RULES = `<details class="grules"><summary>Co vegnan ils puncts calculads?</summary><ul>
     <li><b>5</b> puncts per di cun tool duvrà</li><li><b>1</b> punct per acziun (max. 20 per di)</li>
     <li><b>10</b> puncts per tool scuvrì (ina giada)</li><li><b>3</b> puncts per artitgel avert en l’Artitgel-challenge (max. 3 per di)</li>
     <li><b>20</b> puncts per badge</li><li>Bonus per la megliera seria: <b>15</b> (3 dis), <b>40</b> (7 dis), <b>150</b> (30 dis)</li>
-    <li>Sonda e dumengia na rumpan la seria. Apparats en il modus test na vegnan betg quintads.</li></ul></details>`;
+    <li>Sonda e dumengia n’interrumpan betg la seria.</li></ul></details>`;
   const drawRank = (d) => {
-    if (!me) { rcard.innerHTML = '<div class="gh"><b>Glista da rang<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b></div><p class="gnote">Crea in profil per vesair la glista da rang.</p>'; return; }
-    if (!d) { rcard.innerHTML = '<div class="gh"><b>Glista da rang<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b></div><p class="gnote">Chargia …</p>'; return; }
+    if (!me) { rcard.innerHTML = '<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b></div><p class="gnote">Crea in profil per vesair la rangaziun.</p>'; return; }
+    if (!d) { rcard.innerHTML = '<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b></div><p class="gnote">Chargia …</p>'; return; }
     const rows = d.rows.slice().sort((a, b) => b[sortK] - a[sortK] || b.pts - a.pts || a.name.localeCompare(b.name));
-    rcard.innerHTML = `<div class="gh"><b>Glista da rang<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista." aria-label="Be tgi che ha atgnamain in profil, vesa la glista \u2013 e be profils cumparan en la glista.">i</i></b><span>${rows.length} ${rows.length === 1 ? 'persuna' : 'persunas'}</span></div>
+    rcard.innerHTML = `<div class="gh"><b>Rangaziun<i class="gtp" tabindex="0" data-tip="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun." aria-label="Be tgi che ha atgnamain in profil, vesa la rangaziun \u2013 e be profils cumparan en la rangaziun.">i</i></b><span>${rows.length} ${rows.length === 1 ? 'persuna' : 'persunas'}</span></div>
       <div class="gper">${Object.entries(PN).map(([k, v]) => `<button data-p="${k}" class="${k === per ? 'on' : ''}">${v}</button>`).join('')}</div>
       <table class="grk"><thead><tr><th></th><th>Num</th>${COLS.map(([k, v]) => `<th data-s="${k}" class="${k === sortK ? 'on' : ''}">${v}</th>`).join('')}</tr></thead>
       <tbody>${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''}"><td>${i + 1}</td><td>${esc(r.name)}</td>${COLS.map(([k]) => `<td class="${k === 'pts' ? 'pt' : ''}">${fmt(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>${RULES}`;
@@ -245,7 +245,7 @@
     if (cache[per] && Date.now() - cache[per].t < 6e4) return drawRank(cache[per].d);
     drawRank();
     const r = await call('/game/ranking?c=' + encodeURIComponent(cid) + '&p=' + per);
-    if (!r.ok) { rcard.querySelector('.gnote').textContent = 'Glista betg chargiabla.'; return; }
+    if (!r.ok) { rcard.querySelector('.gnote').textContent = 'Rangaziun betg chargiabla.'; return; }
     cache[per] = { t: Date.now(), d: r }; drawRank(r);
   };
   drawProfile(); drawRank();
