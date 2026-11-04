@@ -118,7 +118,7 @@
   const total = +acts.total || 0, mon = acts.month === month ? +acts.m || 0 : 0;
   const pct = tools.length ? Math.round(seen.length / tools.length * 100) : 0;
 
-  const STEPS = [10, 100, 500]; // = Ziele der Acziuns-Badges
+  const STEPS = [10, 50, 100, 500]; // = Ziele der Acziuns-Badges
   const next = STEPS.find(s => s > total) || total;
   const prev = [...STEPS].reverse().find(s => s <= total) || 0;
 
@@ -132,6 +132,7 @@
     ['⚡', '7 dis', nDays, 7, 'Dovra tools a 7 dis differents – er cun pausas.'],
     ['🌋', '30 dis', nDays, 30, 'Dovra tools a 30 dis differents – er cun pausas.'],
     ['✦', '10 acziuns', total, 10, 'Fa 10 acziuns en ils tools (p.ex. download u export).'],
+    ['✨', '50 acziuns', total, 50, 'Fa 50 acziuns en ils tools (p.ex. download u export).'],
     ['✸', '100 acziuns', total, 100, 'Fa 100 acziuns en ils tools (p.ex. download u export).'],
     ['💎', '500 acziuns', total, 500, 'Fa 500 acziuns en ils tools (p.ex. download u export).'],
   ].map(([e, n, have, goal, rule]) => ({ e, n, rule, on: goal > 0 && have >= goal,

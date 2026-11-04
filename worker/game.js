@@ -185,8 +185,8 @@ function badgeDays(rec) {
   const r3 = runsOf(days).filter(r => r.length >= 3).map(r => r[2]).sort()[0]; if (r3) out.push(r3); // 3 dis a la lunga
   if (days.length >= 7) out.push(days[6]);                                      // 7 dis differents
   if (days.length >= 30) out.push(days[29]);                                    // 30 dis differents
-  let cum = 0; const goals = [10, 100, 500];
-  for (const d of days) { cum += rec.days.get(d).u; while (goals.length && cum >= goals[0]) { out.push(d); goals.shift(); } } // 10/100/500 acziuns
+  let cum = 0; const goals = [10, 50, 100, 500];
+  for (const d of days) { cum += rec.days.get(d).u; while (goals.length && cum >= goals[0]) { out.push(d); goals.shift(); } } // 10/50/100/500 acziuns
   return out;
 }
 
