@@ -753,7 +753,7 @@
         d.rows.map(x => `<tr><td>${esc(x.name)}<small>dapi ${dm(x.created)} · ${x.devices} ${x.devices === 1 ? 'apparat' : 'apparats'}${x.reset ? ' · reset ' + x.reset.slice(8, 10).replace(/^0/, '') + '.' + x.reset.slice(5, 7).replace(/^0/, '') + '.' : ''}</small></td>
           <td>${f(x.month.pts)}</td><td>${f(x.all.pts)}</td><td>${f(x.all.acts)}</td>
           <td><button data-a="reset" data-id="${x.id}" data-n="${esc(x.name)}" title="Puncts zurtgirar: la dumbraziun cumenza danovamain oz">Reset</button><button data-a="delete" data-id="${x.id}" data-n="${esc(x.name)}" title="Stizzar il profil">Stizzar</button></td></tr>`).join('') +
-        `</tbody></table></div><p class="artm">${d.rows.length} ${d.rows.length === 1 ? 'profil' : 'profils'} · «Reset» quinta danovamain a partir da oz, «Stizzar» allontanescha il profil dal tut.</p>`
+        `</tbody></table></div><p class="artm">${d.rows.length} ${d.rows.length === 1 ? 'profil' : 'profils'} · «Reset» quinta danovamain a partir dad oz, «Stizzar» allontanescha il profil dal tut.</p>`
         : '<div class="msg">Anc nagins profils.</div>';
     } catch (e) { el.innerHTML = '<div class="msg">Chargiar betg reussì</div>'; }
   }
