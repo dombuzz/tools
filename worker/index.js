@@ -313,6 +313,15 @@ export default {
     const url = new URL(request.url), parts = url.pathname.split('/').filter(Boolean);
     let res;
     try {
+      // Plan-Aliase (Plan.html): Daten nur als Secret PLAN_ALIASES (JSON {map, rules}), Zugang mit Secret PLAN_ALIAS_CODE. Nichts davon liegt im Repo.
+      if (request.method === 'POST' && parts[0] === 'plan-alias' && parts.length === 1) {
+        if (!env.PLAN_ALIASES || !env.PLAN_ALIAS_CODE) return json({ error: 'unset' }, request, 503);
+        const b = await request.json().catch(() => ({}));
+        const ok = typeof b.code === 'string' && b.code && await sha256(b.code) === await sha256(env.PLAN_ALIAS_CODE);
+        if (!ok) return json({ error: 'auth' }, request, 401);
+        let d; try { d = JSON.parse(env.PLAN_ALIASES); } catch { return json({ error: 'format' }, request, 500); }
+        return json({ map: d.map || {}, rules: d.rules || [] }, request);
+      }
       // Statistik nur mit Passwort (Secret FEEDBACK_PASSWORD, wie /feedback); öffentlich bleibt nur /top (Rangliste ohne Besucherdaten)
       if (request.method === 'GET' && PROTECTED.has(parts[0]) && parts.length === 1) {
         const a = await fbAuth(request, env);

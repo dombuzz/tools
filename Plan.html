@@ -128,6 +128,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
     <div class="btns">
       <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf?d=w5571474005224f84be64292d66631c8c&amp;csf=1&amp;web=1&amp;e=9z2lKX" target="_blank" rel="noopener">Plan da lavur actual - radio/online</a>
       <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/2_televisiun_ondemand.pdf?d=wad4cfb28bf9343db86fe8ab039ef7b17&amp;csf=1&amp;web=1&amp;e=aQtI74" target="_blank" rel="noopener">Plan da lavur actual - televisiun/ondemand</a>
+      <button class="btn-sm" id="aliasbtn" type="button" title="Aliase laden">Aliase</button>
     </div>
   </header>
 
@@ -301,14 +302,31 @@ const fmt=d=>d.getDate()+"."+(d.getMonth()+1)+".";
 let plan=null, weeks=1; const sources={};
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
+// ---- Aliase: liegen als Cloudflare-Secret (PLAN_ALIASES) auf dem Worker, nicht im öffentlichen Repo.
+// Abruf nur mit Zugangscode; die Plandaten verlassen den Browser nie (es geht nur der Code raus).
+const PLAN_API="https://fragrant-grass-c193.zappa-pfadi.workers.dev";
+function aliasData(){try{const a=JSON.parse(store.get("plan-alias")||"null");if(a&&a.map&&Array.isArray(a.rules))return a}catch(e){}return{map:{},rules:[]}}
+async function loadAliases(code){
+  const r=await fetch(PLAN_API+"/plan-alias",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code})});
+  if(r.status===401) throw new Error("Code falsch");
+  if(!r.ok) throw new Error("Aliase nicht verfügbar");
+  const d=await r.json(); store.set("plan-alias",JSON.stringify({map:d.map||{},rules:d.rules||[]})); store.set("plan-alias-code",code);
+}
+async function refreshAliases(){ // beim Start still mit gespeichertem Code aktualisieren
+  const c=store.get("plan-alias-code"); if(!c) return;
+  try{await loadAliases(c); if(plan) setPlan(plan,false)}catch(e){}
+}
+async function askAliases(){
+  const c=prompt("Zugangscode für Aliase (bei Dominik erfragen):"); if(!c) return;
+  try{await loadAliases(c.trim()); if(plan) setPlan(plan,false); $("status").textContent="Aliase geladen."}catch(e){$("status").textContent=e.message}
+}
 let DISP={};
 function shortNames(names){
   // Zusätze im Plan entfernen: «(Firma) », « (RTR)», « z»
   const clean=n=>n.replace(/^\([^)]*\)\s*/,"").replace(/\s*\(RTR\)\s*$/,"").replace(/\s+z$/,"").trim();
   const sur=n=>(n=clean(n),(n.includes(",")?n.split(",")[0]:n.split(" ")[0]).trim());
   const first=n=>(n=clean(n),n.includes(",")?n.split(",").slice(1).join(","):n.split(" ").slice(1).join(" ")).trim()||sur(n);
-  const ALIAS={};
-  const al=n=>ALIAS[n]||(/^$/.test(clean(n))?"Gaby":undefined); // eine Person immer «Gaby» (auch mit zweitem Vornamen)
+  const al=n=>{const A=aliasData();if(A.map[n])return A.map[n];for(const [re,v] of A.rules){try{if(new RegExp(re).test(clean(n)))return v}catch(e){}}return undefined}; // Aliase kommen aus dem Cloudflare-Secret PLAN_ALIASES (nicht im Repo)
   const first0=first; const firstA=n=>al(n)||first0(n);
   const cnt={}; names.forEach(n=>cnt[firstA(n)]=(cnt[firstA(n)]||0)+1);
   const out={}; names.forEach(n=>{const f=firstA(n);out[n]=al(n)?f:cnt[f]>1?`${f} ${sur(n)[0]}.`:f}); DISP={}; names.forEach(n=>DISP[n]=sur(n)+", "+firstA(n).replace(/\s+[A-ZÄÖÜ]\.$/,"")); // Anzeige im Auswahlfeld
@@ -458,6 +476,7 @@ document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed
 try{localStorage.removeItem("plan")}catch(e){}
 $("status").textContent="Anc nagin plan chargià.";
 render();
+$("aliasbtn").addEventListener("click",askAliases); refreshAliases();
 
 // SharePoint-Bookmarklet: PDF via postMessage empfangen
 const SP_ORIGIN="https://srgssr.sharepoint.com";
