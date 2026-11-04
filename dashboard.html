@@ -181,6 +181,15 @@
   .art td:first-child a:hover{color:var(--accent)}
   .art tr.tot td{border-bottom:0;font-weight:700}
   .artm{font-size:.72rem;color:var(--muted);margin:8px 0 0}
+  .gad{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .gad th,.gad td{padding:7px 5px;text-align:right;border-bottom:1px solid var(--line);font-size:.85rem;white-space:nowrap}
+  .gad th{font-size:.72rem;font-weight:600;color:var(--muted)}
+  .gad th:first-child,.gad td:first-child{text-align:left;white-space:normal}
+  .gad td small{display:block;color:var(--muted);font-size:.7rem}
+  .gad tr:last-child td{border-bottom:0}
+  .gad button{font:inherit;font-size:.74rem;border:1px solid var(--line);border-radius:7px;background:none;color:var(--muted);padding:3px 8px;cursor:pointer;margin-left:4px}
+  .gad button:hover,.gad button:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+  .gad-w{overflow-x:auto}
   .heat{overflow-x:auto}
   .heat table{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed;min-width:300px}
   .heat td{height:14px;border-radius:3px;padding:0;background:var(--field)}
@@ -335,6 +344,7 @@
   <section class="pan"><p class="sec" id="sparkh">Activitad · ultimas 24 uras</p><div id="spark"><div class="msg">Chargel …</div></div></section>
   <section class="pan"><p class="sec">Cura vegnan ils tools duvrads</p><div id="heat"><div class="msg">Chargel …</div></div></section>
   <section class="pan"><p class="sec">Artitgels online sin rtr.ch</p><div id="artc"><div class="msg">Chargel …</div></div></section>
+  <section class="pan"><p class="sec">Game · profils</p><div id="gadm"><div class="msg">Chargel …</div></div></section>
 
   <details class="fold" data-k="favs">
     <summary class="labh other">Favurits <span>★</span></summary>
@@ -495,7 +505,7 @@
       if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
       const before = silent && lastData ? snap(lastData) : null;
       lastData = d; lastRange = range;
-      render(); stamp(); loadHourly(range); loadUsage(); loadArt();
+      render(); stamp(); loadHourly(range); loadUsage(); loadArt(); loadGame();
       if (silent) playFx(before, snap(d));
     } catch (e) {
       if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
@@ -722,6 +732,31 @@
         `<p class="artm">Dapi glindesdi ${dm(d.from.week)} · «Il di» dumbrà sco 1 artitgel per di · ultim artitgel en l'index: ${dm(d.newest)}</p>`;
     } catch (e) { el.innerHTML = '<div class="msg">Chargiar betg reussì</div>'; }
   }
+
+  // /game-Profile: Liste, Punkte zurücksetzen, löschen (nur mit Passwort)
+  async function loadGame() {
+    const el = document.getElementById('gadm');
+    try {
+      const r = await fetch(API + '/gadmin', { ...AUTH(), cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json(), f = n => n.toLocaleString('de-CH');
+      const dm = ts => ts ? new Date(ts).toLocaleDateString('de-CH', { day: 'numeric', month: 'numeric', year: '2-digit' }) : '';
+      el.innerHTML = d.rows.length ? `<div class="gad-w"><table class="gad"><thead><tr><th>Num</th><th title="puncts quest mais">mais</th><th title="puncts en tut">tut</th><th title="acziuns en tut">acz.</th><th></th></tr></thead><tbody>` +
+        d.rows.map(x => `<tr><td>${esc(x.name)}<small>dapi ${dm(x.created)} · ${x.devices} ${x.devices === 1 ? 'apparat' : 'apparats'}${x.reset ? ' · reset ' + x.reset.slice(8, 10).replace(/^0/, '') + '.' + x.reset.slice(5, 7).replace(/^0/, '') + '.' : ''}</small></td>
+          <td>${f(x.month.pts)}</td><td>${f(x.all.pts)}</td><td>${f(x.all.acts)}</td>
+          <td><button data-a="reset" data-id="${x.id}" data-n="${esc(x.name)}" title="Puncts zurtgirar: la dumbraziun cumenza danovamain oz">Reset</button><button data-a="delete" data-id="${x.id}" data-n="${esc(x.name)}" title="Stizzar il profil">Stizzar</button></td></tr>`).join('') +
+        `</tbody></table></div><p class="artm">${d.rows.length} ${d.rows.length === 1 ? 'profil' : 'profils'} · «Reset» conta danovamain a partir da oz, «Stizzar» allontanescha il profil dal tut.</p>`
+        : '<div class="msg">Anc nagins profils.</div>';
+    } catch (e) { el.innerHTML = '<div class="msg">Chargiar betg reussì</div>'; }
+  }
+  document.getElementById('gadm').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const del = b.dataset.a === 'delete';
+    if (!confirm(del ? `Stizzar il profil «${b.dataset.n}» definitivamain?` : `Puncts da «${b.dataset.n}» zurtgirar? La dumbraziun cumenza danovamain oz.`)) return;
+    b.disabled = true;
+    try { const r = await fetch(`${API}/gadmin/${b.dataset.a}`, { method: 'POST', headers: { ...AUTH().headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.dataset.id }) }); if (!r.ok) throw new Error(r.status); } catch (x) { alert('Betg reussì.'); }
+    loadGame();
+  });
 
   async function loadUsage() {
     const el = document.getElementById('cfu');

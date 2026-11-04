@@ -303,8 +303,8 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
-import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck } from './artsearch.js';
-import { gameRoute, gameAggregate } from './game.js';
+import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth } from './artsearch.js';
+import { gameRoute, gameAggregate, gameAdminList, gameAdminDelete, gameAdminReset, gameMonthStats } from './game.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -455,6 +455,9 @@ async function monthlyReport(env, ctx) {
     const main = (d.uses || []).filter(x => !x.tool.startsWith('lab-') && (x.count || x.likes)), lab = (d.uses || []).filter(x => x.tool.startsWith('lab-') && (x.count || x.likes));
     const line = x => `${x.name || x.tool}: ${x.count} duvrà · ♥ ${x.likes || 0} · ${d.views?.[x.tool] || 0} visitas`;
     const facts = [['Duvrà', d.usesTotal || 0], ['♥', d.total || 0], ['Visitas', d.viewsTotal || 0], ['Visitaders', d.clients || 0], ['Turnads (≥ 2 dis)', d.returning || 0]];
+    // /game-Profile und Artikel auf rtr.ch (ganzer Monat)
+    try { const g = await gameMonthStats(env, GROUP, key); facts.push(['Profils (game)', g.profiles], ['Profils novs', g.created], ['Profils activs', g.active], ['Acziuns (profils)', g.acts], ['Artitgels averts (challenge)', g.art], ['Badges (profils)', g.badges]); } catch (e) { await reportError(env, 'monthly game', e); }
+    try { const a = await countArtMonth(env, key); facts.push(['Artitgels sin rtr.ch', a.total], ['… Novitads / Sport / Cultura', `${a.novitads} / ${a.sport} / ${a.cultura}`]); } catch (e) { await reportError(env, 'monthly art', e); }
     const text = main.length ? main.map((x, i) => `${i + 1}. ${line(x)}`).join('\n\n') + (lab.length ? '\n\n**Lab:** ' + lab.map(line).join(' · ') : '') : 'Nagina utilisaziun quest mais.';
     const t = await teams(env, { title: 'Statistica tools.dombuzz.ch – ' + label, facts, text });
     ok = t;
@@ -514,6 +517,21 @@ async function handle(request, env, ctx) {
           worker: vm ? { id: vm.id, tag: vm.tag || '', deployed: vm.timestamp } : null,
           mail, backup, teams: !!env.TEAMS_WEBHOOK_URL, kdrive: !!(env.KDRIVE_TOKEN && env.KDRIVE_DRIVE_ID && env.KDRIVE_DIR_ID),
         }, request);
+      }
+
+      // Verwaltung der /game-Profile (nur mit Passwort wie /feedback): Liste, löschen, Punkte zurücksetzen
+      if (parts[0] === 'gadmin' && parts.length <= 2) {
+        const a = await fbAuth(request, env);
+        if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
+        let r2 = null;
+        if (request.method === 'GET' && parts.length === 1) r2 = await gameAdminList(env, GROUP);
+        else if (request.method === 'POST' && parts.length === 2) {
+          if (!ALLOWED_ORIGINS.includes(request.headers.get('Origin') || '')) return json({ error: 'origin' }, request, 403);
+          let b = {}; try { b = (await request.json()) || {}; } catch (e) {}
+          if (parts[1] === 'delete') r2 = await gameAdminDelete(env, b.id);
+          else if (parts[1] === 'reset') r2 = await gameAdminReset(env, b.id);
+        }
+        if (r2) return json(r2.data, request, r2.status);
       }
 
       // /game: Profile (Name + Wiederherstellungscode) und Rangliste

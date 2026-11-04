@@ -212,6 +212,20 @@ export async function countArt(env) {
   return { today, from, counts: out, newest: nw && nw.d };
 }
 
+// Artikel eines ganzen Kalendermonats (JJJJ-MM), «Il di» zählt 1 pro Tag – für die Monatsstatistik
+export async function countArtMonth(env, key) {
+  await ensureArt(env);
+  const from = key + '-01', to = key + '-31';
+  const { results } = await env.DB.prepare(
+    "SELECT CASE WHEN path LIKE '/novitads/%' THEN 'novitads' WHEN path LIKE '/sport/%' THEN 'sport' ELSE 'cultura' END s, COUNT(DISTINCT k) n" +
+    " FROM (SELECT path, d, CASE WHEN path LIKE '/novitads/il-di/%' THEN 'ildi:' || d ELSE url END k FROM art) WHERE d >= ?1 AND d <= ?2 AND (path LIKE '/novitads/%' OR path LIKE '/sport/%' OR path LIKE '/cultura/%') GROUP BY s"
+  ).bind(from, to).all();
+  const out = { novitads: 0, sport: 0, cultura: 0 };
+  for (const r of results) out[r.s] = r.n;
+  out.total = out.novitads + out.sport + out.cultura;
+  return out;
+}
+
 // «Artitgel-challenge»: Übersicht aller Artikel der letzten 30 Tage unter /novitads, /cultura, /sport
 // mit dem Zeitpunkt, an dem ein Artikel zuletzt über die Challenge geöffnet wurde (für alle gemeinsam).
 // «Il di» erhält laufend neue URLs: pro Tag nur die neueste Fassung.

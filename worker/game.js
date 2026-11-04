@@ -36,7 +36,10 @@ const ensure = env => ready ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS gstate (k TEXT PRIMARY KEY, v TEXT)'),
   env.DB.prepare('CREATE TABLE IF NOT EXISTS chatta_log (cid TEXT NOT NULL, url TEXT NOT NULL, ts TEXT NOT NULL, PRIMARY KEY (cid, url))'),
   env.DB.prepare('CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, ts INTEGER NOT NULL, body TEXT NOT NULL)'),
-]).catch(e => { ready = null; throw e; });
+]).then(async () => { // Spalte für «Punkte zurücksetzen» (Zählung ab diesem Tag)
+  const { results: cols } = await env.DB.prepare('PRAGMA table_info(gprofile)').all();
+  if (!cols.some(c => c.name === 'reset_day')) await env.DB.prepare('ALTER TABLE gprofile ADD COLUMN reset_day TEXT').run().catch(() => {});
+}).catch(e => { ready = null; throw e; });
 
 const stGet = async (env, k) => { const { results: [r] } = await env.DB.prepare('SELECT v FROM gstate WHERE k = ?1').bind(k).all(); return r ? r.v : null; };
 const stSet = (env, k, v) => env.DB.prepare('INSERT INTO gstate (k, v) VALUES (?1, ?2) ON CONFLICT(k) DO UPDATE SET v = ?2').bind(k, String(v)).run();
@@ -199,19 +202,20 @@ function scoreFor(rec, inP, bdays) {
   const bdg = bdays.filter(inP).length;
   const bonus = POINTS.streak.reduce((a, [need, pts]) => a + (seria >= need ? pts : 0), 0);
   const pts = days.length * POINTS.day + acts * POINTS.act + coll * POINTS.tool + bonus + art * POINTS.art + bdg * POINTS.badge;
-  return { pts, seria, coll, acts, art, bdg, days: days.length };
+  const raw = days.reduce((a, d) => a + rec.days.get(d).u, 0), rawArt = [...rec.art.entries()].filter(([d]) => inP(d)).reduce((a, [, n]) => a + n, 0);
+  return { pts, seria, coll, acts, art, bdg, days: days.length, raw, rawArt };
 }
 
-async function computeAll(env, GROUP) {
+async function computeAll(env, GROUP, monthKey) {
   const wmRun = await gameAggregate(env, GROUP, 10);
-  const { results: prof } = await env.DB.prepare('SELECT p.id, p.name, d.cid FROM gprofile p LEFT JOIN gdevice d ON d.pid = p.id').all();
+  const { results: prof } = await env.DB.prepare('SELECT p.id, p.name, p.created, p.reset_day, d.cid FROM gprofile p LEFT JOIN gdevice d ON d.pid = p.id').all();
   const per = new Map(), byCid = new Map();
   for (const r of prof) {
-    if (!per.has(r.id)) per.set(r.id, { id: r.id, name: r.name, days: new Map(), first: new Map(), art: new Map() });
-    if (r.cid) byCid.set(r.cid, r.id);
+    if (!per.has(r.id)) per.set(r.id, { id: r.id, name: r.name, created: r.created, reset: r.reset_day || '', devices: 0, days: new Map(), first: new Map(), art: new Map() });
+    if (r.cid) { byCid.set(r.cid, r.id); per.get(r.id).devices++; }
   }
   const add = (cid, day, tool, u) => {
-    const rec = per.get(byCid.get(cid)); if (!rec) return;
+    const rec = per.get(byCid.get(cid)); if (!rec || day < rec.reset) return;
     const o = rec.days.get(day) || { u: 0 }; o.u += u; rec.days.set(day, o);
     const f = rec.first.get(tool); if (!f || day < f) rec.first.set(tool, day);
   };
@@ -224,13 +228,13 @@ async function computeAll(env, GROUP) {
     const { results: ar } = await env.DB.prepare('SELECT cid, url, ts FROM chatta_log WHERE cid IN (SELECT cid FROM gdevice)').all();
     const first = new Map();
     for (const r of ar) { const k = byCid.get(r.cid) + '|' + r.url; if (!first.has(k) || r.ts < first.get(k)) first.set(k, r.ts); }
-    for (const [k, ts] of first) { const rec = per.get(k.split('|')[0]); if (!rec) continue; const d = zday(new Date(ts)); rec.art.set(d, (rec.art.get(d) || 0) + 1); }
+    for (const [k, ts] of first) { const rec = per.get(k.split('|')[0]); if (!rec) continue; const d = zday(new Date(ts)); if (d < rec.reset) continue; rec.art.set(d, (rec.art.get(d) || 0) + 1); }
   }
-  const now = zday(new Date()), P = { month: now.slice(0, 7), year: now.slice(0, 4), all: 'all' };
+  const now = zday(new Date()), P = { month: monthKey || now.slice(0, 7), year: now.slice(0, 4), all: 'all' };
   const out = { total: GAME_TOOLS.length, updated: new Date().toISOString(), p: { month: [], year: [], all: [] } };
   for (const rec of per.values()) {
     const bd = badgeDays(rec);
-    for (const [name, pre] of Object.entries(P)) out.p[name].push({ id: rec.id, name: rec.name, ...scoreFor(rec, d => pre === 'all' || d.startsWith(pre), bd) });
+    for (const [name, pre] of Object.entries(P)) out.p[name].push({ id: rec.id, name: rec.name, created: rec.created, reset: rec.reset, devices: rec.devices, ...scoreFor(rec, d => pre === 'all' || d.startsWith(pre), bd) });
   }
   return out;
 }
@@ -247,7 +251,36 @@ export async function gameRanking(env, GROUP, cid, period) {
     await env.DB.prepare('INSERT INTO cache (k, ts, body) VALUES (?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET ts = ?2, body = ?3').bind(key, Date.now(), JSON.stringify(body)).run();
   }
   const p = ['month', 'year', 'all'].includes(period) ? period : 'month';
-  return { status: 200, data: { period: p, total: body.total, updated: body.updated, rows: body.p[p].map(({ id, ...r }) => ({ ...r, me: id === me.id })) } };
+  return { status: 200, data: { period: p, total: body.total, updated: body.updated, rows: body.p[p].map(r => ({ name: r.name, pts: r.pts, seria: r.seria, coll: r.coll, acts: r.acts, art: r.art, bdg: r.bdg, days: r.days, me: r.id === me.id })) } };
+}
+
+// ---- Verwaltung (nur mit Passwort, siehe index.js /gadmin) und Monatsstatistik ----
+export async function gameAdminList(env, GROUP) {
+  await ensure(env);
+  const b = await computeAll(env, GROUP);
+  const all = new Map(b.p.all.map(r => [r.id, r]));
+  return { status: 200, data: { updated: b.updated, rows: b.p.month.map(m => { const a = all.get(m.id) || {}; return { id: m.id, name: m.name, created: m.created, reset: m.reset, devices: m.devices, month: { pts: m.pts, acts: m.raw, days: m.days }, all: { pts: a.pts || 0, acts: a.raw || 0, days: a.days || 0, art: a.rawArt || 0, bdg: a.bdg || 0 } }; }).sort((x, y) => y.all.pts - x.all.pts || x.name.localeCompare(y.name)) } };
+}
+export async function gameAdminDelete(env, id) {
+  await ensure(env);
+  id = String(id || ''); if (!/^[0-9a-f]{16}$/.test(id)) return err('id');
+  await env.DB.batch([env.DB.prepare('DELETE FROM gdevice WHERE pid = ?1').bind(id), env.DB.prepare('DELETE FROM gprofile WHERE id = ?1').bind(id)]);
+  await dropCache(env);
+  return { status: 200, data: { ok: true } };
+}
+export async function gameAdminReset(env, id) {
+  await ensure(env);
+  id = String(id || ''); if (!/^[0-9a-f]{16}$/.test(id)) return err('id');
+  await env.DB.prepare('UPDATE gprofile SET reset_day = ?2 WHERE id = ?1').bind(id, zday(new Date())).run(); // ab heute neu zählen
+  await dropCache(env);
+  return { status: 200, data: { ok: true } };
+}
+// Kennzahlen der Profile für einen Monat (JJJJ-MM) – für die Monatsstatistik
+export async function gameMonthStats(env, GROUP, key) {
+  await ensure(env);
+  const b = await computeAll(env, GROUP, key), rows = b.p.month;
+  return { profiles: rows.length, created: rows.filter(r => (r.created || '').startsWith(key)).length, active: rows.filter(r => r.days > 0).length,
+    acts: rows.reduce((a, r) => a + r.raw, 0), art: rows.reduce((a, r) => a + r.rawArt, 0), badges: rows.reduce((a, r) => a + r.bdg, 0) };
 }
 
 // Router: gibt { status, data } zurück oder null, wenn die Adresse nicht zu /game gehört
