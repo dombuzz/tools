@@ -322,7 +322,10 @@ export default {
           const ok = typeof b.code === 'string' && b.code && await sha256(b.code) === await sha256(env.PLAN_ALIAS_CODE);
           if (!ok) return json({ error: 'auth' }, request, 401);
         }
-        let d; try { d = JSON.parse(env.PLAN_ALIASES); } catch { return json({ error: 'format' }, request, 500); }
+        // Wert kann Text, doppelt verpacktes JSON oder (bei Typ «JSON») schon ein Objekt sein
+        let d = env.PLAN_ALIASES;
+        try { for (let i = 0; i < 3 && typeof d === 'string'; i++) d = JSON.parse(d); } catch { d = null; }
+        if (!d || typeof d !== 'object' || (!d.map && !d.rules)) return json({ error: 'format' }, request, 500);
         return json({ map: d.map || {}, rules: d.rules || [] }, request);
       }
       // Statistik nur mit Passwort (Secret FEEDBACK_PASSWORD, wie /feedback); öffentlich bleibt nur /top (Rangliste ohne Besucherdaten)
