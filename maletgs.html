@@ -77,6 +77,9 @@
   }
   .frame{ position:relative; width:100%; margin:0 auto; }
   .frame-bg{ position:absolute; inset:0; background:#fff; }
+  .frame-bg.clear{ background-color:#fff;
+    background-image:linear-gradient(45deg,#cfcfd4 25%,transparent 25%,transparent 75%,#cfcfd4 75%),linear-gradient(45deg,#cfcfd4 25%,transparent 25%,transparent 75%,#cfcfd4 75%);
+    background-size:20px 20px; background-position:0 0,10px 10px; }
   .frame img, .frame canvas.lay, .frame canvas.ghost-img{ position:absolute; max-width:none; pointer-events:none; }
   .blurbg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   .ghost-img{ opacity:.3; }
@@ -301,6 +304,12 @@
         <div class="sizeseg" role="group" aria-label="Grondezza" id="sizeGroup">
           <button type="button" data-s="std" aria-pressed="true">Standard<small id="sStd"></small></button>
           <button type="button" data-s="orig" aria-pressed="false">Resoluziun originala<small id="sOrig"></small></button>
+        </div>
+      </div>
+      <div class="field">Fund
+        <div class="sizeseg" role="group" aria-label="Fund" id="bgGroup">
+          <button type="button" data-b="white" aria-pressed="true">Alv</button>
+          <button type="button" data-b="clear" aria-pressed="false">Transparent</button>
         </div>
       </div>
       <div class="spacer"></div>
@@ -1035,7 +1044,10 @@ function addFile(file, label){
         q: 0, fh: false, fv: false, ang: 0, pv: 0, ph: 0, col: newCol() };
       // Bilder mit Transparenz in anderem Seitenverhältnis (z. B. Logos) frei platzieren, sonst Fläche füllen
       const sameRatio = Math.abs(L.iw / L.ih - W / H) < 0.01;
-      L.mode = hasAlpha(im) && !sameRatio ? 'free' : 'cover';
+      const alpha = hasAlpha(im);
+      L.mode = alpha && !sameRatio ? 'free' : 'cover';
+      // Erstes Bild mit Transparenz: Transparenz beibehalten (Fund auf «Transparent», ohne die gespeicherte Wahl zu ändern)
+      if (alpha && !layers.length) setBg('clear', true);
       L.el = document.createElement('canvas'); L.el.className = 'lay';
       clip.appendChild(L.el);
       orient(L);
@@ -1258,6 +1270,18 @@ function origFactor(){
   clamp(B);
   return Math.max(1, Math.min(1 / B.s, 8192 / Math.max(W, H)));
 }
+/* Fund: weiss oder transparent (PNG mit Alphakanal) */
+const bgBtns = [...document.querySelectorAll('#bgGroup button')], frameBg = document.querySelector('.frame-bg');
+let bgMode = 'white';
+try { const s = localStorage.getItem('layers-bg'); if (s === 'white' || s === 'clear') bgMode = s; } catch(e){}
+function setBg(m, keep){
+  bgMode = m;
+  bgBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.b === m));
+  frameBg.classList.toggle('clear', m === 'clear');
+  if (!keep) try { localStorage.setItem('layers-bg', m); } catch(e){}
+}
+bgBtns.forEach(b => b.onclick = () => setBg(b.dataset.b));
+setBg(bgMode, true);
 function outDims(){ const f = sizeMode === 'orig' ? origFactor() : 1; return [Math.round(W * f), Math.round(H * f), f]; }
 function updateSizes(){
   $('sStd').textContent = `${W} × ${H}`;
@@ -1271,7 +1295,7 @@ $('dlBtn').onclick = () => {
   const c = document.createElement('canvas'); c.width = OW; c.height = OH;
   const cx = c.getContext('2d');
   cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
-  cx.fillStyle = '#fff'; cx.fillRect(0, 0, OW, OH);
+  if (bgMode !== 'clear'){ cx.fillStyle = '#fff'; cx.fillRect(0, 0, OW, OH); }   // transparent: Alphakanal bleibt erhalten
   for (const L of layers){
     if (!L.visible) continue;
     clamp(L);
