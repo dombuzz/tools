@@ -226,6 +226,15 @@ export async function countArtMonth(env, key) {
   return out;
 }
 
+// Wie viele der im Monat (JJJJ-MM) erschienenen Artikel wurden (bis jetzt) über die Challenge geöffnet?
+export async function challengeMonth(env, key) {
+  await ensureArt(env); await ensureChatta(env);
+  const { results: [r] } = await env.DB.prepare(
+    "SELECT COUNT(DISTINCT CASE WHEN a.path LIKE '/novitads/il-di/%' THEN 'ildi:' || a.d ELSE a.url END) n FROM chatta_open o JOIN art a ON a.url = o.url" +
+    " WHERE a.d >= ?1 AND a.d <= ?2 AND (a.path LIKE '/novitads/%' OR a.path LIKE '/sport/%' OR a.path LIKE '/cultura/%')").bind(key + '-01', key + '-31').all();
+  return { opened: r ? r.n : 0 };
+}
+
 // «Artitgel-challenge»: Übersicht aller Artikel der letzten 30 Tage unter /novitads, /cultura, /sport
 // mit dem Zeitpunkt, an dem ein Artikel zuletzt über die Challenge geöffnet wurde (für alle gemeinsam).
 // «Il di» erhält laufend neue URLs: pro Tag nur die neueste Fassung.

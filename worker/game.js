@@ -280,7 +280,9 @@ export async function gameMonthStats(env, GROUP, key) {
   await ensure(env);
   const b = await computeAll(env, GROUP, key), rows = b.p.month;
   return { profiles: rows.length, created: rows.filter(r => (r.created || '').startsWith(key)).length, active: rows.filter(r => r.days > 0).length,
-    acts: rows.reduce((a, r) => a + r.raw, 0), art: rows.reduce((a, r) => a + r.rawArt, 0), badges: rows.reduce((a, r) => a + r.bdg, 0) };
+    acts: rows.reduce((a, r) => a + r.raw, 0), art: rows.reduce((a, r) => a + r.rawArt, 0), badges: rows.reduce((a, r) => a + r.bdg, 0),
+    topSeria: Math.max(0, ...rows.map(r => r.seria)), topSeriaNames: rows.filter(r => r.seria > 0 && r.seria === Math.max(...rows.map(x => x.seria))).map(r => r.name),
+    topName: (rows.slice().sort((x, y) => y.pts - x.pts)[0] || {}).pts > 0 ? rows.slice().sort((x, y) => y.pts - x.pts)[0].name : null };
 }
 
 // Router: gibt { status, data } zurück oder null, wenn die Adresse nicht zu /game gehört

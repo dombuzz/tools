@@ -303,7 +303,7 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
-import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth } from './artsearch.js';
+import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth, challengeMonth } from './artsearch.js';
 import { gameRoute, gameAggregate, gameAdminList, gameAdminDelete, gameAdminReset, gameMonthStats } from './game.js';
 
 export default {
@@ -456,8 +456,25 @@ async function monthlyReport(env, ctx) {
     const line = x => `${x.name || x.tool}: ${x.count} duvrà · ♥ ${x.likes || 0} · ${d.views?.[x.tool] || 0} visitas`;
     const facts = [['Duvrà', d.usesTotal || 0], ['♥', d.total || 0], ['Visitas', d.viewsTotal || 0], ['Visitaders', d.clients || 0], ['Turnads (≥ 2 dis)', d.returning || 0]];
     // /game-Profile und Artikel auf rtr.ch (ganzer Monat)
-    try { const g = await gameMonthStats(env, GROUP, key); facts.push(['Profils (game)', g.profiles], ['Profils novs', g.created], ['Profils activs', g.active], ['Acziuns (profils)', g.acts], ['Artitgels averts (challenge)', g.art], ['Badges (profils)', g.badges]); } catch (e) { await reportError(env, 'monthly game', e); }
-    try { const a = await countArtMonth(env, key); facts.push(['Artitgels sin rtr.ch', a.total], ['… Novitads / Sport / Cultura', `${a.novitads} / ${a.sport} / ${a.cultura}`]); } catch (e) { await reportError(env, 'monthly art', e); }
+    try { const g = await gameMonthStats(env, GROUP, key); facts.push(['Profils (game)', g.profiles], ['Profils novs', g.created], ['Profils activs', g.active], ['Acziuns (profils)', g.acts], ['Artitgels averts (profils)', g.art], ['Badges (profils)', g.badges]);
+      if (g.topSeria) facts.push(['Pli lunga seria', `${g.topSeria} ${g.topSeria === 1 ? 'di' : 'dis'} · ${g.topSeriaNames.join(', ')}`]); if (g.topName) facts.push(['Profil il pli activ', g.topName]); } catch (e) { await reportError(env, 'monthly game', e); }
+    try { const a = await countArtMonth(env, key), c = await challengeMonth(env, key); facts.push(['Artitgels sin rtr.ch', a.total], ['… Novitads / Sport / Cultura', `${a.novitads} / ${a.sport} / ${a.cultura}`], ['Averts en l\'Artitgel-challenge', `${c.opened} da ${a.total}${a.total ? ' (' + Math.round(c.opened / a.total * 100) + ' %)' : ''}`]); } catch (e) { await reportError(env, 'monthly art', e); }
+    // meistgenutztes Tool, Feedbacks, beliebteste Tageszeit und aktivster Wochentag
+    try {
+      const top = main[0]; if (top) facts.push(['Tool il pli duvrà', `${top.name || top.tool} (${top.count})`]);
+      await env.DB.prepare('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tool TEXT NOT NULL, name TEXT, text TEXT NOT NULL, iph TEXT)').run();
+      const nx = new Date(Date.UTC(y, mo + 1, 1)).toISOString().slice(0, 10), { results: [fb] } = await env.DB.prepare('SELECT COUNT(*) n FROM feedback WHERE ts >= ?1 AND ts < ?2').bind(key + '-01', nx).all();
+      facts.push(['Feedbacks', fb.n]);
+      const hr = await handle(new Request('https://worker/hourly?range=' + key), env, ctx), hd = hr.ok ? await hr.json() : null;
+      if (hd && hd.uses && hd.uses.length) {
+        const fh = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', hourCycle: 'h23' }), fd = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', weekday: 'long' });
+        const H = Array(24).fill(0), W = {};
+        for (const { h, n } of hd.uses) { const dt = new Date(h.replace(' ', 'T') + ':00:00Z'); H[+fh.format(dt)] += n; const w = fd.format(dt); W[w] = (W[w] || 0) + n; }
+        const ph = H.indexOf(Math.max(...H)), pw = Object.entries(W).sort((a, b) => b[1] - a[1])[0][0];
+        const WD = { Monday: 'glindesdi', Tuesday: 'mardi', Wednesday: 'mesemna', Thursday: 'gievgia', Friday: 'venderdi', Saturday: 'sonda', Sunday: 'dumengia' };
+        facts.push(['Ura la pli activa', `${String(ph).padStart(2, '0')}–${String((ph + 1) % 24).padStart(2, '0')}`], ['Di il pli activ', WD[pw] || pw]);
+      }
+    } catch (e) { await reportError(env, 'monthly extra', e); }
     const text = main.length ? main.map((x, i) => `${i + 1}. ${line(x)}`).join('\n\n') + (lab.length ? '\n\n**Lab:** ' + lab.map(line).join(' · ') : '') : 'Nagina utilisaziun quest mais.';
     const t = await teams(env, { title: 'Statistica tools.dombuzz.ch – ' + label, facts, text });
     ok = t;
