@@ -432,7 +432,7 @@
     if (d && d.uses) {
       const top = d.uses.filter(x => !x.tool.startsWith('lab-'))[0];
       if (top) items.push('★ ' + (PN[top.tool] || top.name || top.tool) + ' sin plaz 1 quest mais');
-      if (d.usesTotal) items.push(fmt(d.usesTotal) + (d.usesTotal === 1 ? ' giada duvrà' : ' giadas duvrà') + ' in tool quest mais');
+      if (d.usesTotal) items.push(fmt(d.usesTotal) + (d.usesTotal === 1 ? ' giada duvrà' : ' giadas duvrà') + ' ils tools quest mais');
       if (d.viewsTotal) items.push(fmt(d.viewsTotal) + (d.viewsTotal === 1 ? ' visita' : ' visitas') + ' quest mais');
       if (d.total) items.push('♥ ' + fmt(d.total) + (d.total === 1 ? ' cor' : ' cors') + ' quest mais');
     }
