@@ -694,8 +694,8 @@
     const top = (lastData.uses || []).filter(x => !x.tool.startsWith('lab-'))[0];
     const items = [];
     if (rec) { const [y, m, d] = rec[0].split('-').map(Number);
-      items.push(rec[0] === today ? `▲ Nov record: ${fmt(rec[1])} giadas duvrà oz` : `▲ Record: ${fmt(rec[1])} giadas duvrà en in di (${d}. ${MONTHS[m - 1]} ${y})`); }
-    if (rec && rec[0] !== today) items.push(`● Oz: ${fmt(nToday)} ${nToday === 1 ? 'giada' : 'giadas'} duvrà`);
+      items.push(rec[0] === today ? `▲ Nov record: ${fmt(rec[1])} giadas duvrà ils tools oz` : `▲ Record: ${fmt(rec[1])} giadas duvrà ils tools en in di (${d}. ${MONTHS[m - 1]} ${y})`); }
+    if (rec && rec[0] !== today) items.push(`● Oz: ${fmt(nToday)} ${nToday === 1 ? 'giada' : 'giadas'} duvrà ils tools`);
     if (top) items.push(`★ ${NAMES[top.tool] || top.name || top.tool} sin plaz 1 ${lbl}`);
     if (lastData.total) items.push(`♥ ${fmt(lastData.total)} ${lastData.total === 1 ? 'cor' : 'cors'} ${lbl}`);
     if (lastData.clients) items.push(`${fmt(lastData.clients)} ${lastData.clients === 1 ? 'visitader unic' : 'visitaders unics'} ${lbl}`);

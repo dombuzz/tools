@@ -118,7 +118,7 @@
   const total = +acts.total || 0, mon = acts.month === month ? +acts.m || 0 : 0;
   const pct = tools.length ? Math.round(seen.length / tools.length * 100) : 0;
 
-  const STEPS = [10, 25, 50, 100, 250, 500, 1000];
+  const STEPS = [10, 100, 500]; // = Ziele der Acziuns-Badges
   const next = STEPS.find(s => s > total) || total;
   const prev = [...STEPS].reverse().find(s => s <= total) || 0;
 
