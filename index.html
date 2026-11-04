@@ -157,6 +157,8 @@
   .ver { margin: auto 0 0; padding: 0 16px 14px; text-align: center; color: var(--muted); font-size: 11px; letter-spacing: .04em; opacity: .35; }
   .ver a { color: var(--accent); text-decoration: none; }
   .ver a:hover, .ver a:focus-visible { text-decoration: underline; outline: none; }
+  .ver a#vgame { color: #5aa6ff; }
+  :root[data-theme="light"] .ver a#vgame { color: #1f6fd1; }
   #vnum:not(:empty)::after { content: " · "; }
   /* Stil wie in den Tools (theme.js): Rotverlauf für rote Texte, Milchglas für Kacheln und Menü */
   h1 span, .favh, .mg { background-image: var(--rgrad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
