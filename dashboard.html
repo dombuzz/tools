@@ -971,7 +971,7 @@
   { let t = false; try { t = localStorage.getItem('dbz-test') === '1'; } catch (e) {}
     const tp = document.getElementById('testpill'), tl = document.getElementById('testlink');
     tp.textContent = t ? 'activ' : 'activar'; tl.classList.toggle('on', t); tl.setAttribute('aria-checked', t);
-    tl.href = t ? '?test=0' : '?test'; tl.title = t ? 'Terminar il modus da test sin quest apparat' : 'Activar il modus da test sin quest apparat'; }
+    tl.href = t ? '?test=0' : '?test'; tl.title = t ? 'Terminar il modus da test sin quest apparat (u cun «?test=0» sin l\'adressa d\'ina pagina)' : 'Activar il modus da test sin quest apparat – era pussaivel cun agiuntar «?test» a l\'adressa d\'ina pagina (p.ex. /visual?test)'; }
 
   // ----- Admin: Feedback-Eingang (Passwort von /feedback, prüft der Worker) -----
   let fbPw = ''; try { fbPw = localStorage.getItem('dbz-fb-pw') || sessionStorage.getItem('dbz-fb-pw') || ''; } catch (e) {}

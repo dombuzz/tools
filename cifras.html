@@ -11,7 +11,7 @@
 <meta name="description" content="Cifras: tge tools vegnan duvrads il pli savens e quants artitgels èn cumparids sin rtr.ch.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
-<meta property="og:title" content="cifras">
+<meta property="og:title" content="Cifras">
 <meta property="og:description" content="Cifras: tge tools vegnan duvrads il pli savens e quants artitgels èn cumparids sin rtr.ch.">
 <meta property="og:url" content="https://tools.dombuzz.ch/cifras">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
@@ -43,6 +43,12 @@
   .cnt small{display:block;font-weight:400;color:var(--muted);font-size:.74rem;white-space:nowrap}
   .hrt{color:var(--accent)}
   .msg{padding:20px 14px;color:var(--muted);text-align:center;font-size:.88rem}
+  .ticker{overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--accent);font:500 .8rem ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;padding:8px 0;margin:0 0 14px}
+  .ticker[hidden]{display:none}
+  .ticker span{display:inline-block;padding-left:100%;animation:run var(--dur,40s) linear infinite}
+  .ticker:hover span{animation-play-state:paused}
+  @keyframes run{to{transform:translateX(-100%)}}
+  @media (prefers-reduced-motion:reduce){.ticker span{animation:none;padding-left:0;white-space:normal}.ticker{white-space:normal}}
   h2{font-size:.85rem;font-weight:600;color:var(--muted);margin:26px 0 8px}
   .art{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
   .art th,.art td{padding:9px 10px;text-align:right;border-top:1px solid var(--line);font-size:.9rem}
@@ -58,7 +64,7 @@
 <body>
 <div class="wrap">
   <div class="top">
-    <h1><span>cifras</span></h1>
+    <h1><span>Cifras</span></h1>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-r="today" aria-selected="false">oz</button>
       <button class="tab" role="tab" data-r="week" aria-selected="false">emna</button>
@@ -67,6 +73,7 @@
       <button class="tab" role="tab" data-r="all" aria-selected="false">tut</button>
     </div>
   </div>
+  <div class="ticker" id="ticker" hidden aria-live="off"><span id="tickt"></span></div>
   <div class="card" id="list"><div class="msg">Chargel …</div></div>
   <div class="foot"><span id="meta"></span></div>
   <h2>Artitgels online sin rtr.ch</h2>
@@ -92,6 +99,22 @@
   if (location.hash.slice(1) && RANGES.includes(location.hash.slice(1))) range = location.hash.slice(1);
   tabs.forEach(b => b.setAttribute('aria-selected', b.dataset.r === range));
 
+  let lastTop = null, lastArt = null;
+  // Fliesstext mit Zahlen (wie im Dashboard), nur aus öffentlichen Daten
+  function ticker() {
+    if (!lastTop) return;
+    const { d, list, views } = lastTop, lbl = { all: 'dapi il cumenzament', today: 'oz', week: "quest'emna", '30d': 'ils ultims 30 dis', month: 'quest mais' }[range] || '';
+    const items = [];
+    if (list[0]) items.push(`★ ${NAMES[list[0].tool] || list[0].tool} sin plaz 1 ${lbl}`);
+    if (d.usesTotal) items.push(`${fmt(d.usesTotal)} ${d.usesTotal === 1 ? 'giada' : 'giadas'} duvrà ${lbl}`);
+    if (d.viewsTotal) items.push(`${fmt(d.viewsTotal)} ${d.viewsTotal === 1 ? 'visita' : 'visitas'} ${lbl}`);
+    if (d.total) items.push(`♥ ${fmt(d.total)} ${d.total === 1 ? 'cor' : 'cors'} ${lbl}`);
+    if (lastArt) { const t = k => ['novitads', 'sport', 'cultura'].reduce((a, s) => a + (lastArt.counts[s][k] || 0), 0);
+      items.push(`${fmt(t('month'))} artitgels sin rtr.ch quest mais`, `${fmt(t('week'))} artitgels quest'emna`, `${fmt(t('year'))} artitgels quest onn`); }
+    $('ticker').hidden = !items.length;
+    const txt = items.join('   ·   '), el = $('tickt');
+    if (el.textContent !== txt) { el.textContent = txt; $('ticker').style.setProperty('--dur', Math.max(25, txt.length / 5) + 's'); }
+  }
   async function load() {
     try {
       const r = await fetch(`${API}/top?range=${range}`, { cache: 'no-store' });
@@ -109,6 +132,7 @@
         <div><div class="name">${esc(NAMES[x.tool] || x.tool)}</div><div class="bar" style="width:${x.count / max * 100}%"></div></div>
         <span class="cnt">${fmt(x.count)}<small>${fmt(views[x.tool] || 0)} visitas · <span class="hrt">♥</span> ${fmt(likes[x.tool] || 0)}</small></span></div>`).join('')
         : '<div class="msg">Anc nagins resultats en quest temp.</div>';
+      lastTop = { d, list, views, likes }; ticker();
       $('meta').textContent = `${fmt(d.usesTotal || 0)} giadas duvrà · ${fmt(d.viewsTotal || 0)} visitas`;
     } catch (e) {
       $('list').innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas.</div>'; $('meta').textContent = '';
@@ -119,6 +143,7 @@
     const el = $('artc');
     try {
       const d = await fetch(API + '/art/count', { cache: 'no-store' }).then(r => r.json());
+      lastArt = d; ticker();
       const R = [['novitads', 'Novitads'], ['sport', 'Sport'], ['cultura', 'Cultura']], C = ['week', 'month', '30d', 'year'];
       const sum = k => R.reduce((a, [s]) => a + (d.counts[s][k] || 0), 0);
       const dm = s => s ? s.slice(8, 10).replace(/^0/, '') + '.' + s.slice(5, 7).replace(/^0/, '') + '.' : '';
