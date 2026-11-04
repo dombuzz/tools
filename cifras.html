@@ -26,7 +26,7 @@
   :root{--bg:#121214;--card:#1c1c1f;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--accent:#ff4d64;color-scheme:dark}
   *{box-sizing:border-box}
   body{margin:0;padding:max(18px,env(safe-area-inset-top)) 14px 24px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  .wrap{max-width:420px;margin:0 auto;padding-top:34px}
+  .wrap{max-width:420px;margin:0 auto;padding-top:20px}
   .top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 10px;margin-bottom:10px}
   h1{font-size:1.2rem;margin:0;letter-spacing:-.01em}h1 span{color:var(--accent)}
   .tabs{display:flex;flex-wrap:wrap;gap:4px}
@@ -49,6 +49,8 @@
   .ticker:hover span{animation-play-state:paused}
   @keyframes run{to{transform:translateX(-100%)}}
   @media (prefers-reduced-motion:reduce){.ticker span{animation:none;padding-left:0;white-space:normal}.ticker{white-space:normal}}
+  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+  .homelink:hover,.homelink:focus-visible{color:var(--accent)}
   h2{font-size:.85rem;font-weight:600;color:var(--muted);margin:26px 0 8px}
   .art{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
   .art th,.art td{padding:9px 10px;text-align:right;border-top:1px solid var(--line);font-size:.9rem}
@@ -63,6 +65,7 @@
 </head>
 <body>
 <div class="wrap">
+  <a class="homelink" href="/">← Tools</a>
   <div class="top">
     <h1><span>Cifras</span></h1>
     <div class="tabs" role="tablist">
