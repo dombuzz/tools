@@ -125,6 +125,13 @@
   .mchatta .star { margin: 0 6px 0 0; }
   .star:hover, .star:focus-visible { color: var(--accent); outline: none; }
   .star.on { color: var(--accent); }
+  .ticker { display: block; overflow: hidden; white-space: nowrap; margin-top: 26px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--accent); text-decoration: none; font: 500 .8rem ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; padding: 8px 0; }
+  .ticker[hidden] { display: none; }
+  .ticker span { display: inline-block; padding-left: 100%; animation: tickrun var(--dur, 40s) linear infinite; }
+  .ticker:hover span, .ticker:focus-visible span { animation-play-state: paused; }
+  .ticker:hover { color: var(--accent-dark, var(--accent)); text-decoration: underline; }
+  @keyframes tickrun { to { transform: translateX(-100%); } }
+  @media (prefers-reduced-motion: reduce) { .ticker span { animation: none; padding-left: 0; white-space: normal; } .ticker { white-space: normal; } }
   .favs { margin-top: 20px; }
   .favh { margin: 0 0 10px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
   .favgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
@@ -178,6 +185,7 @@
     <button type="button" class="sel-btn" id="selbtn" aria-haspopup="true" aria-expanded="false" aria-controls="menu">Tscherner in tool …</button>
     <div class="menu" id="menu" role="menu"></div>
   </div>
+  <a class="ticker" id="ticker" href="/cifras" hidden aria-label="Cifras – tut las cifras"><span id="tickt"></span></a>
 </main>
 <footer class="ver" aria-label="Versiun"><a href="/info">Infus &amp; datas</a> · <span id="vnum"></span><a href="/game" id="vgame">game</a></footer>
 
@@ -412,6 +420,27 @@
   });
   // Beim Zurückkehren mit dem Zurück-Button Menü wieder schliessen
   window.addEventListener('pageshow', () => setOpen(false));
+
+// Lauftext mit Zahlen (wie /cifras), Link auf /cifras
+(() => {
+  const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', fmt = n => n.toLocaleString('de-CH');
+  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'tschertga': 'Tschertga rtr.ch' };
+  Promise.all([fetch(API + '/top?range=month').then(r => r.json()).catch(() => null), fetch(API + '/art/count').then(r => r.json()).catch(() => null)]).then(([d, a]) => {
+    const items = [];
+    if (d && d.uses) {
+      const top = d.uses.filter(x => !x.tool.startsWith('lab-'))[0];
+      if (top) items.push('★ ' + (PN[top.tool] || top.name || top.tool) + ' sin plaz 1 quest mais');
+      if (d.usesTotal) items.push(fmt(d.usesTotal) + (d.usesTotal === 1 ? ' giada duvrà' : ' giadas duvrà') + ' quest mais');
+      if (d.viewsTotal) items.push(fmt(d.viewsTotal) + (d.viewsTotal === 1 ? ' visita' : ' visitas') + ' quest mais');
+      if (d.total) items.push('♥ ' + fmt(d.total) + (d.total === 1 ? ' cor' : ' cors') + ' quest mais');
+    }
+    if (a && a.counts) { const t = k => ['novitads', 'sport', 'cultura'].reduce((n, s) => n + (a.counts[s][k] || 0), 0);
+      items.push(fmt(t('month')) + ' artitgels sin rtr.ch quest mais', fmt(t('week')) + " artitgels quest'emna", fmt(t('year')) + ' artitgels quest onn'); }
+    if (!items.length) return;
+    const el = document.getElementById('ticker'), txt = items.join('   ·   ');
+    document.getElementById('tickt').textContent = txt; el.style.setProperty('--dur', Math.max(25, txt.length / 5) + 's'); el.hidden = false;
+  });
+})();
 
 // Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /cifras bleibt als Ausweichlink)
 (() => {
