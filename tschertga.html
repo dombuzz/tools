@@ -7,11 +7,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Tschertgar artitgels da rtr.ch cun filter da data (da–fin, onn, temps) e zavrar tenor data u relevanza.">
+<meta name="description" content="Tschertgar artitgels da rtr.ch cun filter da data (da–fin, onn, temps) e sortir tenor data u relevanza.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Tschertga rtr.ch">
-<meta property="og:description" content="Tschertgar artitgels da rtr.ch cun filter da data (da–fin, onn, temps) e zavrar tenor data u relevanza.">
+<meta property="og:description" content="Tschertgar artitgels da rtr.ch cun filter da data (da–fin, onn, temps) e sortir tenor data u relevanza.">
 <meta property="og:url" content="https://tools.dombuzz.ch/tschertga">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -58,13 +58,13 @@
 <body>
 <main>
   <h1>Tschertga rtr.ch</h1>
-  <p class="sub">Artitgels da rtr.ch – cun filter da data e zavrar tenor data u relevanza.</p>
+  <p class="sub">Artitgels da rtr.ch – cun filter da data e sortir tenor data u relevanza.</p>
   <form class="q" id="f"><input id="q" type="search" placeholder="Tschertgar …" autocomplete="off" enterkeyhint="search"><button class="go" type="submit">Tschertgar</button></form>
   <div class="row" id="spans"></div>
   <div class="row">
     <label>da <input type="date" id="from"></label>
     <label>fin <input type="date" id="to"></label>
-    <label>Zavrar <select id="sort"><option value="date_desc">Data (nov → vegl)</option><option value="date_asc">Data (vegl → nov)</option><option value="rel">Relevanza</option></select></label>
+    <label>Sortir <select id="sort"><option value="date_desc">Data (nov → vegl)</option><option value="date_asc">Data (vegl → nov)</option><option value="rel">Relevanza</option></select></label>
     <label>Rubrica <select id="sec"><option value="">Tut</option></select></label>
   </div>
   <div class="row" id="years"></div>
@@ -116,7 +116,7 @@
       if (!r.ok) throw 0;
       if (!more) {
         const tot = d.years.reduce((t, y) => t + y.n, 0);
-        $('meta').textContent = d.items.length ? (d.years.length ? tot + (tot === 1 ? ' artitgel' : ' artitgels') + ' en tut (sensa filter da data)' : '') : 'Nagins resultats.';
+        $('meta').textContent = d.items.length ? (d.years.length ? tot + (tot === 1 ? ' artitgel' : ' artitgels') + ' en tut (senza filter da data)' : '') : 'Nagins resultats.';
         drawYears(d.years);
         if (!sectionsDone || $('q').value) {
           const cur = $('sec').value; $('sec').innerHTML = '<option value="">Tut</option>' + d.sections.map(s => '<option>' + esc(s.s) + '</option>').join(''); $('sec').value = cur; sectionsDone = true;
@@ -139,7 +139,7 @@
   async function status() {
     try {
       const d = await fetch(API + '/status').then(r => r.json());
-      $('st').textContent = d.articles ? 'Index: ' + d.articles.toLocaleString('de-CH') + ' artitgels (' + fmt(d.oldest) + ' – ' + fmt(d.newest) + ')' + (d.complete && !d.open ? '' : ' · vegn anc completà') : 'L\'index vegn construì …';
+      $('st').textContent = d.articles ? 'Index: ' + d.articles.toLocaleString('de-CH') + ' artitgels (' + fmt(d.oldest) + ' – ' + fmt(d.newest) + ')' + (d.complete && !d.open ? '' : ' · vegn anc complettà') : 'L\'index vegn construì …';
     } catch (e) {}
   }
   $('f').onsubmit = e => { e.preventDefault(); run(); };
