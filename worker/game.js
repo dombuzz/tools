@@ -165,6 +165,41 @@ export async function gameMe(env, cid) {
   return { status: 200, data: { profile: p ? { name: p.name } : null } };
 }
 
+
+// Spielstand des eigenen Profils: alle Geräte des Profils zusammengezählt (für die Karten Collecziun/Seria/Acziuns/Badges in /game)
+export async function gameStats(env, GROUP, cid) {
+  await ensure(env);
+  const me = await profileOf(env, cid);
+  if (!me) return err('noprofile', 403);
+  const key = 'game:st:' + me.id;
+  const { results: [c] } = await env.DB.prepare('SELECT ts, body FROM cache WHERE k = ?1').bind(key).all();
+  if (c && Date.now() - c.ts < 60e3) return { status: 200, data: JSON.parse(c.body) };
+  const { results: [pr] } = await env.DB.prepare('SELECT reset_day FROM gprofile WHERE id = ?1').bind(me.id).all();
+  const reset = (pr && pr.reset_day) || '';
+  const { results: dv } = await env.DB.prepare('SELECT cid FROM gdevice WHERE pid = ?1').bind(me.id).all();
+  const cids = new Set(dv.map(r => r.cid));
+  const days = new Map(), first = new Map();
+  const add = (day, tool, u) => {
+    if (day < reset) return;
+    days.set(day, (days.get(day) || 0) + u);
+    const f = first.get(tool); if (!f || day < f) first.set(tool, day);
+  };
+  if (cids.size) {
+    const list = [...cids];
+    const { results } = await env.DB.prepare(`SELECT day, tool, SUM(u) u FROM gday WHERE cid IN (${list.map((_, i) => '?' + (i + 1)).join(',')}) GROUP BY day, tool`).bind(...list).all();
+    for (const r of results) add(r.day, r.tool, r.u);
+    // noch nicht verdichtete Tage (laufender UTC-Tag) direkt lesen, wie in der Rangliste
+    const wm = await stGet(env, 'wm');
+    if (wm) for (const o of (await aggRange(env, GROUP, addDay(wm, 1) + ' 00:00:00', '9999-12-31 00:00:00')).values()) if (cids.has(o.cid)) add(o.day, o.tool, o.u);
+  }
+  const mon = zday(new Date()).slice(0, 7);
+  let total = 0, month = 0;
+  for (const [d, u] of days) { total += u; if (d.startsWith(mon)) month += u; }
+  const data = { devices: cids.size, tools: [...first.keys()], days: [...days.keys()].sort(), total, month, m: mon };
+  await env.DB.prepare('INSERT INTO cache (k, ts, body) VALUES (?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET ts = ?2, body = ?3').bind(key, Date.now(), JSON.stringify(data)).run();
+  return { status: 200, data };
+}
+
 // ---- Ranking ----
 const runsOf = days => { // days: aufsteigend sortierte Tage; Samstag/Sonntag ohne Nutzung unterbrechen die Serie nicht
   const runs = []; let cur = [];
@@ -291,6 +326,7 @@ export async function gameRoute(request, env, url, parts, GROUP) {
   const g = request.method === 'GET', body = async () => { try { return (await request.json()) || {}; } catch (e) { return {}; } };
   if (g && parts[1] === 'count') { await ensure(env); const { results: [c] } = await env.DB.prepare('SELECT COUNT(*) n FROM gprofile').all(); return { status: 200, data: { n: c.n } }; }
   if (g && parts[1] === 'me') return gameMe(env, url.searchParams.get('c') || '');
+  if (g && parts[1] === 'stats') return gameStats(env, GROUP, url.searchParams.get('c') || '');
   if (g && parts[1] === 'ranking') return gameRanking(env, GROUP, url.searchParams.get('c') || '', url.searchParams.get('p') || 'month');
   if (request.method === 'POST') {
     if (parts[1] === 'register') return gameRegister(env, await body());

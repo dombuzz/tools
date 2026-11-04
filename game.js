@@ -108,43 +108,68 @@
   const tools = [...document.querySelectorAll('#menu a.mi:not(.lab)')]
     .map(a => ({ key: (a.getAttribute('href') || '').replace(/^\//, ''), name: (n => { n.querySelectorAll('.star, .nov, .dot').forEach(x => x.remove()); return n.textContent.trim(); })(a.cloneNode(true)), href: a.getAttribute('href') }))
     .filter((t, i, all) => /^[A-Za-z0-9-]+$/.test(t.key) && all.findIndex(x => x.key === t.key) === i);
-  const seen = tools.filter(t => ls('dbz-visit-' + t.key, null));
-  // Nutzungstage: Tagesliste aus like.js plus die Tage der letzten Besuche pro Tool (Daten von vor dem Start von /game)
-  const days = [...new Set([...(Array.isArray(lj('dbz-days', [])) ? lj('dbz-days', []) : []),
-    ...tools.map(t => +ls('dbz-visit-' + t.key, 0)).filter(Boolean).map(ms => ymd(new Date(ms)))])];
-  const cur = streak(days), nDays = days.length; // nDays: verschiedene Tage, nicht zwingend nacheinander
-  const best = Math.max(+ls('dbz-best', 0) || 0, cur);
-  const acts = lj('dbz-acts', {}) || {}, month = new Date().toLocaleDateString('sv').slice(0, 7);
-  const total = +acts.total || 0, mon = acts.month === month ? +acts.m || 0 : 0;
-  const pct = tools.length ? Math.round(seen.length / tools.length * 100) : 0;
-
-  const STEPS = [10, 50, 100, 500]; // = Ziele der Acziuns-Badges
-  const next = STEPS.find(s => s > total) || total;
-  const prev = [...STEPS].reverse().find(s => s <= total) || 0;
-
-  // Badges: [Symbol, Name, erreicht?, Bedingung, aktueller Stand, Ziel]
-  const half = Math.ceil(tools.length / 2);
-  const INS = [
-    ['🧭', 'Emprim tool', seen.length, 1, 'Avra tes emprim tool.'],
-    ['🗺️', 'Mez scuvrì', seen.length, half, `Scuvra almain la mesadad dals tools (${half} da ${tools.length}).`],
-    ['🏆', 'Tut scuvrì', seen.length, tools.length, `Scuvra tut ils ${tools.length} tools.`],
-    ['🔥', '3 dis', best, 3, 'Dovra tools 3 dis a la lunga.'],
-    ['⚡', '7 dis', nDays, 7, 'Dovra tools a 7 dis differents – er cun pausas.'],
-    ['🌋', '30 dis', nDays, 30, 'Dovra tools a 30 dis differents – er cun pausas.'],
-    ['✦', '10 acziuns', total, 10, 'Fa 10 acziuns en ils tools (p.ex. download u export).'],
-    ['✨', '50 acziuns', total, 50, 'Fa 50 acziuns en ils tools (p.ex. download u export).'],
-    ['✸', '100 acziuns', total, 100, 'Fa 100 acziuns en ils tools (p.ex. download u export).'],
-    ['💎', '500 acziuns', total, 500, 'Fa 500 acziuns en ils tools (p.ex. download u export).'],
-  ].map(([e, n, have, goal, rule]) => ({ e, n, rule, on: goal > 0 && have >= goal,
-    state: goal > 0 && have >= goal ? '✓ Cuntanschì' : `Anc ${Math.max(goal - have, 0).toLocaleString('de-CH')} · ${Math.min(have, goal).toLocaleString('de-CH')} da ${goal.toLocaleString('de-CH')}` }));
   const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const STEPS = [10, 50, 100, 500]; // = Ziele der Acziuns-Badges
+  const half = Math.ceil(tools.length / 2);
+  // längste Serie aus einer Tagesliste (Samstag/Sonntag ohne Nutzung unterbrechen sie nicht)
+  const bestRun = ds => {
+    const n = d => Math.round(Date.parse(d + 'T00:00:00Z') / 864e5), wk = x => { const w = new Date(x * 864e5).getUTCDay(); return w === 0 || w === 6; };
+    let best = 0, run = 0, last = null;
+    for (const d of [...ds].sort()) {
+      const x = n(d); let ok = last != null;
+      if (ok) for (let y = last + 1; y < x; y++) if (!wk(y)) { ok = false; break; }
+      run = ok ? run + 1 : 1; last = x; if (run > best) best = run;
+    }
+    return best;
+  };
+  // Lokale Daten dieses Geräts (gilt ohne Profil)
+  const localSrc = () => {
+    const acts = lj('dbz-acts', {}) || {}, month = new Date().toLocaleDateString('sv').slice(0, 7);
+    const ds = [...new Set([...(Array.isArray(lj('dbz-days', [])) ? lj('dbz-days', []) : []),
+      ...tools.map(t => +ls('dbz-visit-' + t.key, 0)).filter(Boolean).map(ms => ymd(new Date(ms)))])];
+    return { seen: new Set(tools.filter(t => ls('dbz-visit-' + t.key, null)).map(t => t.key)), days: ds,
+      best: Math.max(+ls('dbz-best', 0) || 0, streak(ds)), total: +acts.total || 0, mon: acts.month === month ? +acts.m || 0 : 0 };
+  };
+  // Daten des Profils: alle Geräte zusammengezählt (Worker /game/stats)
+  const profSrc = d => ({ seen: new Set(d.tools || []), days: d.days || [], best: bestRun(d.days || []), total: +d.total || 0, mon: d.m === new Date().toLocaleDateString('sv').slice(0, 7) ? +d.month || 0 : 0 });
 
   const sec = document.createElement('section');
   sec.className = 'game';
-  sec.innerHTML = `
+  sec.innerHTML = '<div class="gstat" style="display:contents"></div>';
+  const stat = sec.firstChild;
+  const anchor = document.querySelector('.favs') || document.getElementById('selwrap');
+  anchor.after(sec);
+  let pinned = -1, INS = [], tip, tip0 = 'Tippar sin in badge per vesair las cundiziuns.';
+  const showTip = i => {
+    sec.querySelectorAll('.gi').forEach((b, j) => b.classList.toggle('sel', j === i && pinned === i));
+    if (!tip) return;
+    if (i < 0) { tip.textContent = tip0; return; }
+    const b = INS[i];
+    tip.innerHTML = `<b>${esc(b.e + ' ' + b.n)}:</b> ${esc(b.rule)}<span>${esc(b.state)}</span>`;
+  };
+  const drawStats = S => {
+    const seen = tools.filter(t => S.seen.has(t.key)), nDays = S.days.length; // nDays: verschiedene Tage, nicht zwingend nacheinander
+    const cur = streak(S.days), best = Math.max(S.best, cur), total = S.total, mon = S.mon;
+    const pct = tools.length ? Math.round(seen.length / tools.length * 100) : 0;
+    const next = STEPS.find(x => x > total) || total, prev = [...STEPS].reverse().find(x => x <= total) || 0;
+    // Badges: [Symbol, Name, erreicht?, Bedingung, aktueller Stand, Ziel]
+    INS = [
+      ['🧭', 'Emprim tool', seen.length, 1, 'Avra tes emprim tool.'],
+      ['🗺️', 'Mez scuvrì', seen.length, half, `Scuvra almain la mesadad dals tools (${half} da ${tools.length}).`],
+      ['🏆', 'Tut scuvrì', seen.length, tools.length, `Scuvra tut ils ${tools.length} tools.`],
+      ['🔥', '3 dis', best, 3, 'Dovra tools 3 dis a la lunga.'],
+      ['⚡', '7 dis', nDays, 7, 'Dovra tools a 7 dis differents – er cun pausas.'],
+      ['🌋', '30 dis', nDays, 30, 'Dovra tools a 30 dis differents – er cun pausas.'],
+      ['✦', '10 acziuns', total, 10, 'Fa 10 acziuns en ils tools (p.ex. download u export).'],
+      ['✨', '50 acziuns', total, 50, 'Fa 50 acziuns en ils tools (p.ex. download u export).'],
+      ['✸', '100 acziuns', total, 100, 'Fa 100 acziuns en ils tools (p.ex. download u export).'],
+      ['💎', '500 acziuns', total, 500, 'Fa 500 acziuns en ils tools (p.ex. download u export).'],
+    ].map(([e, n, have, goal, rule]) => ({ e, n, rule, on: goal > 0 && have >= goal,
+      state: goal > 0 && have >= goal ? '✓ Cuntanschì' : `Anc ${Math.max(goal - have, 0).toLocaleString('de-CH')} · ${Math.min(have, goal).toLocaleString('de-CH')} da ${goal.toLocaleString('de-CH')}` }));
+    stat.innerHTML = `
     <div class="gcard">
       <div class="gh"><b>Collecziun</b><span>${seen.length} da ${tools.length} tools scuvrids</span></div>
-      <div class="gbar"><i style="width:0"></i></div>
+      <div class="gbar"><i style="width:0" data-w="${pct}"></i></div>
       <div class="gtools">${tools.map(t => `<a class="gt ${seen.includes(t) ? 'on' : 'off'}" href="${esc(t.href)}">${esc(t.name)}</a>`).join('')}</div>
     </div>
     <div class="gcard">
@@ -160,26 +185,27 @@
     <div class="gcard">
       <div class="gh"><b>Badges</b><span>${INS.filter(x => x.on).length} da ${INS.length}</span></div>
       <div class="gins">${INS.map((b, i) => `<button type="button" class="gi${b.on ? ' on' : ''}" data-i="${i}" title="${esc(b.rule + ' – ' + b.state)}" aria-describedby="gtip"><em>${b.e}</em>${b.n}</button>`).join('')}</div>
-      <p class="gtip" id="gtip" aria-live="polite">Tippar sin in badge per vesair las cundiziuns.</p>
+      <p class="gtip" id="gtip" aria-live="polite">${tip0}</p>
     </div>`;
-  const anchor = document.querySelector('.favs') || document.getElementById('selwrap');
-  anchor.after(sec);
-  // Badges: Bedingung bei Hover, Fokus oder Klick unter dem Raster zeigen
-  const tip = sec.querySelector('.gtip'), tip0 = tip.textContent, btns = sec.querySelectorAll('.gi');
-  let pinned = -1;
-  const showTip = i => {
-    btns.forEach((b, j) => b.classList.toggle('sel', j === i && pinned === i));
-    if (i < 0) { tip.textContent = tip0; return; }
-    const b = INS[i];
-    tip.innerHTML = `<b>${esc(b.e + ' ' + b.n)}:</b> ${esc(b.rule)}<span>${esc(b.state)}</span>`;
+    // Badges: Bedingung bei Hover, Fokus oder Klick unter dem Raster zeigen
+    tip = stat.querySelector('.gtip'); pinned = -1;
+    stat.querySelectorAll('.gi').forEach(el => {
+      const i = +el.dataset.i;
+      el.addEventListener('mouseenter', () => showTip(i));
+      el.addEventListener('mouseleave', () => showTip(pinned));
+      el.addEventListener('focus', () => showTip(i));
+      el.addEventListener('click', () => { pinned = pinned === i ? -1 : i; showTip(pinned < 0 ? i : pinned); });
+    });
+    // Balken einblenden
+    requestAnimationFrame(() => setTimeout(() => stat.querySelectorAll('.gbar i').forEach(b => { b.style.width = b.dataset.w + '%'; }), 60));
   };
-  btns.forEach(el => {
-    const i = +el.dataset.i;
-    el.addEventListener('mouseenter', () => showTip(i));
-    el.addEventListener('mouseleave', () => showTip(pinned));
-    el.addEventListener('focus', () => showTip(i));
-    el.addEventListener('click', () => { pinned = pinned === i ? -1 : i; showTip(pinned < 0 ? i : pinned); });
-  });
+  drawStats(localSrc());
+  // Mit Profil: gleicher Stand auf allen Geräten (Nutzung aller verbundenen Geräte zusammengezählt)
+  const loadStats = async () => {
+    if (!me) return drawStats(localSrc());
+    const r = await call('/game/stats?c=' + encodeURIComponent(cid));
+    if (r.ok && Array.isArray(r.days)) drawStats(profSrc(r));
+  };
 
   // ---- Profil und Rangliste (Worker) ----
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
@@ -214,13 +240,13 @@
     const f = e.target, d = Object.fromEntries(new FormData(f)), er = pcard.querySelector('.gerr');
     const r = await call('/game/' + (f.dataset.f === 'reg' ? 'register' : 'login'), d);
     if (!r.ok) { er.textContent = ERR[r.error] || 'Errur.'; return; }
-    me = { name: r.name }; cache = {}; if (f.dataset.f === 'reg' && nProf != null) nProf++; drawProfile(r.code); loadRank();
+    me = { name: r.name }; cache = {}; if (f.dataset.f === 'reg' && nProf != null) nProf++; drawProfile(r.code); loadRank(); loadStats();
   });
   pcard.addEventListener('click', async e => {
     const a = e.target.closest('[data-a]'); if (!a) return; const er = pcard.querySelector('.gerr');
     if (a.dataset.a === 'code') { if (!confirm('Generar in nov code? Il vegl code na vala lura betg pli.')) return; const r = await call('/game/code', {}); if (r.ok) drawProfile(r.code); else er.textContent = 'Errur.'; }
-    if (a.dataset.a === 'out') { await call('/game/logout', {}); me = null; cache = {}; drawProfile(); drawRank(); }
-    if (a.dataset.a === 'del') { if (!confirm('Stizzar il profil definitivamain?')) return; const r = await call('/game/delete', {}); if (r.ok) { me = null; cache = {}; if (nProf) nProf--; drawProfile(); drawRank(); } else er.textContent = 'Errur.'; }
+    if (a.dataset.a === 'out') { await call('/game/logout', {}); me = null; cache = {}; drawProfile(); drawRank(); loadStats(); }
+    if (a.dataset.a === 'del') { if (!confirm('Stizzar il profil definitivamain?')) return; const r = await call('/game/delete', {}); if (r.ok) { me = null; cache = {}; if (nProf) nProf--; drawProfile(); drawRank(); loadStats(); } else er.textContent = 'Errur.'; }
   });
 
   const COLS = [['pts', 'Puncts'], ['seria', 'Seria'], ['coll', 'Collecziun'], ['acts', 'Acziuns'], ['art', 'Artitgels']];
@@ -255,12 +281,6 @@
   };
   drawProfile(); drawRank();
   fetch(API + '/game/count').then(r => r.json()).then(d => { nProf = d.n; drawRank(me ? cache[per] && cache[per].d : undefined); }).catch(() => {});
-  fetch(API + '/game/me?c=' + encodeURIComponent(cid)).then(r => r.json()).then(d => { me = d.profile || null; drawProfile(); loadRank(); }).catch(() => {});
+  fetch(API + '/game/me?c=' + encodeURIComponent(cid)).then(r => r.json()).then(d => { me = d.profile || null; drawProfile(); loadRank(); loadStats(); }).catch(() => {});
 
-  // Balken einblenden
-  requestAnimationFrame(() => setTimeout(() => {
-    const [b1, b2] = sec.querySelectorAll('.gbar i');
-    b1.style.width = pct + '%';
-    b2.style.width = b2.dataset.w + '%';
-  }, 60));
 })();
