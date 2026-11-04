@@ -92,18 +92,30 @@ const HTML = `<div class="dbz-like" id="dbz-like">
     for (let i = 0; i < 400; i++, d.setDate(d.getDate() - 1)) { if (set.has(ymd(d))) n++; else if (d.getDay() % 6 !== 0) break; }
     try { if (n > (+localStorage.getItem('dbz-best') || 0)) localStorage.setItem('dbz-best', n); } catch (e) {}
     let game = false, shown = ''; try { game = localStorage.getItem('dbz-game') === '1'; shown = localStorage.getItem('dbz-serie-shown') || ''; } catch (e) {}
-    if (!game || !wasUsed || n < 2 || shown === today) return; // einmal pro Tag, nur wer /game kennt
+    if (!game || !wasUsed || shown === today) return; // einmal pro Tag, nur wer /game kennt
     try { localStorage.setItem('dbz-serie-shown', today); } catch (e) {}
-    const st = document.createElement('style');
-    st.textContent = '.dbz-serie{position:fixed;left:50%;top:16px;z-index:9999;transform:translate(-50%,-140%);display:flex;align-items:center;gap:10px;padding:10px 18px 10px 14px;border:1px solid var(--accent,var(--acc,#ff4d64));border-radius:999px;background:var(--card,#1c1c1f);color:var(--text,#ececef);font:600 15px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .45s cubic-bezier(.2,1.4,.4,1);cursor:pointer;white-space:nowrap}.dbz-serie.on{transform:translate(-50%,0)}.dbz-serie b{font-size:22px;line-height:1}.dbz-serie small{display:block;color:var(--muted,#9a9aa2);font-weight:500;font-size:12px}@media (prefers-reduced-motion:reduce){.dbz-serie{transition:none}}';
-    document.head.append(st);
-    const el = document.createElement('div'); el.className = 'dbz-serie'; el.setAttribute('role', 'status');
-    el.innerHTML = '<b>🔥</b><span>' + n + ' dis a la lunga<small>Turna damaun per cuntinuar</small></span>';
-    document.body.append(el);
-    const off = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); };
-    el.addEventListener('click', off);
-    setTimeout(() => el.classList.add('on'), 500);
-    setTimeout(off, 4500);
+    const popup = n => {
+      if (n < 2) return;
+      const st = document.createElement('style');
+      st.textContent = '.dbz-serie{position:fixed;left:50%;top:16px;z-index:9999;transform:translate(-50%,-140%);display:flex;align-items:center;gap:10px;padding:10px 18px 10px 14px;border:1px solid var(--accent,var(--acc,#ff4d64));border-radius:999px;background:var(--card,#1c1c1f);color:var(--text,#ececef);font:600 15px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .45s cubic-bezier(.2,1.4,.4,1);cursor:pointer;white-space:nowrap}.dbz-serie.on{transform:translate(-50%,0)}.dbz-serie b{font-size:22px;line-height:1}.dbz-serie small{display:block;color:var(--muted,#9a9aa2);font-weight:500;font-size:12px}@media (prefers-reduced-motion:reduce){.dbz-serie{transition:none}}';
+      document.head.append(st);
+      const el = document.createElement('div'); el.className = 'dbz-serie'; el.setAttribute('role', 'status');
+      el.innerHTML = '<b>🔥</b><span>' + n + ' dis a la lunga<small>Turna damaun per cuntinuar</small></span>';
+      document.body.append(el);
+      const off = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); };
+      el.addEventListener('click', off);
+      setTimeout(() => el.classList.add('on'), 500);
+      setTimeout(off, 4500);
+    };
+    // Mit Profil zählt die Serie über alle Geräte des Profils (Worker /game/stats); sonst der lokale Stand dieses Geräts
+    let c0 = ''; try { c0 = localStorage.getItem('dbz-cid') || ''; } catch (e) {}
+    if (!/^[A-Za-z0-9-]{8,40}$/.test(c0)) return popup(n);
+    fetch(API + '/game/stats?c=' + encodeURIComponent(c0)).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d || !Array.isArray(d.days)) return popup(n);
+      const ps = new Set([...d.days, today]), x = new Date(); let m = 0;   // heute zählt schon, auch wenn der Server den Tag noch nicht verdichtet hat
+      for (let i = 0; i < 400; i++, x.setDate(x.getDate() - 1)) { if (ps.has(ymd(x))) m++; else if (x.getDay() % 6 !== 0) break; }
+      popup(m);
+    }).catch(() => popup(n));
   })();
   // Seitenaufruf zählen (einmal pro Aufruf; nur Tool-Name und Zeitpunkt)
   // Anonyme Zufalls-Kennung pro Browser (nur zum Zählen verschiedener Besucher, gilt für alle Tools gemeinsam)
