@@ -102,7 +102,7 @@
   if (h1) h1.insertAdjacentHTML('beforeend', '<span class="h1g">the game</span>');
   // Beschreibung spielerisch statt des Startseiten-Textes
   const sub = document.querySelector('.sub');
-  if (sub) sub.innerHTML = 'Scuvra tut ils tools, cuntinuescha tia seria, rimna badges \u2013 e ta mesira cun ils auters.<br>Tscherner in tool, el s\'avra directamain.';
+  if (sub) sub.innerHTML = 'Scuvra tut ils tools, cuntinuescha tia seria, rimna badges \u2013 e ta mesira cun ils auters.';
 
   // alle Tools aus dem Dropdown (ohne Lab und externe Links)
   const tools = [...document.querySelectorAll('#menu a.mi:not(.lab)')]
