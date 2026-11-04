@@ -50,13 +50,11 @@ const toolNames = GROUP => [...GAME_TOOLS, ...Object.keys(GROUP).filter(k => GAM
 // Zeilen aus views/uses im UTC-Zeitraum [from, to) zu (Gerät × Zürcher Tag × Tool) zusammenzählen
 async function aggRange(env, GROUP, from, to) {
   const grp = t => GROUP[t] || t;
-  const ex = new Map((await env.DB.prepare('SELECT cid, ts FROM excl').all().catch(() => ({ results: [] }))).results.map(r => [r.cid, r.ts])); // Modus test
   const m = new Map();
   for (const [tbl, key] of [['views', 'v'], ['uses', 'u']]) {
     const { results } = await env.DB.prepare(`SELECT cid, tool, ts FROM ${tbl} WHERE ts >= ?1 AND ts < ?2 AND cid IS NOT NULL`).bind(from, to).all();
     for (const r of results) {
       const t = grp(r.tool); if (!GAME_TOOLS.includes(t)) continue;
-      const e = ex.get(r.cid); if (e && r.ts <= e) continue;
       const day = zday(utcDate(r.ts)), k = r.cid + '|' + day + '|' + t;
       let o = m.get(k); if (!o) m.set(k, o = { cid: r.cid, day, tool: t, v: 0, u: 0 });
       o[key]++;
@@ -68,6 +66,8 @@ async function aggRange(env, GROUP, from, to) {
 // Abgeschlossene UTC-Tage verdichten (höchstens maxDays pro Lauf). Gibt den letzten verdichteten Tag zurück.
 export async function gameAggregate(env, GROUP, maxDays = 10) {
   await ensure(env);
+  // einmalig: Tageswerte neu aufbauen, weil Geräte im Modus test ihre bisherigen Punkte behalten (Version 2)
+  if (!(await stGet(env, 'v2'))) { await env.DB.batch([env.DB.prepare('DELETE FROM gday'), env.DB.prepare("DELETE FROM gstate WHERE k = 'wm'")]); await stSet(env, 'v2', '1'); }
   const today = new Date().toISOString().slice(0, 10);
   let wm = await stGet(env, 'wm');
   if (!wm) {
