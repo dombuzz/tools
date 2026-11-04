@@ -106,11 +106,11 @@
     const { d, list, views } = lastTop, lbl = { all: 'dapi il cumenzament', today: 'oz', week: "quest'emna", '30d': 'ils ultims 30 dis', month: 'quest mais' }[range] || '';
     const items = [];
     if (list[0]) items.push(`★ ${NAMES[list[0].tool] || list[0].tool} sin plaz 1 ${lbl}`);
-    if (d.usesTotal) items.push(`${fmt(d.usesTotal)} ${d.usesTotal === 1 ? 'giada' : 'giadas'} duvrà ${lbl}`);
+    if (d.usesTotal) items.push(`${fmt(d.usesTotal)} ${d.usesTotal === 1 ? 'giada' : 'giadas'} duvrà in tool ${lbl}`);
     if (d.viewsTotal) items.push(`${fmt(d.viewsTotal)} ${d.viewsTotal === 1 ? 'visita' : 'visitas'} ${lbl}`);
     if (d.total) items.push(`♥ ${fmt(d.total)} ${d.total === 1 ? 'cor' : 'cors'} ${lbl}`);
     if (lastArt) { const t = k => ['novitads', 'sport', 'cultura'].reduce((a, s) => a + (lastArt.counts[s][k] || 0), 0);
-      items.push(`${fmt(t('month'))} artitgels sin rtr.ch quest mais`, `${fmt(t('week'))} artitgels quest'emna`, `${fmt(t('year'))} artitgels quest onn`); }
+      items.push(`${fmt(t('week'))} artitgels sin rtr.ch quest'emna`, `${fmt(t('month'))} artitgels sin rtr.ch quest mais`, `${fmt(t('year'))} artitgels sin rtr.ch quest onn`); }
     $('ticker').hidden = !items.length;
     const txt = items.join('   ·   '), el = $('tickt');
     if (el.textContent !== txt) { el.textContent = txt; $('ticker').style.setProperty('--dur', Math.max(25, txt.length / 5) + 's'); }

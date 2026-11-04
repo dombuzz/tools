@@ -125,7 +125,7 @@
   .mchatta .star { margin: 0 6px 0 0; }
   .star:hover, .star:focus-visible { color: var(--accent); outline: none; }
   .star.on { color: var(--accent); }
-  .ticker { display: block; overflow: hidden; white-space: nowrap; margin-top: 26px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--accent); text-decoration: none; font: 500 .8rem ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; padding: 8px 0; }
+  .ticker { display: block; overflow: hidden; white-space: nowrap; margin: 22px 0 6px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--accent); text-decoration: none; font: 500 .8rem ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; padding: 8px 0; }
   .ticker[hidden] { display: none; }
   .ticker span { display: inline-block; padding-left: 100%; animation: tickrun var(--dur, 40s) linear infinite; }
   .ticker:hover span, .ticker:focus-visible span { animation-play-state: paused; }
@@ -298,7 +298,7 @@
     let fav = [];
     try { fav = (JSON.parse(localStorage.getItem('dbz-favs') || '[]') || []).map(k => k === '/layers' ? '/maletgs' : k).filter(k => k in info); } catch (e) {} // /layers heisst neu /maletgs
     const favs = document.createElement('section'); favs.className = 'favs';
-    wrap.after(favs);
+    (document.getElementById('ticker') || wrap).after(favs);
     const render = () => {
       for (const k in info) { const s = info[k].star; s.classList.toggle('on', fav.includes(k)); s.textContent = fav.includes(k) ? '★' : '☆'; s.setAttribute('aria-pressed', fav.includes(k)); }
       favs.innerHTML = '<div class="favh">★ Mes favurits</div>';
@@ -430,12 +430,12 @@
     if (d && d.uses) {
       const top = d.uses.filter(x => !x.tool.startsWith('lab-'))[0];
       if (top) items.push('★ ' + (PN[top.tool] || top.name || top.tool) + ' sin plaz 1 quest mais');
-      if (d.usesTotal) items.push(fmt(d.usesTotal) + (d.usesTotal === 1 ? ' giada duvrà' : ' giadas duvrà') + ' quest mais');
+      if (d.usesTotal) items.push(fmt(d.usesTotal) + (d.usesTotal === 1 ? ' giada duvrà' : ' giadas duvrà') + ' in tool quest mais');
       if (d.viewsTotal) items.push(fmt(d.viewsTotal) + (d.viewsTotal === 1 ? ' visita' : ' visitas') + ' quest mais');
       if (d.total) items.push('♥ ' + fmt(d.total) + (d.total === 1 ? ' cor' : ' cors') + ' quest mais');
     }
     if (a && a.counts) { const t = k => ['novitads', 'sport', 'cultura'].reduce((n, s) => n + (a.counts[s][k] || 0), 0);
-      items.push(fmt(t('month')) + ' artitgels sin rtr.ch quest mais', fmt(t('week')) + " artitgels quest'emna", fmt(t('year')) + ' artitgels quest onn'); }
+      items.push(fmt(t('week')) + " artitgels sin rtr.ch quest'emna", fmt(t('month')) + ' artitgels sin rtr.ch quest mais', fmt(t('year')) + ' artitgels sin rtr.ch quest onn'); }
     if (!items.length) return;
     const el = document.getElementById('ticker'), txt = items.join('   ·   ');
     document.getElementById('tickt').textContent = txt; el.style.setProperty('--dur', Math.max(25, txt.length / 5) + 's'); el.hidden = false;
