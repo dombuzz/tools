@@ -163,7 +163,7 @@
 <main>
   <div class="head">
     <h1>dombuzz <span>Tools</span></h1>
-    <a class="toplink" id="toplink" href="/top" title="top Tools" aria-label="top Tools" aria-haspopup="true" aria-expanded="false">
+    <a class="toplink" id="toplink" href="/cifras" title="cifras" aria-label="cifras" aria-haspopup="true" aria-expanded="false">
       <svg viewBox="12 14 76 76" aria-hidden="true"><g fill="#ff4d64"><rect x="18" y="52" width="18" height="32" rx="3" fill-opacity=".55"/><rect x="41" y="22" width="18" height="62" rx="3"/><rect x="64" y="40" width="18" height="44" rx="3" fill-opacity=".75"/></g></svg>
     </a>
     <div class="pop" id="pop" role="dialog" aria-label="top Tools">
@@ -413,7 +413,7 @@
   // Beim Zurückkehren mit dem Zurück-Button Menü wieder schliessen
   window.addEventListener('pageshow', () => setOpen(false));
 
-// Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /top bleibt als Ausweichlink)
+// Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /cifras bleibt als Ausweichlink)
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', SHOW = 5;
   const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge',
@@ -432,7 +432,7 @@
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       const likes = Object.fromEntries((d.items || []).map(i => [i.tool, i.count])), views = d.views || {};
-      // wie /top: ohne Lab, nach Nutzungen, dann Visitas, dann Likes
+      // wie /cifras: ohne Lab, nach Nutzungen, dann Visitas, dann Likes
       const byTool = Object.fromEntries((d.uses || []).map(x => [x.tool, x]));
       const rows = [...new Set([...Object.keys(byTool), ...Object.keys(likes), ...Object.keys(views)])].filter(t => !t.startsWith('lab-'))
         .map(t => ({ tool: t, name: (byTool[t] || {}).name, count: (byTool[t] || {}).count || 0, likes: (byTool[t] || {}).likes || likes[t] || 0, views: views[t] || 0 }))
