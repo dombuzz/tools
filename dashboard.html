@@ -102,6 +102,11 @@
   .labh.other{color:var(--text)}
   .labh{font-size:1.05rem;margin:34px 0 10px;color:var(--lab)}
   .card.lab{border-style:dashed;border-color:rgba(255,154,60,.35)}
+  /* Box «Game · profils»: blau wie /game */
+  .card.gbox{border:1px solid #5aa6ff;padding:14px 16px}
+  :root[data-theme="light"] .card.gbox{border-color:#1f6fd1}
+  #gfold>summary::before{background-image:none;-webkit-text-fill-color:#5aa6ff;color:#5aa6ff}
+  :root[data-theme="light"] #gfold>summary::before{-webkit-text-fill-color:#1f6fd1;color:#1f6fd1}
   .card.lab .bar{background:var(--lab)}.card.lab .name a:hover{color:var(--lab)}
   .arch{width:100%;padding:12px 14px;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:12px;margin-bottom:14px}
   .subh{font-size:.95rem;margin:22px 0 8px;color:var(--muted)}.subh.lab{color:var(--lab)}
@@ -344,7 +349,10 @@
   <section class="pan"><p class="sec" id="sparkh">Activitad · ultimas 24 uras</p><div id="spark"><div class="msg">Chargel …</div></div></section>
   <section class="pan"><p class="sec">Cura vegnan ils tools duvrads</p><div id="heat"><div class="msg">Chargel …</div></div></section>
   <section class="pan"><p class="sec">Artitgels online sin rtr.ch</p><div id="artc"><div class="msg">Chargel …</div></div></section>
-  <details class="pan fold" data-k="gadm"><summary class="sec">Game · profils</summary><div id="gadm"><div class="msg">Chargel …</div></div></details>
+  <details class="fold" data-k="gadm" id="gfold">
+    <summary class="labh other">Game · profils</summary>
+    <div class="card gbox" id="gadm"><div class="msg">Chargel …</div></div>
+  </details>
 
   <details class="fold" data-k="favs">
     <summary class="labh other">Favurits <span>★</span></summary>
@@ -422,14 +430,14 @@
     // Rang nach Standardreihenfolge (Nutzungen, Likes) vergeben, danach nach Wunsch sortieren
     let rank = 0, prev = null;
     tools.forEach((x, i) => { const key = x.n + '/' + x.h; if (key !== prev) { rank = i + 1; prev = key; } x.r = rank; x.p = x.v ? x.n / x.v * 100 : -1; });
-    const active = tools.filter(x => x.n || x.h || x.v), zero = tools.filter(x => !(x.n || x.h || x.v));
+    const active = tools.filter(x => x.n), zero = tools.filter(x => !x.n);   // nur Tools, die im Zeitraum genutzt wurden; Rest unter «anc betg duvrads»
     const base = new Map(tools.map((x, i) => [x, i]));
     // Rang: erstes Tippen = beste zuerst (Standard), erneut = umgekehrt; Zahlen: erstes Tippen = höchste zuerst, erneut = niedrigste zuerst
     if (sortKey === 'rank') { if (!sortAsc) active.reverse(); }
     else active.sort((a, b) => (sortAsc ? b[sortKey] - a[sortKey] : a[sortKey] - b[sortKey]) || base.get(a) - base.get(b));
     const mk = sortKey === 'rank' || sortKey === 'p' ? 'n' : sortKey;
     const max = Math.max(1, ...tools.map(x => x[mk]));
-    const row = x => `<div class="row m${x.n || x.h || x.v ? '' : ' zero'}" data-t="${esc(x.t)}"><span class="rank">${x.n || x.h ? x.r : '–'}</span>
+    const row = x => `<div class="row m${x.n ? '' : ' zero'}" data-t="${esc(x.t)}"><span class="rank">${x.n ? x.r : '–'}</span>
         <div class="name"><a href="${href(x.t)}">${esc(names[x.t] || x.t)}</a><div class="bar" style="width:${x[mk] / max * 100}%"></div></div>
         <span class="c n${sortKey === 'n' ? ' act' : ''}" data-f="n">${fmt(x.n)}</span><span class="c${sortKey === 'h' ? ' act' : ''}" data-f="h">${fmt(x.h)}</span>
         <span class="c${sortKey === 'v' ? ' act' : ''}" data-f="v">${fmt(x.v)}</span><span class="c${sortKey === 'p' ? ' act' : ''}" title="${fmt(x.n)} giadas duvrà · ${fmt(x.v)} visitas">${x.p < 0 ? '–' : Math.round(x.p) + '%'}</span></div>`;
