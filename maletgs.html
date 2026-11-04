@@ -236,8 +236,6 @@
   .lays button[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
   .lays svg{ display:block; height:24px; width:auto; }
   .crow{ display:flex; flex-wrap:wrap; gap:8px; }
-  #cFmt{ display:grid; grid-template-columns:repeat(4, 1fr); width:100%; }
-  #cFmt button{ padding:6px 4px; }
   #cFmt small{ white-space:nowrap; font-size:.66rem; }
   .lrow{ margin-top:8px; }
   .cmore{ display:block; margin-top:8px; }
@@ -289,6 +287,17 @@
   <p class="subtitle">Fin a 5 layers cun agens maletgs ed overlays. Successiun adattabla, rotar, drizzar, curreger la perspectiva e las colurs per layer. Collascha cun 2 fin 5 maletgs en 16:9 u 1:1. Export sco PNG en grondezza standard u en resoluziun originala.</p>
 
   <div class="card">
+    <div class="toolbar" id="colToolbar" hidden>
+      <div class="field">Format
+        <div class="sizeseg" role="group" aria-label="Format" id="cFmt">
+          <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920×1080</small></button>
+          <button type="button" data-v="1:1" aria-pressed="false">1:1<small>1080×1080</small></button>
+          <button type="button" data-v="4:5" aria-pressed="false">4:5<small>1080×1350</small></button>
+          <button type="button" data-v="9:16" aria-pressed="false">9:16<small>1080×1920</small></button>
+        </div>
+      </div>
+    </div>
+
     <div class="toolbar" id="layToolbar">
       <label class="field">Format
         <select id="fmtSel">
@@ -440,13 +449,6 @@
         <div class="side">
           <div id="cSideEdit"></div>
           <div id="cSide">
-          <h3>Format</h3>
-          <div class="sizeseg" role="group" aria-label="Format" id="cFmt">
-            <button type="button" data-v="16:9" aria-pressed="true">16:9<small>1920×1080</small></button>
-            <button type="button" data-v="1:1" aria-pressed="false">1:1<small>1080×1080</small></button>
-            <button type="button" data-v="4:5" aria-pressed="false">4:5<small>1080×1350</small></button>
-            <button type="button" data-v="9:16" aria-pressed="false">9:16<small>1080×1920</small></button>
-          </div>
           <h3>Disposiziun</h3>
           <div class="lays" id="cLays"></div>
           <button type="button" class="ghost sm cmore" id="cMore" aria-expanded="false">Dapli maletgs ▾</button>
@@ -1352,6 +1354,7 @@ function setTab(i){
   tabBtns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === String(i)));
   panes.forEach(p => p.hidden = p.dataset.pane !== String(i));
   ['layToolbar', 'layWork', 'layHint', 'layActions'].forEach(id => $(id).hidden = colView);
+  $('colToolbar').hidden = !(i === 3);
   $('collage').hidden = !colView;
   $('baBtn').hidden = i === 3;   // «Avant / suenter» nicht in der Collascha-Ansicht
   $('cSide').hidden = i !== 3;
