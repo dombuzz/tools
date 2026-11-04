@@ -274,17 +274,21 @@ async function computeAll(env, GROUP, monthKey) {
   return out;
 }
 
+// Gemeinsame Berechnung für Rangaziun und Dashboard: kurz zwischengespeichert (60 s); die Verwaltung im Dashboard rechnet immer neu und aktualisiert den Zwischenspeicher
+async function getBody(env, GROUP, fresh) {
+  const key = 'game:' + zday(new Date()).slice(0, 7);
+  if (!fresh) { const { results: [c] } = await env.DB.prepare('SELECT ts, body FROM cache WHERE k = ?1').bind(key).all(); if (c && Date.now() - c.ts < 60e3) return JSON.parse(c.body); }
+  const body = await computeAll(env, GROUP);
+  await env.DB.prepare('INSERT INTO cache (k, ts, body) VALUES (?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET ts = ?2, body = ?3').bind(key, Date.now(), JSON.stringify(body)).run().catch(() => {});
+  return body;
+}
+export const gameDropCache = async env => { await ensure(env); await dropCache(env); };
+
 export async function gameRanking(env, GROUP, cid, period) {
   await ensure(env);
   const me = await profileOf(env, cid);
   if (!me) return err('noprofile', 403);
-  const now = zday(new Date()), key = 'game:' + now.slice(0, 7);
-  let body; const { results: [c] } = await env.DB.prepare('SELECT ts, body FROM cache WHERE k = ?1').bind(key).all();
-  if (c && Date.now() - c.ts < 5 * 60e3) body = JSON.parse(c.body);
-  else {
-    body = await computeAll(env, GROUP);
-    await env.DB.prepare('INSERT INTO cache (k, ts, body) VALUES (?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET ts = ?2, body = ?3').bind(key, Date.now(), JSON.stringify(body)).run();
-  }
+  const body = await getBody(env, GROUP, false);
   const p = ['month', 'year', 'all'].includes(period) ? period : 'month';
   return { status: 200, data: { period: p, total: body.total, updated: body.updated, rows: body.p[p].map(r => ({ name: r.name, pts: r.pts, seria: r.seria, coll: r.coll, acts: r.acts, art: r.art, bdg: r.bdg, days: r.days, me: r.id === me.id })) } };
 }
@@ -292,7 +296,7 @@ export async function gameRanking(env, GROUP, cid, period) {
 // ---- Verwaltung (nur mit Passwort, siehe index.js /gadmin) und Monatsstatistik ----
 export async function gameAdminList(env, GROUP) {
   await ensure(env);
-  const b = await computeAll(env, GROUP);
+  const b = await getBody(env, GROUP, true);
   const all = new Map(b.p.all.map(r => [r.id, r]));
   return { status: 200, data: { updated: b.updated, rows: b.p.month.map(m => { const a = all.get(m.id) || {}; return { id: m.id, name: m.name, created: m.created, reset: m.reset, devices: m.devices, month: { pts: m.pts, acts: m.raw, days: m.days }, all: { pts: a.pts || 0, acts: a.raw || 0, days: a.days || 0, art: a.rawArt || 0, bdg: a.bdg || 0 } }; }).sort((x, y) => y.all.pts - x.all.pts || x.name.localeCompare(y.name)) } };
 }

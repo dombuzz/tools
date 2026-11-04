@@ -304,7 +304,7 @@ async function fbMail(env, tool, name, text) {
 }
 
 import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth, challengeMonth } from './artsearch.js';
-import { gameRoute, gameAggregate, gameAdminList, gameAdminDelete, gameAdminReset, gameMonthStats } from './game.js';
+import { gameRoute, gameAggregate, gameAdminList, gameAdminDelete, gameAdminReset, gameMonthStats, gameDropCache } from './game.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -712,7 +712,7 @@ async function handle(request, env, ctx) {
         if (!c || !/^[A-Za-z0-9-]{8,40}$/.test(c)) return json({ error: 'cid' }, request, 400);
         await ensureViews(env);
         await env.DB.prepare("INSERT INTO excl (cid, ts) VALUES (?1, datetime('now')) ON CONFLICT(cid) DO UPDATE SET ts = datetime('now')").bind(c).run();
-        await env.DB.prepare('DELETE FROM gday WHERE cid = ?1').bind(c).run().catch(() => {}); await env.DB.prepare('DELETE FROM chatta_log WHERE cid = ?1').bind(c).run().catch(() => {});
+        await env.DB.prepare('DELETE FROM gday WHERE cid = ?1').bind(c).run().catch(() => {}); await gameDropCache(env).catch(() => {}); await env.DB.prepare('DELETE FROM chatta_log WHERE cid = ?1').bind(c).run().catch(() => {});
         return json({ ok: true }, request);
       }
 
