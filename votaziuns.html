@@ -584,7 +584,7 @@ async function initParcadi(){try{parcadi=(await idbAll())||[]}catch(e){parcOk=fa
 function fontState(){
   const ok=have.bold&&have.light;
   $('#fontState').innerHTML=ok?'<span class="ok">✓ Scrittiras «SRG SSR Type Bold» e «Light» chargiadas</span>':
-   '<span class="no">Scrittiras manchentas ('+[!have.bold&&'«SRG SSR Type Bold»',!have.light&&'«SRG SSR Type Light»'].filter(Boolean).join(' e ')+') – igl è duvrà Arial.</span> Chargiar <code>SRGSSRType.ttf</code> (Bold) e <code>SRGSSRType_Lt.ttf</code> (Light) ina giada, ellas restan memorisadas en quest browser.<br>Copiar quellas or da <code>C:\\Windows\\Fonts</code> sin Desktop, Downloads u auter ordinatur e chargia da là cun cliccar sin quest buttun (tut dus ensemen):';
+   '<span class="no">Scrittiras mancan ('+[!have.bold&&'«SRG SSR Type Bold»',!have.light&&'«SRG SSR Type Light»'].filter(Boolean).join(' e ')+') – igl è duvrà Arial.</span> Chargiar <code>SRGSSRType.ttf</code> (Bold) e <code>SRGSSRType_Lt.ttf</code> (Light) ina giada, ellas restan memorisadas en quest browser.<br>Copiar quellas or da <code>C:\\Windows\\Fonts</code> sin Desktop, Downloads u auter ordinatur e chargia da là cun cliccar sin quest buttun (tut dus ensemen):';
   $('#fontBtn').firstChild.textContent=ok?'Midar las scrittiras':'Chargiar scrittiras';
 }
 function fontNames(buf){
