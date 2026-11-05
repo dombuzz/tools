@@ -32,7 +32,7 @@ const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 const NAMES = { 'info': 'Infus & datas',
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
-  'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'tschertga': 'Tschertga rtr.ch',
+  'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'votaziuns': 'Graficas dumengias da votaziuns', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
 };
