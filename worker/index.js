@@ -46,7 +46,7 @@ const NAMES = { 'info': 'Infus & datas',
 const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
-const NO_STATS = new Set(['stats', 'votgr']);
+const NO_STATS = new Set(['stats', 'votgr', 'lab-vischnanca', 'lab-svizra', 'lab-chartas']);
 const NO_STATS_SQL = `tool NOT IN (${[...NO_STATS].map(t => `'${t}'`).join(', ')})`;
 // Modus test: Einträge eines Geräts (cid) bis zum Zeitpunkt, an dem es den Testmodus zuletzt gemeldet hat, nicht zählen (auch rückwirkend)
 const EX = t => `NOT EXISTS (SELECT 1 FROM excl e WHERE e.cid = ${t}.cid AND ${t}.ts <= e.ts)`;
