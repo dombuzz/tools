@@ -177,23 +177,6 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <p class="hint">Trair qua il maletg sin la surfatscha u integrar el cun Ctrl/Cmd+V: el daventa il funs e va en il Parcadi.</p>
   </div>
 
-  <div class="mode" data-mode="vis">
-      <div class="panel travs">
-        <h2 class="ph">Travs<button class="btn ibtn lockall" id="vLock" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
-        <div id="vSegs"></div>
-        <div class="xtra">
-        <span class="xr">
-          <button class="btn sm" id="vEven" type="button">Distribuir uniformamain</button>
-          <span class="sum" id="vSum"></span>
-        </span>
-        <span class="xr">
-          <label class="chk"><input type="checkbox" id="vPct" checked> Mussar %</label>
-          <label class="chk"><input type="checkbox" id="vName"> Mussar num</label>
-        </span>
-        <label class="cap xr">Posiziuns decimalas <input type="number" id="vDec" min="0" max="2" value="1" style="width:64px"></label>
-      </div>
-      </div>
-  </div>
   <div class="mode" data-mode="svz">
       <div class="panel travs">
         <h2 class="ph">Travs<button class="btn ibtn lockall" id="sLock" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
@@ -212,7 +195,20 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <!-- ===== Vischnanca ===== -->
     <div class="mode" data-mode="vis">
       <div class="panel">
-        <h2 class="ph"><span class="num">1</span>Vopna da vischnanca</h2>
+        <h2 class="ph"><span class="num">1</span>Travs<button class="btn ibtn lockall" id="vLock" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
+        <div id="vSegs"></div>
+        <div class="row">
+          <button class="btn sm" id="vEven" type="button">Distribuir uniformamain</button>
+          <span class="sum" id="vSum"></span>
+        </div>
+        <div class="row">
+          <label class="chk"><input type="checkbox" id="vPct" checked> Mussar %</label>
+          <label class="chk"><input type="checkbox" id="vName"> Mussar num</label>
+        </div>
+        <label class="row cap">Posiziuns decimalas <input type="number" id="vDec" min="0" max="2" value="1" style="width:64px"></label>
+      </div>
+      <div class="panel">
+        <h2 class="ph"><span class="num">2</span>Vopna da vischnanca</h2>
         <select id="vopna" aria-label="Vischnanca"><option value="">– senza vopna –</option></select>
         <div class="row"><button class="btn sm" id="wpBtn" type="button">Atgna vopna (PNG)</button><input type="file" id="wpFile" accept="image/*" hidden></div>
       </div>
