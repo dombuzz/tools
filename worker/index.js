@@ -32,7 +32,7 @@ const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 const NAMES = { 'info': 'Infus & datas',
   'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
-  'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'votaziuns': 'Graficas dumengias da votaziuns', 'tschertga': 'Tschertga rtr.ch',
+  'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
 };
@@ -46,7 +46,7 @@ const NAMES = { 'info': 'Infus & datas',
 const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
-const NO_STATS = new Set(['stats']);
+const NO_STATS = new Set(['stats', 'votgr']);
 const NO_STATS_SQL = `tool NOT IN (${[...NO_STATS].map(t => `'${t}'`).join(', ')})`;
 // Modus test: Einträge eines Geräts (cid) bis zum Zeitpunkt, an dem es den Testmodus zuletzt gemeldet hat, nicht zählen (auch rückwirkend)
 const EX = t => `NOT EXISTS (SELECT 1 FROM excl e WHERE e.cid = ${t}.cid AND ${t}.ts <= e.ts)`;

@@ -206,8 +206,7 @@
     'srt2ttml.html':       'SRT → TTML',
     'studio.html':         'Subtitle Studio',
     'data.html':           'Memorisar grafica Datawrapper',
-    'votgr.html':          'Chartas votaziuns GR',
-    'votaziuns.html':      'Graficas dumengias da votaziuns'
+        'votaziuns.html':      'Graficas dumengias da votaziuns'
   };
 
   // Gruppen und Reihenfolge im Dropdown.
@@ -427,7 +426,7 @@
 // Lauftext mit Zahlen (wie /cifras), Link auf /cifras
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', fmt = n => n.toLocaleString('de-CH');
-  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'votaziuns': 'Graficas dumengias da votaziuns', 'tschertga': 'Tschertga rtr.ch' };
+  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'tschertga': 'Tschertga rtr.ch' };
   Promise.all([fetch(API + '/top?range=month').then(r => r.json()).catch(() => null), fetch(API + '/art/count').then(r => r.json()).catch(() => null)]).then(([d, a]) => {
     const items = [];
     if (d && d.uses) {
@@ -449,7 +448,7 @@
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', SHOW = 5;
   const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge',
-    'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votgr': 'Chartas votaziuns GR', 'votaziuns': 'Graficas dumengias da votaziuns' };
+    'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('de-CH');
   const btn = document.getElementById('toplink'), pop = document.getElementById('pop');
