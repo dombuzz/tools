@@ -137,6 +137,13 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 .fontbox{max-width:400px;font-size:.8rem;align-items:flex-end;text-align:right;gap:6px}
 .left{display:flex;flex-direction:column;gap:18px;min-width:0}
 .cnt iframe{width:100%;height:900px;border:0;display:block;background:transparent}
+.travs #vSegs,.travs #sBars{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+.travs .seg-item{padding-bottom:0;border-bottom:0}
+.travs .seg-row.sb{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr)}
+.travs .seg-row{gap:6px}
+@media (max-width:640px){.travs #vSegs,.travs #sBars{grid-template-columns:1fr}}
+.xtra{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.xr{display:inline-flex;gap:12px;align-items:center}
 .mode{display:flex;flex-direction:column;gap:18px}
 .g text.tx{white-space:pre}
 </style>
@@ -147,7 +154,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
   <div>
     <a class="homelink" href="/">← Tools</a>
     <h1>Graficas <span class="acc">dumengias da votaziuns</span></h1>
-    <p class="lead">Grafica per votaziuns communalas, chantunalas u federalas: funs, colurs, travs che dattan adina 100%.</p>
+    <p class="lead">Grafica per votaziuns communalas, chantunalas u federalas.</p>
     <div class="seg" id="modeSeg" role="group" aria-label="Grafica"></div>
   </div>
   <div class="fontbox fontrow" id="fontBox">
@@ -170,6 +177,30 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <p class="hint">Trair qua il maletg sin la surfatscha u integrar el cun Ctrl/Cmd+V: el daventa il funs e va en il Parcadi.</p>
   </div>
 
+  <div class="mode" data-mode="vis">
+      <div class="panel travs">
+        <h2 class="ph">Travs<button class="btn ibtn lockall" id="vLock" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
+        <div id="vSegs"></div>
+        <div class="xtra">
+        <span class="xr">
+          <button class="btn sm" id="vEven" type="button">Distribuir uniformamain</button>
+          <span class="sum" id="vSum"></span>
+        </span>
+        <span class="xr">
+          <label class="chk"><input type="checkbox" id="vPct" checked> Mussar %</label>
+          <label class="chk"><input type="checkbox" id="vName"> Mussar num</label>
+        </span>
+        <label class="cap xr">Posiziuns decimalas <input type="number" id="vDec" min="0" max="2" value="1" style="width:64px"></label>
+      </div>
+      </div>
+  </div>
+  <div class="mode" data-mode="svz">
+      <div class="panel travs">
+        <h2 class="ph">Travs<button class="btn ibtn lockall" id="sLock" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
+        <div id="sBars"></div>
+        <label class="cap xr">Posiziuns decimalas <input type="number" id="sDec" min="0" max="2" value="1" style="width:64px"></label>
+      </div>
+  </div>
     <div class="panel">
       <h2 class="ph">Funs</h2>
       <p class="hint" id="parcHint">Parcadi: maletgs memorisads en quest browser. Els na vegnan betg chargiads sin in server.</p>
@@ -181,20 +212,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <!-- ===== Vischnanca ===== -->
     <div class="mode" data-mode="vis">
       <div class="panel">
-        <h2 class="ph"><span class="num">1</span>Travs<button class="btn ibtn lockall" id="vLock" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
-        <div id="vSegs"></div>
-        <div class="row">
-          <button class="btn sm" id="vEven" type="button">Distribuir uniformamain</button>
-          <span class="sum" id="vSum"></span>
-        </div>
-        <div class="row">
-          <label class="chk"><input type="checkbox" id="vPct" checked> Mussar %</label>
-          <label class="chk"><input type="checkbox" id="vName"> Mussar num</label>
-        </div>
-        <label class="row cap">Posiziuns decimalas <input type="number" id="vDec" min="0" max="2" value="1" style="width:64px"></label>
-      </div>
-      <div class="panel">
-        <h2 class="ph"><span class="num">2</span>Vopna da vischnanca</h2>
+        <h2 class="ph"><span class="num">1</span>Vopna da vischnanca</h2>
         <select id="vopna" aria-label="Vischnanca"><option value="">– senza vopna –</option></select>
         <div class="row"><button class="btn sm" id="wpBtn" type="button">Atgna vopna (PNG)</button><input type="file" id="wpFile" accept="image/*" hidden></div>
       </div>
@@ -205,8 +223,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
       <div class="panel">
         <h2 class="ph"><span class="num">1</span>Titel</h2>
         <textarea id="sTitle" rows="2" aria-label="Titel">Iniziativa da neutralitad</textarea>
-        <label class="lay"><span>Grondezza (pt)</span><input type="range" id="sSize" min="20" max="72" step="1" value="40"><output id="sSizeO">40</output></label>
-        <p class="hint">Il fund bianc suenter il text creschia e sa smenuescha cun il text.</p>
+        <p class="hint">Il fund alv davos il titel s’adattescha al text.</p>
       </div>
       <div class="panel">
         <h2 class="ph"><span class="num">2</span>Chantuns</h2>
@@ -215,7 +232,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
           <button class="btn sm" id="allBlue" type="button">Tut blau</button>
           <button class="btn sm" id="allRed" type="button">Tut cotschen</button>
         </div>
-        <p class="hint">Clicar sin in chantun en la charta u sin sia scursanida: mo las duas colurs <b style="color:#4d9bdc">blau</b> e <b style="color:#ff4d64">cotschen</b>. Ils laguns èn fixs.</p>
+        <p class="hint">Colurar cun cliccar sin in chantun en la charta u qua sura.</p>
       </div>
       <div class="panel">
         <h2 class="ph"><span class="num">3</span>Maioritad dals chantuns</h2>
@@ -226,11 +243,6 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
           <div class="row"><button class="btn sm" id="sSmCalc" type="button">Calcular da la charta</button></div>
           <p class="hint">Mez chantuns (OW, NW, BS, BL, AR, AI) valan 0,5.</p>
         </div>
-      </div>
-      <div class="panel">
-        <h2 class="ph"><span class="num">4</span>Travs<button class="btn ibtn lockall" id="sLock" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
-        <div id="sBars"></div>
-        <label class="row cap">Posiziuns decimalas <input type="number" id="sDec" min="0" max="2" value="1" style="width:64px"></label>
       </div>
     </div>
 
@@ -402,7 +414,7 @@ const SVZ=(()=>{
   const norm=v=>{const f=10**dec();return Math.round(Math.max(0,Math.min(100,+v||0))*f)/f};
   const pct=v=>v.toFixed(dec())+'%';
   function titleLayout(){
-    const pt=+$('#sSize').value||40,fs=pt*12700*E,pitch=fs*1.4;
+    const pt=40,fs=pt*12700*E,pitch=fs*1.4;
     mc.font=fontCss('l',fs);
     const sp=mc.measureText(' ').width,lines=[],raw=$('#sTitle').value;
     if(!raw.trim())return {lines:[],fs,pitch,sp};
@@ -480,7 +492,6 @@ const SVZ=(()=>{
     });
   }
   $('#sTitle').oninput=render;
-  $('#sSize').oninput=()=>{$('#sSizeO').textContent=$('#sSize').value;render()};
   $('#sSmOn').onchange=render;$('#sSmA').oninput=render;$('#sSmB').oninput=render;
   $('#sSmCalc').onclick=()=>{const [a,b]=calcSM();$('#sSmA').value=a;$('#sSmB').value=b;render()};
   $('#allBlue').onclick=()=>{cant.forEach(c=>c.c=BLUE);paint();render()};
