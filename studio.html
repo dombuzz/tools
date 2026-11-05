@@ -6,11 +6,11 @@
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Spustar ils temps da suttitels, cumparegliar dus files e translatar suttitels rumantschs en tudestg – tut en in tool.">
+<meta name="description" content="Spustar ils temps da suttitels, cumparegliar dus files e translatar suttitels rumantschs e tudestgs (RM ⇄ DE) – tut en in tool.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Subtitle Studio">
-<meta property="og:description" content="Spustar ils temps da suttitels, cumparegliar dus files e translatar suttitels rumantschs en tudestg – tut en in tool.">
+<meta property="og:description" content="Spustar ils temps da suttitels, cumparegliar dus files e translatar suttitels rumantschs e tudestgs (RM ⇄ DE) – tut en in tool.">
 <meta property="og:url" content="https://tools.dombuzz.ch/studio">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -204,7 +204,7 @@ p.sub{margin:0;color:var(--muted)}
 <main>
   <a class="homelink" href="/">← Tools</a>
   <h1>Subtitle <span class="acc">Studio</span></h1>
-  <p class="sub">Spustar temps, cumparegliar files e translatar suttitels rumantschs en tudestg.</p>
+  <p class="sub">Spustar temps, cumparegliar files e translatar suttitels rumantschs e tudestgs (RM ⇄ DE).</p>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
     <button type="button" role="tab" data-tab="cu" aria-selected="false" aria-controls="tab-cu">Cumparegliar</button>
@@ -348,7 +348,7 @@ p.sub{margin:0;color:var(--muted)}
 
 <section class="step" id="de-s3" hidden>
   <h2><span class="num">3</span> Integrar la translaziun</h2>
-  <p class="muted">Copiar en ALAS la translaziun e turnar qua: «Integrar dal clipboard» la agiunta. Cun plirs blocs repeter per mintga bloc. Uschespert ch'il dumber da lingias correspunda, vegn il text reparti automaticamain.</p>
+  <p class="muted">Copiar en ALAS la translaziun e turnar qua: il text vegn integrà automaticamain ed il tab da ALAS serrà (u cliccar «Integrar dal clipboard»). Cun plirs blocs repeter per mintga bloc. Uschespert ch'il dumber da lingias correspunda, vegn il text reparti automaticamain.</p>
   <textarea id="de-paste" rows="8" placeholder="Translaziun tudestga dad ALAS…"></textarea>
   <div class="row" style="margin-top:8px">
     <button id="de-clip" type="button">Integrar dal clipboard</button>
@@ -843,9 +843,9 @@ let segs = [];      // {cues:[i...], src, tr}
 /* ---------- Direcziun: RM → DE u DE → RM ---------- */
 const ALAS_A = '<a href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS</a>';
 const TXT = {
-  rmde: { tab:'RM <em>→</em> DE', src:'rumantsch', tr:'Tudestg (frasa entira)', ph:'Translaziun tudestga dad ALAS…', lang:'de', suf:'DE',
+  rmde: { tab:'RM <em>⇄</em> DE', src:'rumantsch', tr:'Tudestg (frasa entira)', ph:'Translaziun tudestga dad ALAS…', lang:'de', suf:'DE',
     s2:`Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en ${ALAS_A} (idiom → tudestg), copiar il resultat ed l'integrar sutvart. Tar idioms maschadads simplamain tscherner il pli frequent u translatar ils blocs separadamain.` },
-  derm: { tab:'DE <em>→</em> RM', src:'tudestg', tr:'Rumantsch (frasa entira)', ph:'Translaziun rumantscha dad ALAS…', lang:'rm', suf:'RM',
+  derm: { tab:'RM <em>⇄</em> DE', src:'tudestg', tr:'Rumantsch (frasa entira)', ph:'Translaziun rumantscha dad ALAS…', lang:'rm', suf:'RM',
     s2:`Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en ${ALAS_A} (tudestg → rumantsch), copiar il resultat ed l'integrar sutvart. En ALAS scheglias ti l'idiom giavischà.` }
 };
 let dir = 'rmde';
@@ -917,10 +917,23 @@ function renderChunks(){
     const b=document.createElement('button'); b.textContent='Copiar & avrir ALAS';
     // kopiert den Block und öffnet ALAS immer im selben Tab (Name «alas»), damit nicht viele Tabs entstehen
     b.onclick=async()=>{ try{ await navigator.clipboard.writeText(txt); }catch(e){ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-      window.open('https://alas.liarumantscha.ch/','alas'); b.textContent='✓ Copià – integrar en ALAS'; d.classList.add('done'); };
+      alasWin=window.open('https://alas.liarumantscha.ch/','alas'); alasSent=txt.trim(); b.textContent='✓ Copià – integrar en ALAS'; d.classList.add('done'); };
     d.appendChild(b); box.appendChild(d);
   });
 }
+
+/* ALAS-Tab automatisch schliessen: sobald man zurück im Studio ist und die Zwischenablage ein neuer Text enthält, wird er integriert und der ALAS-Tab geschlossen */
+let alasWin=null, alasSent='';
+async function takeBackFromAlas(){
+  if (!alasWin) return;
+  if (alasWin.closed){ alasWin=null; return; }
+  let t=''; try{ t=(await navigator.clipboard.readText()||'').replace(/\r/g,'').trim(); }catch(e){ return; }
+  if (!t || t===alasSent) return;
+  try{ alasWin.close(); }catch(e){}
+  alasWin=null; $('clip').click();
+}
+window.addEventListener('focus',takeBackFromAlas);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) takeBackFromAlas(); });
 
 /* ---------- Verteilen & Umbrechen ---------- */
 const BAD_END = new Set(['der','die','das','den','dem','des','ein','eine','einen','einem','einer','eines','und','oder','aber','zu','zum','zur','im','in','am','an','auf','mit','von','vom','für','bei','nach','aus','über','unter','vor','wie','als','dass','weil','wenn','ob','sehr','nicht','kein','keine','mein','meine','sein','seine','ihr','ihre','unser','unsere','dieser','diese','dieses','ich','du','er','sie','es','wir','man']);
