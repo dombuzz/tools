@@ -1,22 +1,502 @@
 [
  {
-  "n": "Test-Vopna 1",
-  "f": "vopna-1.png"
+  "n": "Alvra (Albula)",
+  "f": "Alvra_Albula.png",
+  "k": "Alvra"
  },
  {
-  "n": "Test-Vopna 2",
-  "f": "vopna-2.png"
+  "n": "Andeer",
+  "f": "Andeer.png",
+  "k": "Andeer"
  },
  {
-  "n": "Test-Vopna 3",
-  "f": "vopna-3.png"
+  "n": "Arosa",
+  "f": "Arosa.png",
+  "k": "Arosa"
  },
  {
-  "n": "Test-Vopna 4",
-  "f": "vopna-4.png"
+  "n": "Avers",
+  "f": "Avers.png",
+  "k": "Avers"
  },
  {
-  "n": "Test-Vopna 5",
-  "f": "vopna-5.png"
+  "n": "Bever",
+  "f": "Bever.png",
+  "k": "Bever"
+ },
+ {
+  "n": "Bravuogn/Filisur (Bergün/Filisur)",
+  "f": "Bravuogn--Filisur_Bergün--Filisur.png",
+  "k": "Bravuogn-Filisur"
+ },
+ {
+  "n": "Bregaglia",
+  "f": "Bregaglia.png",
+  "k": "Bregaglia"
+ },
+ {
+  "n": "Breil (Breil/Brigels)",
+  "f": "Breil_Breil--Brigels.png",
+  "k": "Breil"
+ },
+ {
+  "n": "Brusio",
+  "f": "Brusio.png",
+  "k": "Brusio"
+ },
+ {
+  "n": "Buseno",
+  "f": "Buseno.png",
+  "k": "Buseno"
+ },
+ {
+  "n": "Calanca",
+  "f": "Calanca.png",
+  "k": "Calanca"
+ },
+ {
+  "n": "Cama",
+  "f": "Cama.png",
+  "k": "Cama"
+ },
+ {
+  "n": "Castaneda",
+  "f": "Castaneda.png",
+  "k": "Castaneda"
+ },
+ {
+  "n": "Cazas",
+  "f": "Cazas.png",
+  "k": "Cazas"
+ },
+ {
+  "n": "Churwalden",
+  "f": "Churwalden.png",
+  "k": "Churwalden"
+ },
+ {
+  "n": "Claustra (Klosters)",
+  "f": "Claustra_Klosters.png",
+  "k": "Claustra"
+ },
+ {
+  "n": "Conters (Conters i.P.)",
+  "f": "Conters_Conters-i.P.png",
+  "k": "Conters"
+ },
+ {
+  "n": "Cuira (Chur)",
+  "f": "Cuira_Chur.png",
+  "k": "Cuira"
+ },
+ {
+  "n": "Domat (Domat/Ems)",
+  "f": "Domat_Domat--Ems.png",
+  "k": "Domat"
+ },
+ {
+  "n": "Falera",
+  "f": "Falera.png",
+  "k": "Falera"
+ },
+ {
+  "n": "Farera (Ferrera)",
+  "f": "Farera_Ferrera.png",
+  "k": "Farera"
+ },
+ {
+  "n": "Farschno (Fürstenau)",
+  "f": "Farschno_Fuerstenau.png",
+  "k": "Farschno"
+ },
+ {
+  "n": "Favugn (Felsberg)",
+  "f": "Favugn_Felsberg.png",
+  "k": "Favugn"
+ },
+ {
+  "n": "Fideris",
+  "f": "Fideris.png",
+  "k": "Fideris"
+ },
+ {
+  "n": "Flem (Flims)",
+  "f": "Flem_Flims.png",
+  "k": "Flem"
+ },
+ {
+  "n": "Flerden",
+  "f": "Flerden.png",
+  "k": "Flerden"
+ },
+ {
+  "n": "Fläsch",
+  "f": "Flaesch.png",
+  "k": "Flaesch"
+ },
+ {
+  "n": "Furna",
+  "f": "Furna.png",
+  "k": "Furna"
+ },
+ {
+  "n": "Glion (Ilanz/Glion)",
+  "f": "Glion_Ilanz--Glion.png",
+  "k": "Glion"
+ },
+ {
+  "n": "Grono",
+  "f": "Grono.png",
+  "k": "Grono"
+ },
+ {
+  "n": "Grüsch",
+  "f": "Gruesch.png",
+  "k": "Gruesch"
+ },
+ {
+  "n": "Haldenstein",
+  "f": "Haldenstein.png",
+  "k": "Haldenstein"
+ },
+ {
+  "n": "Jenaz",
+  "f": "Jenaz.png",
+  "k": "Jenaz"
+ },
+ {
+  "n": "Jenins",
+  "f": "Jenins.png",
+  "k": "Jenins"
+ },
+ {
+  "n": "Küblis",
+  "f": "Kueblis.png",
+  "k": "Kueblis"
+ },
+ {
+  "n": "La Punt Chamues-ch",
+  "f": "La-Punt-Chamues-ch.png",
+  "k": "La-Punt-Chamues-ch"
+ },
+ {
+  "n": "Laax",
+  "f": "Laax.png",
+  "k": "Laax"
+ },
+ {
+  "n": "Landquart",
+  "f": "Landquart.png",
+  "k": "Landquart"
+ },
+ {
+  "n": "Lantsch (Lantsch/Lenz)",
+  "f": "Lantsch_Lantsch--Lenz.png",
+  "k": "Lantsch"
+ },
+ {
+  "n": "Lostallo",
+  "f": "Lostallo.png",
+  "k": "Lostallo"
+ },
+ {
+  "n": "Lumnezia",
+  "f": "Lumnezia.png",
+  "k": "Lumnezia"
+ },
+ {
+  "n": "Luzein",
+  "f": "Luzein.png",
+  "k": "Luzein"
+ },
+ {
+  "n": "Madulain",
+  "f": "Madulain.png",
+  "k": "Madulain"
+ },
+ {
+  "n": "Maiavilla (Maienfeld)",
+  "f": "Maiavilla_Maienfeld.png",
+  "k": "Maiavilla"
+ },
+ {
+  "n": "Malans",
+  "f": "Malans.png",
+  "k": "Malans"
+ },
+ {
+  "n": "Masein",
+  "f": "Masein.png",
+  "k": "Masein"
+ },
+ {
+  "n": "Medel (Lucmagn)",
+  "f": "Medel-(Lucmagn).png",
+  "k": "Medel-(Lucmagn)"
+ },
+ {
+  "n": "Mesocco",
+  "f": "Mesocco.png",
+  "k": "Mesocco"
+ },
+ {
+  "n": "Muster (Disentis/Muster)",
+  "f": "Muster_Disentis--Muster.png",
+  "k": "Muster"
+ },
+ {
+  "n": "Panaduz (Bonaduz)",
+  "f": "Panaduz_Bonaduz.png",
+  "k": "Panaduz"
+ },
+ {
+  "n": "Poschiavo",
+  "f": "Poschiavo.png",
+  "k": "Poschiavo"
+ },
+ {
+  "n": "Puntraschigna (Pontresina)",
+  "f": "Puntraschigna_Pontresina.png",
+  "k": "Puntraschigna"
+ },
+ {
+  "n": "Razen (Rhäzüns)",
+  "f": "Razen_Rhaezuens.png",
+  "k": "Razen"
+ },
+ {
+  "n": "Rongellen",
+  "f": "Rongellen.png",
+  "k": "Rongellen"
+ },
+ {
+  "n": "Rossa",
+  "f": "Rossa.png",
+  "k": "Rossa"
+ },
+ {
+  "n": "Rothenbrunnen",
+  "f": "Rothenbrunnen.png",
+  "k": "Rothenbrunnen"
+ },
+ {
+  "n": "Roveredo",
+  "f": "Roveredo.png",
+  "k": "Roveredo"
+ },
+ {
+  "n": "S-chanf",
+  "f": "S-chanf.png",
+  "k": "S-chanf"
+ },
+ {
+  "n": "Sagogn",
+  "f": "Sagogn.png",
+  "k": "Sagogn"
+ },
+ {
+  "n": "Samedan",
+  "f": "Samedan.png",
+  "k": "Samedan"
+ },
+ {
+  "n": "Samignun (Samnaun)",
+  "f": "Samignun_Samnaun.png",
+  "k": "Samignun"
+ },
+ {
+  "n": "San Murezzan (St. Moritz)",
+  "f": "San-Murezzan_St.Moritz.png",
+  "k": "San-Murezzan"
+ },
+ {
+  "n": "San Vittore",
+  "f": "San-Vittore.png",
+  "k": "San-Vittore"
+ },
+ {
+  "n": "Santa Maria i.C.",
+  "f": "Santa-Maria-i.C.png",
+  "k": "Santa-Maria-i.C"
+ },
+ {
+  "n": "Scharans",
+  "f": "Scharans_Scharans.png",
+  "k": "Scharans"
+ },
+ {
+  "n": "Schiers",
+  "f": "Schiers.png",
+  "k": "Schiers"
+ },
+ {
+  "n": "Schlarigna (Celerina)",
+  "f": "Schlarigna_Celerina.png",
+  "k": "Schlarigna"
+ },
+ {
+  "n": "Schluein",
+  "f": "Schluein.png",
+  "k": "Schluein"
+ },
+ {
+  "n": "Schmitten",
+  "f": "Schmitten.png",
+  "k": "Schmitten"
+ },
+ {
+  "n": "Scuol",
+  "f": "Scuol.png",
+  "k": "Scuol"
+ },
+ {
+  "n": "Seewis",
+  "f": "Seewis.png",
+  "k": "Seewis"
+ },
+ {
+  "n": "Segl (Sils i.E.)",
+  "f": "Segl_Sils-i.E.png",
+  "k": "Segl"
+ },
+ {
+  "n": "Seglias (Sils i.D.)",
+  "f": "Seglias_Sils-i.D.png",
+  "k": "Seglias"
+ },
+ {
+  "n": "Silvaplauna (Silvaplana)",
+  "f": "Silvaplauna_Silvaplana.png",
+  "k": "Silvaplauna"
+ },
+ {
+  "n": "Soazza",
+  "f": "Soazza.png",
+  "k": "Soazza"
+ },
+ {
+  "n": "Stussavgia (Safiental)",
+  "f": "Stussavgia_Safiental.png",
+  "k": "Stussavgia"
+ },
+ {
+  "n": "Sufers",
+  "f": "Sufers.png",
+  "k": "Sufers"
+ },
+ {
+  "n": "Sumvitg",
+  "f": "Sumvitg.png",
+  "k": "Sumvitg"
+ },
+ {
+  "n": "Sursaissa (Obersaxen-Mundaun)",
+  "f": "Sursaissa_Obersaxen-Mundaun.png",
+  "k": "Sursaissa"
+ },
+ {
+  "n": "Surses",
+  "f": "Surses.png",
+  "k": "Surses"
+ },
+ {
+  "n": "Tavau (Davos)",
+  "f": "Tavau_Davos.png",
+  "k": "Tavau"
+ },
+ {
+  "n": "Trimmis",
+  "f": "Trimmis.png",
+  "k": "Trimmis"
+ },
+ {
+  "n": "Trin",
+  "f": "Trin.png",
+  "k": "Trin"
+ },
+ {
+  "n": "Trun",
+  "f": "Trun.png",
+  "k": "Trun"
+ },
+ {
+  "n": "Tschappina",
+  "f": "Tschappina.png",
+  "k": "Tschappina"
+ },
+ {
+  "n": "Tujetsch",
+  "f": "Tujetsch.png",
+  "k": "Tujetsch"
+ },
+ {
+  "n": "Tumein (Tamins)",
+  "f": "Tumein_Tamins.png",
+  "k": "Tumein"
+ },
+ {
+  "n": "Tumleastga (Domleschg)",
+  "f": "Tumleastga_Domleschg.png",
+  "k": "Tumleastga"
+ },
+ {
+  "n": "Tusaun (Thusis)",
+  "f": "Tusaun_Thusis.png",
+  "k": "Tusaun"
+ },
+ {
+  "n": "Untervaz",
+  "f": "Untervaz.png",
+  "k": "Untervaz"
+ },
+ {
+  "n": "Urmein",
+  "f": "Urmein.png",
+  "k": "Urmein"
+ },
+ {
+  "n": "Val (Vals)",
+  "f": "Val_Vals.png",
+  "k": "Val"
+ },
+ {
+  "n": "Val Müstair",
+  "f": "Val-Muestair.png",
+  "k": "Val-Muestair"
+ },
+ {
+  "n": "Valragn (Rheinwald)",
+  "f": "Valragn_Rheinwald.png",
+  "k": "Valragn"
+ },
+ {
+  "n": "Valsot",
+  "f": "Valsot.png",
+  "k": "Valsot"
+ },
+ {
+  "n": "Vaz (Vaz/Obervaz)",
+  "f": "Vaz_Vaz--Obervaz.png",
+  "k": "Vaz"
+ },
+ {
+  "n": "Zernez",
+  "f": "Zernez.png",
+  "k": "Zernez"
+ },
+ {
+  "n": "Ziran-Reschen (Zillis-Reischen)",
+  "f": "Ziran-Reschen_Zillis-Reischen.png",
+  "k": "Ziran-Reschen"
+ },
+ {
+  "n": "Zizers",
+  "f": "Zizers.png",
+  "k": "Zizers"
+ },
+ {
+  "n": "Zuoz",
+  "f": "Zuoz.png",
+  "k": "Zuoz"
  }
 ]

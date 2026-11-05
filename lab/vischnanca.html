@@ -352,7 +352,7 @@ async function initVopnas(){
     if(!r.ok)throw 0;
     const list=await r.json();
     list.sort((a,b)=>a.n.localeCompare(b.n,'de'));
-    list.forEach(v=>{const o=document.createElement('option');o.value=VOPNA_DIR+encodeURIComponent(v.f);o.textContent=v.n;sel.appendChild(o)});
+    list.forEach(v=>{const o=document.createElement('option');o.value=VOPNA_DIR+encodeURIComponent(v.f);o.textContent=v.n;o.dataset.k=v.k||'';sel.appendChild(o)});
   }catch(e){}
   sel.onchange=()=>{crest.src=sel.value||null;render()};
 }
@@ -390,7 +390,7 @@ $('#fontFile').onchange=async e=>{
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 function fileName(){
   const sel=$('#vopna'),o=sel.selectedOptions[0];
-  let name=sel.value&&o?o.textContent.replace(/^Agena:\s*/,'').replace(/\.[a-z0-9]+$/i,''):'';
+  let name=sel.value&&o?(o.dataset.k||o.textContent.replace(/^Agena:\s*/,'').replace(/\.[a-z0-9]+$/i,'')):'';
   name=name.replace(/[\\\/:*?"<>|]+/g,'').trim().replace(/\s+/g,'-');
   const d=new Date(),p=n=>String(n).padStart(2,'0');
   const date=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
