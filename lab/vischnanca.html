@@ -107,9 +107,10 @@ details.more[open]>summary::before{transform:rotate(90deg)}
 .thumb .x:hover{color:var(--accent);border-color:var(--accent)}
 select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text);font:inherit;font-size:.9rem}
 select:focus{outline:none;border-color:var(--accent)}
-.fontrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:.85rem;color:var(--muted)}
+.fontrow{display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:.85rem;color:var(--muted)}
 .fontrow .ok{color:var(--ok)}
 .fontrow .no{color:var(--warn)}
+.fontrow code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text)}
 </style>
 </head>
 <body>
@@ -367,7 +368,7 @@ $('#wpFile').onchange=e=>{
 
 /* ---------- Scrittira ---------- */
 function fontState(ok){
-  $('#fontState').innerHTML=ok?'<span class="ok">✓ Scrittira «SRG SSR Type Bold» chargada</span>':'<span class="no">Scrittira «SRG SSR Type Bold» manca – igl è duvrà Arial.</span> Chargiar SRGSSRType.ttf (Bold) ina giada, ella resta memorisada en quest browser.';
+  $('#fontState').innerHTML=ok?'<span class="ok">✓ Scrittira «SRG SSR Type Bold» chargada</span>':'<span class="no">Scrittira «SRG SSR Type Bold» manca – igl è duvrà Arial.</span> Chargiar SRGSSRType.ttf (Bold) ina giada, ella resta memorisada en quest browser.<br>Copiar quella or da <code>C:\\Windows\\Fonts</code> sin Desktop, Downloads u auter ordinatur e chargia da là cun cliccar sin quest buttun:';
   $('#fontBtn').firstChild.textContent=ok?'Midar scrittira':'Chargiar scrittira';
 }
 async function useFont(buf){
