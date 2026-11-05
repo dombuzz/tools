@@ -149,6 +149,8 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 .tabgroups .seg{margin-top:0}
 .tg{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .tgl{font-size:.75rem;color:var(--muted);padding-left:2px}
+.tgl .exp{color:var(--lab,#ff9a3c)}
+#modeSeg2 button:hover,#modeSeg2 button[aria-pressed="true"]{background:var(--lab,#ff9a3c)!important;background-image:linear-gradient(90deg,color-mix(in srgb,var(--lab,#ff9a3c) 82%,#000),var(--lab,#ff9a3c) 70%)!important;border-color:var(--lab,#ff9a3c)!important;color:var(--on-accent,#121214)!important}
 .stage.grad{background:linear-gradient(135deg,#ECECE5 0%,#F3F3EE 55%,#E3E2D8 100%)}
 .stage.hasbg{cursor:grab}.stage.hasbg:active{cursor:grabbing}
 .xlist{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--field)}
@@ -174,7 +176,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <p class="lead">Grafica per votaziuns communalas, chantunalas u federalas.</p>
     <div class="tabgroups">
       <div class="tg"><div class="seg" id="modeSeg" role="group" aria-label="Grafica"></div></div>
-      <div class="tg"><span class="tgl">Chartas simplifitgadas (experimental)</span><div class="seg" id="modeSeg2" role="group" aria-label="Chartas simplifitgadas (experimental)"></div></div>
+      <div class="tg"><span class="tgl">Chartas simplifitgadas <span class="exp">(experimental)</span></span><div class="seg" id="modeSeg2" role="group" aria-label="Chartas simplifitgadas (experimental)"></div></div>
     </div>
   </div>
   <div class="fontbox fontrow" id="fontBox">
@@ -240,7 +242,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <div class="mode" data-mode="svz">
       <div class="panel">
         <h2 class="ph"><span class="num">1</span>Titel</h2>
-        <textarea id="sTitle" rows="2" aria-label="Titel">Iniziativa da neutralitad</textarea>
+        <textarea id="sTitle" rows="2" aria-label="Titel">Iniziativa da ...</textarea>
         <p class="hint">Il fund alv davos il titel s’adattescha al text.</p>
       </div>
       <div class="panel">
@@ -612,7 +614,7 @@ addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.vot
 let mode=MODES[0];
 function setMode(id){
   const q=String(id||'').toLowerCase();mode=MODES.find(m=>m.id===id||m.hash.toLowerCase()===q)||MODES[0];
-  $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode.id));
+  $$('#modeSeg button,#modeSeg2 button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode.id));
   $$('.mode').forEach(p=>p.hidden=!(p.dataset.mode||'').split(' ').includes(mode.id));
   if(mode.grp===2&&bg.src){bg=BG0();buildParcadi();syncZoom()} // Hintergrundbild entfernen, im Parcadi bleibt es
   if(mode.m&&mode.m.enter)mode.m.enter();
