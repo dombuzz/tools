@@ -5,6 +5,7 @@
 <meta name="color-scheme" content="dark light">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="/theme.js"></script>
+<script>if(/[?&]embed\b/.test(location.search))document.documentElement.classList.add("embed")</script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
 <meta name="description" content="Chartas da las vischnancas dad abstimmungen.gr.ch sco PNG en 4K (16:9) – per mintga votaziun, era per las futuras. Nagins links necessaris.">
@@ -60,6 +61,11 @@ h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
 h1 .acc{color:var(--acc)}
 .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
 .homelink:hover,.homelink:focus-visible{color:var(--accent)}
+.embed .homelink,.embed h1,.embed p.sub{display:none}
+.embed main{max-width:none;padding:0 0 8px}
+.embed #gear{top:6px;right:6px;z-index:2}
+.embed main>.card:first-of-type{padding-right:60px}
+.embed .themebtn,.embed .dbz-help,.embed .dbz-helpbox{display:none!important}
 </style>
 </head>
 <body>
@@ -299,6 +305,7 @@ async function files(list) {
   }
 }
 </script>
-<script src="/like.js" defer></script>
+<script>if(!/[?&]embed\b/.test(location.search)){var l=document.createElement("script");l.src="/like.js";l.defer=true;document.body.appendChild(l)}</script>
+<script>if(window.parent!==window){var postH=function(){parent.postMessage({votgrH:document.documentElement.scrollHeight},location.origin)};new ResizeObserver(postH).observe(document.body);addEventListener("load",postH)}</script>
 </body>
 </html>

@@ -133,22 +133,31 @@ textarea:focus{outline:none;border-color:var(--accent)}
 .seg{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;margin-top:14px}
 .seg button{background:transparent;color:var(--muted);border:none;padding:8px 16px;border-radius:7px;font:inherit;font-weight:600;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.fontbox{max-width:400px;font-size:.8rem;align-items:flex-end;text-align:right;gap:6px}
+.left{display:flex;flex-direction:column;gap:18px;min-width:0}
+.cnt iframe{width:100%;height:900px;border:0;display:block;background:transparent}
 .mode{display:flex;flex-direction:column;gap:18px}
 .g text.tx{white-space:pre}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header>
+<header class="top">
   <div>
     <a class="homelink" href="/">← Tools</a>
-    <h1>Graficas dumengias da <span class="acc">votaziuns</span></h1>
-    <p class="lead">Grafica per ina vischnanca u per tut la Svizra: funs, colurs, barras che dattan adina 100&nbsp;% e maioritad dals chantuns.</p>
+    <h1>Graficas <span class="acc">dumengias da votaziuns</span></h1>
+    <p class="lead">Grafica per votaziuns communalas, chantunalas u federalas: funs, colurs, travs che dattan adina 100%.</p>
     <div class="seg" id="modeSeg" role="group" aria-label="Grafica"></div>
+  </div>
+  <div class="fontbox fontrow" id="fontBox">
+    <span id="fontState"></span>
+    <label class="btn sm" id="fontBtn">Chargiar scrittiras<input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" multiple hidden></label>
   </div>
 </header>
 
-<div class="main">
+<div class="main" id="mainBox">
+  <div class="left">
   <div class="panel">
     <div class="stagebox"><div class="stage nobg" id="stage">
       <svg class="g" id="g" viewBox="0 0 1920 1080" preserveAspectRatio="none"></svg>
@@ -158,13 +167,16 @@ textarea:focus{outline:none;border-color:var(--accent)}
       <label class="chk"><input type="checkbox" id="transp"> PNG senza funs</label>
     </div>
     <p class="status" id="status" aria-live="polite"></p>
-    <div class="fontrow">
-      <span id="fontState"></span>
-      <label class="btn sm" id="fontBtn">Chargiar scrittiras<input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" multiple hidden></label>
-    </div>
     <p class="hint">Trair qua il maletg sin la surfatscha u integrar el cun Ctrl/Cmd+V: el daventa il funs e va en il Parcadi.</p>
   </div>
 
+    <div class="panel">
+      <h2 class="ph">Funs</h2>
+      <p class="hint" id="parcHint">Parcadi: maletgs memorisads en quest browser. Els na vegnan betg chargiads sin in server.</p>
+      <div class="thumbs" id="bgs"></div>
+      <div class="row"><label class="btn sm">Deponer maletgs<input type="file" id="bgFile" accept="image/*" multiple hidden></label></div>
+    </div>
+  </div>
   <div class="side">
     <!-- ===== Vischnanca ===== -->
     <div class="mode" data-mode="vis">
@@ -222,15 +234,9 @@ textarea:focus{outline:none;border-color:var(--accent)}
       </div>
     </div>
 
-    <!-- ===== gemeinsam ===== -->
-    <div class="panel">
-      <h2 class="ph"><span class="num" id="funsNum">3</span>Funs</h2>
-      <p class="hint" id="parcHint">Parcadi: maletgs memorisads en quest browser. Els na vegnan betg chargiads sin in server.</p>
-      <div class="thumbs" id="bgs"></div>
-      <div class="row"><label class="btn sm">Deponer maletgs<input type="file" id="bgFile" accept="image/*" multiple hidden></label></div>
-    </div>
   </div>
 </div>
+<section class="cnt" id="cntBox" hidden><iframe id="cntFrame" title="Chartas chantunalas"></iframe></section>
 </div>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -398,17 +404,17 @@ const SVZ=(()=>{
   function titleLayout(){
     const pt=+$('#sSize').value||40,fs=pt*12700*E,pitch=fs*1.4;
     mc.font=fontCss('l',fs);
-    const lines=[],raw=$('#sTitle').value;
-    if(!raw.trim())return {lines:[],fs,pitch};
+    const sp=mc.measureText(' ').width,lines=[],raw=$('#sTitle').value;
+    if(!raw.trim())return {lines:[],fs,pitch,sp};
     raw.split('\n').forEach(par=>{
       let cur='';
       par.split(/\s+/).filter(Boolean).forEach(w=>{
-        const t=cur?cur+' '+w:w,pre=!lines.length?' ':'';
-        if(!cur||mc.measureText(pre+t).width<=G.tw)cur=t;else{lines.push(cur);cur=w}
+        const t=cur?cur+' '+w:w;
+        if(!cur||mc.measureText(t).width+2*sp<=G.tw)cur=t;else{lines.push(cur);cur=w}
       });
       lines.push(cur);
     });
-    return {lines:lines.map((s,i)=>{const txt=(i===0?' ':'')+s;return {txt,w:s?mc.measureText(txt).width:0}}),fs,pitch};
+    return {lines:lines.map(s=>({txt:s,w:s?mc.measureText(s).width+2*sp:0})),fs,pitch,sp}; // links und rechts gleich viel Rand (Breite eines Leerzeichens)
   }
   function calcSM(){let b=0,r=0;cant.forEach(c=>{const v=HALF.has(c.k)?.5:1;if(c.c===BLUE)b+=v;else r+=v});const f=v=>String(v).replace('.',',');return [f(b),f(r)]}
   function scene(){
@@ -421,7 +427,7 @@ const SVZ=(()=>{
       if(l.w<=0)return;
       const base=G.ty+i*T.pitch+T.pitch*.7506;
       sc.push({t:'rect',x:G.tx,y:base-.976*T.fs,w:l.w,h:1.2705*T.fs,fill:'#fff'});
-      sc.push({t:'text',x:G.tx,y:base,fs:T.fs,font:'l',fill:INK,s:l.txt});
+      sc.push({t:'text',x:G.tx+T.sp,y:base,fs:T.fs,font:'l',fill:INK,s:l.txt});
     });
     // Maioritad dals chantuns: Ziffern 24 pt, Grundlinie 38,98 px unter der Blockoberkante, Tintenmitte = Blockmitte
     if($('#sSmOn').checked)[[BLUE,$('#sSmA').value],[RED,$('#sSmB').value]].forEach(([c,v],i)=>{
@@ -487,15 +493,18 @@ const SVZ=(()=>{
 
 /* ---------- Modi (erweiterbar: hier weitere Grafiken anhängen) ---------- */
 const MODES=[
-  {id:'vis',label:'Vischnanca',m:VIS,funs:3},
-  {id:'svz',label:'Svizra',m:SVZ,funs:5}
+  {id:'vis',label:'Communal',m:VIS},
+  {id:'cnt',label:'Chantunal',frame:'/votgr?embed=1'},
+  {id:'svz',label:'Federal',m:SVZ}
 ];
+addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.votgrH)$('#cntFrame').style.height=Math.ceil(e.data.votgrH)+'px'});
 let mode=MODES[0];
 function setMode(id){
   mode=MODES.find(m=>m.id===id)||MODES[0];
   $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode.id));
   $$('.mode').forEach(p=>p.hidden=p.dataset.mode!==mode.id);
-  $('#funsNum').textContent=mode.funs;
+  $('#mainBox').hidden=!mode.m;$('#cntBox').hidden=!!mode.m;$('#fontBox').hidden=!mode.m;
+  if(mode.frame){const f=$('#cntFrame');if(!f.getAttribute('src'))f.src=mode.frame}
   try{history.replaceState(null,'','#'+mode.id)}catch(e){}
   render();
 }
@@ -504,6 +513,7 @@ MODES.forEach(m=>{const b=document.createElement('button');b.type='button';b.dat
 /* ---------- Zeichnen (Vorschau = SVG, Export = Canvas, beide aus derselben Szene) ---------- */
 function el(n,a,t){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e}
 function render(){
+  if(!mode.m)return;
   const st=$('#stage');
   st.classList.toggle('nobg',!bg.src);
   st.style.backgroundImage=bg.src?`url("${bg.src}")`:'';
