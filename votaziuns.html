@@ -614,6 +614,7 @@ function setMode(id){
   const q=String(id||'').toLowerCase();mode=MODES.find(m=>m.id===id||m.hash.toLowerCase()===q)||MODES[0];
   $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode.id));
   $$('.mode').forEach(p=>p.hidden=!(p.dataset.mode||'').split(' ').includes(mode.id));
+  if(mode.grp===2&&bg.src){bg=BG0();buildParcadi();syncZoom()} // Hintergrundbild entfernen, im Parcadi bleibt es
   if(mode.m&&mode.m.enter)mode.m.enter();
   $('#mainBox').hidden=!mode.m;$('#cntBox').hidden=!!mode.m;$('#fontBox').hidden=!mode.m;
   if(mode.frame){const f=$('#cntFrame');if(!f.getAttribute('src'))f.src=mode.frame}
@@ -621,6 +622,15 @@ function setMode(id){
   render();
 }
 MODES.forEach(m=>{const b=document.createElement('button');b.type='button';b.dataset.mode=m.id;b.textContent=m.label;b.setAttribute('aria-pressed','false');b.onclick=()=>setMode(m.hash);$(m.grp===2?'#modeSeg2':'#modeSeg').appendChild(b)});
+/* Beschriftung «Chartas simplifitgadas (experimental)» so verkleinern, dass sie genau so breit ist wie die Tabbox darunter */
+function fitTgl(){
+  const l=document.querySelector('#modeSeg2').parentNode.querySelector('.tgl'),sg=$('#modeSeg2');
+  if(!l||!sg||!sg.offsetWidth)return;
+  l.style.whiteSpace='nowrap';l.style.paddingLeft='0';l.style.fontSize='100px';
+  const w=l.getBoundingClientRect().width;
+  if(w)l.style.fontSize=(100*sg.offsetWidth/w)+'px';
+}
+fitTgl();addEventListener('load',fitTgl);addEventListener('resize',fitTgl);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitTgl);
 
 /* ---------- Zeichnen (Vorschau = SVG, Export = Canvas, beide aus derselben Szene) ---------- */
 function el(n,a,t){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e}
@@ -649,6 +659,7 @@ let parcadi=[],urls=new Map(),parcOk=true;
 const urlOf=it=>{if(!urls.has(it.id))urls.set(it.id,URL.createObjectURL(it.blob));return urls.get(it.id)};
 const BG0=()=>({src:null,id:null,iw:0,ih:0,z:1,ox:0,oy:0});
 async function setBg(it){
+  if(it&&mode.grp===2)return; // Chartas simplifitgadas: nie ein Hintergrundbild, Maletgs bleschan en il Parcadi
   if(!it)bg=BG0();
   else{const src=urlOf(it);let iw=0,ih=0;try{const im=await loadImg(src);iw=im.naturalWidth;ih=im.naturalHeight}catch(e){}bg={src,id:it.id,iw,ih,z:1,ox:0,oy:0}}
   buildParcadi();render();syncZoom();
@@ -693,7 +704,7 @@ async function addImages(files){
     try{id=await idbAdd(f.name||'Maletg',f)}catch(e){parcOk=false;id=-(parcadi.length+1)-Date.now()}
     const it={id,name:f.name||'Maletg',blob:f};parcadi.push(it);last=it;
   }
-  if(last)await setBg(last);else{buildParcadi();render()}
+  if(last&&mode.grp!==2)await setBg(last);else{buildParcadi();render()}
 }
 $('#bgFile').onchange=e=>{addImages([...e.target.files]);e.target.value=''};
 const stage=$('#stage');
