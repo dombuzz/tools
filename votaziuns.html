@@ -145,6 +145,23 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 .xtra{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
 .xr{display:inline-flex;gap:12px;align-items:center}
 .mode{display:flex;flex-direction:column;gap:18px}
+.tabgroups{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;margin-top:14px}
+.tabgroups .seg{margin-top:0}
+.tg{display:flex;flex-direction:column;gap:6px}
+.tgl{font-size:.75rem;color:var(--muted);padding-left:2px}
+.stage.grad{background:linear-gradient(135deg,#ECECE5 0%,#F3F3EE 55%,#E3E2D8 100%)}
+.stage.hasbg{cursor:grab}.stage.hasbg:active{cursor:grabbing}
+.xlist{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+.xrow{display:grid;grid-template-columns:minmax(0,1fr) 26px 26px 26px;gap:6px;align-items:center;padding:4px 8px;font-size:.86rem;border-bottom:1px solid var(--line)}
+.xrow:last-child{border-bottom:0}
+.xrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xsq{width:22px;height:22px;border-radius:5px;border:2px solid transparent;cursor:pointer;padding:0;opacity:.35}
+.xsq:hover{opacity:.8}.xsq.on{opacity:1;border-color:var(--text)}
+.xsq.b{background:#0061AD}.xsq.rd{background:#AF001D}.xsq.dk{background:#333}
+.xcnt{font-size:.85rem;color:var(--muted)}.xcnt b{color:var(--text)}
+.xdot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+.xtrow{display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px;align-items:center}
+.xtrow .c{width:12px;height:12px;border-radius:3px;display:inline-block;margin-right:6px}
 .g text.tx{white-space:pre}
 </style>
 </head>
@@ -155,7 +172,10 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <a class="homelink" href="/">← Tools</a>
     <h1>Graficas <span class="acc">dumengias da votaziuns</span></h1>
     <p class="lead">Grafica per votaziuns communalas, chantunalas u federalas.</p>
-    <div class="seg" id="modeSeg" role="group" aria-label="Grafica"></div>
+    <div class="tabgroups">
+      <div class="tg"><div class="seg" id="modeSeg" role="group" aria-label="Grafica"></div></div>
+      <div class="tg"><span class="tgl">Chartas simplifitgadas (experimental)</span><div class="seg" id="modeSeg2" role="group" aria-label="Chartas simplifitgadas (experimental)"></div></div>
+    </div>
   </div>
   <div class="fontbox fontrow" id="fontBox">
     <span id="fontState"></span>
@@ -189,6 +209,8 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
       <p class="hint" id="parcHint">Parcadi: maletgs memorisads en quest browser. Els na vegnan betg chargiads sin in server.</p>
       <div class="thumbs" id="bgs"></div>
       <div class="row"><label class="btn sm">Deponer maletgs<input type="file" id="bgFile" accept="image/*" multiple hidden></label></div>
+      <div class="row"><label class="cap xr" style="flex:1">Zoom <input type="range" id="bgZ" min="1" max="8" step="0.01" value="1" style="flex:1" disabled></label><button class="btn sm" id="bgReset" type="button" disabled>Reset</button></div>
+      <p class="hint">Rotella dal maus sin la charta = zoom, trair = spustar il maletg.</p>
     </div>
   </div>
   <div class="side">
@@ -242,10 +264,35 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
       </div>
     </div>
 
+    <!-- ===== Chartas simplifitgadas ===== -->
+    <div class="mode" data-mode="sgr sch">
+      <div class="panel">
+        <h2 class="ph"><span class="num">1</span>Titel</h2>
+        <textarea id="xTitle" rows="2" aria-label="Titel"></textarea>
+        <input type="text" id="xSrc" value="Funtauna: " aria-label="Funtauna" placeholder="Funtauna: …">
+        <p class="hint">Titel (ina lingia per pezza) e lingia da la funtauna.</p>
+      </div>
+      <div class="panel">
+        <h2 class="ph"><span class="num">2</span><span id="xLstT">Vischnancas</span></h2>
+        <input type="text" id="xQ" placeholder="Tschertgar …" aria-label="Tschertgar">
+        <div class="xlist" id="xList"></div>
+        <div class="xcnt" id="xCnt"></div>
+        <div class="row"><button class="btn sm" id="xReset" type="button">Dismetter tut las colurs</button></div>
+        <p class="hint">Colurar cun cliccar sin ina part en la charta u en la glista: blau, cotschen, stgir, puspè vid.</p>
+      </div>
+      <div class="panel">
+        <h2 class="ph"><span class="num">3</span>Legenda</h2>
+        <div class="xtrow"><span><i class="c" style="background:#0061AD"></i>Blau</span><input type="text" id="xL1" value="Legenda punct A" aria-label="Legenda blau"></div>
+        <div class="xtrow"><span><i class="c" style="background:#AF001D"></i>Cotschen</span><input type="text" id="xL2" value="Legenda punct B" aria-label="Legenda cotschen"></div>
+        <div class="xtrow"><span><i class="c" style="background:#333"></i>Stgir</span><input type="text" id="xL3" value="Legenda punct C" aria-label="Legenda stgir"></div>
+        <p class="hint">Ina lingia svida zuppa l’entrada.</p>
+      </div>
+    </div>
   </div>
 </div>
 <section class="cnt" id="cntBox" hidden><iframe id="cntFrame" title="Chartas chantunalas"></iframe></section>
 </div>
+<script src="/chartas.js"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const NS='http://www.w3.org/2000/svg';
@@ -255,7 +302,7 @@ const BLUE='#0061AD',RED='#AF001D',INK='#3B3B34',TXT='#F2F2ED';
 const FB='SRG SSR Type Bold',FL='SRG SSR Type Light';
 const SB='"'+FB+'","SRG SSR Type",Arial,Helvetica,sans-serif',SL='"'+FL+'","SRG SSR Type",Arial,Helvetica,sans-serif';
 const have={bold:false,light:false};
-let bg={src:null,id:null};
+let bg={src:null,id:null,iw:0,ih:0,z:1,ox:0,oy:0};
 
 /* ---------- Memoria dal browser (IndexedDB, medema datoteca sco las singulas grafica-tools dal Lab) ---------- */
 let dbp=null;
@@ -499,11 +546,67 @@ const SVZ=(()=>{
   return {scene,fileTitle,toggle};
 })();
 
+/* =====================================================================
+   Modus «Chartas simplifitgadas» (experimental): Bündner Gemeinden + Schweizer Kantone
+   ===================================================================== */
+const SIM=(()=>{
+  const LAKE='#BCDDF1',NEUT='#ADACA3',DARK='#333333',AREA={x0:572,y0:107,x1:1826,y1:988};
+  const CNAME={JU:'Giura',GE:'Genevra',NE:'Neuchâtel',VS:'Vallais',VD:'Vad',TI:'Tessin',TG:'Turgovia',AG:'Argovia',GR:'Grischun',SG:'Son Gagl',AI:'Appenzell Dadens',AR:'Appenzell Dadora',SH:'Schaffusa',BS:'Basilea-Citad',BL:'Basilea-Champagna',SO:'Soloturn',FR:'Friburg',ZG:'Zug',GL:'Glaruna',NW:'Nidwald',OW:'Obwald',SZ:'Sviz',UR:'Uri',LU:'Lucerna',BE:'Berna',ZH:'Turitg'};
+  const WORD={gr:'Vischnancas',ch:'Chantuns'};
+  const state={gr:{sel:{},title:'Charta simplifitgada GR vischnancas'},ch:{sel:{},title:'Charta simplifitgada CH'}};
+  let cur='gr';
+  const xf=(d,s,tx,ty)=>d.replace(/(-?\d*\.?\d+),(-?\d*\.?\d+)/g,(m,x,y)=>(+x*s+tx).toFixed(1)+' '+(+y*s+ty).toFixed(1));
+  const data={};
+  for(const key of ['gr','ch']){
+    const m=CHARTAS[key],bb=m.bb,w=bb[2]-bb[0],h=bb[3]-bb[1],aw=AREA.x1-AREA.x0,ah=AREA.y1-AREA.y0,s=Math.min(aw/w,ah/h),W=w*s,H=h*s;
+    const x0=AREA.x1-W,y0=key==='gr'?AREA.y0+(ah-H)/2:AREA.y1-H,tx=x0-s*bb[0],ty=y0-s*bb[1];
+    data[key]={p:m.p.map(p=>({id:p.id,n:key==='ch'?(CNAME[p.id]||p.id)+' ('+p.id+')':p.n,d:xf(p.d,s,tx,ty)})),lk:(m.lk||[]).map(d=>xf(d,s,tx,ty))};
+  }
+  const col=id=>({b:BLUE,r:RED,d:DARK})[state[cur].sel[id]]||NEUT;
+  function scene(){
+    const st=state[cur],L=[];
+    data[cur].p.forEach(p=>L.push({t:'path',d:p.d,fill:col(p.id),k:p.id,tip:p.n,stroke:'#fff',sw:1.6}));
+    data[cur].lk.forEach(d=>L.push({t:'path',d,fill:LAKE,noclick:true}));
+    st.title.split('\n').map(x=>x.replace(/\s+$/,'')).filter(x=>x.trim()).forEach((x,i)=>L.push({t:'text',s:x,x:96,y:216+i*96,fs:80,fill:INK,font:'l'}));
+    [[BLUE,'#xL1'],[RED,'#xL2'],[DARK,'#xL3']].map(([c,id],i)=>({c,s:$(id).value.trim(),y:264+i*99})).filter(q=>q.s).forEach(q=>{
+      L.push({t:'rect',x:96,y:q.y,w:70,h:70,fill:q.c});
+      L.push({t:'text',s:q.s,x:190,y:q.y+48,fs:36,fill:INK,font:'l'});
+    });
+    const src=$('#xSrc').value.trim();
+    if(src&&src!=='Funtauna:')L.push({t:'text',s:src,x:96,y:885,fs:28,fill:INK,font:'l'});
+    return L;
+  }
+  const fileTitle=()=>state[cur].title;
+  function toggle(id){
+    const s=state[cur].sel,c=s[id];
+    if(!c)s[id]='b';else if(c==='b')s[id]='r';else if(c==='r')s[id]='d';else delete s[id];
+    list();render();
+  }
+  function setC(id,c){const s=state[cur].sel;if(s[id]===c)delete s[id];else s[id]=c;list();render()}
+  const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  function list(){
+    const q=$('#xQ').value.trim().toLowerCase(),s=state[cur].sel;
+    const items=data[cur].p.filter(p=>!q||p.n.toLowerCase().includes(q)).slice().sort((a,b)=>a.n.localeCompare(b.n,'de'));
+    $('#xList').innerHTML=items.map(p=>`<div class="xrow" data-id="${esc(p.id)}"><span class="nm" title="${esc(p.n)}">${esc(p.n)}</span><button class="xsq b${s[p.id]==='b'?' on':''}" data-c="b" type="button" aria-label="Blau: ${esc(p.n)}"></button><button class="xsq rd${s[p.id]==='r'?' on':''}" data-c="r" type="button" aria-label="Cotschen: ${esc(p.n)}"></button><button class="xsq dk${s[p.id]==='d'?' on':''}" data-c="d" type="button" aria-label="Stgir: ${esc(p.n)}"></button></div>`).join('')||'<div class="xrow"><span class="nm">Nagins resultats</span></div>';
+    const n=c=>Object.values(s).filter(x=>x===c).length,tot=data[cur].p.length,b=n('b'),r=n('r'),d=n('d');
+    $('#xCnt').innerHTML=`<i class="xdot" style="background:${BLUE}"></i><b>${b}</b> &nbsp; <i class="xdot" style="background:${RED}"></i><b>${r}</b> &nbsp; <i class="xdot" style="background:${DARK}"></i><b>${d}</b> &nbsp; betg colurà <b>${tot-b-r-d}</b> (total ${tot})`;
+  }
+  $('#xList').addEventListener('click',e=>{const b=e.target.closest('.xsq');if(b)setC(b.closest('.xrow').dataset.id,b.dataset.c)});
+  $('#xQ').oninput=list;
+  $('#xReset').onclick=()=>{state[cur].sel={};list();render()};
+  $('#xTitle').oninput=()=>{state[cur].title=$('#xTitle').value;render()};
+  ['#xSrc','#xL1','#xL2','#xL3'].forEach(i=>$(i).oninput=render);
+  const mk=key=>({scene,fileTitle,toggle,grad:true,enter(){cur=key;$('#xTitle').value=state[key].title;$('#xLstT').textContent=WORD[key];$('#xQ').value='';list()}});
+  return {gr:mk('gr'),ch:mk('ch')};
+})();
+
 /* ---------- Modi (erweiterbar: hier weitere Grafiken anhängen) ---------- */
 const MODES=[
   {id:'vis',hash:'com',label:'Communal',m:VIS},
   {id:'cnt',hash:'GR',label:'Chantunal',frame:'/votgr?embed=1'},
-  {id:'svz',hash:'CH',label:'Federal',m:SVZ}
+  {id:'svz',hash:'CH',label:'Federal',m:SVZ},
+  {id:'sgr',hash:'sGR',label:'Grischun',m:SIM.gr,grp:2},
+  {id:'sch',hash:'sCH',label:'Svizra',m:SIM.ch,grp:2}
 ];
 addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1).toLowerCase();if(h!==mode.hash.toLowerCase())setMode(h)});
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.votgrH)$('#cntFrame').style.height=Math.ceil(e.data.votgrH)+'px'});
@@ -511,50 +614,74 @@ let mode=MODES[0];
 function setMode(id){
   const q=String(id||'').toLowerCase();mode=MODES.find(m=>m.id===id||m.hash.toLowerCase()===q)||MODES[0];
   $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode.id));
-  $$('.mode').forEach(p=>p.hidden=p.dataset.mode!==mode.id);
+  $$('.mode').forEach(p=>p.hidden=!(p.dataset.mode||'').split(' ').includes(mode.id));
+  if(mode.m&&mode.m.enter)mode.m.enter();
   $('#mainBox').hidden=!mode.m;$('#cntBox').hidden=!!mode.m;$('#fontBox').hidden=!mode.m;
   if(mode.frame){const f=$('#cntFrame');if(!f.getAttribute('src'))f.src=mode.frame}
   try{history.replaceState(null,'','#'+mode.hash)}catch(e){}
   render();
 }
-MODES.forEach(m=>{const b=document.createElement('button');b.type='button';b.dataset.mode=m.id;b.textContent=m.label;b.setAttribute('aria-pressed','false');b.onclick=()=>setMode(m.hash);$('#modeSeg').appendChild(b)});
+MODES.forEach(m=>{const b=document.createElement('button');b.type='button';b.dataset.mode=m.id;b.textContent=m.label;b.setAttribute('aria-pressed','false');b.onclick=()=>setMode(m.hash);$(m.grp===2?'#modeSeg2':'#modeSeg').appendChild(b)});
 
 /* ---------- Zeichnen (Vorschau = SVG, Export = Canvas, beide aus derselben Szene) ---------- */
 function el(n,a,t){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e}
 function render(){
   if(!mode.m)return;
   const st=$('#stage');
-  st.classList.toggle('nobg',!bg.src);
-  st.style.backgroundImage=bg.src?`url("${bg.src}")`:'';
+  st.classList.toggle('nobg',!bg.src&&!mode.m.grad);st.classList.toggle('grad',!bg.src&&!!mode.m.grad);st.classList.toggle('hasbg',!!bg.src);
+  st.style.backgroundImage='';
   const g=$('#g');g.innerHTML='';
+  if(bg.src&&bg.iw){const R=bgRect();g.appendChild(el('image',{href:bg.src,x:R.x,y:R.y,width:R.w,height:R.h,preserveAspectRatio:'none'}))}
   const defs=el('defs',{}),pat=el('pattern',{id:'hatch',width:8,height:8,patternUnits:'userSpaceOnUse'});
   pat.appendChild(el('rect',{width:8,height:8,fill:'#F2F2ED'}));
   pat.appendChild(el('path',{d:'M-2 2L2 -2M0 8L8 0M6 10L10 6',stroke:'#94CADD','stroke-width':2.1,fill:'none'}));
   defs.appendChild(pat);g.appendChild(defs);
   mode.m.scene().forEach(it=>{
     if(it.t==='rect')g.appendChild(el('rect',{x:it.x,y:it.y,width:it.w,height:it.h,fill:it.fill}));
-    else if(it.t==='path'){const p=el('path',{d:it.d,fill:it.hatch?'url(#hatch)':it.fill,class:it.hatch?'lk':'cp'});if(it.k)p.dataset.k=it.k;g.appendChild(p)}
+    else if(it.t==='path'){const p=el('path',{d:it.d,fill:it.hatch?'url(#hatch)':it.fill,class:(it.hatch||it.noclick)?'lk':'cp'});if(it.stroke){p.setAttribute('stroke',it.stroke);p.setAttribute('stroke-width',it.sw||1);p.setAttribute('stroke-linejoin','round')}if(it.k)p.dataset.k=it.k;if(it.tip)p.appendChild(el('title',{},it.tip));g.appendChild(p)}
     else if(it.t==='image')g.appendChild(el('image',{href:it.src,x:it.x,y:it.y,width:it.w,height:it.h,preserveAspectRatio:it.fit==='tl'?'xMinYMin meet':'xMidYMid meet'}));
     else if(it.t==='text'){const t=el('text',{x:it.x,y:it.y,'font-size':it.fs,fill:it.fill,class:'tx'+(it.narrow?' nar':'')},it.s);t.style.fontFamily=it.font==='l'?SL:SB;t.style.fontWeight=it.font==='l'?400:700;g.appendChild(t)}
   });
 }
-$('#g').addEventListener('click',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k&&mode.id==='svz')SVZ.toggle(k)});
+$('#g').addEventListener('click',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k&&mode.m&&mode.m.toggle)mode.m.toggle(k)});
 
 /* ---------- Funs + Parcadi ---------- */
 let parcadi=[],urls=new Map(),parcOk=true;
 const urlOf=it=>{if(!urls.has(it.id))urls.set(it.id,URL.createObjectURL(it.blob));return urls.get(it.id)};
+const BG0=()=>({src:null,id:null,iw:0,ih:0,z:1,ox:0,oy:0});
+async function setBg(it){
+  if(!it)bg=BG0();
+  else{const src=urlOf(it);let iw=0,ih=0;try{const im=await loadImg(src);iw=im.naturalWidth;ih=im.naturalHeight}catch(e){}bg={src,id:it.id,iw,ih,z:1,ox:0,oy:0}}
+  buildParcadi();render();syncZoom();
+}
+function bgRect(){
+  const s0=Math.max(VW/bg.iw,VH/bg.ih),w=bg.iw*s0*bg.z,h=bg.ih*s0*bg.z,mx=(w-VW)/2,my=(h-VH)/2;
+  bg.ox=Math.max(-mx,Math.min(mx,bg.ox));bg.oy=Math.max(-my,Math.min(my,bg.oy));
+  return {x:(VW-w)/2+bg.ox,y:(VH-h)/2+bg.oy,w,h};
+}
+function zoomTo(z,px,py){
+  if(!bg.src||!bg.iw)return;
+  const R=bgRect(),u=(px-R.x)/R.w,v=(py-R.y)/R.h;
+  bg.z=Math.max(1,Math.min(8,z));
+  const s0=Math.max(VW/bg.iw,VH/bg.ih),w=bg.iw*s0*bg.z,h=bg.ih*s0*bg.z;
+  bg.ox=px-u*w-(VW-w)/2;bg.oy=py-v*h-(VH-h)/2;
+  render();syncZoom();
+}
+function syncZoom(){const on=!!(bg.src&&bg.iw);$('#bgZ').disabled=!on;$('#bgReset').disabled=!on;$('#bgZ').value=bg.z}
+$('#bgZ').oninput=e=>zoomTo(+e.target.value,VW/2,VH/2);
+$('#bgReset').onclick=()=>{bg.z=1;bg.ox=0;bg.oy=0;render();syncZoom()};
 function buildParcadi(){
   const box=$('#bgs');box.innerHTML='';
   const none=document.createElement('button');none.className='thumb none'+(bg.id===null?' on':'');none.textContent='senza';
-  none.onclick=()=>{bg={src:null,id:null};buildParcadi();render()};box.appendChild(none);
+  none.onclick=()=>setBg(null);box.appendChild(none);
   parcadi.forEach(it=>{
     const cell=document.createElement('div');cell.className='cell';
     const b=document.createElement('button');b.className='thumb'+(bg.id===it.id?' on':'');b.style.backgroundImage=`url("${urlOf(it)}")`;b.title=it.name;
-    b.onclick=()=>{bg={src:urlOf(it),id:it.id};buildParcadi();render()};
+    b.onclick=()=>setBg(it);
     const x=document.createElement('span');x.className='x';x.textContent='×';x.title='Stizzar or dal Parcadi';x.setAttribute('role','button');
     x.onclick=async ev=>{ev.stopPropagation();try{await idbDel(it.id)}catch(e){}
       parcadi=parcadi.filter(p=>p.id!==it.id);URL.revokeObjectURL(urls.get(it.id));urls.delete(it.id);
-      if(bg.id===it.id)bg={src:null,id:null};buildParcadi();render()};
+      if(bg.id===it.id)await setBg(null);else{buildParcadi();render()}};
     b.appendChild(x);cell.appendChild(b);box.appendChild(cell);
   });
   $('#parcHint').textContent=parcOk?'Parcadi: maletgs memorisads en quest browser. Els na vegnan betg chargiads sin in server.':'Il Parcadi n’è betg disponibel en quest browser: ils maletgs restan mo fin che la pagina è averta.';
@@ -567,11 +694,23 @@ async function addImages(files){
     try{id=await idbAdd(f.name||'Maletg',f)}catch(e){parcOk=false;id=-(parcadi.length+1)-Date.now()}
     const it={id,name:f.name||'Maletg',blob:f};parcadi.push(it);last=it;
   }
-  if(last)bg={src:urlOf(last),id:last.id};
-  buildParcadi();render();
+  if(last)await setBg(last);else{buildParcadi();render()}
 }
 $('#bgFile').onchange=e=>{addImages([...e.target.files]);e.target.value=''};
 const stage=$('#stage');
+(()=>{
+  let d=null,moved=false;
+  const pos=e=>{const r=stage.getBoundingClientRect(),k=VW/r.width;return {x:(e.clientX-r.left)*k,y:(e.clientY-r.top)*k,k}};
+  stage.addEventListener('pointerdown',e=>{moved=false;if(!bg.src||!bg.iw||e.pointerType==='touch'||e.button!==0)return;d={x:e.clientX,y:e.clientY,ox:bg.ox,oy:bg.oy}});
+  addEventListener('pointermove',e=>{
+    if(!d)return;const k=pos(e).k,dx=e.clientX-d.x,dy=e.clientY-d.y;
+    if(!moved&&Math.hypot(dx,dy)<5)return;
+    moved=true;bg.ox=d.ox+dx*k;bg.oy=d.oy+dy*k;render();
+  });
+  addEventListener('pointerup',()=>{d=null});
+  stage.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
+  stage.addEventListener('wheel',e=>{if(!bg.src||!bg.iw)return;e.preventDefault();const q=pos(e);zoomTo(bg.z*Math.exp(-e.deltaY*0.0015),q.x,q.y)},{passive:false});
+})();
 ['dragover','dragenter'].forEach(ev=>stage.addEventListener(ev,e=>{e.preventDefault();stage.classList.add('drop')}));
 ['dragleave','drop'].forEach(ev=>stage.addEventListener(ev,e=>{e.preventDefault();stage.classList.remove('drop')}));
 stage.addEventListener('drop',e=>addImages([...e.dataTransfer.files]));
@@ -649,7 +788,8 @@ async function exportPNG(){
   const W=VW,H=VH,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
   const noBg=$('#transp').checked;
-  if(!noBg&&bg.src){const im=await loadImg(bg.src),s=Math.max(W/im.width,H/im.height),w=im.width*s,h=im.height*s;g.drawImage(im,(W-w)/2,(H-h)/2,w,h)}
+  if(!noBg&&bg.src){const im=await loadImg(bg.src),R=bgRect();g.drawImage(im,R.x,R.y,R.w,R.h)}
+  else if(!noBg&&mode.m.grad){const gr=g.createLinearGradient(0,0,W,H);gr.addColorStop(0,'#ECECE5');gr.addColorStop(.55,'#F3F3EE');gr.addColorStop(1,'#E3E2D8');g.fillStyle=gr;g.fillRect(0,0,W,H)}
   else if(!noBg){g.fillStyle='#333';g.fillRect(0,0,W,H)}
   const pc=document.createElement('canvas');pc.width=pc.height=8;const p=pc.getContext('2d');
   p.fillStyle='#F2F2ED';p.fillRect(0,0,8,8);p.strokeStyle='#94CADD';p.lineWidth=2.1;p.beginPath();
@@ -657,7 +797,7 @@ async function exportPNG(){
   const hatch=g.createPattern(pc,'repeat');
   for(const it of mode.m.scene()){
     if(it.t==='rect'){g.fillStyle=it.fill;g.fillRect(it.x,it.y,it.w,it.h)}
-    else if(it.t==='path'){g.fillStyle=it.hatch?hatch:it.fill;g.fill(new Path2D(it.d))}
+    else if(it.t==='path'){const P=new Path2D(it.d);g.fillStyle=it.hatch?hatch:it.fill;g.fill(P);if(it.stroke){g.lineWidth=it.sw||1;g.strokeStyle=it.stroke;g.lineJoin='round';g.stroke(P)}}
     else if(it.t==='image'){
       try{const im=await loadImg(it.src),s=Math.min(it.w/im.width,it.h/im.height),w=im.width*s,h=im.height*s;
         g.drawImage(im,it.fit==='tl'?it.x:it.x+(it.w-w)/2,it.fit==='tl'?it.y:it.y+(it.h-h)/2,w,h)}catch(e){}
