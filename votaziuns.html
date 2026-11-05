@@ -351,10 +351,11 @@ const VIS=(()=>{
     segs.forEach((s,i)=>{
       const sw=w*s.val/100,txt=labelOf(s),last=i===segs.length-1&&segs.length>1;
       if(txt&&s.val>0){
-        const L=layoutText(txt,fs),inkW=L.inkR-L.inkL,gap=VW*(last?LBL.right:LBL.left),narrow=sw<inkW+gap+VW*.004;
-        const ix=last?(narrow?x+sw-VW*.002-inkW:x+sw-gap-inkW):(narrow?x+VW*.002:x+gap);
-        const ox=ix-L.inkL,y=narrow?y0-VW*.006:y0+h-VW*LBL.bottom;
-        L.pieces.forEach(pc=>sc.push({t:'text',x:ox+pc.x,y,fs,font:'b',fill:'#fff',s:pc.s,narrow}));
+        // Zahl bleibt immer im Balken an ihrem Platz (wie bei Federal), auch wenn das Segment schmal ist
+        const L=layoutText(txt,fs),inkW=L.inkR-L.inkL,gap=VW*(last?LBL.right:LBL.left);
+        const ix=last?x+sw-gap-inkW:x+gap;
+        const ox=ix-L.inkL,y=y0+h-VW*LBL.bottom;
+        L.pieces.forEach(pc=>sc.push({t:'text',x:ox+pc.x,y,fs,font:'b',fill:'#fff',s:pc.s}));
       }
       x+=sw;
     });
