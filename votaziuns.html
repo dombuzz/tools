@@ -324,7 +324,7 @@ const VIS=(()=>{
     });
   }
   function sync(act){$$('#vSegs .seg-item').forEach((it,i)=>it.querySelectorAll('[data-k=val],[data-k=rng]').forEach(inp=>{if(inp!==act)inp.value=segs[i].val}))}
-  const fmt=v=>v.toFixed(dec());
+  const fmt=v=>v.toFixed(dec()).replace('.',',');
   const labelOf=s=>{const t=[];if($('#vName').checked&&s.name)t.push(s.name);if($('#vPct').checked)t.push(fmt(s.val)+' %');return t.join('  ')};
   function layoutText(txt,fs){
     const K=8;mc.font=fontCss('b',fs*K);
@@ -359,7 +359,7 @@ const VIS=(()=>{
       }
       x+=sw;
     });
-    $('#vSum').textContent='Summa '+r1(segs.reduce((a,s)=>a+s.val,0),2)+' %';
+    $('#vSum').textContent='Summa '+String(r1(segs.reduce((a,s)=>a+s.val,0),2)).replace('.',',')+' %';
     return sc;
   }
   function fileTitle(){const sel=$('#vopna'),o=sel.selectedOptions[0];return sel.value&&o?(o.dataset.k||o.textContent.replace(/^Atgna:\s*/,'').replace(/\.[a-z0-9]+$/i,'')):''}
@@ -409,7 +409,7 @@ const SVZ=(()=>{
   let bars=[{id:'ch',a:45.2,on:true,img:'/lab/svizra/ch.png'},{id:'gr',a:48.5,on:true,img:'/lab/svizra/gr.png'}],locked=false;
   const dec=()=>Math.min(2,Math.max(0,parseInt($('#sDec').value)||0));
   const norm=v=>{const f=10**dec();return Math.round(Math.max(0,Math.min(100,+v||0))*f)/f};
-  const pct=v=>v.toFixed(dec())+'%';
+  const pct=v=>v.toFixed(dec()).replace('.',',')+'%';
   function titleLayout(){
     const pt=40,fs=pt*12700*E,pitch=fs*1.4;
     mc.font=fontCss('l',fs);
