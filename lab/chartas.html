@@ -227,7 +227,7 @@ const RED='#AF001D',BLUE='#0061AD',NEUT='#ADACA3',DARK='#333333',INK='#3B3B34';
 const FB='SRG SSR Type Bold',FL='SRG SSR Type Light';
 const have={bold:false,light:false};
 const fontCss=(f,px)=>(f==='b'?'700 ':'400 ')+px+'px "'+(f==='b'?FB:FL)+'",Arial,Helvetica,sans-serif';
-const CNAME={JU:'Giura',GE:'Genevra',NE:'Neuchâtel',VS:'Vallais',VD:'Vad',TI:'Tessin',TG:'Turgovia',AG:'Argovia',GR:'Grischun',SG:'Son Gagl',AI:'Appenzell Dadens',AR:'Appenzell Dadora',SH:'Schaffusa',BS:'Basilea-Citad',BL:'Basilea-Champagna',SO:'Soloturn',FR:'Friburg',ZG:'Zug',GL:'Glaruna',NW:'Nidwald',OW:'Obwald',SZ:'Sviz',UR:'Uri',LU:'Lucerna',BE:'Berna',ZH:'Turitg'};
+const CNAME={JU:'Giura',GE:'Genevra',NE:'Neuchâtel',VS:'Vallais',VD:'Vad',TI:'Tessin',TG:'Turgovia',AG:'Argovia',GR:'Grischun',SG:'Son Gagl',AI:'Appenzell Dadens',AR:'Appenzell Dadora',SH:'Schaffusa',BS:'Basilea-Citad',BL:'Basilea-Champagna',SO:'Soloturn',FR:'Friburg',ZG:'Zug',GL:'Glaruna',NW:'Sutsilvania',OW:'Sursilvania',SZ:'Sviz',UR:'Uri',LU:'Lucerna',BE:'Berna',ZH:'Turitg'};
 MAPS.ch.p.forEach(p=>{p.n=(CNAME[p.id]||p.id)+' ('+p.id+')'});
 const WORD={gr:'Vischnancas',ch:'Chantuns'};
 const area=()=>$('#showBar').checked?{x0:572,y0:48,x1:1824,y1:896}:{x0:572,y0:107,x1:1826,y1:988};
