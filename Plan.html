@@ -593,6 +593,10 @@ window.addEventListener("message",e=>{
     $("status").className="status err"; $("status").textContent="SharePoint: il PDF n'ha betg pudì vegnir chargià ("+e.data.msg+"). Es ti annunzià?";
   }
 });
+// Das Bookmarklet oeffnet «window.open(..., 'plan')». Bliebe der Fenstername stehen, wuerde ein zweiter Klick
+// (aus einem neuen SharePoint-Tab) das bestehende Fenster nur wiederverwenden: kein Neuladen, window.opener
+// zeigt noch auf den alten Tab, der Handshake laeuft ins Leere. Name loeschen -> jeder Klick oeffnet ein frisches Fenster.
+if(window.name==="plan") window.name="";
 if(location.hash==="#sharepoint"){
   if(window.opener){
     $("status").textContent="Spetg sin il plan da SharePoint …";
