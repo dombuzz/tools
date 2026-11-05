@@ -783,7 +783,7 @@ function loadImg(src){if(!imgCache.has(src))imgCache.set(src,new Promise((res,re
 function fileName(){
   let t=(mode.m.fileTitle()||'').replace(/[\\\/:*?"<>|]+/g,'').replace(/\s+/g,'-').replace(/^-+|-+$/g,'').slice(0,80);
   const d=new Date(),p=n=>String(n).padStart(2,'0');
-  return 'resultat_'+(t?t+'_':'')+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+(mode.m.grad?'_simpel':'')+'.png';
+  return 'resultat_'+(t?t+'_':'')+(mode.m.grad?(mode.id==='sgr'?'Grischun_':'Svizra_'):'')+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+(mode.m.grad?'_simpel':'')+'.png';
 }
 function drawText(g,it){
   const SS=4,pad=12,fw=it.fs,tmp=document.createElement('canvas'),t=tmp.getContext('2d');
