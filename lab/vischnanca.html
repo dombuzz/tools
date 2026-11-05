@@ -73,7 +73,7 @@ input:focus{outline:none;border-color:var(--accent)}
 .bar{position:absolute;display:flex}
 .seg{height:100%;position:relative;transition:width .7s cubic-bezier(.2,.8,.2,1);min-width:0}
 .lbl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.lbl text{fill:#fff;font-weight:700}
+.lbl text{fill:#fff;font-weight:700;white-space:pre}
 .lbl text.nar{paint-order:stroke;stroke:rgba(0,0,0,.6);stroke-width:4px;stroke-linejoin:round}
 /* Miniaturen */
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
@@ -176,7 +176,7 @@ const $=s=>document.querySelector(s);
 const LAY={bx:30.878,by:15.173,bw:39.963,bh:14.547,cx:21.721,cy:15.223,cw:7.818,ch:15.573};
 const VW=1920,VH=1080;
 // Beschriftung: Schriftgrösse, Abstand links (1. Trav) bzw. rechts (letzter Trav) und Grundlinie über Balkenunterkante, in % der Bildbreite
-const LBL={size:.01515,left:.01845,right:.01042,bottom:.01254};
+const LBL={size:.0152,left:.01831,right:.01042,bottom:.01254}; // left/right = Abstand der sichtbaren Zeichenkante zum Balkenrand
 const FONT='SRG SSR Type Bold';
 const STACK='"'+FONT+'","SRG SSR Type",Arial,Helvetica,sans-serif';
 let segs=[{name:'Gea',color:'#0061AD',val:63.5},{name:'Na',color:'#AF001D',val:36.5}];
@@ -254,15 +254,36 @@ function syncInputs(active){
 function fmt(v){return v.toFixed(dec())}
 function labelOf(s){const t=[];if($('#showName').checked&&s.name)t.push(s.name);if($('#showPct').checked)t.push(fmt(s.val)+' %');return t.join('  ')}
 const mctx=document.createElement('canvas').getContext('2d');
+// Tabellenziffern («tnum») der SRG-Schrift: pro Ziffer [Ink-Anfang normal, Ink-Anfang tabellarisch, Ink-Breite] in 1/1000 em, Zellbreite 576
+const TN={'0':[43,35,506],'1':[37,86,345],'2':[47,62,461],'3':[35,57,463],'4':[30,28,520],'5':[37,60,458],'6':[51,51,484],'7':[30,54,465],'8':[38,35,506],'9':[36,41,484]};
+let tnumOK=false; // nur mit geladener SRG-Schrift (Canvas kann tnum nicht selbst schalten, deshalb Ziffern einzeln gesetzt)
+function layoutText(txt,fs){
+  const K=8;mctx.font='700 '+(fs*K)+'px '+STACK;
+  const runs=tnumOK?(txt.match(/\d|\D+/g)||[]):[txt];
+  let x=0,inkL=null,inkR=null;const pieces=[];
+  runs.forEach(r=>{
+    if(tnumOK&&/^\d$/.test(r)){
+      const d=TN[r];pieces.push({s:r,x:x+(d[1]-d[0])/1000*fs});
+      if(inkL===null)inkL=x+d[1]/1000*fs;inkR=x+(d[1]+d[2])/1000*fs;x+=.576*fs;
+    }else{
+      const m=mctx.measureText(r);pieces.push({s:r,x});
+      if(r.trim()){if(inkL===null)inkL=x-m.actualBoundingBoxLeft/K;inkR=x+m.actualBoundingBoxRight/K}
+      x+=m.width/K;
+    }
+  });
+  return {pieces,inkL:inkL??0,inkR:inkR??x,adv:x};
+}
 function labelItems(){
   const x0=lay.bx/100*VW,y0=lay.by/100*VH,w=lay.bw/100*VW,h=lay.bh/100*VH,fs=VW*LBL.size;
-  mctx.font='700 '+fs+'px '+STACK;
   let x=x0;const items=[];
   segs.forEach((s,i)=>{
     const sw=w*s.val/100,txt=labelOf(s),last=i===segs.length-1&&segs.length>1;
     if(txt&&s.val>0){
-      const tw=mctx.measureText(txt).width,gap=VW*(last?LBL.right:LBL.left),narrow=sw<tw+gap+VW*.004;
-      items.push({txt,narrow,anchor:last?'end':'start',x:last?x+sw-(narrow?VW*.002:gap):x+(narrow?VW*.002:gap),y:narrow?y0-VW*.006:y0+h-VW*LBL.bottom});
+      const L=layoutText(txt,fs),inkW=L.inkR-L.inkL;
+      const gap=VW*(last?LBL.right:LBL.left),narrow=sw<inkW+gap+VW*.004;
+      let ix; // Position der sichtbaren Zeichenkante
+      if(last)ix=narrow?x+sw-VW*.002-inkW:x+sw-gap-inkW;else ix=narrow?x+VW*.002:x+gap;
+      items.push({...L,narrow,x0:ix-L.inkL,y:narrow?y0-VW*.006:y0+h-VW*LBL.bottom});
     }
     x+=sw;
   });
@@ -282,7 +303,7 @@ function render(){
   segs.forEach((s,i)=>{const d=bar.children[i];d.style.width=s.val+'%';d.style.background=s.color});
   const L=$('#lbl'),NS='http://www.w3.org/2000/svg',{items,fs}=labelItems();
   L.innerHTML='';
-  items.forEach(it=>{const t=document.createElementNS(NS,'text');t.textContent=it.txt;t.setAttribute('x',it.x);t.setAttribute('y',it.y);t.setAttribute('text-anchor',it.anchor);t.setAttribute('font-size',fs);if(it.narrow)t.setAttribute('class','nar');L.appendChild(t)});
+  items.forEach(it=>it.pieces.forEach(pc=>{const t=document.createElementNS(NS,'text');t.textContent=pc.s;t.setAttribute('x',it.x0+pc.x);t.setAttribute('y',it.y);t.setAttribute('font-size',fs);if(it.narrow)t.setAttribute('class','nar');L.appendChild(t)}));
   $('#sum').textContent='Summa '+r1(segs.reduce((a,s)=>a+s.val,0),2)+' %';
 }
 $('#lockAll').onclick=()=>{locked=!locked;const b=$('#lockAll');b.textContent=locked?'🔒':'🔓';b.classList.toggle('on',locked);b.setAttribute('aria-pressed',locked);buildSegs()};
@@ -371,13 +392,13 @@ function fontState(ok){
 }
 async function useFont(buf){
   const ff=new FontFace(FONT,buf,{weight:'700',style:'normal'});
-  await ff.load();document.fonts.add(ff);
+  await ff.load();document.fonts.add(ff);tnumOK=true;
 }
 async function initFont(){
   let ok=false;
   try{const buf=await prefGet('font');if(buf){await useFont(buf);ok=true}}catch(e){}
   if(!ok){try{ok=document.fonts.check('700 20px "SRG SSR Type Bold"')&&!!(await document.fonts.load('700 20px "SRG SSR Type Bold"')).length}catch(e){}}
-  fontState(ok);render();
+  tnumOK=ok;fontState(ok);render();
 }
 $('#fontFile').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
@@ -411,14 +432,22 @@ async function exportPNG(){
   const x0=lay.bx/100*W,y0=lay.by/100*H,w=lay.bw/100*W,h=lay.bh/100*H;
   let x=x0;
   segs.forEach(s=>{const sw=w*s.val/100;g.fillStyle=s.color;g.fillRect(x,y0,sw,h);x+=sw});
-  const {items,fs}=labelItems();
-  g.font='700 '+(fs*k)+'px '+STACK;g.textBaseline='alphabetic';g.lineJoin='round';
+  const {items,fs}=labelItems(),SS=4;
+  g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
   items.forEach(it=>{
-    g.textAlign=it.anchor==='end'?'right':'left';
-    if(it.narrow){g.strokeStyle='rgba(0,0,0,.6)';g.lineWidth=4*k;g.strokeText(it.txt,it.x*k,it.y*k)}
-    g.fillStyle='#fff';g.fillText(it.txt,it.x*k,it.y*k);
+    // Text 4-fach gross in Zwischenbild zeichnen und herunterskalieren: gleiche Proportionen wie das Original
+    const pad=12,fw=fs*k,tmp=document.createElement('canvas'),t=tmp.getContext('2d');
+    const tw=Math.ceil(it.adv*k)+2*pad,th=Math.ceil(fw*1.6)+2*pad;
+    tmp.width=tw*SS;tmp.height=th*SS;
+    t.font='700 '+(fw*SS)+'px '+STACK;t.textBaseline='alphabetic';t.lineJoin='round';t.textAlign='left';
+    const by=(pad+fw*1.15)*SS;
+    it.pieces.forEach(pc=>{
+      const bx=(pad+pc.x*k)*SS;
+      if(it.narrow){t.strokeStyle='rgba(0,0,0,.6)';t.lineWidth=4*k*SS;t.strokeText(pc.s,bx,by)}
+      t.fillStyle='#fff';t.fillText(pc.s,bx,by);
+    });
+    g.drawImage(tmp,it.x0*k-pad,it.y*k-pad-fw*1.15,tw,th);
   });
-  g.textAlign='left';
   const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download=fileName();
   document.body.appendChild(a);a.click();a.remove();
 }
