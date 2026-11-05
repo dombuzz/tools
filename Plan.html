@@ -57,6 +57,22 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .link{font:inherit;font-size:.88rem;font-weight:600;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer}
 .link:hover{color:var(--text)}
+.wkpick{position:relative}
+.wkbtn{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;font-weight:500;text-transform:none;letter-spacing:0;white-space:nowrap}
+.wkbtn.set{border-color:var(--accent);color:var(--text)}
+.wkpop{position:absolute;top:100%;left:0;margin-top:6px;z-index:20;width:320px;max-width:calc(100vw - 32px);box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.28);text-transform:none;letter-spacing:0;font-weight:400;color:var(--text)}
+.wkpop[hidden]{display:none}
+.wkl{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.wkd{display:flex;flex-wrap:wrap;gap:4px}
+.wkd button,.wko button{font:inherit;font-size:.85rem;cursor:pointer;color:var(--text);background:transparent;border:1px solid var(--border);border-radius:8px}
+.wkd button{padding:6px 10px;color:var(--muted);font-weight:600}
+.wkd button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.wko{display:flex;flex-direction:column;gap:4px}
+.wko button{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;text-align:left}
+.wko button:hover{background:var(--mono)}
+.wko button[aria-pressed="true"]{border-color:var(--accent)}
+.wko small{color:var(--muted);font-size:.78rem}
+.wkpop input[type=date]{width:100%;box-sizing:border-box}
 section h3{font-size:1rem;margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
@@ -164,6 +180,16 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
       <label class="field" for="from">A partir da
         <input type="date" id="from">
       </label>
+      <div class="field wkpick" id="wkpick">Entschatta da l'emna
+        <button type="button" class="link wkbtn" id="wkbtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="wkpop"><span id="wklbl">Glindesdi</span><span aria-hidden="true">▾</span></button>
+        <div class="wkpop" id="wkpop" role="dialog" aria-label="Entschatta da l'emna" hidden>
+          <div class="wkl">Di da start</div>
+          <div class="wkd" id="wkd" role="group" aria-label="Di da start"></div>
+          <div class="wko" id="wko"></div>
+          <label class="wkl" for="wkdate">Auter data</label>
+          <input type="date" id="wkdate">
+        </div>
+      </div>
       <div class="field">Durada
         <div class="seg" id="len" role="group" aria-label="Durada">
           <button type="button" data-w="1">Quest'emna</button>
@@ -288,6 +314,7 @@ const SVC=[...new Set(Object.values(SPARTEN).flatMap(s=>s.blocks.flat().flatMap(
 const SVCL=new Set(SVC.map(c=>c.toLowerCase()));
 let sparte="newsdesk";
 const DAYS=["Gli","Ma","Me","Gie","Ve","So","Du"];
+const WD=["Dumengia","Glindesdi","Mardi","Mesemna","Gievgia","Venderdi","Sonda"]; // index = Date.getDay()
 const MONTHS=["schaner","favrer","mars","avrigl","matg","zercladur","fanadur","avust","settember","october","november","december"];
 document.documentElement.lang="rm";
 const $=id=>document.getElementById(id);
@@ -389,7 +416,17 @@ async function readPdfs(files,extraErrs){
   }
 }
 const readPdf=f=>readPdfs([f]);
+// Entschatta da l'emna: sco standard cumenza l'emna il glindesdi; cun «customStart» cumenza ella
+// exactamain il di tschernà (pervia da servetschs che cumenzan en dis different)
+let customStart=false, pickDay=1;
+const fmtFull=d=>`${WD[d.getDay()]}, ${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
+function syncWk(){
+  const f=$("from").value, btn=$("wkbtn");
+  btn.classList.toggle("set",customStart);
+  $("wklbl").textContent=customStart&&f?fmtFull(parseIso(f)):WD[1];
+}
 function render(){
+  syncWk();
   const sp=SPARTEN[sparte];
   document.querySelectorAll("#sparte button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.s===sparte)));
   $("note-nd").hidden=sparte!=="newsdesk";
@@ -403,17 +440,17 @@ function render(){
   const from=$("from").value?parseIso($("from").value):new Date();
   let start, end;
   if(weeks===0){start=monday(parseIso(plan.first)); end=parseIso(plan.last)}
-  else {start=monday(from); end=addDays(start,weeks*7-1)}
+  else {start=customStart?addDays(from,0):monday(from); end=addDays(start,weeks*7-1)}
   const todayIso=iso(new Date()), fromIso=weeks===0?"":iso(from);
   for(let s=start; s<=end; s=addDays(s,7)){
     const days=[...Array(7)].map((_,i)=>addDays(s,i));
     let mine=0;
-    const head='<thead><tr><th>Servetsch</th>'+days.map((d,i)=>{const c=[i>4?'we':'',iso(d)===todayIso?'today':'',fromIso&&iso(d)<fromIso?'past':''].join(' ');return `<th class="${c}">${DAYS[i]}<small>${fmt(d)}</small></th>`}).join('')+'</tr></thead>';
+    const head='<thead><tr><th>Servetsch</th>'+days.map(d=>{const c=[d.getDay()%6===0?'we':'',iso(d)===todayIso?'today':'',fromIso&&iso(d)<fromIso?'past':''].join(' ');return `<th class="${c}">${DAYS[(d.getDay()+6)%7]}<small>${fmt(d)}</small></th>`}).join('')+'</tr></thead>';
     const rowHtml=sv=>{
       const rule=sp.need&&sp.need[sv];
       let r=`<tr><th>${sv.replace(/</g,'&lt;')}</th>`;
       days.forEach((d,i)=>{
-        const k=iso(d), we=i>4;
+        const k=iso(d), we=d.getDay()%6===0;
         const c=[we?'we':'',k===todayIso?'today':'',fromIso&&k<fromIso?'past':''].join(' ');
         if(!plan.months.has(k.slice(0,7))){r+=`<td class="${c} out">·</td>`;return}
         const ps=(map[k]||{})[sv]||[];
@@ -429,7 +466,7 @@ function render(){
     };
     const h=ROWS.map((blk,bi)=>`<div class="tw${bi?' graf':''}${sparte==='newsdesk'&&blk.includes('Online 1')?' nd':''}"><table>${bi?'':head}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
     const sec=document.createElement('section');
-    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="wk">${h}</div>`;
+    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)===isoWeek(days[6])?isoWeek(s):isoWeek(s)+"/"+isoWeek(days[6])}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="wk">${h}</div>`;
     out.appendChild(sec);
   }
   const anyInPlan=iso(end)>=plan.first&&iso(start)<=plan.last;
@@ -465,9 +502,29 @@ file.addEventListener("change",()=>{readPdfs(file.files);file.value=""});
 drop.addEventListener("drop",e=>{readPdfs(e.dataTransfer.files)});
 function setWeeks(w){weeks=w;document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===w)));store.set("weeks",String(w));render()}
 document.querySelectorAll("#len button").forEach(b=>b.addEventListener("click",()=>setWeeks(+b.dataset.w)));
-$("from").addEventListener("change",render);
+$("from").addEventListener("change",()=>{customStart=false;render()});
 $("who").addEventListener("change",()=>{store.set("who",$("who").value);render()});
-$("reset").addEventListener("click",()=>{$("from").value=iso(new Date());render()});
+$("reset").addEventListener("click",()=>{customStart=false;$("from").value=iso(new Date());closeWk();render()});
+
+// ---- Entschatta da l'emna (di + data libra)
+const wkpop=$("wkpop"), wkbtn=$("wkbtn");
+function buildWk(){
+  $("wkd").innerHTML=[1,2,3,4,5,6,0].map(k=>`<button type="button" data-k="${k}" aria-pressed="${k===pickDay}" title="${WD[k]}">${DAYS[(k+6)%7]}</button>`).join("");
+  const t=parseIso(iso(new Date())); let d=t; while(d.getDay()!==pickDay) d=addDays(d,1);
+  const cur=customStart?$("from").value:"";
+  $("wko").innerHTML=[...Array(6)].map((_,j)=>{const x=addDays(d,7*j), n=Math.round((x-t)/864e5/7);
+    return `<button type="button" data-d="${iso(x)}" aria-pressed="${iso(x)===cur}">${fmtFull(x)}<small>${n===0?(iso(x)===iso(t)?"oz":"questa emna"):"+ "+n+" emna"+(n>1?"s":"")}</small></button>`}).join("");
+  $("wkdate").value=cur;
+}
+function openWk(){ if(customStart&&$("from").value) pickDay=parseIso($("from").value).getDay(); buildWk(); wkpop.hidden=false; wkbtn.setAttribute("aria-expanded","true") }
+function closeWk(){ wkpop.hidden=true; wkbtn.setAttribute("aria-expanded","false") }
+function pickStart(s){ if(!s) return; $("from").value=s; customStart=true; pickDay=parseIso(s).getDay(); closeWk(); render() }
+wkbtn.addEventListener("click",()=>wkpop.hidden?openWk():closeWk());
+$("wkd").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; pickDay=+b.dataset.k; buildWk()});
+$("wko").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) pickStart(b.dataset.d)});
+$("wkdate").addEventListener("change",e=>pickStart(e.target.value));
+document.addEventListener("click",e=>{if(!wkpop.hidden&&!$("wkpick").contains(e.target)) closeWk()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!wkpop.hidden){closeWk();wkbtn.focus()}});
 
 // init
 $("from").value=iso(new Date());
