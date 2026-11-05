@@ -165,7 +165,7 @@ select:focus{outline:none;border-color:var(--accent)}
     <div class="panel">
       <h2 class="ph"><span class="num">3</span>Vopna da vischnanca</h2>
       <select id="vopna" aria-label="Vischnanca"><option value="">– senza vopna –</option></select>
-      <div class="row"><label class="btn sm">Agena vopna (PNG)<input type="file" id="wpFile" accept="image/*" hidden></label></div>
+      <div class="row"><button class="btn sm" id="wpBtn" type="button">Atgna vopna (PNG)</button><input type="file" id="wpFile" accept="image/*" hidden></div>
     </div>
   </div>
 </div>
@@ -357,19 +357,30 @@ async function initVopnas(){
   }catch(e){}
   sel.onchange=()=>{crest.src=sel.value||null;render()};
 }
-$('#wpFile').onchange=e=>{
-  const f=e.target.files[0];e.target.value='';if(!f)return;
+function useOwnCrest(f){
   const r=new FileReader();r.onload=()=>{
     const sel=$('#vopna');let o=sel.querySelector('option[data-own]');
     if(!o){o=document.createElement('option');o.dataset.own='1';sel.appendChild(o)}
-    o.value=r.result;o.textContent='Agena: '+f.name;sel.value=r.result;crest.src=r.result;render();
+    o.value=r.result;o.textContent='Atgna: '+f.name;sel.value=r.result;crest.src=r.result;render();
   };r.readAsDataURL(f);
+}
+// Chrome/Edge: der Dialog öffnet im zuletzt für «vopnas» gewählten Ordner (Kennung 'vopnas'); sonst normaler Datei-Dialog
+$('#wpBtn').onclick=async()=>{
+  if(window.showOpenFilePicker){
+    try{
+      const [h]=await showOpenFilePicker({id:'vopnas',startIn:'downloads',types:[{description:'Maletgs',accept:{'image/*':['.png','.jpg','.jpeg','.webp','.svg']}}]});
+      useOwnCrest(await h.getFile());
+    }catch(e){if(e&&e.name!=='AbortError')$('#wpFile').click()}
+    return;
+  }
+  $('#wpFile').click();
 };
+$('#wpFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)useOwnCrest(f)};
 
 /* ---------- Scrittira ---------- */
 function fontState(ok){
-  $('#fontState').innerHTML=ok?'<span class="ok">✓ Scrittira «SRG SSR Type Bold» chargada</span>':'<span class="no">Scrittira «SRG SSR Type Bold» manca – igl è duvrà Arial.</span> Chargiar SRGSSRType.ttf (Bold) ina giada, ella resta memorisada en quest browser.<br>Copiar quella or da <code>C:\\Windows\\Fonts</code> sin Desktop, Downloads u auter ordinatur e chargia da là cun cliccar sin quest buttun:';
-  $('#fontBtn').firstChild.textContent=ok?'Midar scrittira':'Chargiar scrittira';
+  $('#fontState').innerHTML=ok?'<span class="ok">✓ Scrittira «SRG SSR Type Bold» chargiada</span>':'<span class="no">Scrittira «SRG SSR Type Bold» manca – igl è duvrà Arial.</span> Chargiar SRGSSRType.ttf (Bold) ina giada, ella resta memorisada en quest browser.<br>Copiar quella or da <code>C:\\Windows\\Fonts</code> sin Desktop, Downloads u auter ordinatur e chargia da là cun cliccar sin quest buttun:';
+  $('#fontBtn').hidden=ok;
 }
 async function useFont(buf){
   const ff=new FontFace(FONT,buf,{weight:'700',style:'normal'});
@@ -391,7 +402,7 @@ $('#fontFile').onchange=async e=>{
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 function fileName(){
   const sel=$('#vopna'),o=sel.selectedOptions[0];
-  let name=sel.value&&o?(o.dataset.k||o.textContent.replace(/^Agena:\s*/,'').replace(/\.[a-z0-9]+$/i,'')):'';
+  let name=sel.value&&o?(o.dataset.k||o.textContent.replace(/^Atgna:\s*/,'').replace(/\.[a-z0-9]+$/i,'')):'';
   name=name.replace(/[\\\/:*?"<>|]+/g,'').trim().replace(/\s+/g,'-');
   const d=new Date(),p=n=>String(n).padStart(2,'0');
   const date=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
