@@ -187,6 +187,8 @@ p.sub{margin:0;color:var(--muted)}
 #tab-de .cue textarea{font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;min-height:44px;padding:6px}
 #tab-de .cue.bad textarea{border-color:var(--err)}
 #tab-de .cue.meh textarea{border-color:var(--warn)}
+#tab-de .dirsw{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#tab-de .dirsw button{border:0;border-radius:0;background:transparent;padding:6px 14px;font-weight:600}
 #tab-de .badges{display:flex;flex-wrap:wrap;gap:4px}
 #tab-de .badges .pill{font-size:12px;padding:2px 7px}
 #tab-de .hide-ok .seg.allok{display:none}
@@ -326,6 +328,7 @@ p.sub{margin:0;color:var(--muted)}
   <section class="pane" id="tab-de" role="tabpanel" hidden>
 <div class="intro"><p class="sub">Chargiar SRT, translatar las frasas en ALAS, reparter enavos sin ils timecodes, controllar las normas, exportar SRT u TTML.</p><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
 
+<div class="row" style="margin:12px 0 0"><span class="muted">Direcziun</span><div class="wseg dirsw" id="de-dir" role="group" aria-label="Direcziun da la translaziun"><button type="button" data-dir="rmde" aria-pressed="true">RM → DE</button><button type="button" data-dir="derm" aria-pressed="false">DE → RM</button></div></div>
 
 <section class="step">
   <h2><span class="num">1</span> Chargiar SRT</h2>
@@ -335,7 +338,7 @@ p.sub{margin:0;color:var(--muted)}
 
 <section class="step" id="de-s2" hidden>
   <h2><span class="num">2</span> Translatar las frasas en ALAS</h2>
-  <p class="muted">Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en <a href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS</a> (idiom → tudestg), copiar il resultat ed l'integrar sutvart. Tar idioms maschadads simplamain tscherner il pli frequent u translatar ils blocs separadamain.</p>
+  <p class="muted" id="de-s2txt">Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en <a href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS</a> (idiom → tudestg), copiar il resultat ed l'integrar sutvart. Tar idioms maschadads simplamain tscherner il pli frequent u translatar ils blocs separadamain.</p>
   <div class="row">
     <label class="muted">Max. caracters per bloc <input type="number" id="de-chunkMax" value="3000" step="500" min="500"></label>
     <a class="btn" href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">Avrir ALAS ↗</a>
@@ -531,13 +534,13 @@ const SUB = (() => {
 
 // ---- Tabs ----
 (() => {
-  const HASH = { spustar: 'sp', cumparegliar: 'cu', 'rm-de': 'de', subs: 'de' }, NAME = { sp: 'spustar', cu: 'cumparegliar', de: 'rm-de' };
+  const HASH = { spustar: 'sp', cumparegliar: 'cu', 'rm-de': 'de', 'de-rm': 'de', subs: 'de' }, NAME = { sp: 'spustar', cu: 'cumparegliar', de: 'rm-de' };
   const btns = [...document.querySelectorAll('.tabs [data-tab]')];
   function setTab(t, push) {
     btns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
     for (const k of ['sp', 'cu', 'de']) document.getElementById('tab-' + k).hidden = k !== t;
     try { localStorage.setItem('studio-tab', t); } catch (e) {}
-    if (push) history.replaceState(null, '', '#' + NAME[t]);
+    if (push) history.replaceState(null, '', '#' + (t === 'de' && window.__utDir && window.__utDir() === 'derm' ? 'de-rm' : NAME[t]));
   }
   btns.forEach(b => b.onclick = () => setTab(b.dataset.tab, true));
   let t = HASH[location.hash.slice(1)];
@@ -837,6 +840,27 @@ let fileName = 'untertitel';
 let cues = [];      // {idx,start,end,src,out}
 let segs = [];      // {cues:[i...], src, tr}
 
+/* ---------- Direcziun: RM → DE u DE → RM ---------- */
+const ALAS_A = '<a href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS</a>';
+const TXT = {
+  rmde: { tab:'RM <em>→</em> DE', src:'rumantsch', tr:'Tudestg (frasa entira)', ph:'Translaziun tudestga dad ALAS…', lang:'de', suf:'DE',
+    s2:`Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en ${ALAS_A} (idiom → tudestg), copiar il resultat ed l'integrar sutvart. Tar idioms maschadads simplamain tscherner il pli frequent u translatar ils blocs separadamain.` },
+  derm: { tab:'DE <em>→</em> RM', src:'tudestg', tr:'Rumantsch (frasa entira)', ph:'Translaziun rumantscha dad ALAS…', lang:'rm', suf:'RM',
+    s2:`Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en ${ALAS_A} (tudestg → rumantsch), copiar il resultat ed l'integrar sutvart. En ALAS scheglias ti l'idiom giavischà.` }
+};
+let dir = 'rmde';
+try { if (localStorage.getItem('ut-dir') === 'derm') dir = 'derm'; } catch(e){}
+if (location.hash === '#de-rm') dir = 'derm'; else if (location.hash === '#rm-de') dir = 'rmde';
+window.__utDir = () => dir;
+function applyDir(){
+  const T = TXT[dir];
+  document.querySelector('.tabs [data-tab="de"]').innerHTML = T.tab;
+  $('s2txt').innerHTML = T.s2;
+  $('paste').placeholder = T.ph;
+  ROOT.querySelectorAll('#de-dir button').forEach(b => b.setAttribute('aria-pressed', b.dataset.dir === dir));
+  if (typeof segs !== 'undefined' && segs.length) renderSegs();
+}
+
 /* ---------- Settings (per Browser gemerkt) ---------- */
 const SETTING_IDS = ['maxLine','maxLines','maxCps','minDur','maxDur','chunkMax'];
 try { const s = JSON.parse(localStorage.getItem('ut-settings')||'{}'); SETTING_IDS.forEach(k => { if (s[k]!=null) $(k).value = s[k]; }); } catch(e){}
@@ -973,14 +997,14 @@ function renderSegs(){
   const box=$('segs'); box.innerHTML='';
   segs.forEach((s,si)=>{
     const el=document.createElement('div'); el.className='seg'; el.dataset.si=si;
-    el.innerHTML=`<div class="seg-head"><div><div class="lbl">Frasa ${si+1} · rumantsch</div><div class="src">${esc(s.src)}</div></div>
-      <div><div class="lbl">Tudestg (frasa entira)</div><textarea class="tr" rows="2">${esc(s.tr)}</textarea></div></div>`;
+    el.innerHTML=`<div class="seg-head"><div><div class="lbl">Frasa ${si+1} · ${TXT[dir].src}</div><div class="src">${esc(s.src)}</div></div>
+      <div><div class="lbl">${TXT[dir].tr}</div><textarea class="tr" rows="2">${esc(s.tr)}</textarea></div></div>`;
     s.cues.forEach(ci=>{
       const c=cues[ci];
       const r=document.createElement('div'); r.className='cue'; r.dataset.ci=ci;
       r.innerHTML=`<div class="tc">#${ci+1}<br>${msToTc(c.start)}<br>${msToTc(c.end)}</div>
         <div class="srcc">${esc(c.src)}</div>
-        <textarea class="out" rows="2" spellcheck="true" lang="de">${esc(c.out)}</textarea>
+        <textarea class="out" rows="2" spellcheck="true" lang="${TXT[dir].lang}">${esc(c.out)}</textarea>
         <div><div class="badges"></div><div class="row" style="margin-top:4px"><button class="rewrap" title="Rumper da nov" aria-label="Rumper da nov">↻</button><span class="meta muted" style="font-size:12px"></span></div></div>`;
       el.appendChild(r);
     });
@@ -1122,10 +1146,18 @@ $('export').onclick=()=>{
   const n=list.length, fmt=$('fmt').value;
   const data = fmt==='ttml' ? buildTtml(list) : buildSrt(list);
   const blob=new Blob([data],{type:(fmt==='ttml'?'application/ttml+xml':'text/plain')+';charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${fileName}_DE.${fmt}`; a.click();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${fileName}_${TXT[dir].suf}.${fmt}`; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   $('exportInfo').textContent=`${n} suttitels exportads`+(skipped?` · ${skipped} vids sursiglids`:'');
 };
+
+$('dir').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-dir]'); if(!b||b.dataset.dir===dir) return;
+  dir=b.dataset.dir; try{ localStorage.setItem('ut-dir',dir); }catch(e){}
+  if(!ROOT.hidden) history.replaceState(null,'','#'+(dir==='derm'?'de-rm':'rm-de'));
+  applyDir();
+});
+applyDir();
 
 // Test-Hook
 window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
