@@ -500,22 +500,23 @@ const SVZ=(()=>{
 
 /* ---------- Modi (erweiterbar: hier weitere Grafiken anhängen) ---------- */
 const MODES=[
-  {id:'vis',label:'Communal',m:VIS},
-  {id:'cnt',label:'Chantunal',frame:'/votgr?embed=1'},
-  {id:'svz',label:'Federal',m:SVZ}
+  {id:'vis',hash:'com',label:'Communal',m:VIS},
+  {id:'cnt',hash:'GR',label:'Chantunal',frame:'/votgr?embed=1'},
+  {id:'svz',hash:'CH',label:'Federal',m:SVZ}
 ];
+addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1).toLowerCase();if(h!==mode.hash.toLowerCase())setMode(h)});
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.votgrH)$('#cntFrame').style.height=Math.ceil(e.data.votgrH)+'px'});
 let mode=MODES[0];
 function setMode(id){
-  mode=MODES.find(m=>m.id===id)||MODES[0];
+  const q=String(id||'').toLowerCase();mode=MODES.find(m=>m.id===id||m.hash.toLowerCase()===q)||MODES[0];
   $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode.id));
   $$('.mode').forEach(p=>p.hidden=p.dataset.mode!==mode.id);
   $('#mainBox').hidden=!mode.m;$('#cntBox').hidden=!!mode.m;$('#fontBox').hidden=!mode.m;
   if(mode.frame){const f=$('#cntFrame');if(!f.getAttribute('src'))f.src=mode.frame}
-  try{history.replaceState(null,'','#'+mode.id)}catch(e){}
+  try{history.replaceState(null,'','#'+mode.hash)}catch(e){}
   render();
 }
-MODES.forEach(m=>{const b=document.createElement('button');b.type='button';b.dataset.mode=m.id;b.textContent=m.label;b.setAttribute('aria-pressed','false');b.onclick=()=>setMode(m.id);$('#modeSeg').appendChild(b)});
+MODES.forEach(m=>{const b=document.createElement('button');b.type='button';b.dataset.mode=m.id;b.textContent=m.label;b.setAttribute('aria-pressed','false');b.onclick=()=>setMode(m.hash);$('#modeSeg').appendChild(b)});
 
 /* ---------- Zeichnen (Vorschau = SVG, Export = Canvas, beide aus derselben Szene) ---------- */
 function el(n,a,t){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e}
