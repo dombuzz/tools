@@ -75,6 +75,13 @@ td p:last-child{margin-bottom:0}
 .fb button:disabled{opacity:.6;cursor:default}
 .fb .msg{font-size:.85rem;min-height:1.2em}
 .fb .msg.err{color:#ff6b7d}
+.tl{display:flex;flex-direction:column;gap:14px}
+.tl h3{margin:0 0 4px;font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600}
+.tl ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tl li{font-size:.92rem;max-width:68ch}
+.tl li b{font-weight:600}
+.tl li b a{text-decoration:none}
+.tl li b a:hover,.tl li b a:focus-visible{text-decoration:underline}
 a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
@@ -87,7 +94,58 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   </header>
 
   <section class="step">
-    <h2><span class="num">1</span>Plans da teams</h2>
+    <h2><span class="num">1</span>Ils tools en curt</h2>
+    <p>Tge che mintga tool fa – en ina frasa.</p>
+    <div class="tl">
+        <div>
+          <h3>Maletgs</h3>
+          <ul>
+          <li><b><a href="/rtr-picture">RTR Picture-downloader</a></b>: Memorisescha maletgs da rtr.ch en la meglra qualitad che stat a disposiziun.</li>
+          <li><b><a href="/visual">Magazin / Il di / #mument</a></b>: Metta in maletg en il visual e exportescha el sco PNG, cun overlay per RTR Magazin, Il di u #mument.</li>
+          <li><b><a href="/maletgs">Colurar, rotar e cumbinar</a></b>: Elavura maletgs: clerezza e colurs, rotar e drizzar, collaschas e layers.</li>
+          <li><b><a href="/Resizer2000">Resizer 2000</a></b>: Fa ils maletgs pli pitschens u pli gronds, uschia che la vart la pli lunga è 2000 pixels u quants che ti giavischas.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Redacziun</h3>
+          <ul>
+          <li><b><a href="/Plan">Plans da teams</a></b>: Mussa tenor redacziun, tgi che ha tge servetsch en ils plans da lavur (PDF).</li>
+          <li><b><a href="/artitgel">Links d'artitgels</a></b>: Far or dad URLs d'artitgels en CMS links che lubeschan gia avant la publicaziun da planisar posts e newsletters.</li>
+          <li><b><a href="/artitgel-challenge">Artitgel-challenge</a></b>: Mussa ils artitgels da rtr.ch dals ultims 30 dis; ti als legias e controlleschas sin sbagls.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Audio e suttitels</h3>
+          <ul>
+          <li><b><a href="/audio-recorder">Audio-Recorder</a></b>: Registrescha audio directamain en il browser.</li>
+          <li><b><a href="/srt2ttml">SRT → TTML</a></b>: Transfurmescha suttitels da SRT en TTML.</li>
+          <li><b><a href="/studio">Subtitle Studio</a></b>: Spustar temps, cumparegliar duas datotecas da suttitels e translatar suttitels RM → DE.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Grafica</h3>
+          <ul>
+          <li><b><a href="/data">Memorisar grafica Datawrapper</a></b>: Memorisescha in diagram u ina charta da Datawrapper sco PNG 16:9, senza titel e funtauna.</li>
+          <li><b><a href="/votgr">Chartas votaziuns GR</a></b>: Fa chartas e resultats da votaziuns dal Grischun or da las datas publicas dal chantun.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Lab</h3>
+          <ul>
+          <li><b><a href="/lab/">Lab</a></b>: Experiments che n’èn anc betg finids, tranter auter novitads da hockey regiunal, in pledari d’idioms, ina analisa da CSV e Plan → GeoJSON.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Game</h3>
+          <ul>
+          <li><b><a href="/game">Game</a></b>: Scuvra tut ils tools, cuntinuescha tia seria, rimna badges – e ta mesira cun ils auters.</li>
+          </ul>
+        </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span>Plans da teams</h2>
     <p class="key"><a href="/Plan">Plans da teams</a> na va betg sur in server, mabain tut capita be en il browser. Ils PDFs vegnan legids sin tes apparat; nagut vegn chargià si u memorisà. Cur che ti serras la pagina, èn ils plans puspè davent.</p>
     <p>Ils plans da lavur èn gea atgnamain be tabellas. Cun quest tool vegnan be transponids ils servetschs correspundents per redacziun tenor selecziun – atgnamain nagut auter che filters, sco ch'ins po er drizzar en en Excel cun gruppas e categorias.</p>
     <p>Dad entschatta ennà è stà impurtant che naginas indicaziuns u datas da fatschenta vegnan deponidas insanua sin in server betg SRG SSR.</p>
@@ -96,7 +154,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   </section>
 
   <section class="step">
-    <h2><span class="num">2</span>Colliaziuns cun l'internet</h2>
+    <h2><span class="num">3</span>Colliaziuns cun l'internet</h2>
     <p>Sch'i dat insanua ina colliaziun da tools.dombuzz.ch cun il rest da l'internet, lura èsi per ir per datas publicas:</p>
     <div class="tw"><table>
       <thead><tr><th>Tool</th><th>Tge vegn tschiffà?</th><th>Tge vegn tramess?</th></tr></thead>
@@ -109,18 +167,18 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <tr><th><a href="/artitgel">Links d'artitgels</a></th><td data-l="Tge vegn tschiffà?">Artitgels publitgads sin rtr.ch</td><td data-l="Tge vegn tramess?"><p>Enconuscher la Text-URL sin basa da la artitgel-ID capita via in Worker (Cloudflare) che chargia la pagina publitgada e vegn uschia via titel sin quella URL.</p><p>La ID da l'artitgel chatta il Worker en il code da funtauna da l'artitgel publitgà sin rtr.ch.</p></td></tr>
       </tbody>
     </table></div>
-    <p>Tools betg numnads qua sura chargian nagut or u en l'internet – be las cifras d'utilisaziun sco menziunà en il punct 3.</p>
+    <p>Tools betg numnads qua sura chargian nagut or u en l'internet – be las cifras d'utilisaziun sco menziunà en il punct 4.</p>
   </section>
 
   <section class="step">
-    <h2><span class="num">3</span>Cifras</h2>
+    <h2><span class="num">4</span>Cifras</h2>
     <p>En ils tools vegnan rimnadas cifras per savair tge che vegn duvrà quant savens: quant savens ch'in tool ha fatg sia funcziun (<i>giadas duvrà</i>), quants cors (♥) ch'el ha survegnì e quantas giadas che la pagina è vegnida guardada (<i>visitas</i>).</p>
     <p>Per quest intent survegn mintga browser ina ID casuala ed anonima – nagin num, nagins datas, er betg or da las persunas ch'ins marchescha en ils plans da lavur. Uschia san ins quants apparats differents che dovran ils tools e quants che turnan. Plinavant vegn memorisà sche la pagina è vegnida averta en moda clera u stgira.</p>
     <p>Exempel d'utilisaziun da questas datas: <a href="/cifras">Cifras</a>.</p>
   </section>
 
   <section class="step">
-    <h2><span class="num">4</span>Feedback</h2>
+    <h2><span class="num">5</span>Feedback</h2>
     <p>Ils feedbacks èn opziunals. Il text e – sche ti vuls – in num vegnan pir lura memorisads. Per l'intent da plinavant far attent sin ils resuns vegnan questas indicaziuns tramess per e-mail ad ina adressa da mail @rtr.ch. Mintgina e mintgin decida sez, sch'ella u el vul duvrar in num u betg.</p>
     <form id="fb" class="fb">
       <textarea name="text" maxlength="1000" required placeholder="Tes messadi …" aria-label="Tes messadi"></textarea>
