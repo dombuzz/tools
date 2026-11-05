@@ -57,6 +57,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .link{font:inherit;font-size:.88rem;font-weight:600;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer}
 .link:hover{color:var(--text)}
+.step.ctl{position:relative;z-index:30}
 .wkpick{position:relative}
 .wkbtn{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;font-weight:500;text-transform:none;letter-spacing:0;white-space:nowrap}
 .wkbtn.set{border-color:var(--accent);color:var(--text)}
@@ -73,6 +74,11 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .wko button[aria-pressed="true"]{border-color:var(--accent)}
 .wko small{color:var(--muted);font-size:.78rem}
 .wkpop input[type=date]{width:100%;box-sizing:border-box}
+.whopop{width:260px}
+.wholist{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto}
+.wholist label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text)}
+.wholist label:hover{background:var(--mono)}
+.wholist input{accent-color:var(--accent)}
 section h3{font-size:1rem;margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
@@ -165,7 +171,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
   </div>
 
 
-  <div class="step">
+  <div class="step ctl">
     <h2><span class="num">2</span>Tscherner redacziun e perioda</h2>
     <div class="controls">
       <div class="field">Redacziun
@@ -199,9 +205,13 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
           <button type="button" data-w="0">Plan entir</button>
         </div>
       </div>
-      <label class="field" for="who">Marcar ina persuna
-        <select id="who"><option value="">nagina</option></select>
-      </label>
+      <div class="field wkpick" id="whopick">Marcar persunas
+        <button type="button" class="link wkbtn" id="whobtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="whopop"><span id="wholbl">nagina</span><span aria-hidden="true">▾</span></button>
+        <div class="wkpop whopop" id="whopop" role="dialog" aria-label="Marcar persunas" hidden>
+          <div class="wholist" id="wholist"></div>
+          <button type="button" class="link" id="whoclear">Nagina</button>
+        </div>
+      </div>
       <button type="button" class="link" id="reset">Enavos ad oz</button>
     </div>
   </div>
@@ -376,7 +386,7 @@ function setPlan(p,save){
   for(const [date,,name] of p.entries){months.add(date.slice(0,7)); names.add(name); dates.add(date)}
   const ds=[...dates].sort();
   plan={...p,maps,rows,people,months,short:shortNames([...names]),names:[...names].sort((a,b)=>DISP[a].localeCompare(DISP[b],"de")),first:ds[0],last:ds[ds.length-1]};
-  $("who").dataset.k="";
+  $("wholist").dataset.k="";
   const mlist=[...months].sort().map(m=>{const [y,mo]=m.split("-");return MONTHS[mo-1]+" "+y});
   $("status").className="status ok";
   $("status").innerHTML=`<b>${plan.names.length} persunas, ${p.entries.length} servetschs</b> · ${mlist.join(", ")} · ${p.label.replace(/</g,"&lt;")}`;
@@ -419,6 +429,16 @@ const readPdf=f=>readPdfs([f]);
 // Entschatta da l'emna: sco standard cumenza l'emna il glindesdi; cun «customStart» cumenza ella
 // exactamain il di tschernà (pervia da servetschs che cumenzan en dis different)
 let customStart=false, pickDay=1;
+// Marcar persunas: pliras persunas pussiblas (Set da nums)
+const whoSet=new Set();
+{ const s=store.get("who")||""; try{const a=JSON.parse(s); if(Array.isArray(a)) a.forEach(n=>whoSet.add(n)); else if(s) whoSet.add(s)}catch(e){ if(s) whoSet.add(s) } }
+const nz=n=>n+" servetsch"+(n===1?"":"s");
+function whoInfo(cnt){
+  const sel=[...whoSet].filter(n=>plan.short[n]&&plan.people[sparte].has(n));
+  if(!sel.length) return "";
+  if(sel.length===1) return ` · ${plan.short[sel[0]]}: ${nz(cnt[sel[0]]||0)}`;
+  return " · "+sel.map(n=>`${plan.short[n]}: ${cnt[n]||0}`).join(", ");
+}
 const fmtFull=d=>`${WD[d.getDay()]}, ${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
 function syncWk(){
   const f=$("from").value, btn=$("wkbtn");
@@ -436,7 +456,7 @@ function render(){
   fillWho();
   const map=plan.maps[sparte], ROWS=plan.rows[sparte];
   if(!ROWS.length){out.innerHTML=`<p class="empty">En il plan chargià na sa chattan nagins servetschs da la redacziun ${sp.name}.</p>`;return}
-  const who=$("who").value;
+  const cnt={};
   const from=$("from").value?parseIso($("from").value):new Date();
   let start, end;
   if(weeks===0){start=monday(parseIso(plan.first)); end=parseIso(plan.last)}
@@ -444,7 +464,6 @@ function render(){
   const todayIso=iso(new Date()), fromIso=weeks===0?"":iso(from);
   for(let s=start; s<=end; s=addDays(s,7)){
     const days=[...Array(7)].map((_,i)=>addDays(s,i));
-    let mine=0;
     const head='<thead><tr><th>Servetsch</th>'+days.map(d=>{const c=[d.getDay()%6===0?'we':'',iso(d)===todayIso?'today':'',fromIso&&iso(d)<fromIso?'past':''].join(' ');return `<th class="${c}">${DAYS[(d.getDay()+6)%7]}<small>${fmt(d)}</small></th>`}).join('')+'</tr></thead>';
     const rowHtml=sv=>{
       const rule=sp.need&&sp.need[sv];
@@ -460,26 +479,30 @@ function render(){
           else r+=`<td class="${c} none">–</td>`;
           return;
         }
-        r+=`<td class="${c}">`+ps.map(p=>{if(p===who)mine++;return `<span class="p${p===who?' hi':''}" title="${p.replace(/"/g,'&quot;')}">${plan.short[p]}</span>`}).join('')+'</td>';
+        r+=`<td class="${c}">`+ps.map(p=>{const hi=whoSet.has(p);if(hi)cnt[p]=(cnt[p]||0)+1;return `<span class="p${hi?' hi':''}" title="${p.replace(/"/g,'&quot;')}">${plan.short[p]}</span>`}).join('')+'</td>';
       });
       return r+'</tr>';
     };
     const h=ROWS.map((blk,bi)=>`<div class="tw${bi?' graf':''}${sparte==='newsdesk'&&blk.includes('Online 1')?' nd':''}"><table>${bi?'':head}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
     const sec=document.createElement('section');
-    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)===isoWeek(days[6])?isoWeek(s):isoWeek(s)+"/"+isoWeek(days[6])}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${who?` · ${plan.short[who]}: ${mine} servetsch${mine===1?'':'s'}`:''}</span></h3><div class="wk">${h}</div>`;
+    sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)===isoWeek(days[6])?isoWeek(s):isoWeek(s)+"/"+isoWeek(days[6])}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${whoInfo(cnt)}</span></h3><div class="wk">${h}</div>`;
     out.appendChild(sec);
   }
   const anyInPlan=iso(end)>=plan.first&&iso(start)<=plan.last;
   if(!anyInPlan){const p=document.createElement('p');p.className='empty';p.textContent=`Il plan chargià na cuntegna betg questa perioda (dals ${fmt(parseIso(plan.first))} fin ils ${fmt(parseIso(plan.last))}${plan.last.slice(0,4)}). Chargia in plan pli nov.`;out.prepend(p)}
 }
-// «Marcar ina persuna»: mo persunas da la redacziun tschernida
+// «Marcar persunas»: mo persunas da la redacziun tschernida, tschernida multipla cun checkboxes
+function syncWho(){
+  const on=[...$("wholist").querySelectorAll("input:checked")];
+  $("whobtn").classList.toggle("set",on.length>0);
+  $("wholbl").textContent=on.length===0?"nagina":on.length===1?on[0].nextElementSibling.textContent:on.length+" persunas";
+}
 function fillWho(){
-  const sel=$("who"); if(sel.dataset.k===sparte) return;
-  sel.dataset.k=sparte;
+  const box=$("wholist"); if(box.dataset.k===sparte){syncWho();return}
+  box.dataset.k=sparte;
   const list=plan.names.filter(n=>plan.people[sparte].has(n));
-  const keep=store.get("who")||"";
-  sel.innerHTML='<option value="">nagina</option>'+list.map(n=>`<option value="${n.replace(/"/g,"&quot;")}">${DISP[n].replace(/</g,"&lt;")}</option>`).join("");
-  sel.value=list.includes(keep)?keep:"";
+  box.innerHTML=list.map(n=>`<label><input type="checkbox" value="${n.replace(/"/g,"&quot;")}"${whoSet.has(n)?" checked":""}><span>${DISP[n].replace(/</g,"&lt;")}</span></label>`).join("");
+  syncWho();
 }
 function setSparte(s,save){
   if(!SPARTEN[s]) return;
@@ -503,8 +526,8 @@ drop.addEventListener("drop",e=>{readPdfs(e.dataTransfer.files)});
 function setWeeks(w){weeks=w;document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===w)));store.set("weeks",String(w));render()}
 document.querySelectorAll("#len button").forEach(b=>b.addEventListener("click",()=>setWeeks(+b.dataset.w)));
 $("from").addEventListener("change",()=>{customStart=false;render()});
-$("who").addEventListener("change",()=>{store.set("who",$("who").value);render()});
-$("reset").addEventListener("click",()=>{customStart=false;$("from").value=iso(new Date());closeWk();render()});
+
+$("reset").addEventListener("click",()=>{customStart=false;$("from").value=iso(new Date());closeWk();closeWho();render()});
 
 // ---- Entschatta da l'emna (di + data libra)
 const wkpop=$("wkpop"), wkbtn=$("wkbtn");
@@ -516,15 +539,34 @@ function buildWk(){
     return `<button type="button" data-d="${iso(x)}" aria-pressed="${iso(x)===cur}">${fmtFull(x)}<small>${n===0?(iso(x)===iso(t)?"oz":"questa emna"):"+ "+n+" emna"+(n>1?"s":"")}</small></button>`}).join("");
   $("wkdate").value=cur;
 }
-function openWk(){ if(customStart&&$("from").value) pickDay=parseIso($("from").value).getDay(); buildWk(); wkpop.hidden=false; wkbtn.setAttribute("aria-expanded","true") }
+function openWk(){ closeWho(); if(customStart&&$("from").value) pickDay=parseIso($("from").value).getDay(); buildWk(); wkpop.hidden=false; wkbtn.setAttribute("aria-expanded","true") }
 function closeWk(){ wkpop.hidden=true; wkbtn.setAttribute("aria-expanded","false") }
 function pickStart(s){ if(!s) return; $("from").value=s; customStart=true; pickDay=parseIso(s).getDay(); closeWk(); render() }
 wkbtn.addEventListener("click",()=>wkpop.hidden?openWk():closeWk());
 $("wkd").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; pickDay=+b.dataset.k; buildWk()});
 $("wko").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) pickStart(b.dataset.d)});
 $("wkdate").addEventListener("change",e=>pickStart(e.target.value));
-document.addEventListener("click",e=>{if(!wkpop.hidden&&!$("wkpick").contains(e.target)) closeWk()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!wkpop.hidden){closeWk();wkbtn.focus()}});
+
+// ---- Marcar persunas (popover)
+const whopop=$("whopop"), whobtn=$("whobtn");
+function openWho(){ closeWk(); whopop.hidden=false; whobtn.setAttribute("aria-expanded","true") }
+function closeWho(){ whopop.hidden=true; whobtn.setAttribute("aria-expanded","false") }
+whobtn.addEventListener("click",()=>whopop.hidden?openWho():closeWho());
+$("wholist").addEventListener("change",e=>{
+  const c=e.target; if(!c.matches("input")) return;
+  c.checked?whoSet.add(c.value):whoSet.delete(c.value);
+  store.set("who",JSON.stringify([...whoSet])); render();
+});
+$("whoclear").addEventListener("click",()=>{
+  whoSet.clear(); $("wholist").querySelectorAll("input").forEach(i=>i.checked=false);
+  store.set("who","[]"); render();
+});
+// zavrar cun clic ordaifer / Escape (composedPath, perquei che las listas vegnan rebuvidas)
+document.addEventListener("click",e=>{const p=e.composedPath();
+  if(!wkpop.hidden&&!p.includes($("wkpick"))) closeWk();
+  if(!whopop.hidden&&!p.includes($("whopick"))) closeWho()});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape") return;
+  if(!wkpop.hidden){closeWk();wkbtn.focus()} if(!whopop.hidden){closeWho();whobtn.focus()}});
 
 // init
 $("from").value=iso(new Date());
