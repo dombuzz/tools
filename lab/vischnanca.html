@@ -72,8 +72,10 @@ input:focus{outline:none;border-color:var(--accent)}
 .crest{position:absolute;object-fit:contain;object-position:left top}
 .bar{position:absolute;display:flex}
 .seg{height:100%;position:relative;transition:width .7s cubic-bezier(.2,.8,.2,1);min-width:0}
-.seg span{position:absolute;left:1.4cqw;bottom:.9cqw;color:#fff;white-space:nowrap;font-size:2.1cqw;line-height:1}
+.seg span{position:absolute;left:1.04cqw;bottom:1.25cqw;color:#fff;white-space:nowrap;font-size:1.67cqw;line-height:1}
+.seg.last span{left:auto;right:1.04cqw}
 .seg.nolabel span{display:none}
+.seg.narrow.last span{left:auto;right:.2cqw}
 .seg.narrow span{bottom:calc(100% + .6cqw);left:.2cqw;text-shadow:0 0 .8cqw #000,0 0 .3cqw #000}
 /* Miniaturen */
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
@@ -128,7 +130,6 @@ select:focus{outline:none;border-color:var(--accent)}
     </div></div>
     <div class="row">
       <button class="btn primary" id="png">Memorisar PNG (1920×1080)</button>
-      <button class="btn" id="replay">Animaziun</button>
       <label class="chk"><input type="checkbox" id="transp"> PNG senza funs</label>
     </div>
     <p class="status" id="status" aria-live="polite"></p>
@@ -274,7 +275,7 @@ function syncInputs(active){
 }
 function fmt(v){return v.toFixed(dec())}
 function labelOf(s){const t=[];if($('#showName').checked&&s.name)t.push(s.name);if($('#showPct').checked)t.push(fmt(s.val)+' %');return t.join('  ')}
-function isNarrow(s,txt){return lay.bw*s.val/100<(txt.length*1.25+3.2)}
+function isNarrow(s,txt){return lay.bw*s.val/100<(txt.length*1.0+3.2)}
 function render(){
   const st=$('#stage');
   st.classList.toggle('nobg',!bg.src);
@@ -292,6 +293,7 @@ function render(){
     d.firstChild.textContent=txt;
     d.classList.toggle('nolabel',!txt||s.val<=0);
     d.classList.toggle('narrow',isNarrow(s,txt));
+    d.classList.toggle('last',i===segs.length-1&&segs.length>1);
   });
   $('#sum').textContent='Summa '+r1(segs.reduce((a,s)=>a+s.val,0),2)+' %';
 }
@@ -299,11 +301,6 @@ $('#addSeg').onclick=addSeg;
 $('#even').onclick=()=>{const free=segs.filter(s=>!s.lock);if(!free.length)return;const rest=100-segs.filter(s=>s.lock).reduce((a,s)=>a+s.val,0);free.forEach(s=>s.val=rest/free.length);normalize();buildSegs();render()};
 ['#showPct','#showName'].forEach(s=>$(s).onchange=render);
 $('#dec').onchange=()=>{normalize();buildSegs();render()};
-$('#replay').onclick=()=>{
-  const bar=$('#bar');[...bar.children].forEach(d=>{d.style.transition='none';d.style.width='0%'});
-  bar.offsetWidth;
-  requestAnimationFrame(()=>{[...bar.children].forEach((d,i)=>{d.style.transition='';d.style.width=segs[i].val+'%'})});
-};
 
 /* ---------- Funs + Parcadi ---------- */
 let parcadi=[],urls=new Map(),parcOk=true;
@@ -391,6 +388,14 @@ $('#fontFile').onchange=async e=>{
 
 /* ---------- PNG-Export ---------- */
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+function fileName(){
+  const sel=$('#vopna'),o=sel.selectedOptions[0];
+  let name=sel.value&&o?o.textContent.replace(/^Agena:\s*/,'').replace(/\.[a-z0-9]+$/i,''):'';
+  name=name.replace(/[\\\/:*?"<>|]+/g,'').trim().replace(/\s+/g,'-');
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  const date=d.getFullYear()+p(d.getMonth()+1)+p(d.getDate());
+  return 'resultat_'+(name?name+'_':'')+date+'.png';
+}
 async function exportPNG(){
   try{await document.fonts.load('700 40px "'+FONT+'"')}catch(e){}
   const W=1920,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
@@ -405,17 +410,21 @@ async function exportPNG(){
   }
   const x0=lay.bx/100*W,y0=lay.by/100*H,w=lay.bw/100*W,h=lay.bh/100*H;
   let x=x0;
-  segs.forEach(s=>{
+  segs.forEach((s,i)=>{
     const sw=w*s.val/100;g.fillStyle=s.color;g.fillRect(x,y0,sw,h);
     const txt=labelOf(s);
     if(txt&&s.val>0){
-      g.fillStyle='#fff';g.font='700 '+(W*.021)+'px '+STACK;g.textBaseline='alphabetic';
-      if(isNarrow(s,txt)){g.shadowColor='#000';g.shadowBlur=W*.008;g.fillText(txt,x+W*.002,y0-W*.006);g.fillText(txt,x+W*.002,y0-W*.006);g.shadowBlur=0}
-      else g.fillText(txt,x+W*.014,y0+h-W*.009);
+      g.fillStyle='#fff';g.font='700 '+(W*.0167)+'px '+STACK;g.textBaseline='alphabetic';
+      const last=i===segs.length-1&&segs.length>1,narrow=isNarrow(s,txt),pad=W*.0104;
+      g.textAlign=last?'right':'left';
+      const tx=last?x+sw-(narrow?W*.002:pad):x+(narrow?W*.002:pad);
+      if(narrow){g.shadowColor='#000';g.shadowBlur=W*.008;g.fillText(txt,tx,y0-W*.006);g.fillText(txt,tx,y0-W*.006);g.shadowBlur=0}
+      else g.fillText(txt,tx,y0+h-W*.0125);
+      g.textAlign='left';
     }
     x+=sw;
   });
-  const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='resultat-vischnanca.png';
+  const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download=fileName();
   document.body.appendChild(a);a.click();a.remove();
 }
 $('#png').onclick=()=>{
