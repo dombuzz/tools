@@ -88,7 +88,9 @@ input:focus{outline:none;border-color:var(--accent)}
 /* Barras */
 .seg-item{display:grid;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .seg-item:last-of-type{border-bottom:0;padding-bottom:0}
-.seg-row{display:grid;grid-template-columns:38px minmax(0,1fr) 78px 36px 36px;gap:8px;align-items:center}
+.seg-row{display:grid;grid-template-columns:38px minmax(0,1fr) 78px;gap:8px;align-items:center}
+.lockall{margin-left:auto}
+.seg-row input:disabled{opacity:.5;cursor:not-allowed}
 .seg-row .sl{grid-column:1/-1}
 .ibtn{padding:0;width:36px;height:36px;justify-content:center}
 .ibtn.on{border-color:var(--accent);color:var(--accent)}
@@ -143,15 +145,14 @@ select:focus{outline:none;border-color:var(--accent)}
 
   <div class="side">
     <div class="panel">
-      <h2 class="ph"><span class="num">1</span>Travs</h2>
+      <h2 class="ph"><span class="num">1</span>Travs<button class="btn ibtn lockall" id="lockAll" type="button" title="Valurs fixar" aria-label="Valurs fixar" aria-pressed="false">🔓</button></h2>
       <div id="segs"></div>
       <div class="row">
-        <button class="btn sm" id="addSeg">+ Trav</button>
         <button class="btn sm" id="even">Distribuir uniformamain</button>
         <span class="sum" id="sum"></span>
       </div>
       <div class="row">
-        <label class="chk"><input type="checkbox" id="showPct" checked> Mussar pertschient</label>
+        <label class="chk"><input type="checkbox" id="showPct" checked> Mussar %</label>
         <label class="chk"><input type="checkbox" id="showName"> Mussar num</label>
       </div>
       <label class="row cap">Posiziuns decimalas <input type="number" id="dec" min="0" max="2" value="1" style="width:64px"></label>
@@ -175,9 +176,9 @@ const $=s=>document.querySelector(s);
 const LAY={bx:33.2,by:10.4,bw:43,bh:15.5,cx:23.4,cy:10.5,cw:8.4,ch:16.7};
 const FONT='SRG SSR Type Bold';
 const STACK='"'+FONT+'","SRG SSR Type",Arial,Helvetica,sans-serif';
-let segs=[{name:'Gea',color:'#0061AD',val:63.5,lock:false},{name:'Na',color:'#AF001D',val:36.5,lock:false}];
+let segs=[{name:'Gea',color:'#0061AD',val:63.5},{name:'Na',color:'#AF001D',val:36.5}];
+let locked=false;
 let bg={src:null,id:null},crest={src:null};
-const PALETTE=['#0061AD','#AF001D','#3B3B34','#E0A100','#2E8B57'];
 const lay=LAY;
 $('#stage').style.fontFamily=STACK;
 
@@ -211,34 +212,14 @@ function normalize(){
   const d=dec(),f=10**d;
   let ints=segs.map(s=>Math.round(s.val*f));
   let diff=100*f-ints.reduce((a,b)=>a+b,0);
-  if(diff){let idx=-1,best=-1;segs.forEach((s,i)=>{if(!s.lock&&ints[i]>best){best=ints[i];idx=i}});if(idx<0)idx=ints.indexOf(Math.max(...ints));ints[idx]+=diff}
+  if(diff){ints[ints.indexOf(Math.max(...ints))]+=diff}
   segs.forEach((s,i)=>s.val=ints[i]/f);
 }
 function setVal(i,v){
+  if(locked)return;
   v=Math.max(0,Math.min(100,+v||0));
-  const others=segs.map((s,k)=>k).filter(k=>k!==i&&!segs[k].lock);
-  const lockedSum=segs.reduce((a,s,k)=>a+(k!==i&&s.lock?s.val:0),0);
-  if(!others.length)return;
-  v=Math.min(v,100-lockedSum);
-  const rest=100-lockedSum-v,oldSum=others.reduce((a,k)=>a+segs[k].val,0);
-  others.forEach(k=>{segs[k].val=oldSum>0?segs[k].val*rest/oldSum:rest/others.length});
-  segs[i].val=v;
+  segs[i].val=v;segs[1-i].val=100-v;
   normalize();
-}
-function addSeg(){
-  if(segs.length>=5)return;
-  const share=100/(segs.length+1);
-  segs.forEach(s=>{if(!s.lock)s.val=s.val*(100-share)/100});
-  segs.push({name:'Trav '+(segs.length+1),color:PALETTE[segs.length%PALETTE.length],val:0,lock:false});
-  normalize();buildSegs();render();
-}
-function removeSeg(i){
-  if(segs.length<=1)return;
-  const gone=segs.splice(i,1)[0];
-  const free=segs.filter(s=>!s.lock),sum=free.reduce((a,s)=>a+s.val,0);
-  free.forEach(s=>s.val=sum>0?s.val+gone.val*s.val/sum:s.val+gone.val/free.length);
-  if(!free.length)segs[0].val+=gone.val;
-  normalize();buildSegs();render();
 }
 
 /* ---------- Travs ---------- */
@@ -249,10 +230,8 @@ function buildSegs(){
     it.innerHTML=`<div class="seg-row">
       <input type="color" value="${s.color}" data-k="color" aria-label="Colur">
       <input type="text" value="${s.name.replace(/"/g,'&quot;')}" data-k="name" aria-label="Num">
-      <input type="number" min="0" max="100" step="0.1" value="${s.val}" data-k="val" aria-label="Pertschient">
-      <button class="btn ibtn ${s.lock?'on':''}" data-k="lock" title="Fixar la valur" aria-label="Fixar la valur">${s.lock?'🔒':'🔓'}</button>
-      <button class="btn ibtn" data-k="del" title="Allontanar il trav" aria-label="Allontanar il trav" ${segs.length<2?'disabled':''}>×</button>
-      <input class="sl" type="range" min="0" max="100" step="0.1" value="${s.val}" data-k="rng" aria-label="Regulatur">
+      <input type="number" min="0" max="100" step="0.1" value="${s.val}" data-k="val" aria-label="Pertschient" ${locked?'disabled':''}>
+      <input class="sl" type="range" min="0" max="100" step="0.1" value="${s.val}" data-k="rng" aria-label="Regulatur" ${locked?'disabled':''}>
     </div>`;
     it.addEventListener('input',e=>{
       const k=e.target.dataset.k;
@@ -261,11 +240,6 @@ function buildSegs(){
       else if(k==='val'||k==='rng'){setVal(i,e.target.value);syncInputs(e.target);render()}
     });
     it.addEventListener('change',e=>{if(e.target.dataset.k==='val'||e.target.dataset.k==='rng')syncInputs()});
-    it.addEventListener('click',e=>{
-      const k=e.target.closest('button')?.dataset.k;
-      if(k==='lock'){if(segs.filter(x=>!x.lock).length<=1&&!s.lock)return;s.lock=!s.lock;buildSegs()}
-      if(k==='del')removeSeg(i);
-    });
     box.appendChild(it);
   });
 }
@@ -298,8 +272,8 @@ function render(){
   });
   $('#sum').textContent='Summa '+r1(segs.reduce((a,s)=>a+s.val,0),2)+' %';
 }
-$('#addSeg').onclick=addSeg;
-$('#even').onclick=()=>{const free=segs.filter(s=>!s.lock);if(!free.length)return;const rest=100-segs.filter(s=>s.lock).reduce((a,s)=>a+s.val,0);free.forEach(s=>s.val=rest/free.length);normalize();buildSegs();render()};
+$('#lockAll').onclick=()=>{locked=!locked;const b=$('#lockAll');b.textContent=locked?'🔒':'🔓';b.classList.toggle('on',locked);b.setAttribute('aria-pressed',locked);buildSegs()};
+$('#even').onclick=()=>{if(locked)return;segs[0].val=50;segs[1].val=50;normalize();buildSegs();render()};
 ['#showPct','#showName'].forEach(s=>$(s).onchange=render);
 $('#dec').onchange=()=>{normalize();buildSegs();render()};
 
