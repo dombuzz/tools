@@ -360,7 +360,11 @@ function syncCrest(){
   {const hh=Math.round(s.h0*s.sc/100);$('#cSc').value=hh;setOut('cScV',hh,' px')}
   c.style.setProperty('--cx',(cell.offsetLeft+cell.offsetWidth/2-c.offsetLeft)+'px');
 }
-function selectGrid(){const cell=$('#cgrid .cc.sel');if(cell)cell.scrollIntoView({block:'nearest'})}
+function selectGrid(){
+  const box=$('#cgrid'),cell=box.querySelector('.cc.sel'),c=$('#cSel');if(!cell||c.hidden)return;
+  const top=cell.offsetTop-6,bot=c.offsetTop+c.offsetHeight+6;
+  if(top<box.scrollTop||bot>box.scrollTop+box.clientHeight)box.scrollTop=Math.max(0,Math.min(top,bot-box.clientHeight));
+}
 /* Repartiziun automatica: las vopnas activas vegnan repartidas en differentas grondezzas en la zona survart las chasas (davos las chasas ed il titel) */
 const ZONE=[[995,70],[1235,70],[1500,300],[1630,370],[1850,448],[1915,410],[1915,705],[1045,705],[1045,545],[995,545]];
 const HMIN=96,HMAX=206,ASP=427/480;
