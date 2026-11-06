@@ -226,11 +226,12 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
         <button class="btn sm" id="cAll" type="button" title="Activar tut las vopnas mussadas">Tut activar</button>
         <button class="btn sm" id="cArr" type="button" title="Reparter las vopnas automaticamain (grondezzas e posiziuns)">Reparter</button>
         <button class="btn sm" id="cReset" type="button" title="Cumenzar cun ina pagina vida">Reset</button>
+        <button class="btn sm" id="cEx" type="button" title="5 fin 7 vopnas casualas">Exempel</button>
       </div>
       <input class="csrch" type="search" id="cQ" placeholder="Tschertgar vischnanca …" aria-label="Tschertgar vischnanca">
       <div class="cgrid" id="cgrid"></div>
       <div id="cSel" hidden>
-        <div class="sl"><span>Plaun</span><div class="lyr"><button class="rs" type="button" id="cUp" title="Ina plaun pli davant" aria-label="Pli davant">↑</button><button class="rs" type="button" id="cDn" title="Ina plaun pli davos" aria-label="Pli davos">↓</button></div></div>
+        <div class="sl"><span>Layer</span><div class="lyr"><button class="rs" type="button" id="cUp" title="Ina plaun pli davant" aria-label="Pli davant">↑</button><button class="rs" type="button" id="cDn" title="Ina plaun pli davos" aria-label="Pli davos">↓</button></div></div>
         <div class="sl" style="margin-top:8px"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output><button class="rs" type="button" id="cScR" title="Rimetter" aria-label="Grondezza rimetter">↺</button></div>
       </div>
       <p class="hint">Cliccar sin ina vopna per l’activar u selecziunar (cliccar anc ina giada per ella deactivar), trair en la grafica per spustar.</p>
@@ -244,7 +245,6 @@ const E=v=>v*1920/18288000;
 const FH='SRG SSR Type Heavy',FB='SRG SSR Type Bold';
 const have={heavy:false,bold:false};
 const fontCss=px=>'700 '+px+'px "'+FH+'","'+FB+'",Arial,Helvetica,sans-serif';
-const SLOTS0=[{"f":"Bravuogn--Filisur_Berg\u00fcn--Filisur.png","cx":1834.6,"cy":684.0,"h":81.8,"rot":0.0,"front":false},{"f":"Flem_Flims.png","cx":1509.5,"cy":713.2,"h":81.8,"rot":0.0,"front":false},{"f":"Mesocco.png","cx":1444.9,"cy":605.1,"h":92.6,"rot":0.0,"front":false},{"f":"Glion_Ilanz--Glion.png","cx":1174.6,"cy":617.0,"h":101.6,"rot":-13.34,"front":false},{"f":"Arosa.png","cx":1310.6,"cy":571.7,"h":92.6,"rot":17.98,"front":true},{"f":"Roveredo.png","cx":1569.3,"cy":617.0,"h":101.0,"rot":19.91,"front":true},{"f":"Cuira_Chur.png","cx":1759.6,"cy":584.3,"h":124.9,"rot":20.79,"front":true},{"f":"Favugn_Felsberg.png","cx":1627.1,"cy":684.0,"h":81.8,"rot":0.0,"front":true},{"f":"Lantsch_Lantsch--Lenz.png","cx":1652.0,"cy":522.1,"h":76.6,"rot":-13.75,"front":true},{"f":"Poschiavo.png","cx":1869.1,"cy":594.2,"h":65.9,"rot":0.0,"front":true},{"f":"Schiers.png","cx":1405.7,"cy":504.0,"h":71.7,"rot":-18.03,"front":true},{"f":"Tavau_Davos.png","cx":1528.9,"cy":499.0,"h":93.7,"rot":0.0,"front":true}];
 const TABS=[
   {id:'fed',hash:'fed',label:'Federal',title:'VOTAZIUNS\nFEDERALAS\n00-00-0000',oLabel:'Maletg (Palaz federal)',obj:{src:'/avis-assets/bundeshaus.png',x:E(10349485),y:E(5063433),w:E(6897623),h:E(5391721)}},
   {id:'chan',hash:'chan',label:'Chantunal',title:'ELECZIUNS\nCHANTUNALAS\n14-06-2026',oLabel:'Maletg (Gronda cussegl)',obj:{src:'/avis-assets/grossrat.svg',x:E(10836729),y:E(6218690),w:E(7848600),h:E(4391025)}},
@@ -252,7 +252,7 @@ const TABS=[
 ];
 TABS.forEach(t=>{
   t.auto=false;t.text=t.title;t.o={show:true,sc:100,dx:0,dy:0,src:null};
-  if(t.crests)t.slots=SLOTS0.map(s=>({on:true,f:s.f,cx:s.cx,cy:s.cy,h0:s.h,sc:100,rot:0,front:s.front}));
+  if(t.crests)t.slots=[];
 });
 let tab=TABS[0],sel=-1,VOP=[];
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
@@ -361,7 +361,8 @@ function rectIn(cx,cy,w,h){const x0=cx-w/2,x1=cx+w/2,y0=cy-h/2,y1=cy+h/2,mx=cx,m
   return [[x0,y0],[x1,y0],[x0,y1],[x1,y1],[mx,y0],[mx,y1],[x0,my],[x1,my]].every(q=>inZone(q[0],q[1]))}
 function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 let arrSeed=7;
-function arrange(){
+const arrange=arrangeAll;
+function arrangeAll(){
   const act=tab.slots.filter(s=>s.on),n=act.length;if(!n)return;
   const rnd=rng(arrSeed*7919+n);
   const base=act.map(()=>HMIN+(HMAX-HMIN)*Math.pow(rnd(),1.6));
@@ -385,6 +386,21 @@ function arrange(){
   if(!best)return;
   best.placed.forEach(q=>{const s=act[q.i];s.cx=q.cx;s.cy=q.cy;s.h0=q.h;s.sc=100;s.rot=0});
 }
+function placeOne(s){
+  const rnd=rng((Math.random()*1e9)|0),others=tab.slots.filter(o=>o.on&&o!==s);
+  const base=HMIN+(HMAX-HMIN)*Math.pow(rnd(),1.6);
+  for(let f=1;f>.35;f*=.96){
+    const h=base*f,w=h*ASP;let bc=null,bs=-1e9;
+    for(let k=0;k<1500;k++){
+      const cx=995+rnd()*920,cy=70+rnd()*640;
+      if(!rectIn(cx,cy,w,h))continue;
+      let sep=1e9;for(const q of others){const qh=q.h0*q.sc/100,qw=qh*ASP;sep=Math.min(sep,Math.max(Math.abs(cx-q.cx)-(w+qw)/2,Math.abs(cy-q.cy)-(h+qh)/2))}
+      if(sep>bs){bs=sep;bc={cx,cy}}
+    }
+    if(bc&&bs>=5){Object.assign(s,{cx:bc.cx,cy:bc.cy,h0:h,sc:100,rot:0});return}
+  }
+  arrSeed++;arrangeAll();
+}
 function activate(f){
   let k=tab.slots.findIndex(s=>s.on&&s.f===f);if(k>=0)return k;
   k=tab.slots.findIndex(s=>!s.on&&s.f===f);
@@ -398,8 +414,7 @@ $('#cgrid').addEventListener('click',e=>{
   const f=b.dataset.f,i=slotOf(f);
   if(i>=0&&i===sel){tab.slots[i].on=false;sel=-1}
   else if(i>=0)sel=i;
-  else sel=activate(f);
-  if(tab.auto)arrange();
+  else{sel=activate(f);placeOne(tab.slots[sel])}
   buildCrests();render();selectGrid();
 });
 $('#cQ').addEventListener('input',buildCrests);
@@ -414,9 +429,15 @@ $('#cSc').addEventListener('input',()=>{const s=tab.slots[sel];if(!s)return;tab.
 $('#cAll').onclick=()=>{
   const q=$('#cQ').value.trim().toLowerCase();
   VOP.filter(v=>!q||String(v.n).toLowerCase().includes(q)).forEach(v=>activate(v.f));
-  if(tab.auto)arrange();buildCrests();render();
+  arrSeed++;arrangeAll();buildCrests();render();
 };
-$('#cArr').onclick=()=>{tab.auto=true;arrSeed++;arrange();buildCrests();render()};
+$('#cArr').onclick=()=>{arrSeed++;arrangeAll();buildCrests();render()};
+$('#cEx').onclick=()=>{
+  if(!VOP.length)return;
+  const n=5+Math.floor(Math.random()*3),pool=[...VOP];tab.slots=[];sel=-1;
+  for(let i=0;i<n&&pool.length;i++){const v=pool.splice(Math.floor(Math.random()*pool.length),1)[0];activate(v.f)}
+  arrSeed=(Math.random()*1e6)|0;arrangeAll();buildCrests();render();
+};
 $('#cReset').onclick=()=>{tab.slots=[];tab.auto=true;sel=-1;$('#cQ').value='';buildCrests();render()};
 
 /* ---------- Tabs ---------- */
