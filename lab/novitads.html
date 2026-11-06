@@ -41,7 +41,7 @@ button:hover,.btn:hover{border-color:var(--ac)}
 .pill:hover{color:var(--tx)}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
 .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
-canvas{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y pinch-zoom}
+canvas{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y}
 canvas:active{cursor:grabbing}
 .hint{font-size:.78rem;color:var(--mu);margin-top:8px}
 .sep{height:1px;background:var(--line);margin:14px 0}
@@ -73,7 +73,7 @@ input[type=file]{display:none}
           </div>
         </div>
         <canvas id="cv" width="1080" height="1350"></canvas>
-        <div class="hint">Maletg cun il maus spustar, cun la rotella zoomar (en il telefonin: schliders sut «Fund») · Ctrl/Cmd + V u tegnair en la zona per midar il maletg.</div>
+        <div class="hint">Maletg direct sin la surfatscha: maus = tirar e zoomar cun la rotella · telefonin = cun dus decs spustar e zoomar (in det scroll la pagina) · Ctrl/Cmd + V u tegnair en la zona per midar il maletg.</div>
         <div class="row" style="margin-top:14px">
           <button class="pri" id="exp">Exportar PNG</button>
           <button id="expAll">Exportar tut</button>
@@ -381,24 +381,42 @@ cv.addEventListener('drop',e=>{e.preventDefault();setImage(e.dataTransfer.files[
 
 $('imgAll').onclick=()=>{const s=cs(),im=imgs[s.id];if(!im){alert('Pli baud in maletg tscherner.');return}
   S.slides.forEach(t=>{imgs[t.id]=im;t.zoom=s.zoom;t.ox=s.ox;t.oy=s.oy});save();redraw()};
-/* mouse wheel = zoom */
-cv.addEventListener('wheel',e=>{const s=cs();if(!imgs[s.id])return;e.preventDefault();
-  s.zoom=Math.max(1,Math.min(3,s.zoom*(e.deltaY<0?1.06:1/1.06)));
-  $('zoom').value=Math.round(s.zoom*100);$('zv').textContent=Math.round(s.zoom*100)+'%';redraw();save()},{passive:false});
-/* drag to move image */
-let drag=null;
-cv.addEventListener('pointerdown',e=>{const s=cs(),im=imgs[s.id];if(!im)return;drag={x:e.clientX,y:e.clientY,ox:s.ox,oy:s.oy};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointermove',e=>{
-  if(!drag)return;const s=cs(),im=imgs[s.id];if(!im)return;
-  const r=cv.getBoundingClientRect(),k=W/r.width;
-  const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight)*s.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
-  const ax=(dw-W)/2,ay=(dh-H)/2;
-  if(ax>0)s.ox=Math.max(-1,Math.min(1,drag.ox+(e.clientX-drag.x)*k/ax));
-  if(ay>0)s.oy=Math.max(-1,Math.min(1,drag.oy+(e.clientY-drag.y)*k/ay));
+/* ---- Bild direkt auf der Fläche: Maus (ziehen, Rad) · Touch (zwei Finger: schieben + zoomen) ---- */
+function geom(s,im){const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight)*s.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;return{dw,dh,x:(W-dw)/2+s.ox*(dw-W)/2,y:(H-dh)/2+s.oy*(dh-H)/2}}
+/* zoomNew; (px,py) = Fixpunkt in Canvas-Koordinaten; (dx,dy) = Verschiebung in Canvas-Pixeln */
+function applyView(s,im,zoomNew,px,py,dx,dy){
+  const g=geom(s,im),u=(px-g.x)/g.dw,v=(py-g.y)/g.dh;
+  s.zoom=Math.max(1,Math.min(3,zoomNew));
+  const n=geom(s,im),x=px-u*n.dw+dx,y=py-v*n.dh+dy,ax=(n.dw-W)/2,ay=(n.dh-H)/2;
+  s.ox=ax>0.5?Math.max(-1,Math.min(1,(x-(W-n.dw)/2)/ax)):0;
+  s.oy=ay>0.5?Math.max(-1,Math.min(1,(y-(H-n.dh)/2)/ay)):0;
+  $('zoom').value=Math.round(s.zoom*100);$('zv').textContent=Math.round(s.zoom*100)+'%';
   $('ox').value=Math.round(s.ox*100);$('oy').value=Math.round(s.oy*100);redraw();
+}
+function cpt(cx,cy){const r=cv.getBoundingClientRect();return{x:(cx-r.left)*W/r.width,y:(cy-r.top)*H/r.height,k:W/r.width}}
+/* Maus */
+cv.addEventListener('wheel',e=>{const s=cs(),im=imgs[s.id];if(!im)return;e.preventDefault();
+  const p=cpt(e.clientX,e.clientY);applyView(s,im,s.zoom*(e.deltaY<0?1.08:1/1.08),p.x,p.y,0,0);save()},{passive:false});
+let drag=null;
+cv.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;const s=cs();if(!imgs[s.id])return;drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerType!=='mouse')return;const s=cs(),im=imgs[s.id];if(!im)return;
+  const k=cpt(0,0).k;applyView(s,im,s.zoom,W/2,H/2,(e.clientX-drag.x)*k,(e.clientY-drag.y)*k);drag.x=e.clientX;drag.y=e.clientY;
 });
 const endDrag=()=>{if(drag){drag=null;save()}};
 cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
+/* Touch: ein Finger scrollt die Seite, zwei Finger bewegen/zoomen das Bild */
+let tg=null;
+function tInfo(t){const a=t[0],b=t[1];return{cx:(a.clientX+b.clientX)/2,cy:(a.clientY+b.clientY)/2,d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)||1}}
+cv.addEventListener('touchstart',e=>{if(e.touches.length===2&&imgs[cs().id]){tg=tInfo(e.touches);e.preventDefault()}else tg=null},{passive:false});
+cv.addEventListener('touchmove',e=>{
+  if(e.touches.length!==2||!tg)return;e.preventDefault();
+  const s=cs(),im=imgs[s.id];if(!im)return;
+  const n=tInfo(e.touches),p=cpt(n.cx,n.cy),k=p.k;
+  applyView(s,im,s.zoom*n.d/tg.d,p.x,p.y,(n.cx-tg.cx)*k,(n.cy-tg.cy)*k);tg=n;
+},{passive:false});
+const tEnd=e=>{if(tg&&e.touches.length<2){tg=null;save()}};
+cv.addEventListener('touchend',tEnd);cv.addEventListener('touchcancel',tEnd);
 
 /* slides */
 $('addP').onclick=()=>{S.slides.splice(cur+1,0,mk({colSrc:cs().colSrc==='A'?'B':'A'}));cur++;fill();buildTabs();redraw();save()};
