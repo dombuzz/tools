@@ -5,20 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
-<meta name="robots" content="noindex">
-<meta name="description" content="Visuals generals per votaziuns ed elecziuns (federal, chantunal, communal): titel, maletg e vopnas, exportà en 1920×1080. Senza AI, tut en il browser.">
+<meta name="description" content="Avis per votaziuns ed elecziuns (federal, chantunal, communal): titel, maletg e vopnas, exportà en 1920×1080. Senza AI, tut en il browser.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
-<meta property="og:title" content="Visuals generals VOT/ELEC">
-<meta property="og:description" content="Visuals generals per votaziuns ed elecziuns (federal, chantunal, communal): titel, maletg e vopnas, exportà en 1920×1080. Senza AI, tut en il browser.">
-<meta property="og:url" content="https://tools.dombuzz.ch/lab/visuals">
+<meta property="og:title" content="Avis sin votaziuns ed elecziuns">
+<meta property="og:description" content="Avis per votaziuns ed elecziuns (federal, chantunal, communal): titel, maletg e vopnas, exportà en 1920×1080. Senza AI, tut en il browser.">
+<meta property="og:url" content="https://tools.dombuzz.ch/avis-votelec">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#121214">
-<title>Visuals generals VOT/ELEC</title>
+<title>Avis sin votaziuns ed elecziuns</title>
 <meta name="color-scheme" content="dark light">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3.4 3.6 53.2 53.2'%3E%3Cpath d='M12 17 H48 M12 31 H37 M12 45 H27' fill='none' stroke='%23ff4d64' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -187,9 +186,9 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 <div class="wrap">
 <header class="top">
   <div>
-    <a class="homelink" href="/lab/">← Lab</a>
-    <h1>Visuals <span class="acc">generals VOT/ELEC</span><span class="labbadge">Labor</span></h1>
-    <p class="lead">Visuals per votaziuns ed elecziuns: titel, maletg e vopnas, exportà en 1920×1080.</p>
+    <a class="homelink" href="/votaziuns">← Votaziuns</a>
+    <h1>Avis <span class="acc">sin votaziuns ed elecziuns</span></h1>
+    <p class="lead">Avis per votaziuns ed elecziuns: titel, maletg e vopnas, exportà en 1920×1080.</p>
     <div class="tabgroups"><div class="tg"><div class="seg" id="modeSeg" role="group" aria-label="Visual"></div></div></div>
   </div>
   <div class="fontbox fontrow" id="fontBox">
@@ -240,9 +239,9 @@ const have={heavy:false,bold:false};
 const fontCss=px=>'700 '+px+'px "'+FH+'","'+FB+'",Arial,Helvetica,sans-serif';
 const SLOTS0=[{"f":"Bravuogn--Filisur_Berg\u00fcn--Filisur.png","cx":1834.6,"cy":684.0,"h":81.8,"rot":0.0,"front":false},{"f":"Flem_Flims.png","cx":1509.5,"cy":713.2,"h":81.8,"rot":0.0,"front":false},{"f":"Mesocco.png","cx":1444.9,"cy":605.1,"h":92.6,"rot":0.0,"front":false},{"f":"Glion_Ilanz--Glion.png","cx":1174.6,"cy":617.0,"h":101.6,"rot":-13.34,"front":false},{"f":"Arosa.png","cx":1310.6,"cy":571.7,"h":92.6,"rot":17.98,"front":true},{"f":"Roveredo.png","cx":1569.3,"cy":617.0,"h":101.0,"rot":19.91,"front":true},{"f":"Cuira_Chur.png","cx":1759.6,"cy":584.3,"h":124.9,"rot":20.79,"front":true},{"f":"Favugn_Felsberg.png","cx":1627.1,"cy":684.0,"h":81.8,"rot":0.0,"front":true},{"f":"Lantsch_Lantsch--Lenz.png","cx":1652.0,"cy":522.1,"h":76.6,"rot":-13.75,"front":true},{"f":"Poschiavo.png","cx":1869.1,"cy":594.2,"h":65.9,"rot":0.0,"front":true},{"f":"Schiers.png","cx":1405.7,"cy":504.0,"h":71.7,"rot":-18.03,"front":true},{"f":"Tavau_Davos.png","cx":1528.9,"cy":499.0,"h":93.7,"rot":0.0,"front":true}];
 const TABS=[
-  {id:'fed',hash:'fed',label:'Federal',title:'VOTAZIUNS\nFEDERALAS\n00-00-0000',oLabel:'Maletg (Palaz federal)',obj:{src:'/lab/visuals/bundeshaus.png',x:E(10349485),y:E(5063433),w:E(6897623),h:E(5391721)}},
-  {id:'chan',hash:'chan',label:'Chantunal',title:'ELECZIUNS\nCHANTUNALAS\n14-06-2026',oLabel:'Maletg (Gronda cussegl)',obj:{src:'/lab/visuals/grossrat.svg',x:E(10836729),y:E(6218690),w:E(7848600),h:E(4391025)}},
-  {id:'com',hash:'com',label:'Communal',title:'VOTAZIUNS\nED ELECZIUNS\n29-11-2026',oLabel:'Chasas',obj:{src:'/lab/visuals/chasas.svg',x:E(9020175),y:E(5876925),w:E(9267825),h:E(4410075)},crests:true}
+  {id:'fed',hash:'fed',label:'Federal',title:'VOTAZIUNS\nFEDERALAS\n00-00-0000',oLabel:'Maletg (Palaz federal)',obj:{src:'/avis-assets/bundeshaus.png',x:E(10349485),y:E(5063433),w:E(6897623),h:E(5391721)}},
+  {id:'chan',hash:'chan',label:'Chantunal',title:'ELECZIUNS\nCHANTUNALAS\n14-06-2026',oLabel:'Maletg (Gronda cussegl)',obj:{src:'/avis-assets/grossrat.svg',x:E(10836729),y:E(6218690),w:E(7848600),h:E(4391025)}},
+  {id:'com',hash:'com',label:'Communal',title:'VOTAZIUNS\nED ELECZIUNS\n29-11-2026',oLabel:'Chasas',obj:{src:'/avis-assets/chasas.svg',x:E(9020175),y:E(5876925),w:E(9267825),h:E(4410075)},crests:true}
 ];
 TABS.forEach(t=>{
   t.text=t.title;t.o={show:true,sc:100,dx:0,dy:0,src:null};
@@ -297,7 +296,7 @@ function render(){
     h+=`<rect x="${(s.cx-w/2-4).toFixed(1)}" y="${(s.cy-hh/2-4).toFixed(1)}" width="${(w+8).toFixed(1)}" height="${(hh+8).toFixed(1)}" rx="6" fill="none" stroke="#fff" stroke-width="8" opacity=".9" transform="rotate(${s.rot} ${s.cx} ${s.cy})" pointer-events="none"/><rect x="${(s.cx-w/2-4).toFixed(1)}" y="${(s.cy-hh/2-4).toFixed(1)}" width="${(w+8).toFixed(1)}" height="${(hh+8).toFixed(1)}" rx="6" fill="none" stroke="#E2001A" stroke-width="4" transform="rotate(${s.rot} ${s.cx} ${s.cy})" pointer-events="none"/>`;
   }
   $('#g').innerHTML=h;
-  $('#stage').style.background=`url("/lab/visuals/bg.png") center/100% 100% no-repeat`;
+  $('#stage').style.background=`url("/avis-assets/bg.png") center/100% 100% no-repeat`;
 }
 
 /* ---------- Drag ---------- */
@@ -438,7 +437,7 @@ function fileName(){
 async function exportPNG(){
   try{await document.fonts.load(fontCss(104))}catch(e){}
   const W=1920,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
-  g.drawImage(await loadImg('/lab/visuals/bg.png'),0,0,W,H);
+  g.drawImage(await loadImg('/avis-assets/bg.png'),0,0,W,H);
   for(const it of scene()){
     if(it.t==='img'){
       const im=await loadImg(it.src);let x=it.x,y=it.y,w=it.w,h=it.h;

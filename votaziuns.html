@@ -148,6 +148,8 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 .tabgroups{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;margin-top:14px}
 .tabgroups .seg{margin-top:0}
 .tg{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.avisbtn{align-self:flex-end;display:inline-flex;align-items:center;height:56px;padding:0 22px;border:2px solid var(--accent);border-radius:14px;color:var(--accent);font-weight:700;text-decoration:none;font-size:1rem;transition:background .15s,color .15s}
+.avisbtn:hover{background:var(--accent);color:#fff}
 .tgl{font-size:.75rem;color:var(--muted);padding-left:2px}
 .tgl .exp{color:var(--lab,#ff9a3c)}
 #modeSeg2 button:hover,#modeSeg2 button[aria-pressed="true"]{background:var(--lab,#ff9a3c)!important;background-image:linear-gradient(90deg,color-mix(in srgb,var(--lab,#ff9a3c) 82%,#000),var(--lab,#ff9a3c) 70%)!important;border-color:var(--lab,#ff9a3c)!important;color:var(--on-accent,#121214)!important}
@@ -177,6 +179,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
     <div class="tabgroups">
       <div class="tg"><div class="seg" id="modeSeg" role="group" aria-label="Grafica"></div></div>
       <div class="tg"><span class="tgl">Chartas simplifitgadas <span class="exp">(experimental)</span></span><div class="seg" id="modeSeg2" role="group" aria-label="Chartas simplifitgadas (experimental)"></div></div>
+      <a class="avisbtn" href="/avis-votelec">Avis</a>
     </div>
   </div>
   <div class="fontbox fontrow" id="fontBox">
