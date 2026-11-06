@@ -221,6 +221,13 @@ p.sub{margin:0;color:var(--muted)}
       <button class="primary" id="de-lrun" type="button">Lokal übersetzen</button>
       <span id="de-lprog" class="muted"></span>
     </div>
+    <details style="margin-top:8px"><summary class="muted">Server-Adresse (Standard: dieser Rechner · für Colab den Link aus dem Notebook verwenden)</summary>
+      <div class="row" style="margin-top:8px">
+        <input id="de-lurl" type="text" placeholder="http://127.0.0.1:8787" style="flex:1;min-width:220px" autocomplete="off" spellcheck="false">
+        <input id="de-ltok" type="password" placeholder="Zugangsschlüssel (nur Fernzugriff)" style="min-width:200px" autocomplete="off">
+        <button id="de-lsave" type="button">Übernehmen</button>
+      </div>
+    </details>
     <p class="muted" style="font-size:14px;margin:8px 0 0">Start auf dem eigenen Rechner: <code>pip install ctranslate2 transformers sentencepiece huggingface_hub</code>, dann <code>python3 studio-test-server.py</code> (Skript: <a href="/studio-test-server.py" download>studio-test-server.py</a>). Modell-Lizenz: CC-BY-NC-4.0.<br>Ohne Installation (nur unkritischer Testtext, läuft auf einem Google-Server): <a href="https://colab.research.google.com/github/dombuzz/tools/blob/main/studio-test-colab.ipynb" target="_blank" rel="noopener">Colab-Notebook öffnen ↗</a></p>
   </div>
   <details><summary class="muted">Alternativ: ALAS von Hand</summary>
@@ -754,11 +761,28 @@ $('dir').addEventListener('click',e=>{
 applyDir();
 
 /* ---------- Lokale Übersetzung (nur Test): Server auf 127.0.0.1, siehe studio-test-server.py ---------- */
-const LOCAL = 'http://127.0.0.1:8787';
+const DEFAULT_SERVER = 'http://127.0.0.1:8787';
+let LOCAL = DEFAULT_SERVER, LTOK = '';
+const isLocalSrv = () => /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(LOCAL);
+function loadServer(){
+  // Verbindungslink aus Colab: …/studio-test#server=https://….trycloudflare.com&token=…  (Fragment geht nie an einen Server)
+  try {
+    const h = new URLSearchParams(location.hash.slice(1));
+    if (h.get('server')) { sessionStorage.setItem('ut-lserver', JSON.stringify({ url: h.get('server'), tok: h.get('token') || '' })); history.replaceState(null, '', location.pathname + location.search); }
+    const v = JSON.parse(sessionStorage.getItem('ut-lserver') || 'null'); if (v && v.url) { LOCAL = v.url.replace(/\/+$/, ''); LTOK = v.tok || ''; }
+  } catch(e){}
+  $('lurl').value = LOCAL === DEFAULT_SERVER ? '' : LOCAL; $('ltok').value = LTOK;
+}
+$('lsave').onclick = () => {
+  const u = $('lurl').value.trim().replace(/\/+$/, '');
+  try { if (!u) sessionStorage.removeItem('ut-lserver'); else sessionStorage.setItem('ut-lserver', JSON.stringify({ url: u, tok: $('ltok').value.trim() })); } catch(e){}
+  LOCAL = u || DEFAULT_SERVER; LTOK = u ? $('ltok').value.trim() : ''; lping();
+};
+const lhdr = () => Object.assign({ 'Content-Type': 'application/json' }, LTOK ? { 'X-Token': LTOK } : {});
 async function lping(){
   const el = $('lstate'); if (!el) return false;
-  try { const j = await (await fetch(LOCAL + '/health')).json(); el.textContent = '● Server bereit (' + j.model + ')'; el.style.color = 'var(--ok)'; return true; }
-  catch(e){ el.textContent = '○ Server nicht erreichbar – Skript starten (siehe unten)'; el.style.color = 'var(--warn)'; return false; }
+  try { const j = await (await fetch(LOCAL + '/health')).json(); el.textContent = '● Server bereit (' + j.model + ')' + (isLocalSrv() ? '' : ' – FERNSERVER (Colab/Google), nur unkritischer Text'); el.style.color = isLocalSrv() ? 'var(--ok)' : 'var(--warn)'; return true; }
+  catch(e){ el.textContent = isLocalSrv() ? '○ Server nicht erreichbar – Skript starten (siehe unten)' : '○ Fernserver nicht erreichbar – Colab-Notebook noch aktiv?'; el.style.color = 'var(--warn)'; return false; }
 }
 $('lrun').onclick = async () => {
   const prog = $('lprog'); if (!segs.length) { prog.textContent = 'Zuerst eine SRT-Datei laden.'; return; }
@@ -770,8 +794,8 @@ $('lrun').onclick = async () => {
   try {
     for (let i = 0; i < texts.length; i += 8) {
       prog.textContent = `Übersetze … ${Math.min(i + 8, texts.length)}/${texts.length}`;
-      const r = await fetch(LOCAL + '/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ src, tgt, texts: texts.slice(i, i + 8) }) });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const r = await fetch(LOCAL + '/translate', { method: 'POST', headers: lhdr(), body: JSON.stringify({ src, tgt, texts: texts.slice(i, i + 8) }) });
+      if (r.status === 401) throw new Error('Zugangsschlüssel fehlt oder falsch (Server-Adresse aufklappen)'); if (!r.ok) throw new Error('HTTP ' + r.status);
       out.push(...(await r.json()).translations.map(t => (t || '').replace(/\s*\n\s*/g, ' ').trim() || '·'));
     }
     $('paste').value = out.join('\n'); updateCount(); $('paste').dispatchEvent(new Event('input'));
@@ -779,7 +803,7 @@ $('lrun').onclick = async () => {
   } catch(e){ prog.textContent = 'Fehler: ' + e.message; }
   $('lrun').disabled = false;
 };
-addEventListener('focus', lping); lping();
+loadServer(); addEventListener('focus', lping); lping();
 
 // Test-Hook
 window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
