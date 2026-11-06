@@ -234,7 +234,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
         <div class="sl"><span>Layer</span><div class="lyr"><button class="rs" type="button" id="cUp" title="Ina plaun pli davant" aria-label="Pli davant">↑</button><button class="rs" type="button" id="cDn" title="Ina plaun pli davos" aria-label="Pli davos">↓</button></div></div>
         <div class="sl" style="margin-top:8px"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output><button class="rs" type="button" id="cScR" title="Rimetter" aria-label="Grondezza rimetter">↺</button></div>
       </div>
-      <p class="hint">Cliccar sin ina vopna per l’activar u selecziunar (cliccar anc ina giada per ella deactivar), trair en la grafica per spustar.</p>
+      <p class="hint">Cliccar sin ina vopna per l’activar u selecziunar (cliccar anc ina giada per deactivar), en la grafica trair la vopna per spustar.</p>
     </div>
   </div>
 </div>
@@ -322,6 +322,14 @@ svg.addEventListener('pointermove',e=>{
   render();
 });
 const endDrag=()=>{drag=null};
+svg.addEventListener('wheel',e=>{
+  const im=e.target.closest&&e.target.closest('image[data-d]');if(!im||!tab.slots)return;
+  const s=tab.slots[+im.dataset.d];if(!s||!s.on)return;
+  e.preventDefault();
+  const cur=s.h0*s.sc/100,nh=Math.max(HMIN,Math.min(HMAX,cur*(e.deltaY<0?1.06:1/1.06)));
+  sel=+im.dataset.d;s.h0=nh;s.sc=100;
+  syncCrest();selectGrid();render();
+},{passive:false});
 svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
 
 /* ---------- Formular ---------- */
