@@ -11,7 +11,7 @@
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Subtitle Studio (Colab)">
 <meta property="og:description" content="Spustar ils temps da suttitels, cumparegliar dus files e translatar suttitels rumantschs e tudestgs (RM ⇄ DE) – tut en in tool.">
-<meta property="og:url" content="https://tools.dombuzz.ch/UTstudio-colab">
+<meta property="og:url" content="https://tools.dombuzz.ch/lab/UTstudio-colab">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -207,7 +207,7 @@ html:root[data-theme="light"]{--accent:#c9650a;--acc:#c9650a;--accent-dark:#a854
 </head>
 <body>
 <main>
-  <a class="homelink" href="/">← Tools</a>
+  <a class="homelink" href="/lab/">← Lab</a>
   <h1>Subtitle <span class="acc">Studio</span> <small style="font-size:.5em;font-weight:600;vertical-align:middle;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 8px;margin-left:6px">Colab</small></h1>
   <p class="sub">Spustar temps, cumparegliar files e translatar suttitels rumantschs e tudestgs (RM ⇄ DE).</p>
   <p style="font-size:14px;margin:0 0 8px;color:var(--muted,#9a9aa3)">Testversion mit experimentellen Funktionen (Box «Optional: translatar localmain» in «RM ⇄ DE», Schritt 2). Das normale Studio: <a href="/UTstudio">tools.dombuzz.ch/UTstudio</a>.</p>
@@ -1201,7 +1201,7 @@ const DEFAULT_SERVER = 'http://127.0.0.1:8787';
 let LOCAL = DEFAULT_SERVER, LTOK = '';
 const isLocalSrv = () => /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(LOCAL);
 function loadServer(){
-  // Link dal notebook Colab: …/UTstudio-colab#server=https://….trycloudflare.com&token=…  (il fragment na va mai ad in server)
+  // Link dal notebook Colab: …/lab/UTstudio-colab#server=https://….trycloudflare.com&token=…  (il fragment na va mai ad in server)
   try {
     const h = new URLSearchParams(location.hash.slice(1));
     if (h.get('server')) { sessionStorage.setItem('ut-lserver', JSON.stringify({ url: h.get('server'), tok: h.get('token') || '' })); history.replaceState(null, '', location.pathname + location.search); $('local').open = true; }
