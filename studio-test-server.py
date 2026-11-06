@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lokaler Übersetzungs-Server für das Subtitle Studio (Test) /studio-test (Box «Optional: translatar localmain», RM <-> DE) – experimentell.
+"""Lokaler Übersetzungs-Server für das Subtitle Studio (Colab) /UTstudio-colab (Box «Optional: translatar localmain», RM <-> DE) – experimentell.
 
 Modell: ZurichNLP/romansh-nllb-1.3b-ct2 (Hugging Face, Lizenz CC-BY-NC-4.0 – nicht kommerziell!)
 Datenschutz: Der Server lauscht NUR auf 127.0.0.1 (dein eigener Rechner). Texte werden weder
@@ -11,7 +11,7 @@ Start:
     python3 studio-test-server.py            # echtes Modell
     python3 studio-test-server.py --demo     # ohne Modell, gibt nur "[DEMO] ..." zurück (für Funktionstest)
     Optionen: --token GEHEIM (Zugangsschlüssel, Header X-Token), --device auto|cpu|cuda, --port 8787
-Dann https://tools.dombuzz.ch/studio-test öffnen, in «RM ⇄ DE» Schritt 2 die Box «Optional: translatar localmain» aufklappen.
+Dann https://tools.dombuzz.ch/UTstudio-colab öffnen, in «RM ⇄ DE» Schritt 2 die Box «Optional: translatar localmain» aufklappen.
 
 Schnittstelle:
     GET  /health      -> {"ok": true, "model": "..."}
