@@ -174,10 +174,12 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 .crow.sel{border-color:var(--accent)}
 .crow img{width:26px;height:29px;object-fit:contain;display:block}
 .crow.off img{opacity:.3}
+#cSel .rs{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;padding:0;line-height:1;font-size:.9rem}
+#cSel .rs:hover{color:var(--accent);border-color:var(--accent)}
 .crow .del{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;padding:0;line-height:1}
 .crow .del:hover{color:var(--accent);border-color:var(--accent)}
 .crow select{padding:5px 8px;font-size:.82rem}
-.sl{display:grid;grid-template-columns:96px minmax(0,1fr) 44px;gap:8px;align-items:center;font-size:.85rem;color:var(--muted)}
+.sl{display:grid;grid-template-columns:96px minmax(0,1fr) 44px 24px;gap:8px;align-items:center;font-size:.85rem;color:var(--muted)}
 .sl output{text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
 </style>
 </head>
@@ -223,10 +225,10 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
       <div class="row"><select id="cAddSel" aria-label="Vopna agiuntar" style="flex:1"></select><button class="btn sm" id="cAdd" type="button">Agiuntar</button></div>
       <div class="rows" id="crows"></div>
       <div id="cSel" hidden>
-        <div class="sl"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output></div>
-        <div class="sl"><span>Rotaziun</span><input type="range" id="cRot" min="-45" max="45" step="1"><output id="cRotV"></output></div>
+        <div class="sl"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output><button class="rs" type="button" data-r="cSc" data-v="100" title="Rimetter" aria-label="Grondezza rimetter">↺</button></div>
+        <div class="sl"><span>Rotaziun</span><input type="range" id="cRot" min="-45" max="45" step="1"><output id="cRotV"></output><button class="rs" type="button" data-r="cRot" data-v="0" title="Rimetter" aria-label="Rotaziun rimetter">↺</button></div>
       </div>
-      <p class="hint">Cliccar sin ina lingia u sin in vopna per al tscherner (cotschen), trair per al spustar. Ils vopnas vegnan da <code>/lab/vopnas</code>.</p>
+      <p class="hint">Cliccar sin ina lingia u sin ina vopna per selecziunar ella, trair per spustar.</p>
     </div>
   </div>
 </div>
@@ -352,6 +354,7 @@ function syncCrest(){
   if(s){const r=$('#crows').querySelectorAll('.crow')[sel];if(r)r.after($('#cSel'))}
   if(s){$('#cSc').value=s.sc;$('#cRot').value=Math.round(s.rot);setOut('cScV',s.sc,'%');setOut('cRotV',Math.round(s.rot),'°')}
 }
+document.querySelectorAll('#cSel .rs').forEach(b=>b.onclick=()=>{const i=$('#'+b.dataset.r);i.value=b.dataset.v;i.dispatchEvent(new Event('input'))});
 ['cSc','cRot'].forEach(id=>$('#'+id).addEventListener('input',()=>{
   const s=tab.slots[sel];if(!s)return;s.sc=+$('#cSc').value;s.rot=+$('#cRot').value;syncCrest();render();
 }));
