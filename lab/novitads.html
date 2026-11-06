@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Novitads dal di</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='3' width='12' height='18' rx='2'/%3E%3Cpath d='M9 15h6M9 18h4'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#111113;--card:#1c1c1f;--line:#2e2e33;--tx:#ececf0;--mu:#9a9aa5;--ac:#ff4d64;--fld:#141416;--warn:#ffb86b}
+@media(prefers-color-scheme:light){:root{--bg:#f2f2f4;--card:#fff;--line:#d8d8de;--tx:#1b1b1f;--mu:#6b6b76;--ac:#d9304a;--fld:#f7f7f9;--warn:#b86a00}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:40px 16px 64px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-size:1.4rem;margin:0;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1 .acc{color:var(--ac)}
+.badge{font-size:.7rem;font-weight:600;color:#ff9a3c;border:1px solid #ff9a3c;border-radius:99px;padding:1px 9px}
+.lead{font-size:.9rem;color:var(--mu);margin:4px 0 0}
+.grid{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.stick{position:sticky;top:16px}
+@media(max-width:860px){.stick{position:static}}
+.col{display:flex;flex-direction:column;gap:18px}
+.card{background:var(--card);border-radius:14px;padding:20px;border:1px solid var(--line)}
+.card h2{font-size:.95rem;margin:0 0 14px;font-weight:600}
+.card h2 .n{color:var(--ac);margin-right:6px}
+label{display:block;font-size:.82rem;color:var(--mu);margin:0 0 4px}
+.f{margin-bottom:12px}.f:last-child{margin-bottom:0}
+input[type=text],textarea,select{width:100%;background:var(--fld);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:.92rem}
+textarea{min-height:130px;resize:vertical;line-height:1.4}
+input[type=range]{width:100%;accent-color:var(--ac)}
+input[type=color]{width:38px;height:36px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--fld);cursor:pointer}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row>.grow{flex:1;min-width:120px}
+button,.btn{font:inherit;font-size:.88rem;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--tx);padding:7px 13px;cursor:pointer}
+button:hover,.btn:hover{border-color:var(--ac)}
+.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.pri:hover{filter:brightness(1.08)}
+.pill{border-radius:99px;padding:5px 13px;font-size:.84rem}
+.pill.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.pill.on:hover{color:#fff}
+.pill:hover{color:var(--tx)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
+canvas{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y pinch-zoom}
+canvas:active{cursor:grabbing}
+.hint{font-size:.78rem;color:var(--mu);margin-top:8px}
+.sep{height:1px;background:var(--line);margin:14px 0}
+.only-cover{display:none}
+.is-cover .only-cover{display:block}
+.only-cover-inline{display:none!important}
+.is-cover .only-cover-inline{display:flex!important}
+input[type=file]{display:none}
+.val{color:var(--mu);font-size:.8rem;float:right}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Novitads <span class="acc">dal di</span><span class="badge">Lab</span></h1>
+    <p class="lead">Visuals 4:5 per las novitads dal di – tut ils texts, las colurs e las paginas pon vegnir midadas. Exportaziun sco PNG 1080 × 1350.</p>
+  </div>
+
+  <div class="grid">
+    <!-- Preview -->
+    <div class="stick">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:12px">
+          <div class="pills" id="tabs"></div>
+          <div class="row" style="gap:6px">
+            <button id="mvL" title="Pagina a sanestra">←</button>
+            <button id="mvR" title="Pagina a dretga">→</button>
+            <button id="del" title="Stizzar la pagina">✕</button>
+          </div>
+        </div>
+        <canvas id="cv" width="1080" height="1350"></canvas>
+        <div class="hint">Maletg cun il maus spustar, cun la rotella zoomar (en il telefonin: schliders sut «Fund») · Ctrl/Cmd + V u tegnair en la zona per midar il maletg.</div>
+        <div class="row" style="margin-top:14px">
+          <button class="pri" id="exp">Exportar PNG</button>
+          <button id="expAll">Exportar tut</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="col" id="ctl">
+      <div class="card">
+        <h2><span class="n">1</span>Cuntegn</h2>
+        <div class="f">
+          <label>Tip da pagina</label>
+          <div class="pills" id="typePills">
+            <button class="pill" data-t="cover">Cover (logo + data)</button>
+            <button class="pill" data-t="text">Novitad</button>
+          </div>
+        </div>
+        <div class="f">
+          <label>Titel</label>
+          <input type="text" id="title" placeholder="p.ex. Incendi a Poschiavo">
+        </div>
+        <div class="f only-cover">
+          <label>Data (suenter «|»)</label>
+          <div class="row">
+            <input type="text" id="date" class="grow" style="flex:1">
+            <button id="today">oz</button>
+          </div>
+        </div>
+        <div class="f">
+          <label>Text <span class="val" id="lineCnt"></span></label>
+          <textarea id="text" placeholder="Il text – mintga lingia survegn aut'atras sia atgna surfatscha alva, uschè lunga sco necessari."></textarea>
+        </div>
+        <div class="f">
+          <label style="display:flex;justify-content:space-between;align-items:center">
+            <span>Funtauna dal maletg (suenter «maletg:»)</span>
+            <span style="display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="showCr"> mussar</span>
+          </label>
+          <input type="text" id="credit" placeholder="p.ex. Reuters">
+          <div class="hint">Maletgs da RTR: desactivar, la funtauna na dastga betg vegnir inditgada.</div>
+        </div>
+        <div class="f">
+          <div class="row">
+            <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="arrow"> Frizza</label>
+            <label class="only-cover-inline" style="margin:0;display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="logo"> Logo RTR</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">2</span>Colur dal titel</h2>
+        <div class="pills" id="colPills" style="margin-bottom:12px"></div>
+        <div class="row">
+          <input type="color" id="colPick">
+          <input type="text" id="colHex" class="grow" placeholder="#ff8a1f" style="flex:1">
+        </div>
+        <div class="hint" id="colHint"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">3</span>Fund (maletg)</h2>
+        <div class="row" style="margin-bottom:12px">
+          <label class="btn" for="imgIn" style="margin:0;color:var(--tx)" id="imgBtn">Tscherner maletg …</label>
+          <input type="file" id="imgIn" accept="image/*">
+          <button id="imgClr">Allontanar</button>
+          <button id="posRst">Posiziun resetar</button>
+          <button id="imgAll" title="Il medem maletg, zoom e posiziun per tut las paginas">Per tut las paginas</button>
+        </div>
+        <div class="f"><label>Zoom <span class="val" id="zv"></span></label><input type="range" id="zoom" min="100" max="300" step="1"></div>
+        <div class="f"><label>Posiziun orizontala</label><input type="range" id="ox" min="-100" max="100" step="1"></div>
+        <div class="f"><label>Posiziun verticala</label><input type="range" id="oy" min="-100" max="100" step="1"></div>
+        <div class="f"><label>Stgirs <span class="val" id="dv"></span></label><input type="range" id="dark" min="0" max="80" step="1"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">4</span>Parameters generals</h2>
+        <div class="row" style="margin-bottom:12px">
+          <div>
+            <label>Colur A</label>
+            <div class="row" style="gap:6px"><input type="color" id="aPick"><input type="text" id="aHex" style="width:100px"></div>
+          </div>
+          <div>
+            <label>Colur B</label>
+            <div class="row" style="gap:6px"><input type="color" id="bPick"><input type="text" id="bHex" style="width:100px"></div>
+          </div>
+        </div>
+        <div class="f"><label>Grondezza dal text <span class="val" id="sv"></span></label><input type="range" id="size" min="34" max="66" step="1"></div>
+        <div class="sep"></div>
+        <div class="f">
+          <label>Scrittira SRG SSR Type (in cars per browser; datoteca d'ina vouta)</label>
+          <div class="row">
+            <label class="btn" for="fBold" style="margin:0;color:var(--tx)">Bold …</label><input type="file" id="fBold" accept=".ttf,.otf,.woff,.woff2">
+            <label class="btn" for="fLight" style="margin:0;color:var(--tx)">Light …</label><input type="file" id="fLight" accept=".ttf,.otf,.woff,.woff2">
+            <span class="hint" id="fState" style="margin:0"></span>
+          </div>
+        </div>
+        <div class="f">
+          <label>Logo RTR (opziunal, PNG/SVG cun fund transparent)</label>
+          <div class="row">
+            <label class="btn" for="logoIn" style="margin:0;color:var(--tx)">Logo …</label><input type="file" id="logoIn" accept="image/*">
+            <button id="logoClr">Logo standard</button>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="row">
+          <button id="addP">+ Agiuntar pagina</button>
+          <button id="reset">Nova seria</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const W=1080,H=1350,KEY='novitads.v1',FKB='novitads.font.bold',FKL='novitads.font.light',LK='novitads.logo';
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+let S,cur=0,fontOK=false,logoImg=null,dateEdited=false;
+const imgs={};
+
+function uid(){return Math.random().toString(36).slice(2,9)}
+function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'A',colC:'#e0245e',zoom:1,ox:0,oy:0,dark:0,frizza:false,logo:true},o)}
+function today(){const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear()}
+function ymd(){const m=(S.date||'').match(/^(\d{1,2})[-.](\d{1,2})[-.](\d{4})$/);if(m)return m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0');const t=today().split('-');return t[2]+t[1]+t[0]}
+function defaults(){return{colA:'#ff8a1f',colB:'#8b5cf6',size:48,date:today(),slides:[
+  mk({type:'cover',frizza:true,title:'News dal di',credit:'Polizia chantunala grischuna',colSrc:'C',colC:'#e0245e'}),
+  mk({title:'Incendi a Poschiavo',text:"En la Val da Camp dasper Poschiavo hai brischà gievgia en in cumplex da chasas. Persunas na sajan betg vegnidas blessadas. Daco ch'i ha brischà n'è anc betg cler.",colSrc:'A'}),
+  mk({title:'Gieus olimpics da juniors',text:"Als Youth Olympic Games a Dakar en il Senegal hai dà l'emprima medaglia dad aur per la Svizra. La Turitgaisa Kimey Casanova ha gudagnà aur en il triatlon.",credit:'imago images/teamsprint media',colSrc:'B'}),
+  mk({title:'Segund chaud onn insumma',text:"Tenor il Servetsch europeic da clima Copernicus, vegn il 2026 robablamain ad esser il segund onn il pli chaud dapi ch'ins mesira las temperaturas.",credit:'Reuters',colSrc:'A'})
+]}}
+function load(){try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.slides&&j.slides.length){j.slides=j.slides.map(s=>{if(s.frizza===undefined)s.frizza=(s.type==='cover'&&s.arrow!==false);delete s.arrow;return mk(s)});j.date=today();return Object.assign(defaults(),j)}}catch(e){}return defaults()}
+function save(){try{const c=JSON.parse(JSON.stringify(S));delete c.date;localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}}
+S=load();
+
+function normHex(v,f){v=(v||'').trim().replace(/^#?/,'#');if(/^#[0-9a-f]{3}$/i.test(v))v='#'+[...v.slice(1)].map(c=>c+c).join('');return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():f}
+function slideColor(s){return s.colSrc==='A'?S.colA:s.colSrc==='B'?S.colB:s.colC}
+
+/* ---------- fonts ---------- */
+const fb=n=>`700 ${n}px SRGType, "Helvetica Neue", Arial, system-ui, sans-serif`;
+const fl=n=>`${fontOK?300:400} ${n}px SRGType, "Helvetica Neue", Arial, system-ui, sans-serif`;
+async function addFont(dataUrl,weight){const buf=await (await fetch(dataUrl)).arrayBuffer();const ff=new FontFace('SRGType',buf,{weight:String(weight)});await ff.load();document.fonts.add(ff);fontOK=true}
+async function loadFonts(){
+  const st=[];
+  for(const [k,w,n] of [[FKB,700,'Bold'],[FKL,300,'Light']]){
+    let d=null;try{d=localStorage.getItem(k)}catch(e){}
+    if(d){try{await addFont(d,w);st.push(n+' ✓')}catch(e){}}
+  }
+  $('fState').textContent=st.join(' · ');
+  redraw();
+}
+function readFile(f){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)})}
+async function onFont(e,key,w){const f=e.target.files[0];if(!f)return;const d=await readFile(f);try{localStorage.setItem(key,d)}catch(x){}try{await addFont(d,w)}catch(x){alert('Scrittira na po betg vegnir chargiada.')}
+  let st=[];try{if(localStorage.getItem(FKB))st.push('Bold ✓');if(localStorage.getItem(FKL))st.push('Light ✓')}catch(x){}
+  $('fState').textContent=st.join(' · ');e.target.value='';redraw()}
+$('fBold').onchange=e=>onFont(e,FKB,700);
+$('fLight').onchange=e=>onFont(e,FKL,300);
+
+/* ---------- logo ---------- */
+function setLogo(src){if(!src){logoImg=null;redraw();return}const i=new Image();i.onload=()=>{logoImg=i;redraw()};i.src=src}
+try{setLogo(localStorage.getItem(LK))}catch(e){}
+$('logoIn').onchange=async e=>{const f=e.target.files[0];if(!f)return;const d=await readFile(f);try{localStorage.setItem(LK,d)}catch(x){}setLogo(d);e.target.value=''};
+$('logoClr').onclick=()=>{try{localStorage.removeItem(LK)}catch(e){}setLogo(null)};
+
+/* ---------- render ---------- */
+function wrap(c,text,maxW){
+  const out=[];
+  for(const para of String(text).split(/\n/)){
+    const words=para.split(/\s+/).filter(Boolean);let line='';
+    for(const w of words){const t=line?line+' '+w:w;if(line&&c.measureText(t).width>maxW){out.push(line);line=w}else line=t}
+    if(line)out.push(line);
+  }
+  return out;
+}
+function render(c,s,preview){
+  c.clearRect(0,0,W,H);
+  const im=imgs[s.id];
+  if(im){
+    const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight)*s.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
+    c.drawImage(im,(W-dw)/2+s.ox*(dw-W)/2,(H-dh)/2+s.oy*(dh-H)/2,dw,dh);
+  }else{
+    const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#2b2b33');g.addColorStop(1,'#16161a');c.fillStyle=g;c.fillRect(0,0,W,H);
+    if(preview){c.fillStyle='rgba(255,255,255,.22)';c.font='500 34px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('Maletg tscherner, spustar u encollar',W/2,H/2-120);c.textAlign='left'}
+  }
+  if(s.dark>0){c.fillStyle='rgba(0,0,0,'+(s.dark/100)+')';c.fillRect(0,0,W,H)}
+
+  const n=S.size,padX=Math.round(n*.35),boxH=Math.round(n*1.67),tN=Math.round(n*1.04),tH=Math.round(n*1.7),gap=Math.round(n*.21);
+  const X0=70,MAXBOX=W-2*X0,maxW=MAXBOX-2*padX;
+  const isCover=s.type==='cover';
+  let y=1280;
+  c.textBaseline='middle';c.textAlign='left';
+
+  /* text lines, bottom-anchored, each box exactly as wide as its line */
+  c.font=fl(n);
+  const lines=wrap(c,s.text||'',maxW);
+  for(let i=lines.length-1;i>=0;i--){
+    const w=c.measureText(lines[i]).width;
+    y-=boxH;
+    c.fillStyle='#fff';c.fillRect(X0,y,Math.ceil(w+2*padX),boxH);
+    c.fillStyle='#16161a';c.fillText(lines[i],X0+padX,y+boxH/2+2);
+    y-=gap;
+  }
+  /* title */
+  const title=(s.title||'').toUpperCase(),suffix=isCover&&S.date?' | '+S.date:'';
+  let lastRowY=null;
+  if(title||suffix){
+    c.font=fb(tN);
+    const tl=isCover?[title]:wrap(c,title,maxW);
+    for(let i=tl.length-1;i>=0;i--){
+      c.font=fb(tN);const wb=c.measureText(tl[i]).width;
+      let wl=0;if(isCover&&suffix){c.font=fl(tN);wl=c.measureText(suffix).width}
+      y-=tH;lastRowY=y;
+      c.fillStyle=slideColor(s);c.fillRect(X0,y,Math.ceil(wb+wl+2*padX),tH);
+      c.fillStyle='#fff';c.font=fb(tN);c.fillText(tl[i],X0+padX,y+tH/2+2);
+      if(wl){c.font=fl(tN);c.fillText(suffix,X0+padX+wb,y+tH/2+2)}
+      y-=gap;
+    }
+  }
+  /* arrow */
+  if(s.frizza&&lastRowY!==null){
+    const cy=lastRowY+tH/2;c.strokeStyle='#fff';c.lineWidth=5;c.lineCap='round';c.lineJoin='round';
+    c.beginPath();c.moveTo(880,cy);c.lineTo(1012,cy);c.moveTo(990,cy-24);c.lineTo(1014,cy);c.lineTo(990,cy+24);c.stroke();
+  }
+  /* logo */
+  if(isCover&&s.logo){
+    if(logoImg){const h=70,w=h*logoImg.naturalWidth/logoImg.naturalHeight;c.drawImage(logoImg,X0,65,w,h)}
+    else{c.fillStyle='#c8102e';c.fillRect(X0,65,108,70);c.fillStyle='#fff';c.font='800 50px "Helvetica Neue",Arial,sans-serif';c.textAlign='center';c.fillText('RTR',X0+54,102);c.textAlign='left'}
+  }
+  /* credit */
+  if(s.credit&&s.showCr!==false){
+    c.save();c.font=fl(28);c.fillStyle='#fff';c.shadowColor='rgba(0,0,0,.65)';c.shadowBlur=6;c.textBaseline='middle';
+    c.fillText('maletg: '+s.credit,X0,1309);c.restore();
+  }
+  return {lines:lines.length,top:y+gap};
+}
+let raf=0;
+function redraw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const r=render(ctx,S.slides[cur],true);$('lineCnt').textContent=r.lines?r.lines+' lingias':''})}
+
+/* ---------- UI ---------- */
+function cs(){return S.slides[cur]}
+function buildTabs(){
+  const t=$('tabs');t.innerHTML='';
+  S.slides.forEach((s,i)=>{const b=document.createElement('button');b.className='pill'+(i===cur?' on':'');b.innerHTML='<span class="sw" style="background:'+slideColor(s)+'"></span>'+(i+1);b.onclick=()=>{cur=i;fill();buildTabs();redraw()};t.appendChild(b)});
+}
+function buildColPills(){
+  const p=$('colPills');p.innerHTML='';
+  [['A','Colur A',S.colA],['B','Colur B',S.colB],['C','Atgna colur',cs().colC]].forEach(([k,n,c])=>{
+    const b=document.createElement('button');b.className='pill'+(cs().colSrc===k?' on':'');b.innerHTML='<span class="sw" style="background:'+c+'"></span>'+n;
+    b.onclick=()=>{cs().colSrc=k;fill();buildTabs();redraw();save()};p.appendChild(b)});
+}
+function fill(){
+  const s=cs();
+  $('ctl').classList.toggle('is-cover',s.type==='cover');
+  document.querySelectorAll('#typePills .pill').forEach(b=>b.classList.toggle('on',b.dataset.t===s.type));
+  $('title').value=s.title;$('text').value=s.text;$('credit').value=s.credit;$('date').value=S.date;
+  $('arrow').checked=!!s.frizza;$('logo').checked=!!s.logo;
+  $('showCr').checked=s.showCr!==false;$('credit').disabled=s.showCr===false;$('credit').style.opacity=s.showCr===false?.45:1;
+  const col=slideColor(s);$('colPick').value=col;$('colHex').value=col;
+  $('colHint').textContent=s.colSrc==='C'?'Atgna colur da questa pagina.':'Midar la colur '+s.colSrc+' vala per tut las paginas che la utiliseschan (vesair parameters generals).';
+  buildColPills();
+  $('zoom').value=Math.round(s.zoom*100);$('zv').textContent=Math.round(s.zoom*100)+'%';
+  $('ox').value=Math.round(s.ox*100);$('oy').value=Math.round(s.oy*100);
+  $('dark').value=s.dark;$('dv').textContent=s.dark+'%';
+  $('aPick').value=S.colA;$('aHex').value=S.colA;$('bPick').value=S.colB;$('bHex').value=S.colB;
+  $('size').value=S.size;$('sv').textContent=S.size+' px';
+}
+function upd(fn){fn();redraw();save()}
+document.querySelectorAll('#typePills .pill').forEach(b=>b.onclick=()=>{cs().type=b.dataset.t;fill();buildTabs();redraw();save()});
+$('title').oninput=e=>upd(()=>cs().title=e.target.value);
+$('text').oninput=e=>upd(()=>cs().text=e.target.value);
+$('credit').oninput=e=>upd(()=>cs().credit=e.target.value);
+$('date').oninput=e=>{S.date=e.target.value;dateEdited=true;redraw()};
+$('today').onclick=()=>{S.date=today();$('date').value=S.date;redraw()};
+$('showCr').onchange=e=>{cs().showCr=e.target.checked;fill();redraw();save()};
+$('arrow').onchange=e=>upd(()=>cs().frizza=e.target.checked);
+$('logo').onchange=e=>upd(()=>cs().logo=e.target.checked);
+
+function setCol(hex){const s=cs();if(s.colSrc==='A')S.colA=hex;else if(s.colSrc==='B')S.colB=hex;else s.colC=hex;fill();buildTabs();redraw();save()}
+$('colPick').oninput=e=>setCol(e.target.value);
+$('colHex').oninput=e=>{const h=normHex(e.target.value,null);if(h){const s=cs();if(s.colSrc==='A')S.colA=h;else if(s.colSrc==='B')S.colB=h;else s.colC=h;$('colPick').value=h;buildColPills();buildTabs();redraw();save()}};
+$('aPick').oninput=e=>{S.colA=e.target.value;$('aHex').value=S.colA;fill();buildTabs();redraw();save()};
+$('bPick').oninput=e=>{S.colB=e.target.value;$('bHex').value=S.colB;fill();buildTabs();redraw();save()};
+$('aHex').oninput=e=>{const h=normHex(e.target.value,null);if(h){S.colA=h;$('aPick').value=h;buildColPills();buildTabs();redraw();save()}};
+$('bHex').oninput=e=>{const h=normHex(e.target.value,null);if(h){S.colB=h;$('bPick').value=h;buildColPills();buildTabs();redraw();save()}};
+$('size').oninput=e=>{S.size=+e.target.value;$('sv').textContent=S.size+' px';redraw();save()};
+
+$('zoom').oninput=e=>{cs().zoom=e.target.value/100;$('zv').textContent=e.target.value+'%';redraw();save()};
+$('ox').oninput=e=>{cs().ox=e.target.value/100;redraw();save()};
+$('oy').oninput=e=>{cs().oy=e.target.value/100;redraw();save()};
+$('dark').oninput=e=>{cs().dark=+e.target.value;$('dv').textContent=e.target.value+'%';redraw();save()};
+$('posRst').onclick=()=>{const s=cs();s.zoom=1;s.ox=0;s.oy=0;fill();redraw();save()};
+
+/* image in / out */
+function setImage(f){
+  if(!f||!f.type.startsWith('image/'))return;
+  const s=cs(),id=s.id,i=new Image();
+  i.onload=()=>{imgs[id]=i;s.zoom=1;s.ox=0;s.oy=0;if(cs()===s)fill();redraw()};
+  i.src=URL.createObjectURL(f);
+}
+$('imgIn').onchange=e=>{setImage(e.target.files[0]);e.target.value=''};
+$('imgClr').onclick=()=>{delete imgs[cs().id];redraw()};
+window.addEventListener('paste',e=>{const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));if(it){setImage(it.getAsFile());e.preventDefault()}});
+cv.addEventListener('dragover',e=>e.preventDefault());
+cv.addEventListener('drop',e=>{e.preventDefault();setImage(e.dataTransfer.files[0])});
+
+$('imgAll').onclick=()=>{const s=cs(),im=imgs[s.id];if(!im){alert('Pli baud in maletg tscherner.');return}
+  S.slides.forEach(t=>{imgs[t.id]=im;t.zoom=s.zoom;t.ox=s.ox;t.oy=s.oy});save();redraw()};
+/* mouse wheel = zoom */
+cv.addEventListener('wheel',e=>{const s=cs();if(!imgs[s.id])return;e.preventDefault();
+  s.zoom=Math.max(1,Math.min(3,s.zoom*(e.deltaY<0?1.06:1/1.06)));
+  $('zoom').value=Math.round(s.zoom*100);$('zv').textContent=Math.round(s.zoom*100)+'%';redraw();save()},{passive:false});
+/* drag to move image */
+let drag=null;
+cv.addEventListener('pointerdown',e=>{const s=cs(),im=imgs[s.id];if(!im)return;drag={x:e.clientX,y:e.clientY,ox:s.ox,oy:s.oy};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{
+  if(!drag)return;const s=cs(),im=imgs[s.id];if(!im)return;
+  const r=cv.getBoundingClientRect(),k=W/r.width;
+  const sc=Math.max(W/im.naturalWidth,H/im.naturalHeight)*s.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
+  const ax=(dw-W)/2,ay=(dh-H)/2;
+  if(ax>0)s.ox=Math.max(-1,Math.min(1,drag.ox+(e.clientX-drag.x)*k/ax));
+  if(ay>0)s.oy=Math.max(-1,Math.min(1,drag.oy+(e.clientY-drag.y)*k/ay));
+  $('ox').value=Math.round(s.ox*100);$('oy').value=Math.round(s.oy*100);redraw();
+});
+const endDrag=()=>{if(drag){drag=null;save()}};
+cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
+
+/* slides */
+$('addP').onclick=()=>{S.slides.splice(cur+1,0,mk({colSrc:cs().colSrc==='A'?'B':'A'}));cur++;fill();buildTabs();redraw();save()};
+$('del').onclick=()=>{if(S.slides.length<2){alert('Almain ina pagina stat.');return}if(!confirm('Stizzar questa pagina?'))return;delete imgs[cs().id];S.slides.splice(cur,1);cur=Math.min(cur,S.slides.length-1);fill();buildTabs();redraw();save()};
+$('mvL').onclick=()=>{if(cur>0){[S.slides[cur-1],S.slides[cur]]=[S.slides[cur],S.slides[cur-1]];cur--;buildTabs();redraw();save()}};
+$('mvR').onclick=()=>{if(cur<S.slides.length-1){[S.slides[cur+1],S.slides[cur]]=[S.slides[cur],S.slides[cur+1]];cur++;buildTabs();redraw();save()}};
+$('reset').onclick=()=>{if(!confirm('Tut ils texts e maletgs stizzar e cumenzar da nov?'))return;Object.keys(imgs).forEach(k=>delete imgs[k]);S.slides=[mk({type:'cover',frizza:true,title:'News dal di',colSrc:'C',colC:'#e0245e'}),mk({})];cur=0;fill();buildTabs();redraw();save()};
+
+/* export */
+function blobOf(i){const c=document.createElement('canvas');c.width=W;c.height=H;render(c.getContext('2d'),S.slides[i],false);return new Promise(r=>c.toBlob(r,'image/png'))}
+function dl(b,name){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+const fname=i=>'novitads_'+ymd()+'_'+String(i+1).padStart(2,'0')+'.png';
+$('exp').onclick=async()=>dl(await blobOf(cur),fname(cur));
+$('expAll').onclick=async()=>{for(let i=0;i<S.slides.length;i++){dl(await blobOf(i),fname(i));await new Promise(r=>setTimeout(r,400))}};
+
+fill();buildTabs();redraw();loadFonts();
+})();
+</script>
+</body>
+</html>
