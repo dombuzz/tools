@@ -344,24 +344,6 @@ p.sub{margin:0;color:var(--muted)}
     <a class="btn" href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">Avrir ALAS ↗</a>
   </div>
   <div class="chunks" id="de-chunks"></div>
-  <details id="de-local" style="margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px">
-    <summary style="cursor:pointer"><strong>Optional: translatar localmain</strong> <span class="muted">(experimental · model da l'UZH)</span></summary>
-    <p class="muted" style="font-size:14px;margin:10px 0">Las frasas vegnan translatadas dad in model da l'Universitad da Turitg (NLLB, licenza CC-BY-NC-4.0) che gira sin tes agen computer u en in notebook Colab – senza avrir ALAS.</p>
-    <div class="row">
-      <label class="muted">Idiom <select id="de-lidiom" style="font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><option value="rm-rumgr">Rumantsch Grischun</option><option value="rm-sursilv">Sursilvan</option><option value="rm-sutsilv">Sutsilvan</option><option value="rm-surmiran">Surmiran</option><option value="rm-puter">Puter</option><option value="rm-vallader">Vallader</option></select></label>
-      <button class="primary" id="de-lrun" type="button">Translatar localmain</button>
-    </div>
-    <p id="de-lstate" class="muted" style="margin:8px 0 0"></p>
-    <p id="de-lprog" class="muted" style="margin:4px 0 0"></p>
-    <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Adressa dal server (standard: quest computer · tar Colab duvrar il link dal notebook)</summary>
-      <div class="row" style="margin-top:8px">
-        <input id="de-lurl" type="text" placeholder="http://127.0.0.1:8787" style="flex:1;min-width:220px" autocomplete="off" spellcheck="false">
-        <input id="de-ltok" type="password" placeholder="Clav d'access (mo server a distanza)" style="min-width:200px" autocomplete="off">
-        <button id="de-lsave" type="button">Surpigliar</button>
-      </div>
-    </details>
-    <p class="muted" style="font-size:14px;margin:10px 0 0">Sin agen computer: <code>pip install ctranslate2 transformers sentencepiece huggingface_hub</code>, lura <code>python3 studio-test-server.py</code> (<a href="/studio-test-server.py" download>skript</a>). Senza installaziun: <a href="https://colab.research.google.com/github/dombuzz/tools/blob/main/studio-test-colab.ipynb" target="_blank" rel="noopener">notebook Colab ↗</a> – <b>mo text betg critic</b>, il text vegn processà sin in server da Google.</p>
-  </details>
 </section>
 
 <section class="step" id="de-s3" hidden>
@@ -561,7 +543,7 @@ const SUB = (() => {
     if (push) history.replaceState(null, '', '#' + (t === 'de' && window.__utDir && window.__utDir() === 'derm' ? 'de-rm' : NAME[t]));
   }
   btns.forEach(b => b.onclick = () => setTab(b.dataset.tab, true));
-  let t = HASH[location.hash.slice(1)] || (/^#server=/.test(location.hash) ? 'de' : undefined);
+  let t = HASH[location.hash.slice(1)];
   if (!t) try { t = localStorage.getItem('studio-tab'); } catch (e) {}
   setTab(/^(sp|cu|de)$/.test(t || '') ? t : 'sp');
   addEventListener('hashchange', () => { const h = HASH[location.hash.slice(1)]; if (h) setTab(h); });
@@ -1189,54 +1171,6 @@ $('dir').addEventListener('click',e=>{
   applyDir();
 });
 applyDir();
-
-/* ---------- Optional: translaziun locala (server sin agen computer u Colab), skript: studio-test-server.py ---------- */
-const DEFAULT_SERVER = 'http://127.0.0.1:8787';
-let LOCAL = DEFAULT_SERVER, LTOK = '';
-const isLocalSrv = () => /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(LOCAL);
-function loadServer(){
-  // Link dal notebook Colab: …/studio#server=https://….trycloudflare.com&token=…  (il fragment na va mai ad in server)
-  try {
-    const h = new URLSearchParams(location.hash.slice(1));
-    if (h.get('server')) { sessionStorage.setItem('ut-lserver', JSON.stringify({ url: h.get('server'), tok: h.get('token') || '' })); history.replaceState(null, '', location.pathname + location.search); $('local').open = true; }
-    const v = JSON.parse(sessionStorage.getItem('ut-lserver') || 'null'); if (v && v.url) { LOCAL = v.url.replace(/\/+$/, ''); LTOK = v.tok || ''; }
-  } catch(e){}
-  $('lurl').value = LOCAL === DEFAULT_SERVER ? '' : LOCAL; $('ltok').value = LTOK;
-}
-$('lsave').onclick = () => {
-  const u = $('lurl').value.trim().replace(/\/+$/, '');
-  try { if (!u) sessionStorage.removeItem('ut-lserver'); else sessionStorage.setItem('ut-lserver', JSON.stringify({ url: u, tok: $('ltok').value.trim() })); } catch(e){}
-  LOCAL = u || DEFAULT_SERVER; LTOK = u ? $('ltok').value.trim() : ''; lping();
-};
-const lhdr = () => Object.assign({ 'Content-Type': 'application/json' }, LTOK ? { 'X-Token': LTOK } : {});
-async function lping(){
-  const el = $('lstate'); if (!el) return false;
-  try { const j = await (await fetch(LOCAL + '/health')).json(); el.textContent = '● Server pront (' + j.model + ')' + (isLocalSrv() ? '' : ' – SERVER A DISTANZA (Colab/Google): mo text betg critic'); el.style.color = isLocalSrv() ? 'var(--ok)' : 'var(--warn)'; return true; }
-  catch(e){ el.textContent = isLocalSrv() ? '○ Server betg accessibel – avrir il skript (guardar sutvart)' : '○ Server a distanza betg accessibel – notebook Colab anc activ?'; el.style.color = 'var(--warn)'; return false; }
-}
-// Il server vegn dumandà mo, cur che la box è averta (uschiglio avriss mintga visitader enconuschenta localhost)
-$('local').addEventListener('toggle', () => { if ($('local').open) lping(); });
-addEventListener('focus', () => { if ($('local').open) lping(); });
-$('lrun').onclick = async () => {
-  const prog = $('lprog'); if (!segs.length) { prog.textContent = "Chargiar l'emprim ina datoteca SRT."; return; }
-  if (!(await lping())) { prog.textContent = 'Il server na gira betg.'; return; }
-  const idiom = $('lidiom').value, rmde = dir === 'rmde';
-  const src = rmde ? idiom : 'deu_Latn', tgt = rmde ? 'deu_Latn' : idiom;
-  const texts = segs.map(s => s.src.replace(/\s*\n\s*/g, ' ').trim());
-  const out = []; $('lrun').disabled = true;
-  try {
-    for (let i = 0; i < texts.length; i += 8) {
-      prog.textContent = `Translatesch … ${Math.min(i + 8, texts.length)}/${texts.length}`;
-      const r = await fetch(LOCAL + '/translate', { method: 'POST', headers: lhdr(), body: JSON.stringify({ src, tgt, texts: texts.slice(i, i + 8) }) });
-      if (r.status === 401) throw new Error("clav d'access manca u fauss (avrir l'adressa dal server)"); if (!r.ok) throw new Error('HTTP ' + r.status);
-      out.push(...(await r.json()).translations.map(t => (t || '').replace(/\s*\n\s*/g, ' ').trim() || '·'));
-    }
-    $('paste').value = out.join('\n'); updateCount(); $('paste').dispatchEvent(new Event('input'));
-    prog.textContent = `✓ ${out.length} frasas translatadas localmain – controllar.`;
-  } catch(e){ prog.textContent = 'Errur: ' + e.message; }
-  $('lrun').disabled = false;
-};
-loadServer();
 
 // Test-Hook
 window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
