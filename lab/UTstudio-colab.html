@@ -366,7 +366,7 @@ html:root[data-theme="light"]{--accent:#c9650a;--acc:#c9650a;--accent-dark:#a854
         <button id="de-lsave" type="button">Surpigliar</button>
       </div>
     </details>
-    <p class="muted" style="font-size:14px;margin:10px 0 0">Sin agen computer: <code>pip install ctranslate2 transformers sentencepiece huggingface_hub</code>, lura <code>python3 studio-test-server.py</code> (<a href="/studio-test-server.py" download>skript</a>). Senza installaziun: <a href="https://colab.research.google.com/github/dombuzz/tools/blob/main/studio-test-colab.ipynb" target="_blank" rel="noopener">notebook Colab ↗</a> – <b>mo text betg critic</b>, il text vegn processà sin in server da Google.</p>
+    <p class="muted" style="font-size:14px;margin:10px 0 0">Sin agen computer: <code>pip install ctranslate2 transformers sentencepiece huggingface_hub</code>, lura <code>python3 UTstudio-colab-server.py</code> (<a href="/lab/UTstudio-colab-server.py" download>skript</a>). Senza installaziun: <a href="https://colab.research.google.com/github/dombuzz/tools/blob/main/lab/UTstudio-colab.ipynb" target="_blank" rel="noopener">notebook Colab ↗</a> – <b>mo text betg critic</b>, il text vegn processà sin in server da Google.</p>
   </details>
 </section>
 
@@ -1196,7 +1196,7 @@ $('dir').addEventListener('click',e=>{
 });
 applyDir();
 
-/* ---------- Optional: translaziun locala (server sin agen computer u Colab), skript: studio-test-server.py ---------- */
+/* ---------- Optional: translaziun locala (server sin agen computer u Colab), skript: UTstudio-colab-server.py ---------- */
 const DEFAULT_SERVER = 'http://127.0.0.1:8787';
 let LOCAL = DEFAULT_SERVER, LTOK = '';
 const isLocalSrv = () => /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(LOCAL);

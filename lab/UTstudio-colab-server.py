@@ -8,8 +8,8 @@ gespeichert noch geloggt und verlassen den Rechner nicht. Nur beim ersten Start 
 
 Start:
     pip install ctranslate2 transformers sentencepiece huggingface_hub
-    python3 studio-test-server.py            # echtes Modell
-    python3 studio-test-server.py --demo     # ohne Modell, gibt nur "[DEMO] ..." zurück (für Funktionstest)
+    python3 UTstudio-colab-server.py            # echtes Modell
+    python3 UTstudio-colab-server.py --demo     # ohne Modell, gibt nur "[DEMO] ..." zurück (für Funktionstest)
     Optionen: --token GEHEIM (Zugangsschlüssel, Header X-Token), --device auto|cpu|cuda, --port 8787
 Dann https://tools.dombuzz.ch/lab/UTstudio-colab öffnen, in «RM ⇄ DE» Schritt 2 die Box «Optional: translatar localmain» aufklappen.
 
