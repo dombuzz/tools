@@ -39,6 +39,7 @@ h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
 h1 .acc{color:var(--accent)}
 .labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:1px}
 .lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
+.left{display:flex;flex-direction:column;gap:18px;min-width:0}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
 @media (max-width:980px){.main{grid-template-columns:minmax(0,1fr)}}
 .side{display:flex;flex-direction:column;gap:18px;min-width:0}
@@ -195,13 +196,12 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
   </div>
 </header>
 
-<div class="panel" style="margin-bottom:18px">
-  <h2 class="ph"><span class="num">1</span>Titel</h2>
-  <textarea id="title" rows="3" aria-label="Titel"></textarea>
-</div>
-
 <div class="main">
   <div class="left">
+    <div class="panel">
+      <h2 class="ph"><span class="num">1</span>Titel</h2>
+      <textarea id="title" rows="3" aria-label="Titel"></textarea>
+    </div>
     <div class="panel">
       <div class="stagebox"><div class="stage" id="stage"><svg id="g" class="g" viewBox="0 0 1920 1080" preserveAspectRatio="none" role="img" aria-label="Visual"></svg></div></div>
       <div class="row">
@@ -296,7 +296,7 @@ function render(){
     h+=`<rect x="${(s.cx-w/2-4).toFixed(1)}" y="${(s.cy-hh/2-4).toFixed(1)}" width="${(w+8).toFixed(1)}" height="${(hh+8).toFixed(1)}" rx="6" fill="none" stroke="#fff" stroke-width="8" opacity=".9" transform="rotate(${s.rot} ${s.cx} ${s.cy})" pointer-events="none"/><rect x="${(s.cx-w/2-4).toFixed(1)}" y="${(s.cy-hh/2-4).toFixed(1)}" width="${(w+8).toFixed(1)}" height="${(hh+8).toFixed(1)}" rx="6" fill="none" stroke="#E2001A" stroke-width="4" transform="rotate(${s.rot} ${s.cx} ${s.cy})" pointer-events="none"/>`;
   }
   $('#g').innerHTML=h;
-  $('#stage').style.background=`url("/lab/visuals/bg.jpg") center/100% 100% no-repeat`;
+  $('#stage').style.background=`url("/lab/visuals/bg.png") center/100% 100% no-repeat`;
 }
 
 /* ---------- Drag ---------- */
@@ -434,7 +434,7 @@ function fileName(){
 async function exportPNG(){
   try{await document.fonts.load(fontCss(104))}catch(e){}
   const W=1920,H=1080,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
-  g.drawImage(await loadImg('/lab/visuals/bg.jpg'),0,0,W,H);
+  g.drawImage(await loadImg('/lab/visuals/bg.png'),0,0,W,H);
   for(const it of scene()){
     if(it.t==='img'){
       const im=await loadImg(it.src);let x=it.x,y=it.y,w=it.w,h=it.h;
