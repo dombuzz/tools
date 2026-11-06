@@ -169,10 +169,12 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 .g [data-d]{cursor:grab}.g [data-d]:active{cursor:grabbing}
 .g .ti{fill:#fff;font-family:"SRG SSR Type Heavy","SRG SSR Type Bold",Arial,Helvetica,sans-serif;font-weight:700;white-space:pre}
 .rows{display:flex;flex-direction:column;gap:6px}
-.crow{display:grid;grid-template-columns:20px 30px minmax(0,1fr);gap:8px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+.crow{display:grid;grid-template-columns:20px 30px minmax(0,1fr) 24px;gap:8px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
 .crow.sel{border-color:var(--accent)}
 .crow img{width:26px;height:29px;object-fit:contain;display:block}
 .crow.off img{opacity:.3}
+.crow .del{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;padding:0;line-height:1}
+.crow .del:hover{color:var(--accent);border-color:var(--accent)}
 .crow select{padding:5px 8px;font-size:.82rem}
 .sl{display:grid;grid-template-columns:96px minmax(0,1fr) 44px;gap:8px;align-items:center;font-size:.85rem;color:var(--muted)}
 .sl output{text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
@@ -193,6 +195,11 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
   </div>
 </header>
 
+<div class="panel" style="margin-bottom:18px">
+  <h2 class="ph"><span class="num">1</span>Titel</h2>
+  <textarea id="title" rows="3" aria-label="Titel"></textarea>
+</div>
+
 <div class="main">
   <div class="left">
     <div class="panel">
@@ -201,40 +208,25 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
         <button class="btn primary" id="png" type="button">Memorisar PNG (1920×1080)</button>
         <span class="status" id="status" role="status"></span>
       </div>
-      <p class="hint">Maletg e vopnas pon vegnir trais cun il maus.</p>
+      <p class="hint">Ils vopnas pon vegnir trais cun il maus.</p>
     </div>
   </div>
 
   <div class="side">
-    <div class="panel">
-      <h2 class="ph"><span class="num">1</span>Titel</h2>
-      <textarea id="title" rows="3" aria-label="Titel"></textarea>
-    </div>
-    <div class="panel">
-      <h2 class="ph"><span class="num">2</span><span id="objT">Maletg</span></h2>
-      <label class="chk"><input type="checkbox" id="oShow" checked> Mussar</label>
-      <div class="sl"><span>Grondezza</span><input type="range" id="oSc" min="20" max="200" step="1"><output id="oScV"></output></div>
-      <div class="sl"><span>Posiziun X</span><input type="range" id="oX" min="-600" max="600" step="1"><output id="oXV"></output></div>
-      <div class="sl"><span>Posiziun Y</span><input type="range" id="oY" min="-600" max="600" step="1"><output id="oYV"></output></div>
-      <div class="row">
-        <label class="btn sm">Autr’maletg<input type="file" id="oFile" accept="image/*" hidden></label>
-        <button class="btn sm" id="oOrig" type="button">Maletg original</button>
-        <button class="btn sm" id="oReset" type="button">Reset posiziun</button>
-      </div>
-    </div>
     <div class="panel" id="crestPanel">
-      <h2 class="ph"><span class="num">3</span>Vopnas</h2>
+      <h2 class="ph"><span class="num">2</span>Vopnas</h2>
       <div class="row">
         <button class="btn sm" id="cAll" type="button">Tut activar</button>
         <button class="btn sm" id="cNone" type="button">Tut deactivar</button>
         <button class="btn sm" id="cReset" type="button">Reset</button>
       </div>
+      <div class="row"><select id="cAddSel" aria-label="Vopna agiuntar" style="flex:1"></select><button class="btn sm" id="cAdd" type="button">Agiuntar</button></div>
       <div class="rows" id="crows"></div>
       <div id="cSel" hidden>
         <div class="sl"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output></div>
-        <div class="sl"><span>Rotaziun</span><input type="range" id="cRot" min="-180" max="180" step="1"><output id="cRotV"></output></div>
+        <div class="sl"><span>Rotaziun</span><input type="range" id="cRot" min="-45" max="45" step="1"><output id="cRotV"></output></div>
       </div>
-      <p class="hint">Cliccar sin ina lingia u sin in vopna per al tscherner, trair per al spustar. Ils vopnas vegnan da <code>/lab/vopnas</code>.</p>
+      <p class="hint">Cliccar sin ina lingia u sin in vopna per al tscherner (cotschen), trair per al spustar. Ils vopnas vegnan da <code>/lab/vopnas</code>.</p>
     </div>
   </div>
 </div>
@@ -285,7 +277,7 @@ function scene(){
   const L=[],t=tab,r=objRect(t);
   const crest=s=>{const h=s.h0*s.sc/100;return {t:'img',src:vopUrl(s.f),ar:427/480,x:s.cx-h*427/960,y:s.cy-h/2,w:h*427/480,h,rot:s.rot,cx:s.cx,cy:s.cy,d:'s'}};
   if(t.slots)t.slots.forEach((s,i)=>{if(s.on&&!s.front)L.push({...crest(s),d:String(i)})});
-  if(t.o.show)L.push({t:'img',src:t.o.src||t.obj.src,custom:!!t.o.src,...r,rot:0,d:'o'});
+  L.push({t:'img',src:t.obj.src,...r,rot:0,d:'o'});
   if(t.slots)t.slots.forEach((s,i)=>{if(s.on&&s.front)L.push({...crest(s),d:String(i)})});
   const top=E(4310743),X=E(3323771),fs=104;
   lines().forEach((s,i)=>L.push({t:'text',s,x:X,y:top+.7506*fs+i*fs,fs}));
@@ -296,12 +288,12 @@ function render(){
   L.forEach(it=>{
     if(it.t==='img'){
       const tr=it.rot?` transform="rotate(${it.rot} ${it.x+it.w/2} ${it.y+it.h/2})"`:'';
-      h+=`<image href="${esc(it.src)}" x="${it.x.toFixed(2)}" y="${it.y.toFixed(2)}" width="${it.w.toFixed(2)}" height="${it.h.toFixed(2)}" preserveAspectRatio="${it.custom?'xMidYMax meet':'none'}" data-d="${it.d}"${tr}/>`;
+      h+=`<image href="${esc(it.src)}" x="${it.x.toFixed(2)}" y="${it.y.toFixed(2)}" width="${it.w.toFixed(2)}" height="${it.h.toFixed(2)}" preserveAspectRatio="none"${it.d==='o'?' pointer-events="none"':` data-d="${it.d}"`}${tr}/>`;
     }else h+=`<text class="ti" x="${it.x.toFixed(2)}" y="${it.y.toFixed(2)}" font-size="${it.fs}">${esc(it.s)}</text>`;
   });
   if(tab.slots&&sel>=0&&tab.slots[sel]&&tab.slots[sel].on){
     const s=tab.slots[sel],hh=s.h0*s.sc/100,w=hh*427/480;
-    h+=`<rect x="${(s.cx-w/2-3).toFixed(1)}" y="${(s.cy-hh/2-3).toFixed(1)}" width="${(w+6).toFixed(1)}" height="${(hh+6).toFixed(1)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 4" transform="rotate(${s.rot} ${s.cx} ${s.cy})" pointer-events="none"/>`;
+    h+=`<rect x="${(s.cx-w/2-4).toFixed(1)}" y="${(s.cy-hh/2-4).toFixed(1)}" width="${(w+8).toFixed(1)}" height="${(hh+8).toFixed(1)}" rx="6" fill="none" stroke="#fff" stroke-width="8" opacity=".9" transform="rotate(${s.rot} ${s.cx} ${s.cy})" pointer-events="none"/><rect x="${(s.cx-w/2-4).toFixed(1)}" y="${(s.cy-hh/2-4).toFixed(1)}" width="${(w+8).toFixed(1)}" height="${(hh+8).toFixed(1)}" rx="6" fill="none" stroke="#E2001A" stroke-width="4" transform="rotate(${s.rot} ${s.cx} ${s.cy})" pointer-events="none"/>`;
   }
   $('#g').innerHTML=h;
   $('#stage').style.background=`url("/lab/visuals/bg.jpg") center/100% 100% no-repeat`;
@@ -313,17 +305,14 @@ const svg=$('#g');
 svg.addEventListener('pointerdown',e=>{
   const n=e.target.closest('[data-d]');if(!n)return;
   const d=n.dataset.d,r=svg.getBoundingClientRect();
-  let start;
-  if(d==='o')start={x:tab.o.dx,y:tab.o.dy};
-  else{sel=+d;const s=tab.slots[sel];start={x:s.cx,y:s.cy};syncCrest()}
+  sel=+d;const s=tab.slots[sel];const start={x:s.cx,y:s.cy};syncCrest();
   drag={d,x:e.clientX,y:e.clientY,k:1920/r.width,start};
   svg.setPointerCapture(e.pointerId);e.preventDefault();
 });
 svg.addEventListener('pointermove',e=>{
   if(!drag)return;
   const dx=(e.clientX-drag.x)*drag.k,dy=(e.clientY-drag.y)*drag.k;
-  if(drag.d==='o'){tab.o.dx=Math.round(drag.start.x+dx);tab.o.dy=Math.round(drag.start.y+dy);syncObj(true)}
-  else{const s=tab.slots[+drag.d];s.cx=drag.start.x+dx;s.cy=drag.start.y+dy}
+  const s=tab.slots[+drag.d];s.cx=drag.start.x+dx;s.cy=drag.start.y+dy;
   render();
 });
 const endDrag=()=>{drag=null};
@@ -331,20 +320,6 @@ svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',e
 
 /* ---------- Formular ---------- */
 function setOut(id,v,suf=''){$('#'+id).value=v+suf}
-function syncObj(keep){
-  const o=tab.o;
-  $('#oShow').checked=o.show;
-  $('#oSc').value=o.sc;$('#oX').value=o.dx;$('#oY').value=o.dy;
-  setOut('oScV',o.sc,'%');setOut('oXV',o.dx);setOut('oYV',o.dy);
-  $('#oOrig').hidden=!o.src;
-}
-['oSc','oX','oY'].forEach(id=>$('#'+id).addEventListener('input',()=>{
-  const o=tab.o;o.sc=+$('#oSc').value;o.dx=+$('#oX').value;o.dy=+$('#oY').value;syncObj();render();
-}));
-$('#oShow').onchange=()=>{tab.o.show=$('#oShow').checked;render()};
-$('#oReset').onclick=()=>{tab.o.sc=100;tab.o.dx=0;tab.o.dy=0;syncObj();render()};
-$('#oFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(tab.o.src&&tab.o.src.startsWith('blob:'))URL.revokeObjectURL(tab.o.src);tab.o.src=URL.createObjectURL(f);syncObj();render()};
-$('#oOrig').onclick=()=>{tab.o.src=null;syncObj();render()};
 $('#title').oninput=()=>{tab.text=$('#title').value;render()};
 
 function buildCrests(){
@@ -352,13 +327,15 @@ function buildCrests(){
   if(!tab.slots){$('#crestPanel').hidden=true;return}
   $('#crestPanel').hidden=false;
   const opts=VOP.map(v=>`<option value="${esc(v.f)}">${esc(v.n)}</option>`).join('');
-  box.innerHTML=tab.slots.map((s,i)=>`<div class="crow${s.on?'':' off'}${i===sel?' sel':''}" data-i="${i}"><input type="checkbox" ${s.on?'checked':''} aria-label="Vopna ${i+1} activar"><img src="${esc(vopUrl(s.f))}" alt=""><select aria-label="Vopna ${i+1}">${opts}</select></div>`).join('');
+  const add=$('#cAddSel');if(add.dataset.n!==String(VOP.length)){add.innerHTML=opts;add.dataset.n=VOP.length}
+  box.innerHTML=tab.slots.map((s,i)=>`<div class="crow${s.on?'':' off'}${i===sel?' sel':''}" data-i="${i}"><input type="checkbox" ${s.on?'checked':''} aria-label="Vopna ${i+1} activar"><img src="${esc(vopUrl(s.f))}" alt=""><select aria-label="Vopna ${i+1}">${opts}</select><button class="del" type="button" title="Stizzar il vopna" aria-label="Vopna ${i+1} stizzar">×</button></div>`).join('');
   [...box.children].forEach((row,i)=>{row.querySelector('select').value=tab.slots[i].f});
   syncCrest();
 }
 $('#crows').addEventListener('click',e=>{
   const row=e.target.closest('.crow');if(!row)return;
   const i=+row.dataset.i,s=tab.slots[i];
+  if(e.target.closest('.del')){tab.slots.splice(i,1);sel=-1;buildCrests();render();return}
   if(e.target.matches('input[type=checkbox]')){s.on=e.target.checked;row.classList.toggle('off',!s.on)}
   sel=i;syncCrest();render();
 });
@@ -376,6 +353,11 @@ function syncCrest(){
 ['cSc','cRot'].forEach(id=>$('#'+id).addEventListener('input',()=>{
   const s=tab.slots[sel];if(!s)return;s.sc=+$('#cSc').value;s.rot=+$('#cRot').value;syncCrest();render();
 }));
+$('#cAdd').onclick=()=>{
+  const f=$('#cAddSel').value;if(!f)return;
+  tab.slots.push({on:true,f,cx:1480,cy:470,h0:100,sc:100,rot:0,front:true});
+  sel=tab.slots.length-1;buildCrests();render();
+};
 $('#cAll').onclick=()=>{tab.slots.forEach(s=>s.on=true);buildCrests();render()};
 $('#cNone').onclick=()=>{tab.slots.forEach(s=>s.on=false);buildCrests();render()};
 $('#cReset').onclick=()=>{tab.slots=SLOTS0.map(s=>({on:true,f:s.f,cx:s.cx,cy:s.cy,h0:s.h,sc:100,rot:s.rot,front:s.front}));sel=-1;buildCrests();render()};
@@ -385,8 +367,8 @@ function setTab(id,push=true){
   tab=TABS.find(t=>t.id===id)||TABS[0];sel=-1;
   [...$('#modeSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.id===tab.id));
   if(push){try{history.replaceState(null,'','#'+tab.hash)}catch(e){}}
-  $('#title').value=tab.text;$('#objT').textContent=tab.oLabel;
-  syncObj();buildCrests();render();
+  $('#title').value=tab.text;
+  buildCrests();render();
 }
 TABS.forEach(t=>{const b=document.createElement('button');b.type='button';b.dataset.id=t.id;b.textContent=t.label;b.onclick=()=>setTab(t.id);$('#modeSeg').appendChild(b)});
 const fromHash=()=>{const h=(location.hash||'').slice(1).toLowerCase();return (TABS.find(t=>t.hash===h)||TABS[0]).id};
