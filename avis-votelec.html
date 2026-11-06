@@ -180,6 +180,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 #cSel::before{content:"";position:absolute;left:var(--cx,50%);top:-9px;height:9px;width:1px;background:#E2001A}
 #cSel .rs{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;padding:0;line-height:1;font-size:.9rem}
 #cSel .rs:hover{color:var(--accent);border-color:var(--accent)}
+.lyr{display:flex;gap:6px}
 .csrch{width:100%;box-sizing:border-box;padding:9px 12px;background:var(--field);color:var(--text,inherit);border:1px solid var(--line);border-radius:10px;font:inherit}
 #res{width:auto;flex:0 0 auto}
 .resrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -223,13 +224,14 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
       <h2 class="ph"><span class="num">2</span>Vopnas <small id="cCount" style="font-weight:400;color:var(--muted)"></small></h2>
       <div class="row">
         <button class="btn sm" id="cAll" type="button" title="Activar tut las vopnas mussadas">Tut activar</button>
-        <button class="btn sm" id="cArr" type="button" title="Repartir las vopnas automaticamain">Repartir</button>
+        <button class="btn sm" id="cArr" type="button" title="Reparter las vopnas automaticamain (grondezzas e posiziuns)">Reparter</button>
         <button class="btn sm" id="cReset" type="button" title="Cumenzar cun ina pagina vida">Reset</button>
       </div>
       <input class="csrch" type="search" id="cQ" placeholder="Tschertgar vischnanca …" aria-label="Tschertgar vischnanca">
       <div class="cgrid" id="cgrid"></div>
       <div id="cSel" hidden>
-        <div class="sl"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output><button class="rs" type="button" id="cScR" title="Rimetter" aria-label="Grondezza rimetter">↺</button></div>
+        <div class="sl"><span>Plaun</span><div class="lyr"><button class="rs" type="button" id="cUp" title="Ina plaun pli davant" aria-label="Pli davant">↑</button><button class="rs" type="button" id="cDn" title="Ina plaun pli davos" aria-label="Pli davos">↓</button></div></div>
+        <div class="sl" style="margin-top:8px"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output><button class="rs" type="button" id="cScR" title="Rimetter" aria-label="Grondezza rimetter">↺</button></div>
       </div>
       <p class="hint">Cliccar sin ina vopna per l’activar u selecziunar (cliccar anc ina giada per ella deactivar), trair en la grafica per spustar.</p>
     </div>
@@ -281,9 +283,8 @@ const t_lines=s=>s.split('\n').map(x=>x.replace(/\s+$/,'').toUpperCase()).filter
 function scene(){
   const L=[],t=tab,r=objRect(t);
   const crest=s=>{const h=s.h0*s.sc/100;return {t:'img',src:vopUrl(s.f),ar:427/480,x:s.cx-h*427/960,y:s.cy-h/2,w:h*427/480,h,rot:s.rot,cx:s.cx,cy:s.cy,d:'s'}};
-  if(t.slots)t.slots.forEach((s,i)=>{if(s.on&&!s.front)L.push({...crest(s),d:String(i)})});
+  if(t.slots)t.slots.forEach((s,i)=>{if(s.on)L.push({...crest(s),d:String(i)})});
   L.push({t:'img',src:t.obj.src,...r,rot:0,d:'o'});
-  if(t.slots)t.slots.forEach((s,i)=>{if(s.on&&s.front)L.push({...crest(s),d:String(i)})});
   const top=E(4310743),X=E(3323771),fs=104;
   lines().forEach((s,i)=>L.push({t:'text',s,x:X,y:top+.7506*fs-1+i*fs,fs}));
   return L;
@@ -352,25 +353,37 @@ function syncCrest(){
   c.style.setProperty('--cx',(cell.offsetLeft+cell.offsetWidth/2-c.offsetLeft)+'px');
 }
 function selectGrid(){const cell=$('#cgrid .cc.sel');if(cell)cell.scrollIntoView({block:'nearest'})}
-/* Repartiziun automatica: las vopnas activas vegnan repartidas sur las chasas (grondezza + posiziun) */
+/* Repartiziun automatica: las vopnas activas vegnan repartidas en differentas grondezzas en la zona survart las chasas (davos las chasas ed il titel) */
+const ZONE=[[995,70],[1235,70],[1500,300],[1630,370],[1850,448],[1915,410],[1915,705],[1045,705],[1045,545],[995,545]];
+const HMIN=96,HMAX=206,ASP=427/480;
+function inZone(x,y){let c=false;for(let i=0,j=ZONE.length-1;i<ZONE.length;j=i++){const a=ZONE[i],b=ZONE[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c}return c}
+function rectIn(cx,cy,w,h){const x0=cx-w/2,x1=cx+w/2,y0=cy-h/2,y1=cy+h/2,mx=cx,my=cy;
+  return [[x0,y0],[x1,y0],[x0,y1],[x1,y1],[mx,y0],[mx,y1],[x0,my],[x1,my]].every(q=>inZone(q[0],q[1]))}
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let arrSeed=7;
 function arrange(){
   const act=tab.slots.filter(s=>s.on),n=act.length;if(!n)return;
-  const A={x:1115,y:430,w:785,h:225},ASP=427/480;
+  const rnd=rng(arrSeed*7919+n);
+  const base=act.map(()=>HMIN+(HMAX-HMIN)*Math.pow(rnd(),1.6));
   let best=null;
-  for(let r=1;r<=6;r++){
-    const c=Math.ceil(n/r),cw=A.w/(c+(r>1?.5:0)),ch=A.h/r,hh=Math.min(ch*.94,cw*.94/ASP,125);
-    if(!best||hh>best.hh+.5)best={r,c,hh,cw,ch};
-  }
-  const {r,hh,cw,ch}=best;let k=0;
-  for(let i=0;i<r;i++){
-    const cnt=Math.floor(n/r)+(i<n%r?1:0),off=(r>1&&i%2)?cw/2:0;
-    const rowW=cnt*cw+(r>1?cw/2:0),x0=A.x+(A.w-rowW)/2+(r>1&&i%2===0?0:0);
-    for(let j=0;j<cnt;j++){
-      const s=act[k++];
-      s.cx=x0+(j+.5)*cw+off;s.cy=A.y+(i+.5)*ch+((j%2)?-6:6);
-      s.h0=hh;s.sc=100;s.rot=0;s.front=true;
+  const NC=n<=24?2500:500;
+  for(let f=1;f>.15;f*=.97){
+    const order=base.map((h,i)=>i).sort((a,b)=>base[b]-base[a]),placed=[];let ok=true;
+    for(const i of order){
+      const h=base[i]*f,w=h*ASP;let bc=null,bs=-1e9;
+      for(let k=0;k<NC;k++){
+        const cx=995+rnd()*920,cy=70+rnd()*640;
+        if(!rectIn(cx,cy,w,h))continue;
+        let sep=1e9;for(const q of placed)sep=Math.min(sep,Math.max(Math.abs(cx-q.cx)-(w+q.w)/2,Math.abs(cy-q.cy)-(h+q.h)/2));
+        if(sep>bs){bs=sep;bc={cx,cy}}
+      }
+      if(!bc||bs<5){ok=false;if(!bc)break}
+      if(bc)placed.push({i,cx:bc.cx,cy:bc.cy,w,h});
     }
+    if(placed.length===n){best={placed,f};if(ok)break}
   }
+  if(!best)return;
+  best.placed.forEach(q=>{const s=act[q.i];s.cx=q.cx;s.cy=q.cy;s.h0=q.h;s.sc=100;s.rot=0});
 }
 function activate(f){
   let k=tab.slots.findIndex(s=>s.on&&s.f===f);if(k>=0)return k;
@@ -390,6 +403,12 @@ $('#cgrid').addEventListener('click',e=>{
   buildCrests();render();selectGrid();
 });
 $('#cQ').addEventListener('input',buildCrests);
+function moveLayer(d){
+  let j=sel+d;while(j>=0&&j<tab.slots.length&&!tab.slots[j].on)j+=d;
+  if(j<0||j>=tab.slots.length)return;
+  [tab.slots[sel],tab.slots[j]]=[tab.slots[j],tab.slots[sel]];sel=j;buildCrests();render();
+}
+$('#cUp').onclick=()=>moveLayer(1);$('#cDn').onclick=()=>moveLayer(-1);
 $('#cScR').onclick=()=>{const i=$('#cSc');i.value=100;i.dispatchEvent(new Event('input'))};
 $('#cSc').addEventListener('input',()=>{const s=tab.slots[sel];if(!s)return;tab.auto=false;s.sc=+$('#cSc').value;setOut('cScV',s.sc,'%');render()});
 $('#cAll').onclick=()=>{
@@ -397,7 +416,7 @@ $('#cAll').onclick=()=>{
   VOP.filter(v=>!q||String(v.n).toLowerCase().includes(q)).forEach(v=>activate(v.f));
   if(tab.auto)arrange();buildCrests();render();
 };
-$('#cArr').onclick=()=>{tab.auto=true;arrange();buildCrests();render()};
+$('#cArr').onclick=()=>{tab.auto=true;arrSeed++;arrange();buildCrests();render()};
 $('#cReset').onclick=()=>{tab.slots=[];tab.auto=true;sel=-1;$('#cQ').value='';buildCrests();render()};
 
 /* ---------- Tabs ---------- */
