@@ -278,6 +278,34 @@ function objRect(t){
   const b=t.obj,o=t.o,k=o.sc/100,w=b.w*k,h=b.h*k;
   return {x:b.x+b.w/2-w/2+o.dx,y:b.y+b.h-h+o.dy,w,h};
 }
+/* Sichtbarkeit: mindestens 85 % jeder Vopna duai restar visibels (betg zuglischada da text u chasas) */
+let HM=null;
+function buildMask(){
+  const t=tab,r=objRect(t);HM=null;
+  loadImg(t.obj.src).then(im=>{
+    if(t!==tab)return;
+    const K=.25,cv=document.createElement('canvas');cv.width=480;cv.height=270;const g=cv.getContext('2d');
+    g.drawImage(im,r.x*K,r.y*K,r.w*K,r.h*K);
+    const d=g.getImageData(0,0,480,270).data,m=new Uint8Array(480*270);
+    for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>40?1:0;
+    HM=m;
+  }).catch(()=>{});
+}
+function textRects(){
+  const g=document.createElement('canvas').getContext('2d');g.font=fontCss(104);g.fontKerning='none';
+  const top=E(4310743),X=E(3323771),fs=104;
+  return lines().map((s,i)=>{const y=top+.7506*fs-1+i*fs;return {x0:X,x1:X+g.measureText(s).width,y0:y-.72*fs,y1:y}});
+}
+function visFrac(cx,cy,h){
+  const w=h*427/480,N=14,tr=textRects();let occ=0;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const x=cx-w/2+(i+.5)*w/N,y=cy-h/2+(j+.5)*h/N;
+    if(tr.some(q=>x>=q.x0&&x<=q.x1&&y>=q.y0&&y<=q.y1)){occ++;continue}
+    if(HM){const ix=Math.floor(x/4),iy=Math.floor(y/4);if(ix>=0&&iy>=0&&ix<480&&iy<270&&HM[iy*480+ix])occ++}
+  }
+  return 1-occ/(N*N);
+}
+const visOK=(cx,cy,h)=>visFrac(cx,cy,h)>=.85;
 function lines(){return t_lines(tab.text)}
 const t_lines=s=>s.split('\n').map(x=>x.replace(/\s+$/,'').toUpperCase()).filter(x=>x.trim());
 function scene(){
@@ -318,7 +346,8 @@ svg.addEventListener('pointerdown',e=>{
 svg.addEventListener('pointermove',e=>{
   if(!drag)return;
   const dx=(e.clientX-drag.x)*drag.k,dy=(e.clientY-drag.y)*drag.k;
-  tab.auto=false;const s=tab.slots[+drag.d];s.cx=drag.start.x+dx;s.cy=drag.start.y+dy;
+  tab.auto=false;const s=tab.slots[+drag.d],h=s.h0*s.sc/100,nx=drag.start.x+dx,ny=drag.start.y+dy;
+  for(const [x,y] of [[nx,ny],[nx,s.cy],[s.cx,ny]])if(visOK(x,y,h)){s.cx=x;s.cy=y;break}
   render();
 });
 const endDrag=()=>{drag=null};
@@ -327,7 +356,7 @@ svg.addEventListener('wheel',e=>{
   const s=tab.slots[+im.dataset.d];if(!s||!s.on)return;
   e.preventDefault();
   const cur=s.h0*s.sc/100,nh=Math.max(HMIN,Math.min(HMAX,cur*(e.deltaY<0?1.06:1/1.06)));
-  sel=+im.dataset.d;s.h0=nh;s.sc=100;
+  sel=+im.dataset.d;if(nh>cur&&!visOK(s.cx,s.cy,nh)){syncCrest();selectGrid();render();return}s.h0=nh;s.sc=100;
   syncCrest();selectGrid();render();
 },{passive:false});
 svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
@@ -386,7 +415,7 @@ function arrangeAll(){
       const h=base[i]*f,w=h*ASP;let bc=null,bs=-1e9;
       for(let k=0;k<NC;k++){
         const cx=995+rnd()*920,cy=70+rnd()*640;
-        if(!rectIn(cx,cy,w,h))continue;
+        if(!rectIn(cx,cy,w,h)||!visOK(cx,cy,h))continue;
         let sep=1e9;for(const q of placed)sep=Math.min(sep,Math.max(Math.abs(cx-q.cx)-(w+q.w)/2,Math.abs(cy-q.cy)-(h+q.h)/2));
         if(sep>bs){bs=sep;bc={cx,cy}}
       }
@@ -405,7 +434,7 @@ function placeOne(s){
     const h=base*f,w=h*ASP;let bc=null,bs=-1e9;
     for(let k=0;k<1500;k++){
       const cx=995+rnd()*920,cy=70+rnd()*640;
-      if(!rectIn(cx,cy,w,h))continue;
+      if(!rectIn(cx,cy,w,h)||!visOK(cx,cy,h))continue;
       let sep=1e9;for(const q of others){const qh=q.h0*q.sc/100,qw=qh*ASP;sep=Math.min(sep,Math.max(Math.abs(cx-q.cx)-(w+qw)/2,Math.abs(cy-q.cy)-(h+qh)/2))}
       if(sep>bs){bs=sep;bc={cx,cy}}
     }
@@ -437,7 +466,7 @@ function moveLayer(d){
 }
 $('#cUp').onclick=()=>moveLayer(1);$('#cDn').onclick=()=>moveLayer(-1);
 $('#cScR').onclick=()=>{const i=$('#cSc');i.value=140;i.dispatchEvent(new Event('input'))};
-$('#cSc').addEventListener('input',()=>{const s=tab.slots[sel];if(!s)return;tab.auto=false;s.h0=+$('#cSc').value;s.sc=100;setOut('cScV',s.h0,' px');render()});
+$('#cSc').addEventListener('input',()=>{const s=tab.slots[sel];if(!s)return;tab.auto=false;const nh=+$('#cSc').value,cur=s.h0*s.sc/100;if(nh>cur&&!visOK(s.cx,s.cy,nh)){syncCrest();return}s.h0=nh;s.sc=100;setOut('cScV',Math.round(nh),' px');render()});
 $('#cAll').onclick=()=>{
   const q=$('#cQ').value.trim().toLowerCase();
   VOP.filter(v=>!q||String(v.n).toLowerCase().includes(q)).forEach(v=>activate(v.f));
@@ -458,7 +487,7 @@ function setTab(id,push=true){
   [...$('#modeSeg').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.id===tab.id));
   if(push){try{history.replaceState(null,'','#'+tab.hash)}catch(e){}}
   $('#title').value=tab.text;
-  buildCrests();render();
+  buildCrests();buildMask();render();
 }
 TABS.forEach(t=>{const b=document.createElement('button');b.type='button';b.dataset.id=t.id;b.textContent=t.label;b.onclick=()=>setTab(t.id);$('#modeSeg').appendChild(b)});
 const fromHash=()=>{const h=(location.hash||'').slice(1).toLowerCase();return (TABS.find(t=>t.hash===h)||TABS[0]).id};
