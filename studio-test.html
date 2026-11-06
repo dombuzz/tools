@@ -432,9 +432,9 @@ let segs = [];      // {cues:[i...], src, tr}
 /* ---------- Direcziun: RM → DE u DE → RM ---------- */
 const ALAS_A = '<a href="https://alas.liarumantscha.ch/" target="_blank" rel="noopener">ALAS</a>';
 const TXT = {
-  rmde: { tab:'RM <em>⇄</em> DE', src:'rumantsch', tr:'Tudestg (frasa entira)', ph:'Translaziun tudestga dad ALAS…', lang:'de', suf:'DE',
+  rmde: { tab:'RM <em>⇄</em> DE', src:'rumantsch', tr:'Tudestg', ph:'Translaziun tudestga dad ALAS…', lang:'de', suf:'DE',
     s2:`Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en ${ALAS_A} (idiom → tudestg), copiar il resultat ed l'integrar sutvart. Tar idioms maschadads simplamain tscherner il pli frequent u translatar ils blocs separadamain.` },
-  derm: { tab:'RM <em>⇄</em> DE', src:'tudestg', tr:'Rumantsch (frasa entira)', ph:'Translaziun rumantscha dad ALAS…', lang:'rm', suf:'RM',
+  derm: { tab:'RM <em>⇄</em> DE', src:'tudestg', tr:'Rumantsch', ph:'Translaziun rumantscha dad ALAS…', lang:'rm', suf:'RM',
     s2:`Ils suttitels èn vegnids unids a frasas entiras – ina lingia per frasa. Copiar il bloc, l'integrar en ${ALAS_A} (tudestg → rumantsch), copiar il resultat ed l'integrar sutvart. En ALAS scheglias ti l'idiom giavischà.` }
 };
 let dir = 'rmde';
@@ -598,7 +598,7 @@ function renderSegs(){
   const box=$('segs'); box.innerHTML='';
   segs.forEach((s,si)=>{
     const el=document.createElement('div'); el.className='seg'; el.dataset.si=si;
-    el.innerHTML=`<div class="seg-head"><div><div class="lbl">Frasa ${si+1} · ${TXT[dir].src}</div><div class="src">${esc(s.src)}</div></div>
+    el.innerHTML=`<div class="seg-head"><div><div class="lbl">${si+1} · ${TXT[dir].src}</div><div class="src">${esc(s.src)}</div></div>
       <div><div class="lbl">${TXT[dir].tr}</div><textarea class="tr" rows="2">${esc(s.tr)}</textarea></div></div>`;
     s.cues.forEach(ci=>{
       const c=cues[ci];
@@ -799,7 +799,7 @@ $('lrun').onclick = async () => {
       out.push(...(await r.json()).translations.map(t => (t || '').replace(/\s*\n\s*/g, ' ').trim() || '·'));
     }
     $('paste').value = out.join('\n'); updateCount(); $('paste').dispatchEvent(new Event('input'));
-    prog.textContent = `✓ ${out.length} Frasen lokal übersetzt – bitte prüfen.`;
+    prog.textContent = `✓ ${out.length} Zeilen lokal übersetzt – bitte prüfen.`;
   } catch(e){ prog.textContent = 'Fehler: ' + e.message; }
   $('lrun').disabled = false;
 };
