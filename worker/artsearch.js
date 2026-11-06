@@ -4,6 +4,10 @@
 
 const UA = 'Mozilla/5.0 (compatible; dombuzz-tools; +https://tools.dombuzz.ch/info)';
 const SKIP = /\/(interpresa\/organisaziun|uffants\/lexicon)\//;
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Stabile Artikel-ID: rtr.ch liefert eine UUID (früher eine Zahl). Fehlt beides, ist die ID nur der Pfad und taugt nicht zum Wiedererkennen.
+export const stableId = id => UUID.test(id || '') || /^\d+$/.test(id || '');
+const isIldi = path => /^\/novitads\/il-di\//.test(path || '');
 const PER_RUN = 25, MAX_TRIES = 3, WRITE_PAUSE = 70000, FIRST_YM = "2016_01", CUR_EVERY = 9 * 60e3;
 
 export const unesc = s => (s || '').replace(/&#0?39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
@@ -64,10 +68,15 @@ async function getText(url) {
   return { ok: r.ok, status: r.status, text: r.ok ? await r.text() : '' };
 }
 
-// Ein Artikel = eine Zeile. Gleiche Artikel-ID (srf:content:id) mit neuer Adresse (Titel geändert) ersetzt den alten Eintrag.
+// Ein Artikel = eine Zeile. Derselbe Artikel (gleiche ID = srf:content:id, eine UUID) mit neuer Adresse, weil Titel oder Lead
+// geändert wurden, ersetzt den alten Eintrag – er erscheint nie als neuer Artikel. «Il di» (jeden Tag mehrfach umbenannt): pro Tag nur ein Eintrag.
+// Geöffnet-Stand (Artitgel-challenge) wird auf die neue Adresse übertragen.
 export async function saveArticle(env, a) {
-  const numeric = /^\d+$/.test(a.id);
-  const found = (await env.DB.prepare('SELECT id FROM art WHERE url = ?1' + (numeric ? ' OR aid = ?2' : '') + ' ORDER BY id').bind(...(numeric ? [a.url, a.id] : [a.url])).all()).results;
+  const keyed = stableId(a.id), ildi = isIldi(a.path);
+  const cond = ['url = ?1'], bind = [a.url];
+  if (keyed) { cond.push('lower(aid) = ?' + (bind.push(a.id.toLowerCase()), bind.length)); }
+  if (ildi) { cond.push("(d = ?" + (bind.push(a.d), bind.length) + " AND path LIKE '/novitads/il-di/%')"); }
+  const found = (await env.DB.prepare('SELECT id, url FROM art WHERE ' + cond.join(' OR ') + ' ORDER BY id').bind(...bind).all()).results;
   const st = [];
   if (found.length) {
     const id = found[0].id;
@@ -75,21 +84,53 @@ export async function saveArticle(env, a) {
     st.push(env.DB.prepare('DELETE FROM art_fts WHERE rowid = ?1').bind(id));
     st.push(env.DB.prepare('UPDATE art SET aid=?2, url=?10, title=?3, kicker=?4, descr=?5, section=?6, path=?7, d=?8, pub=?9 WHERE id = ?1').bind(id, a.id, a.title, a.kicker, a.descr, a.section, a.path, a.d, a.pub, a.url));
     st.push(env.DB.prepare('INSERT INTO art_fts (rowid, title, kicker, descr, body) VALUES (?1, ?2, ?3, ?4, ?5)').bind(id, a.title, a.kicker, a.descr, a.body));
+    const old = found.map(r => r.url).filter(u => u !== a.url);
+    if (old.length) st.push(...await moveOpened(env, old, a.url));
   } else {
     st.push(env.DB.prepare('INSERT INTO art (aid, url, title, kicker, descr, section, path, d, pub) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9)').bind(a.id, a.url, a.title, a.kicker, a.descr, a.section, a.path, a.d, a.pub));
     st.push(env.DB.prepare('INSERT INTO art_fts (rowid, title, kicker, descr, body) VALUES (last_insert_rowid(), ?1, ?2, ?3, ?4)').bind(a.title, a.kicker, a.descr, a.body));
   }
   await env.DB.batch(st);
 }
-// Einmalig: bereits gespeicherte Doppelte (gleiche Artikel-ID) entfernen, das zuletzt gespeicherte bleibt
+// «Geöffnet»-Daten (chatta_open, chatta_log) von alten Adressen auf die aktuelle übertragen, damit ein umbenannter Artikel nicht wieder «ungeöffnet» wird
+async function moveOpened(env, oldUrls, url) {
+  await ensureChatta(env);
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS chatta_log (cid TEXT NOT NULL, url TEXT NOT NULL, ts TEXT NOT NULL, PRIMARY KEY (cid, url))').run();
+  const st = [];
+  for (const o of oldUrls) {
+    const { results: [x] } = await env.DB.prepare('SELECT url, first_at, last_at, n, h0, chk_at, mod_at FROM chatta_open WHERE url = ?1').bind(o).all();
+    if (x) {
+      const { results: [y] } = await env.DB.prepare('SELECT url FROM chatta_open WHERE url = ?1').bind(url).all();
+      if (y) st.push(env.DB.prepare('UPDATE chatta_open SET first_at = MIN(first_at, ?2), last_at = MAX(last_at, ?3), n = n + ?4, mod_at = COALESCE(mod_at, ?5) WHERE url = ?1').bind(url, x.first_at, x.last_at, x.n, x.mod_at));
+      else st.push(env.DB.prepare('UPDATE chatta_open SET url = ?2 WHERE url = ?1').bind(o, url));
+      st.push(env.DB.prepare('DELETE FROM chatta_open WHERE url = ?1').bind(o));
+    }
+    st.push(env.DB.prepare('UPDATE OR IGNORE chatta_log SET url = ?2 WHERE url = ?1').bind(o, url));
+    st.push(env.DB.prepare('DELETE FROM chatta_log WHERE url = ?1').bind(o));
+  }
+  return st;
+}
+// Einmalig (dedup2): bereits gespeicherte Doppelte entfernen – gleiche Artikel-ID (UUID oder Zahl), bei «Il di» pro Tag.
+// Es bleibt die zuletzt gespeicherte Fassung (aktuellster Titel); geöffnet-Stand wird übertragen.
 async function dedupeOnce(env) {
-  if (await stGet(env, 'dedup1')) return;
-  const sub = "SELECT id FROM art WHERE aid GLOB '[0-9]*' AND id NOT IN (SELECT MAX(id) FROM art WHERE aid GLOB '[0-9]*' GROUP BY aid)";
-  await env.DB.batch([
-    env.DB.prepare('DELETE FROM art_fts WHERE rowid IN (' + sub + ')'),
-    env.DB.prepare('DELETE FROM art WHERE id IN (' + sub.replace('SELECT id FROM art WHERE', 'SELECT id FROM art WHERE') + ')'),
-  ]);
-  await stSet(env, 'dedup1', '1');
+  if (await stGet(env, 'dedup2')) return;
+  const groups = [
+    "SELECT group_concat(id) ids FROM art WHERE (length(aid) = 36 AND aid GLOB '*-*-*-*-*') OR (aid <> '' AND aid NOT GLOB '*[^0-9]*') GROUP BY lower(aid) HAVING COUNT(*) > 1",
+    "SELECT group_concat(id) ids FROM art WHERE path LIKE '/novitads/il-di/%' GROUP BY d HAVING COUNT(*) > 1",
+  ];
+  let removed = 0;
+  for (const q of groups) {
+    const { results } = await env.DB.prepare(q).all();
+    for (const g of results) {
+      const ids = g.ids.split(',').map(Number).sort((x, y) => x - y), keep = ids.pop();
+      const { results: rows } = await env.DB.prepare('SELECT id, url FROM art WHERE id IN (' + [keep, ...ids].map(() => '?').join(',') + ')').bind(keep, ...ids).all();
+      const keepUrl = rows.find(r => r.id === keep).url, st = [];
+      st.push(...await moveOpened(env, rows.filter(r => r.id !== keep).map(r => r.url), keepUrl));
+      for (const id of ids) { st.push(env.DB.prepare('DELETE FROM art_fts WHERE rowid = ?1').bind(id)); st.push(env.DB.prepare('DELETE FROM art WHERE id = ?1').bind(id)); }
+      await env.DB.batch(st); removed += ids.length;
+    }
+  }
+  await stSet(env, 'dedup2', String(removed));
 }
 
 // Ein Lauf: Sind Artikel vorgemerkt, werden bis zu PER_RUN davon geholt (neueste Monate zuerst).
@@ -164,7 +205,10 @@ export async function searchArt(env, p) {
   if (isD(p.from)) { w.push('art.d >= ?'); a.push(p.from); }
   if (isD(p.to)) { w.push('art.d <= ?'); a.push(p.to); }
   if (p.section) { w.push('art.section = ?'); a.push(String(p.section).slice(0, 80)); }
-  const where = w.length ? ' AND ' + w.join(' AND ') : '';
+  // Sicherheitsnetz: nie mehrere Fassungen desselben Artikels zeigen (gleiche ID bzw. «Il di» pro Tag) – nur die neueste
+  const dupFree = " AND NOT EXISTS (SELECT 1 FROM art b WHERE b.id > art.id AND ((art.aid <> '' AND b.aid = art.aid AND (length(art.aid) = 36 OR art.aid NOT GLOB '*[^0-9]*'))" +
+    " OR (art.path LIKE '/novitads/il-di/%' AND b.d = art.d AND b.path LIKE '/novitads/il-di/%')))";
+  const where = (w.length ? ' AND ' + w.join(' AND ') : '') + dupFree;
   const order = p.sort === 'date_asc' ? 'art.d ASC, art.pub ASC' : p.sort === 'rel' && fts ? 'bm25(art_fts, 8, 4, 3, 1)' : 'art.d DESC, art.pub DESC';
   const from = fts ? 'art_fts JOIN art ON art.id = art_fts.rowid WHERE art_fts MATCH ?' : 'art WHERE 1=1';
   const base = fts ? [fts] : [];
@@ -174,7 +218,7 @@ export async function searchArt(env, p) {
   // Jahre und Sparten für die Filter (ohne Datums-/Sparten-Einschränkung, nur mit Suchbegriff)
   let years = [], sections = [];
   if (!off) {
-    const f2 = fts ? 'art_fts JOIN art ON art.id = art_fts.rowid WHERE art_fts MATCH ?' : 'art WHERE 1=1';
+    const f2 = (fts ? 'art_fts JOIN art ON art.id = art_fts.rowid WHERE art_fts MATCH ?' : 'art WHERE 1=1') + dupFree;
     years = (await env.DB.prepare("SELECT substr(art.d,1,4) y, COUNT(*) n FROM " + f2 + " GROUP BY y ORDER BY y DESC").bind(...base).all()).results;
     sections = (await env.DB.prepare("SELECT art.section s, COUNT(*) n FROM " + f2 + " AND art.section <> '' GROUP BY s ORDER BY n DESC LIMIT 20".replace('WHERE art_fts MATCH ? AND', 'WHERE art_fts MATCH ? AND')).bind(...base).all().catch(() => ({ results: [] }))).results;
   }
@@ -293,7 +337,6 @@ export async function chattaOverview(env) {
   const items = results.map(r => ({ url: r.url, title: r.title, kicker: r.kicker, d: r.d, pub: r.pub, rub: r.path.split('/')[1], ildi: r.path.startsWith('/novitads/il-di/'), aid: UUID.test(r.aid || '') ? r.aid.toLowerCase() : null, opened: r.opened || null, n: r.n || 0, mod: r.mod_at || null }));
   return { from, today, items };
 }
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function fetchAid(url) {
   const r = await getText(url).catch(() => null);
   const m = r && r.ok && r.text.match(/urn:rtr:article:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
