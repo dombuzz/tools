@@ -369,7 +369,11 @@ export default {
     const m = { r: 0, w: 0 }, raw = env.DB;
     env = { ...env, DB: meterDB(raw, m) };
     try {
-      if (event.cron === CRON_ART) { await chattaRecheck(env).catch(e => reportError(env, 'chatta recheck', e)); await crawlStep(env); await gameAggregate(env, GROUP).catch(e => reportError(env, 'game aggregate', e)); }
+      if (event.cron === CRON_ART) {
+        // Tschertga (Nachprüfen geöffneter Artikel + Crawler) nur jeden zweiten Lauf, also alle 20 statt 10 Min. (spart gelesene Zeilen); die /game-Auswertung läuft weiter alle 10 Min.
+        if (new Date(event.scheduledTime).getUTCMinutes() % 20 < 10) { await chattaRecheck(env).catch(e => reportError(env, 'chatta recheck', e)); await crawlStep(env); }
+        await gameAggregate(env, GROUP).catch(e => reportError(env, 'game aggregate', e));
+      }
       else if (event.cron === CRON_MONTHLY) await monthlyReport(env, ctx);
       else await hourlyChecks(env);
     } catch (e) { await reportError(env, 'cron ' + event.cron, e); }
@@ -590,8 +594,8 @@ async function handle(request, env, ctx) {
       if (request.method === 'GET' && parts[0] === 'art' && parts.length <= 2) {
         if (parts[1] === 'status') {
           const st = await artStatus(env);
-          // Falls der Cron nicht läuft: Aufruf der Seite stösst höchstens jede Minute einen Crawl-Lauf an
-          if (!st.last || Date.now() - Date.parse(st.last.at) > 60e3) ctx.waitUntil(crawlStep(env).catch(() => {}));
+          // Nur falls der Cron ausgefallen ist (letzter Lauf > 45 Min.): Aufruf der Seite stösst einen Crawl-Lauf an – sonst würde jeder Seitenaufruf zusätzlich crawlen
+          if (!st.last || Date.now() - Date.parse(st.last.at) > 45 * 60e3) ctx.waitUntil(crawlStep(env).catch(() => {}));
           return json(st, request);
         }
         if (parts[1] === 'count') return json(await countArt(env), request);

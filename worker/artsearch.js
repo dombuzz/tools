@@ -54,6 +54,8 @@ export async function ensureArt(env) {
     env.DB.prepare('CREATE INDEX IF NOT EXISTS art_aid ON art (aid)'),
     env.DB.prepare("CREATE VIRTUAL TABLE IF NOT EXISTS art_fts USING fts5(title, kicker, descr, body, tokenize = \"unicode61 remove_diacritics 2\")"),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS art_seen (url TEXT PRIMARY KEY, ym TEXT, ok INTEGER NOT NULL DEFAULT 0, tries INTEGER NOT NULL DEFAULT 0)'),
+    // Index, damit der Crawler nur die offenen Adressen liest und nicht bei jedem Lauf die ganze Tabelle (sonst Tausende gelesene Zeilen pro Lauf)
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS art_seen_open ON art_seen (ok, tries, ym)'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS art_state (k TEXT PRIMARY KEY, v TEXT)'),
   ]);
 }
@@ -134,7 +136,7 @@ async function dedupeOnce(env) {
 }
 
 // Ein Lauf: Sind Artikel vorgemerkt, werden bis zu PER_RUN davon geholt (neueste Monate zuerst).
-// Die Sitemap des aktuellen Monats wird etwa alle 10 Min. neu gelesen (neue Artikel kommen so zuvorderst in die Warteschlange);
+// Der Crawler läuft alle 20 Min. (jeden zweiten 10-Min.-Cron). Die Sitemap des aktuellen Monats wird bei jedem Lauf neu gelesen (neue Artikel kommen so zuvorderst in die Warteschlange);
 // ist die Warteschlange leer, wird der nächste ältere Monat bis 2016 eingelesen.
 export async function crawlStep(env) {
   let res;
@@ -218,7 +220,7 @@ export async function searchArt(env, p) {
   // Jahre und Sparten für die Filter (ohne Datums-/Sparten-Einschränkung, nur mit Suchbegriff)
   let years = [], sections = [];
   if (!off) {
-    const f2 = (fts ? 'art_fts JOIN art ON art.id = art_fts.rowid WHERE art_fts MATCH ?' : 'art WHERE 1=1') + dupFree;
+    const f2 = fts ? 'art_fts JOIN art ON art.id = art_fts.rowid WHERE art_fts MATCH ?' : 'art WHERE 1=1';
     years = (await env.DB.prepare("SELECT substr(art.d,1,4) y, COUNT(*) n FROM " + f2 + " GROUP BY y ORDER BY y DESC").bind(...base).all()).results;
     sections = (await env.DB.prepare("SELECT art.section s, COUNT(*) n FROM " + f2 + " AND art.section <> '' GROUP BY s ORDER BY n DESC LIMIT 20".replace('WHERE art_fts MATCH ? AND', 'WHERE art_fts MATCH ? AND')).bind(...base).all().catch(() => ({ results: [] }))).results;
   }
@@ -227,9 +229,15 @@ export async function searchArt(env, p) {
 
 export async function artStatus(env) {
   await ensureArt(env);
+  const last = JSON.parse((await stGet(env, 'last')) || 'null');
+  // Zähler sind nur Anzeige: höchstens alle 10 Min. neu zählen (das Zählen liest die ganzen Tabellen)
+  const cached = JSON.parse((await stGet(env, 'status_cache')) || 'null');
+  if (cached && Date.now() - cached.ts < 10 * 60e3) return { ...cached.v, back: await stGet(env, 'back'), last, complete: !!(await stGet(env, 'complete')) };
   const one = async q => (await env.DB.prepare(q).all()).results[0];
   const n = (await one('SELECT COUNT(*) n, MIN(d) a, MAX(d) b FROM art')), s = await one('SELECT COUNT(*) n, SUM(ok = 0 AND tries < 3) open FROM art_seen');
-  return { articles: n.n, oldest: n.a, newest: n.b, known: s.n, open: s.open || 0, back: await stGet(env, 'back'), last: JSON.parse((await stGet(env, 'last')) || 'null'), complete: !!(await stGet(env, 'complete')) };
+  const v = { articles: n.n, oldest: n.a, newest: n.b, known: s.n, open: s.open || 0 };
+  await stSet(env, 'status_cache', JSON.stringify({ ts: Date.now(), v })).catch(() => {});
+  return { ...v, back: await stGet(env, 'back'), last, complete: !!(await stGet(env, 'complete')) };
 }
 
 // Zähler fürs Dashboard: Anzahl Artikel unter rtr.ch/novitads, /sport, /cultura (nach URL-Pfad); «Il di» zählt 1× pro Tag
@@ -297,7 +305,7 @@ async function textHash(url) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode([a.kicker, a.title, a.body].join('\n')));
   return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
 }
-// Geöffnete Artikel regelmässig nachprüfen (Cron alle 10 Min., höchstens 8 Abrufe): stündlich in den ersten 3 Tagen, danach alle 12 Std., bis 30 Tage nach dem Öffnen.
+// Geöffnete Artikel regelmässig nachprüfen (alle 20 Min., höchstens 8 Abrufe): stündlich in den ersten 3 Tagen, danach alle 12 Std., bis 30 Tage nach dem Öffnen.
 // «Il di» nur, wenn er an einem späteren Tag geöffnet wurde (dann hat er eine Vergleichsbasis h0); am Publikationstag ändert er laufend.
 export async function chattaRecheck(env) {
   await ensureChatta(env);

@@ -58,3 +58,10 @@ assert.deepEqual(r.map(x => x.title), ['Version 5', 'Il di 2', 'Zahl neu', 'Pfad
 assert.equal((await q("SELECT count(*) n FROM art_fts"))[0].n, 4);
 assert.equal((await q("SELECT url FROM chatta_open"))[0].url, 'https://www.rtr.ch/novitads/s5');
 console.log('4 ok: Bestand bereinigt', r.map(x => x.title).join(' | '));
+
+// 5) Status: zweiter Aufruf kommt aus dem Zwischenspeicher (keine erneute Zählung der ganzen Tabellen)
+const { artStatus } = await import('./artsearch.js');
+let reads = 0; const orig = db.prepare.bind(db); db.prepare = sql => { if (/FROM art_seen|FROM art\b(?! WHERE)/.test(sql) && /COUNT/.test(sql)) reads++; return orig(sql); };
+const s1 = await artStatus(env), n1 = reads, s2 = await artStatus(env);
+assert.equal(reads, n1); assert.equal(s1.articles, s2.articles);
+console.log('5 ok: Status aus Zwischenspeicher');
