@@ -168,7 +168,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
 .g text.tx{white-space:pre}
 .stage{background:#FFD026;cursor:default}
 .g [data-d]{cursor:grab}.g [data-d]:active{cursor:grabbing}
-.g .ti{fill:#fff;font-family:"SRG SSR Type Heavy","SRG SSR Type Bold",Arial,Helvetica,sans-serif;font-weight:700;white-space:pre}
+.g .ti{fill:#fff;font-family:"SRG SSR Type Heavy","SRG SSR Type Bold",Arial,Helvetica,sans-serif;font-weight:700;white-space:pre;font-kerning:none}
 .rows{display:flex;flex-direction:column;gap:6px}
 .crow{display:grid;grid-template-columns:20px 30px minmax(0,1fr) 24px;gap:8px;align-items:center;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
 .crow.sel{border-color:var(--accent)}
@@ -280,7 +280,7 @@ function scene(){
   L.push({t:'img',src:t.obj.src,...r,rot:0,d:'o'});
   if(t.slots)t.slots.forEach((s,i)=>{if(s.on&&s.front)L.push({...crest(s),d:String(i)})});
   const top=E(4310743),X=E(3323771),fs=104;
-  lines().forEach((s,i)=>L.push({t:'text',s,x:X,y:top+.7506*fs+i*fs,fs}));
+  lines().forEach((s,i)=>L.push({t:'text',s,x:X,y:top+.7506*fs-1+i*fs,fs}));
   return L;
 }
 function render(){
@@ -328,6 +328,7 @@ function buildCrests(){
   $('#crestPanel').hidden=false;
   const opts=VOP.map(v=>`<option value="${esc(v.f)}">${esc(v.n)}</option>`).join('');
   const add=$('#cAddSel');if(add.dataset.n!==String(VOP.length)){add.innerHTML=opts;add.dataset.n=VOP.length}
+  $('#crestPanel').appendChild($('#cSel'));
   box.innerHTML=tab.slots.map((s,i)=>`<div class="crow${s.on?'':' off'}${i===sel?' sel':''}" data-i="${i}"><input type="checkbox" ${s.on?'checked':''} aria-label="Vopna ${i+1} activar"><img src="${esc(vopUrl(s.f))}" alt=""><select aria-label="Vopna ${i+1}">${opts}</select><button class="del" type="button" title="Stizzar il vopna" aria-label="Vopna ${i+1} stizzar">×</button></div>`).join('');
   [...box.children].forEach((row,i)=>{row.querySelector('select').value=tab.slots[i].f});
   syncCrest();
@@ -346,8 +347,9 @@ $('#crows').addEventListener('change',e=>{
 });
 function syncCrest(){
   if(!tab.slots)return;
-  [...$('#crows').children].forEach((r,i)=>r.classList.toggle('sel',i===sel));
+  [...$('#crows').querySelectorAll('.crow')].forEach((r,i)=>r.classList.toggle('sel',i===sel));
   const s=tab.slots[sel];$('#cSel').hidden=!s;
+  if(s){const r=$('#crows').querySelectorAll('.crow')[sel];if(r)r.after($('#cSel'))}
   if(s){$('#cSc').value=s.sc;$('#cRot').value=Math.round(s.rot);setOut('cScV',s.sc,'%');setOut('cRotV',Math.round(s.rot),'°')}
 }
 ['cSc','cRot'].forEach(id=>$('#'+id).addEventListener('input',()=>{
@@ -442,7 +444,7 @@ async function exportPNG(){
       g.save();
       if(it.rot){g.translate(it.cx,it.cy);g.rotate(it.rot*Math.PI/180);g.translate(-it.cx,-it.cy)}
       g.drawImage(im,x,y,w,h);g.restore();
-    }else{g.fillStyle='#fff';g.font=fontCss(it.fs);g.textAlign='left';g.textBaseline='alphabetic';g.fillText(it.s,it.x,it.y)}
+    }else{g.fillStyle='#fff';g.font=fontCss(it.fs);g.fontKerning='none';g.textAlign='left';g.textBaseline='alphabetic';g.fillText(it.s,it.x,it.y)}
   }
   const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download=fileName();
   document.body.appendChild(a);a.click();a.remove();
