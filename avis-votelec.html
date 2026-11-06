@@ -232,7 +232,7 @@ header.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-
       <div class="cgrid" id="cgrid"></div>
       <div id="cSel" hidden>
         <div class="sl"><span>Layer</span><div class="lyr"><button class="rs" type="button" id="cUp" title="Ina plaun pli davant" aria-label="Pli davant">↑</button><button class="rs" type="button" id="cDn" title="Ina plaun pli davos" aria-label="Pli davos">↓</button></div></div>
-        <div class="sl" style="margin-top:8px"><span>Grondezza</span><input type="range" id="cSc" min="40" max="260" step="1"><output id="cScV"></output><button class="rs" type="button" id="cScR" title="Rimetter" aria-label="Grondezza rimetter">↺</button></div>
+        <div class="sl" style="margin-top:8px"><span>Grondezza</span><input type="range" id="cSc" min="96" max="206" step="1"><output id="cScV"></output><button class="rs" type="button" id="cScR" title="Rimetter" aria-label="Grondezza rimetter">↺</button></div>
       </div>
       <p class="hint">Cliccar sin ina vopna per l’activar u selecziunar (cliccar anc ina giada per deactivar), en la grafica trair la vopna per spustar.</p>
     </div>
@@ -357,7 +357,7 @@ function syncCrest(){
   if(!cell){$('#crestPanel').appendChild(c);return}
   const cells=[...box.querySelectorAll('.cc')],i=cells.indexOf(cell),end=Math.min(cells.length,(Math.floor(i/4)+1)*4);
   cells[end-1].after(c);
-  $('#cSc').value=s.sc;setOut('cScV',s.sc,'%');
+  {const hh=Math.round(s.h0*s.sc/100);$('#cSc').value=hh;setOut('cScV',hh,' px')}
   c.style.setProperty('--cx',(cell.offsetLeft+cell.offsetWidth/2-c.offsetLeft)+'px');
 }
 function selectGrid(){const cell=$('#cgrid .cc.sel');if(cell)cell.scrollIntoView({block:'nearest'})}
@@ -432,8 +432,8 @@ function moveLayer(d){
   [tab.slots[sel],tab.slots[j]]=[tab.slots[j],tab.slots[sel]];sel=j;buildCrests();render();
 }
 $('#cUp').onclick=()=>moveLayer(1);$('#cDn').onclick=()=>moveLayer(-1);
-$('#cScR').onclick=()=>{const i=$('#cSc');i.value=100;i.dispatchEvent(new Event('input'))};
-$('#cSc').addEventListener('input',()=>{const s=tab.slots[sel];if(!s)return;tab.auto=false;s.sc=+$('#cSc').value;setOut('cScV',s.sc,'%');render()});
+$('#cScR').onclick=()=>{const i=$('#cSc');i.value=140;i.dispatchEvent(new Event('input'))};
+$('#cSc').addEventListener('input',()=>{const s=tab.slots[sel];if(!s)return;tab.auto=false;s.h0=+$('#cSc').value;s.sc=100;setOut('cScV',s.h0,' px');render()});
 $('#cAll').onclick=()=>{
   const q=$('#cQ').value.trim().toLowerCase();
   VOP.filter(v=>!q||String(v.n).toLowerCase().includes(q)).forEach(v=>activate(v.f));
