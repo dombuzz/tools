@@ -246,9 +246,9 @@ const FH='SRG SSR Type Heavy',FB='SRG SSR Type Bold';
 const have={heavy:false,bold:false};
 const fontCss=px=>'700 '+px+'px "'+FH+'","'+FB+'",Arial,Helvetica,sans-serif';
 const TABS=[
-  {id:'fed',hash:'fed',label:'Federal',title:'VOTAZIUNS\nFEDERALAS\n00-00-0000',oLabel:'Maletg (Palaz federal)',obj:{src:'/avis-assets/bundeshaus.png',x:E(10349485),y:E(5063433),w:E(6897623),h:E(5391721)}},
+  {id:'com',hash:'com',label:'Communal',title:'VOTAZIUNS\nED ELECZIUNS\n29-11-2026',oLabel:'Chasas',obj:{src:'/avis-assets/chasas.svg',x:E(9020175),y:E(5876925),w:E(9267825),h:E(4410075)},crests:true},
   {id:'chan',hash:'chan',label:'Chantunal',title:'ELECZIUNS\nCHANTUNALAS\n14-06-2026',oLabel:'Maletg (Gronda cussegl)',obj:{src:'/avis-assets/grossrat.svg',x:E(10836729),y:E(6218690),w:E(7848600),h:E(4391025)}},
-  {id:'com',hash:'com',label:'Communal',title:'VOTAZIUNS\nED ELECZIUNS\n29-11-2026',oLabel:'Chasas',obj:{src:'/avis-assets/chasas.svg',x:E(9020175),y:E(5876925),w:E(9267825),h:E(4410075)},crests:true}
+  {id:'fed',hash:'fed',label:'Federal',title:'VOTAZIUNS\nFEDERALAS\n00-00-0000',oLabel:'Maletg (Palaz federal)',obj:{src:'/avis-assets/bundeshaus.png',x:E(10349485),y:E(5063433),w:E(6897623),h:E(5391721)}}
 ];
 TABS.forEach(t=>{
   t.auto=false;t.text=t.title;t.o={show:true,sc:100,dx:0,dy:0,src:null};
