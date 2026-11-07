@@ -164,11 +164,10 @@ input[type=file]{display:none}
         <div class="f"><label>Grondezza dal text <span class="val" id="sv"></span></label><input type="range" id="size" min="34" max="66" step="1"></div>
         <div class="sep"></div>
         <div class="f">
-          <label>Scrittira SRG SSR Type (in cars per browser; datoteca d'ina vouta)</label>
-          <div class="row">
-            <label class="btn" for="fBold" style="margin:0;color:var(--tx)">Bold …</label><input type="file" id="fBold" accept=".ttf,.otf,.woff,.woff2">
-            <label class="btn" for="fLight" style="margin:0;color:var(--tx)">Light …</label><input type="file" id="fLight" accept=".ttf,.otf,.woff,.woff2">
+          <label>Scrittira SRG SSR Type (memorisada en quest browser, la medema sco en ils auters tools)</label>
+          <div class="row" style="flex-direction:column;align-items:flex-start;gap:8px">
             <span class="hint" id="fState" style="margin:0"></span>
+            <label class="btn" id="fBtn" style="margin:0;color:var(--tx)">Chargiar scrittiras<input type="file" id="fFile" accept=".ttf,.otf,.woff,.woff2" multiple></label>
           </div>
         </div>
         <div class="f">
@@ -190,10 +189,10 @@ input[type=file]{display:none}
 
 <script>
 (function(){
-const W=1080,H=1350,KEY='novitads.v1',FKB='novitads.font.bold',FKL='novitads.font.light',LK='novitads.logo';
+const W=1080,H=1350,KEY='novitads.v1',LK='novitads.logo';
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d');
-let S,cur=0,fontOK=false,logoImg=null,dateEdited=false;
+let S,cur=0,logoImg=null,dateEdited=false;
 const imgs={};
 
 function uid(){return Math.random().toString(36).slice(2,9)}
@@ -213,26 +212,76 @@ S=load();
 function normHex(v,f){v=(v||'').trim().replace(/^#?/,'#');if(/^#[0-9a-f]{3}$/i.test(v))v='#'+[...v.slice(1)].map(c=>c+c).join('');return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():f}
 function slideColor(s){return s.colSrc==='A'?S.colA:s.colSrc==='B'?S.colB:s.colC}
 
-/* ---------- fonts ---------- */
-const fb=n=>`700 ${n}px SRGType, "Helvetica Neue", Arial, system-ui, sans-serif`;
-const fl=n=>`${fontOK?300:400} ${n}px SRGType, "Helvetica Neue", Arial, system-ui, sans-serif`;
-async function addFont(dataUrl,weight){const buf=await (await fetch(dataUrl)).arrayBuffer();const ff=new FontFace('SRGType',buf,{weight:String(weight)});await ff.load();document.fonts.add(ff);fontOK=true}
-async function loadFonts(){
-  const st=[];
-  for(const [k,w,n] of [[FKB,700,'Bold'],[FKL,300,'Light']]){
-    let d=null;try{d=localStorage.getItem(k)}catch(e){}
-    if(d){try{await addFont(d,w);st.push(n+' ✓')}catch(e){}}
-  }
-  $('fState').textContent=st.join(' · ');
-  redraw();
+/* ---------- Scrittiras: gemeinsamer Speicher mit /votaziuns und den Grafik-Tools (IndexedDB «vischnanca», prefs: font = Bold, fontLt = Light) ---------- */
+const FB='SRG SSR Type Bold',FL='SRG SSR Type Light',have={bold:false,light:false};
+const fb=n=>`700 ${n}px "${FB}","SRG SSR Type",Arial,Helvetica,sans-serif`;
+const fl=n=>`400 ${n}px "${FL}","SRG SSR Type",Arial,Helvetica,sans-serif`;
+let dbp=null;
+function db(){
+  if(dbp)return dbp;
+  dbp=new Promise((res,rej)=>{
+    try{
+      const r=indexedDB.open('vischnanca',1);
+      r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('parcadi',{keyPath:'id',autoIncrement:true});d.createObjectStore('prefs')};
+      r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
+    }catch(e){rej(e)}
+  });
+  return dbp;
 }
-function readFile(f){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)})}
-async function onFont(e,key,w){const f=e.target.files[0];if(!f)return;const d=await readFile(f);try{localStorage.setItem(key,d)}catch(x){}try{await addFont(d,w)}catch(x){alert('Scrittira na po betg vegnir chargiada.')}
-  let st=[];try{if(localStorage.getItem(FKB))st.push('Bold ✓');if(localStorage.getItem(FKL))st.push('Light ✓')}catch(x){}
-  $('fState').textContent=st.join(' · ');e.target.value='';redraw()}
-$('fBold').onchange=e=>onFont(e,FKB,700);
-$('fLight').onchange=e=>onFont(e,FKL,300);
+async function tx(store,mode,fn){
+  const d=await db();
+  return new Promise((res,rej)=>{const t=d.transaction(store,mode),st=t.objectStore(store),q=fn(st);t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)});
+}
+const prefGet=k=>tx('prefs','readonly',st=>st.get(k));
+const prefSet=(k,v)=>tx('prefs','readwrite',st=>st.put(v,k));
+function fontState(){
+  const ok=have.bold&&have.light;
+  $('fState').innerHTML=ok?'<span style="color:#4cc38a">✓ Scrittiras «SRG SSR Type Bold» e «Light» chargiadas</span>':
+   '<span style="color:var(--warn)">Scrittiras mancan ('+[!have.bold&&'Bold',!have.light&&'Light'].filter(Boolean).join(' e ')+') – igl è duvrà Arial.</span><br>Chargiar <code>SRGSSRType.ttf</code> (Bold) e <code>SRGSSRType_Lt.ttf</code> (Light) ina giada (tut dus ensemen) – ellas valan era per ils auters tools (p.ex. /votaziuns).';
+  $('fBtn').firstChild.textContent=ok?'Midar las scrittiras':'Chargiar scrittiras';
+}
+function fontNames(buf){
+  const v=new DataView(buf),n=v.getUint16(4),out=[];
+  for(let i=0;i<n;i++){
+    const o=12+16*i,tag=String.fromCharCode(v.getUint8(o),v.getUint8(o+1),v.getUint8(o+2),v.getUint8(o+3));
+    if(tag!=='name')continue;
+    const off=v.getUint32(o+8),cnt=v.getUint16(off+2),so=off+v.getUint16(off+4);
+    for(let j=0;j<cnt;j++){
+      const r=off+6+12*j,pid=v.getUint16(r),nid=v.getUint16(r+6),len=v.getUint16(r+8),p=so+v.getUint16(r+10);
+      if(nid!==4&&nid!==2)continue;
+      let str='';
+      if(pid===3||pid===0)for(let k=0;k<len;k+=2)str+=String.fromCharCode(v.getUint16(p+k));
+      else for(let k=0;k<len;k++)str+=String.fromCharCode(v.getUint8(p+k));
+      out.push(str);
+    }
+  }
+  return out.join(' ');
+}
+async function useFont(buf,kind){
+  const ff=kind==='light'?new FontFace(FL,buf,{weight:'400',style:'normal'}):new FontFace(FB,buf,{weight:'700',style:'normal'});
+  await ff.load();document.fonts.add(ff);have[kind]=true;
+}
+async function loadFonts(){
+  for(const [k,key] of [['bold','font'],['light','fontLt']]){try{const buf=await prefGet(key);if(buf)await useFont(buf,k)}catch(e){}}
+  if(!have.bold){try{have.bold=document.fonts.check('700 20px "'+FB+'"')&&!!(await document.fonts.load('700 20px "'+FB+'"')).length}catch(e){}}
+  if(!have.light){try{have.light=document.fonts.check('20px "'+FL+'"')&&!!(await document.fonts.load('20px "'+FL+'"')).length}catch(e){}}
+  fontState();redraw();
+}
+$('fFile').onchange=async e=>{
+  const fs=[...e.target.files];e.target.value='';let bad=0;
+  for(const f of fs){
+    try{
+      const buf=await f.arrayBuffer(),nm=fontNames(buf).toLowerCase();
+      const kind=/light/.test(nm)?'light':/bold/.test(nm)?'bold':null;
+      if(!kind){bad++;continue}
+      await useFont(buf,kind);try{await prefSet(kind==='light'?'fontLt':'font',buf)}catch(_){}
+    }catch(err){bad++}
+  }
+  fontState();redraw();
+  if(bad)$('fState').insertAdjacentHTML('beforeend','<br><span style="color:var(--warn)">'+bad+' file n’è betg ina scrittira «SRG SSR Type» valaivla.</span>');
+};
 
+function readFile(f){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)})}
 /* ---------- logo ---------- */
 function setLogo(src){if(!src){logoImg=null;redraw();return}const i=new Image();i.onload=()=>{logoImg=i;redraw()};i.src=src}
 try{setLogo(localStorage.getItem(LK))}catch(e){}
