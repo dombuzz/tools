@@ -147,7 +147,8 @@
   $('more').onclick = () => run(true);
   const u = new URLSearchParams(location.search);
   for (const [k, id] of [['q', 'q'], ['from', 'from'], ['to', 'to'], ['sort', 'sort']]) if (u.get(k)) $(id).value = u.get(k);
-  drawSpans(); status(); run().then(() => { if (u.get('section')) { $('sec').value = u.get('section'); } });
+  // Suche seit 07.11.2026 aus (Cloudflare-Kontingent): keine Abfragen mehr; die Artitgel-challenge läuft weiter.
+  document.querySelector('main').innerHTML = '<h1>Tschertga rtr.ch</h1><p class="lead">La tschertga è deactivada per il mument.</p><p class="lead"><a href="/artitgel-challenge">→ Artitgel-challenge</a></p>';
 })();
 </script>
 <script src="/like.js" defer></script>

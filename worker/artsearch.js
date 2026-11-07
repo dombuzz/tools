@@ -4,9 +4,12 @@
 
 const UA = 'Mozilla/5.0 (compatible; dombuzz-tools; +https://tools.dombuzz.ch/info)';
 const SKIP = /\/(interpresa\/organisaziun|uffants\/lexicon)\//;
-// SCHALTER: false = keine automatischen Abrufe von rtr.ch mehr (weder Crawler noch Nachprüfen geöffneter Artikel). Seit 07.11.2026 aus
-// (Cloudflare-Kontingent); die Suche und die Artitgel-challenge arbeiten mit dem bisherigen Bestand weiter. Zum Wiedereinschalten auf true setzen.
-export const CRAWL_ON = false;
+// SCHALTER: false = keine automatischen Abrufe von rtr.ch mehr (weder Crawler noch Nachprüfen geöffneter Artikel).
+export const CRAWL_ON = true;
+// Seit 07.11.2026 ist die Suche (Tschertga) aus: Der Crawler liest nur noch den aktuellen und den Vormonat (reicht für die Artitgel-challenge, die
+// die letzten 30 Tage zeigt) und füllt das Archiv bis 2016 nicht mehr auf. Zum Wiederaufnehmen des Archivs auf true setzen (und SEARCH_ON in index.js).
+export const ARCHIVE_ON = false;
+export const SEARCH_ON = false;
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Stabile Artikel-ID: rtr.ch liefert eine UUID (früher eine Zahl). Fehlt beides, ist die ID nur der Pfad und taugt nicht zum Wiedererkennen.
 export const stableId = id => UUID.test(id || '') || /^\d+$/.test(id || '');
@@ -157,7 +160,7 @@ async function crawlInner(env) {
   // Aktueller Monat zuerst: dessen Sitemap alle CUR_EVERY neu lesen, auch wenn noch ältere Artikel in der Warteschlange sind
   let fresh = null;
   if (Date.now() - Number(await stGet(env, 'cur_ts') || 0) >= CUR_EVERY) fresh = await sitemapStep(env, true);
-  const rows = (await env.DB.prepare('SELECT url FROM art_seen WHERE ok = 0 AND tries < ?1 ORDER BY ym DESC, rowid ASC LIMIT ?2').bind(MAX_TRIES, PER_RUN).all()).results;
+  const rows = (await env.DB.prepare('SELECT url FROM art_seen WHERE ok = 0 AND tries < ?1 AND ym >= ?3 ORDER BY ym DESC, rowid ASC LIMIT ?2').bind(MAX_TRIES, PER_RUN, ARCHIVE_ON ? '' : prevYm(ymOf(new Date()))).all()).results;
   if (!rows.length) return fresh || sitemapStep(env);
   let done = 0, failed = 0;
   for (const { url } of rows) {
@@ -181,6 +184,7 @@ async function sitemapStep(env, forceCur) {
   if (!forceCur && Date.now() - lastCur < CUR_EVERY) {
     if (await stGet(env, 'complete')) return { idle: true };
     ym = (await stGet(env, 'back')) || prevYm(cur);
+    if (!ARCHIVE_ON && ym < prevYm(cur)) return { idle: true }; // Archiv ruht: nur aktueller und Vormonat
   }
   const sm = await getText('https://www.rtr.ch/sitemaps/aron/articles/' + ym + '.xml').catch(() => ({ ok: false, status: 0 }));
   if (sm.ok) {

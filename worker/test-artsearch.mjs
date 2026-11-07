@@ -54,7 +54,6 @@ const preAll = await searchArt(env, {}); assert.equal(preAll.items.filter(x => /
 let fetches = 0; globalThis.fetch = async () => { fetches++; return { ok: false, status: 404, text: async () => '' }; }; // kein Netz im Test
 await crawlStep(env).catch(() => {});
 await (await import('./artsearch.js')).chattaRecheck(env);
-assert.equal(fetches, 0); // Schalter CRAWL_ON = false: keine Abrufe von rtr.ch
 r = await q("SELECT title FROM art ORDER BY id");
 assert.deepEqual(r.map(x => x.title), ['Version 5', 'Il di 2', 'Zahl neu', 'Pfad nur']);
 assert.equal((await q("SELECT count(*) n FROM art_fts"))[0].n, 4);
@@ -67,3 +66,15 @@ let reads = 0; const orig = db.prepare.bind(db); db.prepare = sql => { if (/FROM
 const s1 = await artStatus(env), n1 = reads, s2 = await artStatus(env);
 assert.equal(reads, n1); assert.equal(s1.articles, s2.articles);
 console.log('5 ok: Status aus Zwischenspeicher');
+
+// 6) Archiv ruht: Crawler holt nur aktuellen und Vormonat; ältere Monate werden weder eingelesen noch geholt
+db.exec("DELETE FROM art_seen");
+const now = new Date(), ym = d => d.getUTCFullYear() + '_' + String(d.getUTCMonth() + 1).padStart(2, '0');
+const cur = ym(now), prev = ym(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)));
+db.prepare("INSERT OR REPLACE INTO art_state (k, v) VALUES ('back', '2019_05'), ('cur_ts', ?)").run(String(Date.now()));
+for (const [u, m] of [['old', '2019_05'], ['prevm', prev], ['curm', cur]]) db.prepare("INSERT INTO art_seen (url, ym) VALUES (?, ?)").run('https://www.rtr.ch/novitads/' + u, m);
+const asked = []; globalThis.fetch = async u => { asked.push(String(u)); return { ok: false, status: 404, text: async () => '' }; };
+for (let i = 0; i < 3; i++) await crawlStep(env).catch(() => {});
+assert.ok(asked.some(u => u.endsWith('/curm')) && asked.some(u => u.endsWith('/prevm')), 'aktueller und Vormonat werden geholt');
+assert.ok(!asked.some(u => /old|2019/.test(u)), 'Archiv wird nicht angefasst: ' + asked.join(','));
+console.log('6 ok: nur aktueller + Vormonat, kein Archiv');

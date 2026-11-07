@@ -303,7 +303,7 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
-import { searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth, challengeMonth } from './artsearch.js';
+import { SEARCH_ON, searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth, challengeMonth } from './artsearch.js';
 import { gameRoute, gameAggregate, gameAdminList, gameAdminDelete, gameAdminReset, gameMonthStats, gameDropCache } from './game.js';
 
 export default {
@@ -600,6 +600,7 @@ async function handle(request, env, ctx) {
         }
         if (parts[1] === 'count') return json(await countArt(env), request);
         if (parts[1]) return json({ error: 'notfound' }, request, 404);
+        if (!SEARCH_ON) return json({ disabled: true, items: [], total: 0 }, request, 503); // Suche aus seit 07.11.2026 (Kontingent); Artitgel-challenge läuft weiter
         const g = k => (url.searchParams.get(k) || '').slice(0, 200);
         const out = await searchArt(env, { q: g('q'), from: g('from'), to: g('to'), section: g('section'), sort: g('sort'), page: g('page'), size: g('size') });
         return json(out, request);
