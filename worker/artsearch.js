@@ -4,6 +4,9 @@
 
 const UA = 'Mozilla/5.0 (compatible; dombuzz-tools; +https://tools.dombuzz.ch/info)';
 const SKIP = /\/(interpresa\/organisaziun|uffants\/lexicon)\//;
+// SCHALTER: false = keine automatischen Abrufe von rtr.ch mehr (weder Crawler noch Nachprüfen geöffneter Artikel). Seit 07.11.2026 aus
+// (Cloudflare-Kontingent); die Suche und die Artitgel-challenge arbeiten mit dem bisherigen Bestand weiter. Zum Wiedereinschalten auf true setzen.
+export const CRAWL_ON = false;
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Stabile Artikel-ID: rtr.ch liefert eine UUID (früher eine Zahl). Fehlt beides, ist die ID nur der Pfad und taugt nicht zum Wiedererkennen.
 export const stableId = id => UUID.test(id || '') || /^\d+$/.test(id || '');
@@ -139,6 +142,7 @@ async function dedupeOnce(env) {
 // Der Crawler läuft alle 20 Min. (jeden zweiten 10-Min.-Cron). Die Sitemap des aktuellen Monats wird bei jedem Lauf neu gelesen (neue Artikel kommen so zuvorderst in die Warteschlange);
 // ist die Warteschlange leer, wird der nächste ältere Monat bis 2016 eingelesen.
 export async function crawlStep(env) {
+  if (!CRAWL_ON) { await ensureArt(env); await dedupeOnce(env); return { paused: 'aus' }; } // nur die einmalige Bereinigung (rein in der Datenbank), kein Abruf
   let res;
   try { res = await crawlInner(env); } catch (e) { res = { error: String(e && e.message || e) }; }
   await stSet(env, 'last', JSON.stringify({ at: new Date().toISOString(), ...res })).catch(() => {});
@@ -308,6 +312,7 @@ async function textHash(url) {
 // Geöffnete Artikel regelmässig nachprüfen (alle 20 Min., höchstens 8 Abrufe): stündlich in den ersten 3 Tagen, danach alle 12 Std., bis 30 Tage nach dem Öffnen.
 // «Il di» nur, wenn er an einem späteren Tag geöffnet wurde (dann hat er eine Vergleichsbasis h0); am Publikationstag ändert er laufend.
 export async function chattaRecheck(env) {
+  if (!CRAWL_ON) return;
   await ensureChatta(env);
   const { results } = await env.DB.prepare(
     "SELECT url, h0, first_at FROM chatta_open WHERE mod_at IS NULL AND (url NOT LIKE '%/novitads/il-di/%' OR h0 IS NOT NULL) AND first_at >= strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-30 days')" +

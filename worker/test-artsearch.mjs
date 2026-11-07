@@ -51,8 +51,10 @@ db.prepare("INSERT INTO chatta_open (url, first_at, last_at, n) VALUES ('https:/
 // Suche zeigt dank Sicherheitsnetz schon vor der Bereinigung keine Doppelten
 const pre = await searchArt(env, { q: 'Version' }); assert.equal(pre.items.length, 1);
 const preAll = await searchArt(env, {}); assert.equal(preAll.items.filter(x => /il-di/.test(x.url)).length, 1);
-globalThis.fetch = async () => ({ ok: false, status: 404, text: async () => '' }); // kein Netz im Test
+let fetches = 0; globalThis.fetch = async () => { fetches++; return { ok: false, status: 404, text: async () => '' }; }; // kein Netz im Test
 await crawlStep(env).catch(() => {});
+await (await import('./artsearch.js')).chattaRecheck(env);
+assert.equal(fetches, 0); // Schalter CRAWL_ON = false: keine Abrufe von rtr.ch
 r = await q("SELECT title FROM art ORDER BY id");
 assert.deepEqual(r.map(x => x.title), ['Version 5', 'Il di 2', 'Zahl neu', 'Pfad nur']);
 assert.equal((await q("SELECT count(*) n FROM art_fts"))[0].n, 4);
