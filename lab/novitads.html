@@ -10,12 +10,12 @@
 @media(prefers-color-scheme:light){:root{--bg:#f2f2f4;--card:#fff;--line:#d8d8de;--tx:#1b1b1f;--mu:#6b6b76;--ac:#d9304a;--fld:#f7f7f9;--warn:#b86a00}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:40px 16px 64px}
-.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.wrap{max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 h1{font-size:1.4rem;margin:0;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 h1 .acc{color:var(--ac)}
 .badge{font-size:.7rem;font-weight:600;color:#ff9a3c;border:1px solid #ff9a3c;border-radius:99px;padding:1px 9px}
 .lead{font-size:.9rem;color:var(--mu);margin:4px 0 0}
-.grid{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:18px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
 .stick{position:sticky;top:16px}
 @media(max-width:860px){.stick{position:static}}
@@ -41,14 +41,12 @@ button:hover,.btn:hover{border-color:var(--ac)}
 .pill:hover{color:var(--tx)}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
 .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
-canvas{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y}
+canvas{display:block;width:min(100%,calc((100vh - 150px)*.8));height:auto;aspect-ratio:4/5;margin:0 auto;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y}
 canvas:active{cursor:grabbing}
 .hint{font-size:.78rem;color:var(--mu);margin-top:8px}
 .sep{height:1px;background:var(--line);margin:14px 0}
 .only-cover{display:none}
 .is-cover .only-cover{display:block}
-.only-cover-inline{display:none!important}
-.is-cover .only-cover-inline{display:flex!important}
 input[type=file]{display:none}
 .val{color:var(--mu);font-size:.8rem;float:right}
 </style>
@@ -118,7 +116,6 @@ input[type=file]{display:none}
         <div class="f">
           <div class="row">
             <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="arrow"> Frizza</label>
-            <label class="only-cover-inline" style="margin:0;display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="logo"> Logo RTR</label>
           </div>
         </div>
       </div>
@@ -293,12 +290,12 @@ function render(c,s,preview){
     }
   }
   /* arrow */
-  if(s.frizza&&lastRowY!==null){
-    const cy=lastRowY+tH/2;c.strokeStyle='#fff';c.lineWidth=5;c.lineCap='round';c.lineJoin='round';
+  if(s.frizza){
+    const cy=1245;c.strokeStyle='#fff';c.lineWidth=5;c.lineCap='round';c.lineJoin='round';
     c.beginPath();c.moveTo(880,cy);c.lineTo(1012,cy);c.moveTo(990,cy-24);c.lineTo(1014,cy);c.lineTo(990,cy+24);c.stroke();
   }
   /* logo */
-  if(isCover&&s.logo){
+  if(isCover){
     if(logoImg){const h=70,w=h*logoImg.naturalWidth/logoImg.naturalHeight;c.drawImage(logoImg,X0,65,w,h)}
     else{c.fillStyle='#c8102e';c.fillRect(X0,65,108,70);c.fillStyle='#fff';c.font='800 50px "Helvetica Neue",Arial,sans-serif';c.textAlign='center';c.fillText('RTR',X0+54,102);c.textAlign='left'}
   }
@@ -329,7 +326,7 @@ function fill(){
   $('ctl').classList.toggle('is-cover',s.type==='cover');
   document.querySelectorAll('#typePills .pill').forEach(b=>b.classList.toggle('on',b.dataset.t===s.type));
   $('title').value=s.title;$('text').value=s.text;$('credit').value=s.credit;$('date').value=S.date;
-  $('arrow').checked=!!s.frizza;$('logo').checked=!!s.logo;
+  $('arrow').checked=!!s.frizza;
   $('showCr').checked=s.showCr!==false;$('credit').disabled=s.showCr===false;$('credit').style.opacity=s.showCr===false?.45:1;
   const col=slideColor(s);$('colPick').value=col;$('colHex').value=col;
   $('colHint').textContent=s.colSrc==='C'?'Atgna colur da questa pagina.':'Midar la colur '+s.colSrc+' vala per tut las paginas che la utiliseschan (vesair parameters generals).';
@@ -349,7 +346,6 @@ $('date').oninput=e=>{S.date=e.target.value;dateEdited=true;redraw()};
 $('today').onclick=()=>{S.date=today();$('date').value=S.date;redraw()};
 $('showCr').onchange=e=>{cs().showCr=e.target.checked;fill();redraw();save()};
 $('arrow').onchange=e=>upd(()=>cs().frizza=e.target.checked);
-$('logo').onchange=e=>upd(()=>cs().logo=e.target.checked);
 
 function setCol(hex){const s=cs();if(s.colSrc==='A')S.colA=hex;else if(s.colSrc==='B')S.colB=hex;else s.colC=hex;fill();buildTabs();redraw();save()}
 $('colPick').oninput=e=>setCol(e.target.value);
