@@ -505,7 +505,7 @@
           <button type="button" class="ghost sm cmore" id="cMore" aria-expanded="false">Dapli maletgs ▾</button>
           <div class="crow lrow">
             <button type="button" class="ghost sm" id="cFlip" title="Spievlar la trav" hidden>⇋ Spievlar la trav</button>
-            <button type="button" class="ghost sm" id="cSpReset" title="Lingias da separaziun puspè en il center" hidden>Reposiziunar las lingias</button>
+            <button type="button" class="ghost sm" id="cSpReset" title="Lingias da separaziun puspè en il center" hidden>Resposiziunar lingia</button>
           </div>
           <div class="ctl" id="cAngBox" hidden><div class="top"><label for="cAng">Angul da la lingia</label><span class="val" id="cAngVal" title="Reset">15°</span></div><input type="range" id="cAng" min="-35" max="35" step="1" value="15"></div>
           <h3>Lingia da separaziun</h3>
@@ -1764,7 +1764,10 @@ const CL = {
 const SL = 0.13;
 const SA0 = 15;             // Standardwinkel der schrägen Linie (Grad), nur 2-teilige Disposiziuns s2 / sr2 einstellbar
 const SAOK = k => k === 's2' || k === 'sr2';
-const slOf = k => SAOK(k) && cs.sa && cs.sa[k] != null ? Math.tan(cs.sa[k] * Math.PI / 180) / 2 : SL;            // halbe horizontale Verschiebung der schrägen Kante, im Verhältnis zur Höhe
+// grösster Winkel = Linie von Eck zu gegenüberliegendem Eck (mind. 45°)
+const maxA = k => { const [W, H] = dims(), r = CL[k].sl === 'h' ? H / W : W / H; return Math.max(45, Math.atan(r) * 180 / Math.PI); };
+const angOf = k => { const m = maxA(k); return Math.max(-m, Math.min(m, cs.sa && cs.sa[k] != null ? cs.sa[k] : SA0)); };
+const slOf = k => SAOK(k) && cs.sa && cs.sa[k] != null ? Math.tan(angOf(k) * Math.PI / 180) / 2 : SL;            // halbe horizontale Verschiebung der schrägen Kante, im Verhältnis zur Höhe
 const stageC = $('cStage'), cv = $('cCanvas'), cx2 = cv.getContext('2d'), cMsgEl = $('cMsg');
 const cells = [null, null, null, null, null];   // pro Part: { img, prev, iw, ih, name, z, fx, fy }
 const cs = { fmt:'16:9', lay:'c2', line:'', lw:5, sp:{}, flip:false };
@@ -1793,7 +1796,7 @@ function spOf(k, W, H){
 }
 function clampSp(L, v, W, H){
   let lo = .1, hi = .9;
-  if (L.sl && W){ const sv = L === CL[cs.lay] ? slOf(cs.lay) : SL, m = (L.sl === 'h' ? sv * W / H : sv * H / W) + .04; lo = Math.max(lo, m); hi = Math.min(hi, 1 - m); }
+  if (L.sl && W){ const sv = L === CL[cs.lay] ? slOf(cs.lay) : SL, m = Math.min(.5, Math.abs(L.sl === "h" ? sv * W / H : sv * H / W) + .04); lo = Math.max(lo, m); hi = Math.min(hi, 1 - m); }
   v = v.map(x => Math.max(lo, Math.min(hi, x)));
   // geordnete Linien: mindestens 10 % Abstand
   for (const g of L.ord || []){
@@ -1952,7 +1955,7 @@ function syncLineUI(){
   const inp = $('cLwIn'); if (document.activeElement !== inp) inp.value = cs.lw;
   const L = CL[cs.lay];
   $('cAngBox').hidden = !SAOK(cs.lay);
-  { const a = (cs.sa && cs.sa[cs.lay] != null) ? cs.sa[cs.lay] : SA0; $('cAng').value = a; $('cAngVal').textContent = a + '°'; }
+  { if (SAOK(cs.lay)){ const m = Math.ceil(maxA(cs.lay)), a = Math.round(angOf(cs.lay)); $('cAng').min = -m; $('cAng').max = m; $('cAng').value = a; $('cAngVal').textContent = a + '°'; } }
   $('cFlip').hidden = !L.sl; $('cFlip').setAttribute('aria-pressed', !!cs.flip);
   $('cSpReset').hidden = !((cs.sp && cs.sp[cs.lay] && cs.sp[cs.lay].some((v, i) => Math.abs(v - L.d[i]) > .004)) || (SAOK(cs.lay) && cs.sa && cs.sa[cs.lay] != null && cs.sa[cs.lay] !== SA0));
 }
