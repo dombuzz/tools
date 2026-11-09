@@ -119,7 +119,7 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
   <header>
     <a class="homelink" href="/lab/">← Lab</a>
     <h1>Chat-<span class="acc">Generator</span><span class="labbadge">Labor</span></h1>
-    <p class="lead">Transparentes Chat-Overlay mit Animation: Nachrichten eintippen, links = Gianna, rechts = RTR. Keine Uhrzeiten im Bild, auf Wunsch mit Kontakt oben. Export als PNG-Sequenz mit Alpha für den Schnitt – alles bleibt im Browser.</p>
+    <p class="lead">Transparentes Chat-Overlay mit Animation: Nachrichten eintippen, links = Protagonistin, rechts = RTR. Keine Uhrzeiten im Bild, auf Wunsch mit Kontakt oben. Export als PNG-Sequenz mit Alpha für den Schnitt – alles bleibt im Browser.</p>
   </header>
 
   <div class="cols">
@@ -172,7 +172,7 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
         <h2><span class="num">1</span>Nachrichten</h2>
         <div id="list"></div>
         <div class="addrow">
-          <button class="ghost" id="addL">＋ Gianna (links)</button>
+          <button class="ghost" id="addL">＋ Protagonistin (links)</button>
           <button class="ghost" id="addR">＋ RTR (rechts)</button>
         </div>
         <p class="hint">Tipp: <b>Strg/Cmd + Enter</b> im Textfeld fügt die nächste Nachricht auf der Gegenseite hinzu.</p>
@@ -327,7 +327,7 @@ const Core=(function(){
         const ns=fs*0.82,ss=fs*0.58,ad0=Math.round(hH*0.72),pre=(hH-ad0)/2+ad0+fs*0.4,post=hH*0.45;
         ctx.font=ns+'px '+S.fontFamily;let tw=name?ctx.measureText(name).width:0;
         ctx.font=ss+'px '+S.fontFamily;if(sub)tw=Math.max(tw,ctx.measureText(sub).width);
-        const hw=Math.min(colW,Math.ceil(pre+tw+post)); // Kopf passt sich dem Inhalt an, linksbündig wie Gianna
+        const hw=Math.min(colW,Math.ceil(pre+tw+post)); // Kopf passt sich dem Inhalt an, linksbündig wie die Protagonistin
         ctx.save();ctx.globalAlpha=ha;
         rr(ctx,hx,hy,hw,hH,hr,hr,hr,hr);
         if(S.shadow){ctx.shadowColor='rgba(0,0,0,0.28)';ctx.shadowBlur=fs*0.35*scale;ctx.shadowOffsetY=fs*0.07*scale;}
@@ -450,14 +450,14 @@ const DEFAULTS={
   fontSize:46,fontFamily:FONTS['System (Standard)'],
   columnWidth:1100,bubbleMaxPct:80,hAlign:'center',vAlign:'bottom',marginH:80,marginV:90,
   colL:'#ECECEF',txtL:'#101114',colR:'#2F7BFF',txtR:'#FFFFFF',shadow:true,
-  header:false,headerName:'Gianna',headerSub:'',headerBg:'#2B2D33',headerTxt:'#FFFFFF',headerImg:'',
+  header:false,headerName:'Protagonistin',headerSub:'',headerBg:'#2B2D33',headerTxt:'#FFFFFF',headerImg:'',
   cps:15,typingFactor:1,startDelay:0.5,endHold:1.5,fadeOut:true,fadeOutDur:0.6
 };
 const normMsg=m=>({side:m&&m.side==='R'?'R':'L',text:String((m&&m.text)||''),typing:!(m&&m.typing===false),pause:+(m&&m.pause)||0});
 let S=Object.assign({},DEFAULTS);
 let messages=[
   {side:'R',text:'Das ist ein Beispiel: Frage von RTR.',typing:true,pause:0},
-  {side:'L',text:'Und hier antwortet Gianna. Text einfach überschreiben.',typing:true,pause:0},
+  {side:'L',text:'Und hier antwortet die Protagonistin. Text einfach überschreiben.',typing:true,pause:0},
   {side:'R',text:'Mit Strg/Cmd + Enter fügst du die nächste Nachricht auf der Gegenseite hinzu.',typing:true,pause:0}
 ];
 try{
@@ -529,7 +529,7 @@ function renderList(focusIdx){
   messages.forEach((m,i)=>{
     const el=document.createElement('div');el.className='msg '+m.side;
     el.innerHTML=
-      '<div class="msg-top"><div class="seg"><button data-s="L" class="'+(m.side==='L'?'on L':'')+'">◀ Gianna · links</button><button data-s="R" class="'+(m.side==='R'?'on R':'')+'">RTR · rechts ▶</button></div>'+
+      '<div class="msg-top"><div class="seg"><button data-s="L" class="'+(m.side==='L'?'on L':'')+'">◀ Protagonistin · links</button><button data-s="R" class="'+(m.side==='R'?'on R':'')+'">RTR · rechts ▶</button></div>'+
       '<div class="tools"><button data-a="up" title="Nach oben">↑</button><button data-a="down" title="Nach unten">↓</button><button data-a="del" title="Löschen">✕</button></div></div>'+
       '<textarea rows="1" placeholder="Nachricht eintippen …"></textarea>'+
       '<div class="opts"><label><input type="checkbox" data-o="typing"> Tipp-Punkte davor</label><label>Extra-Pause davor <input type="number" data-o="pause" min="0" step="0.1"> s</label></div>';
@@ -631,7 +631,7 @@ function buildSettings(){
     {k:'vAlign',label:'Vertikal',type:'sel',opts:[['bottom','Unten (wächst nach oben)'],['middle','Mitte'],['top','Oben (wächst nach unten)']]},
     {k:'marginH',label:'Seitenrand (px)',type:'num',min:0,max:2000},
     {k:'marginV',label:'Rand oben/unten (px)',type:'num',min:0,max:2000},
-    {k:'colL',label:'Gianna: Blase',type:'color'},{k:'txtL',label:'Gianna: Text',type:'color'},
+    {k:'colL',label:'Protagonistin: Blase',type:'color'},{k:'txtL',label:'Protagonistin: Text',type:'color'},
     {k:'colR',label:'RTR: Blase',type:'color'},{k:'txtR',label:'RTR: Text',type:'color'},
     {k:'shadow',label:'Weicher Schatten unter den Blasen',type:'chk',full:true}
   ].forEach(d=>field(gl,d));
@@ -642,7 +642,7 @@ function buildSettings(){
   const gh=$('gridHead');
   [
     {k:'header',label:'Kontakt oben anzeigen',type:'chk',full:true},
-    {k:'headerName',label:'Name',type:'txt',max:40,ph:'Gianna'},
+    {k:'headerName',label:'Name',type:'txt',max:40,ph:'Name der Protagonistin'},
     {k:'headerSub',label:'Untertitel (optional)',type:'txt',max:60,ph:'z. B. online'},
     {k:'headerBg',label:'Kopf: Hintergrund',type:'color'},{k:'headerTxt',label:'Kopf: Text',type:'color'}
   ].forEach(d=>field(gh,d));
