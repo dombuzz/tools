@@ -39,7 +39,7 @@ h1 .acc{color:var(--accent)}
 .labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:1px}
 .lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
 .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
-@media (min-width:980px){.cols{grid-template-columns:minmax(340px,430px) minmax(0,1fr)}.sticky{position:sticky;top:16px}}
+@media (min-width:980px){.cols{grid-template-columns:minmax(0,1fr) minmax(340px,430px)}.sticky{position:sticky;top:16px}}
 .col{display:flex;flex-direction:column;gap:18px;min-width:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
 .card h2{margin:0 0 14px;font-size:.95rem;display:flex;gap:10px;align-items:center}
@@ -123,6 +123,50 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
   </header>
 
   <div class="cols">
+    <div class="col sticky">
+      <section class="card">
+        <h2>Vorschau</h2>
+        <div id="stageWrap"><div id="stage"><canvas id="cv"></canvas></div></div>
+        <div class="transport">
+          <button class="ghost" id="play">▶ Abspielen</button>
+          <button class="ghost" id="restart" title="Zum Anfang">⏮</button>
+          <input type="range" id="seek" min="0" max="1000" value="0">
+          <span class="time" id="timeLbl">0:00.0 / 0:00.0</span>
+          <label><input type="checkbox" id="loop" checked> Schleife</label>
+          <label>Hintergrund
+            <select id="bgSel">
+              <option value="checker">Schachbrett (transparent)</option>
+              <option value="dark">Dunkel</option>
+              <option value="light">Hell</option>
+              <option value="green">Grün</option>
+              <option value="img">Eigenes Bild …</option>
+            </select>
+          </label>
+          <input type="file" id="bgFile" accept="image/*" hidden>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="num">3</span>Export</h2>
+        <div class="actions">
+          <button id="expZip">⬇ PNG-Sequenz mit Transparenz (.zip)</button>
+          <button class="ghost" id="expFrame">Einzelbild (PNG)</button>
+          <button class="ghost" id="expWebm" title="Abspielbares Video mit Hintergrund, ohne Transparenz">Vorschau-Video (.webm)</button>
+          <button class="ghost" id="saveJson">Projekt speichern</button>
+          <button class="ghost" id="loadJson">Projekt laden</button>
+          <input type="file" id="jsonFile" accept=".json,application/json" hidden>
+        </div>
+        <div class="bar" id="bar"><i id="barI"></i></div>
+        <p class="meta" id="expInfo" style="margin-top:10px"></p>
+        <details class="export-more">
+          <summary>Als Video mit Transparenz (ProRes 4444 / WebM) – ffmpeg-Befehl</summary>
+          <p class="hint" style="margin-top:10px">ZIP entpacken, im Ordner ausführen. Die Befehle passen sich der Bildrate an.</p>
+          <div class="cmd"><code id="cmdMov"></code><button class="btn" data-copy="cmdMov">Kopieren</button></div>
+          <div class="cmd"><code id="cmdWebm"></code><button class="btn" data-copy="cmdWebm">Kopieren</button></div>
+          <p class="hint">Premiere / DaVinci Resolve / Final Cut (via ProRes) importieren die PNG-Sequenz auch direkt: erstes Bild wählen, «Bildsequenz» anhaken, Bildrate passend setzen.</p>
+        </details>
+      </section>
+    </div>
     <div class="col">
       <section class="card">
         <h2><span class="num">1</span>Nachrichten</h2>
@@ -147,50 +191,6 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
       </section>
     </div>
 
-    <div class="col sticky">
-      <section class="card">
-        <h2><span class="num">3</span>Vorschau</h2>
-        <div id="stageWrap"><div id="stage"><canvas id="cv"></canvas></div></div>
-        <div class="transport">
-          <button class="ghost" id="play">▶ Abspielen</button>
-          <button class="ghost" id="restart" title="Zum Anfang">⏮</button>
-          <input type="range" id="seek" min="0" max="1000" value="0">
-          <span class="time" id="timeLbl">0:00.0 / 0:00.0</span>
-          <label><input type="checkbox" id="loop" checked> Schleife</label>
-          <label>Hintergrund
-            <select id="bgSel">
-              <option value="checker">Schachbrett (transparent)</option>
-              <option value="dark">Dunkel</option>
-              <option value="light">Hell</option>
-              <option value="green">Grün</option>
-              <option value="img">Eigenes Bild …</option>
-            </select>
-          </label>
-          <input type="file" id="bgFile" accept="image/*" hidden>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2><span class="num">4</span>Export</h2>
-        <div class="actions">
-          <button id="expZip">⬇ PNG-Sequenz mit Transparenz (.zip)</button>
-          <button class="ghost" id="expFrame">Einzelbild (PNG)</button>
-          <button class="ghost" id="expWebm" title="Abspielbares Video mit Hintergrund, ohne Transparenz">Vorschau-Video (.webm)</button>
-          <button class="ghost" id="saveJson">Projekt speichern</button>
-          <button class="ghost" id="loadJson">Projekt laden</button>
-          <input type="file" id="jsonFile" accept=".json,application/json" hidden>
-        </div>
-        <div class="bar" id="bar"><i id="barI"></i></div>
-        <p class="meta" id="expInfo" style="margin-top:10px"></p>
-        <details class="export-more">
-          <summary>Als Video mit Transparenz (ProRes 4444 / WebM) – ffmpeg-Befehl</summary>
-          <p class="hint" style="margin-top:10px">ZIP entpacken, im Ordner ausführen. Die Befehle passen sich der Bildrate an.</p>
-          <div class="cmd"><code id="cmdMov"></code><button class="btn" data-copy="cmdMov">Kopieren</button></div>
-          <div class="cmd"><code id="cmdWebm"></code><button class="btn" data-copy="cmdWebm">Kopieren</button></div>
-          <p class="hint">Premiere / DaVinci Resolve / Final Cut (via ProRes) importieren die PNG-Sequenz auch direkt: erstes Bild wählen, «Bildsequenz» anhaken, Bildrate passend setzen.</p>
-        </details>
-      </section>
-    </div>
   </div>
 </div>
 
