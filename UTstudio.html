@@ -522,7 +522,8 @@ const SUB = (() => {
   function write(list, key) { const o = OUT[key]; return { text: o[2](list), ext: o[1], mime: o[3] + ';charset=utf-8' }; }
   const base = name => name.replace(/\.(srt|vtt|ttml|dfxp|xml|sbv|ass|ssa|txt|stl)$/i, '');
 
-  function decode(buf) { const b = new Uint8Array(buf);
+  function decode(buf) { return dec(buf).normalize('NFC'); } // ä ö ü immer als ein Zeichen
+  function dec(buf) { const b = new Uint8Array(buf);
     if (b[0] === 0xFF && b[1] === 0xFE) return new TextDecoder('utf-16le').decode(b);
     if (b[0] === 0xFE && b[1] === 0xFF) return new TextDecoder('utf-16be').decode(b);
     try { return new TextDecoder('utf-8', { fatal: true }).decode(b); }
@@ -1066,7 +1067,7 @@ function decodeSrt(buf){
   try { return new TextDecoder('utf-8',{fatal:true}).decode(b); }
   catch(e){ return new TextDecoder('windows-1252').decode(b); } // ANSI-SRT (z. B. aus Windows-Programmen)
 }
-function readFile(f){ const r=new FileReader(); r.onload=()=>loadText(decodeSrt(r.result),f.name); r.readAsArrayBuffer(f); }
+function readFile(f){ const r=new FileReader(); r.onload=()=>loadText(decodeSrt(r.result).normalize('NFC'),f.name); r.readAsArrayBuffer(f); }
 const drop=$('drop');
 drop.onclick=()=>$('file').click();
 drop.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('file').click(); } };
@@ -1076,7 +1077,7 @@ drop.ondragleave=()=>drop.classList.remove('over');
 drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over'); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);};
 
 $('chunkMax').onchange=()=>{saveSettings(); if(segs.length) renderChunks();};
-const pasteLines=()=>$('paste').value.replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
+const pasteLines=()=>$('paste').value.normalize('NFC').replace(/\r/g,'').split('\n').map(l=>l.trim()).filter(Boolean);
 function updateCount(){ const n=pasteLines().length; $('pasteCount').textContent = segs.length ? `${n} / ${segs.length} lingias` : ''; $('pasteCount').style.color = n===segs.length ? 'var(--ok)' : ''; }
 $('paste').oninput=()=>{ updateCount(); autoApply(); };
 // Sobald alle Frasas da sind, automatisch verteilen (nur einmal pro Inhalt)
@@ -1126,29 +1127,10 @@ $('segs').addEventListener('click',e=>{
 $('onlyBad').onchange=e=>$('segs').classList.toggle('hide-ok',e.target.checked);
 
 const msToTt = ms => msToTc(ms).replace(',','.');
-function buildSrt(list){
-  return '﻿'+list.map((c,i)=>`${i+1}\r\n${msToTc(c.start)} --> ${msToTc(c.end)}\r\n${c.lines.join('\r\n')}`).join('\r\n\r\n')+'\r\n';
-}
-function buildTtml(list){
-  const x=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // RTR-Vorlage (Subtitle Edit, Custom Text Format), Zeitformat hh:mm:ss.zzz
-  const NL='</span><br></br><span tts:color="#ffffff">';
-  const ps=list.map((c,i)=>`<p begin="${msToTt(c.start)}" xml:id="p${i+1}" end="${msToTt(c.end)}">
-    <span tts:color="#ffffff">${c.lines.map(x).join(NL)}</span>
-</p>`).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:tts="http://www.w3.org/ns/ttml#styling">
-    <head>
-        <styling></styling>
-        <layout></layout>
-    </head>
-    <body><div>
-${ps}
-        </div>
-  </body>
-</tt>
-`;
-}
+// gleicher Standard wie SRT → TTML: UTF-8 mit BOM, Zeilenenden CRLF, Umlaute als ein Zeichen (NFC)
+const nfc=list=>list.map(c=>({start:c.start,end:c.end,lines:c.lines.map(l=>l.normalize('NFC'))}));
+const buildSrt=list=>SUB.write(nfc(list),'srt').text;
+const buildTtml=list=>SUB.write(nfc(list),'ttml').text;
 $('export').onclick=()=>{
   let skipped=0; const list=[];
   cues.forEach(c=>{
@@ -1158,7 +1140,7 @@ $('export').onclick=()=>{
   });
   const n=list.length, fmt=$('fmt').value;
   const data = fmt==='ttml' ? buildTtml(list) : buildSrt(list);
-  const blob=new Blob([data],{type:(fmt==='ttml'?'application/ttml+xml':'text/plain')+';charset=utf-8'});
+  const blob=new Blob([data],{type:(fmt==='ttml'?'application/ttml+xml':'application/x-subrip')+';charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${fileName}_${TXT[dir].suf}.${fmt}`; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   $('exportInfo').textContent=`${n} suttitels exportads`+(skipped?` · ${skipped} vids sursiglids`:'');
