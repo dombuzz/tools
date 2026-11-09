@@ -391,6 +391,7 @@
             </div>
             <button type="button" class="plink2" id="presetAll">Applitgar parameters sin tut ils maletgs</button>
           </div>
+          <a class="plink2" style="margin-top:14px" id="expertLink" href="/photoeditor?from=maletgs" target="_blank" rel="noopener" title="Avrir il maletg tschernì en in nov tab, cun parameters supplementars">expert / experimental</a>
         </div>
 
         <div class="pane" data-pane="1" hidden>
@@ -2360,6 +2361,25 @@ $('presetAll').onclick = () => {
   refreshAfterCol(); sayAny(`Applitgà a ${all.length} ${all.length === 1 ? 'maletg' : 'maletgs'}.`);
 };
 renderPresets();
+
+/* ---------- expert / experimental: Maletg + parameters en il «Photoeditor» (nov tab) ---------- */
+(() => {
+  const idb = () => new Promise((res, rej) => { const r = indexedDB.open('dbz-photoeditor', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const put = async v => { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('h', 'readwrite'); t.objectStore('h').put(v, 'in'); t.oncomplete = res; t.onerror = () => rej(t.error); }); };
+  $('expertLink').addEventListener('click', async () => {      // der Link öffnet den Tab, der Editor wartet kurz auf das Bild
+    try {
+      const A = editTarget();
+      if (!A) { await put({ t: Date.now() }); return; }
+      let blob;
+      if (A.url) blob = await (await fetch(A.url)).blob();
+      else {
+        const [w, h] = dimsOf(A.orig), c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(A.orig, 0, 0); blob = await new Promise(r => c.toBlob(r, 'image/png'));
+      }
+      await put({ t: Date.now(), blob, name: A.name, q: A.q || 0, fh: !!A.fh, fv: !!A.fv, col: { ...A.col } });
+    } catch (e) {}
+  });
+})();
 </script>
 <script src="/handoff.js"></script>
 <script src="/like.js" defer></script>

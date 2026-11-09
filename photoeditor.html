@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Expert / experimental: Clerezza + colurs cun parameters supplementars (aguzzar, rumur, vignetta, nair/alv, duoton, grana, allontanar il funs).">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Photoeditor">
+<meta property="og:description" content="Expert / experimental: Clerezza + colurs cun parameters supplementars (aguzzar, rumur, vignetta, nair/alv, duoton, grana, allontanar il funs).">
+<meta property="og:url" content="https://tools.dombuzz.ch/photoeditor">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>Photoeditor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.4 11.4 77.3 77.3'%3E%3Crect x='16' y='38' width='52' height='36' rx='4' stroke='%23ff4d64' stroke-width='8' fill='none'/%3E%3Cpath d='M32 26h52v36' stroke='%23ff4d64' stroke-width='8' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+    --accent:#ff4d64; --accent-dark:#d93a50; --border:#2f2f34;
+    --mono:#26262a; color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  body{
+    margin:0; padding:32px 16px; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+  }
+  .container{ width:100%; max-width:1100px; min-width:0; margin:0 auto; }
+  h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+  h1 .acc{color:var(--accent)}
+  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+  .homelink:hover,.homelink:focus-visible{color:var(--accent)}
+  .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px; }
+
+  .toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .spacer{ flex:1; }
+  button{
+    background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:10px 16px;
+    font-size:0.9rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  button:hover{ background:var(--accent-dark); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  button.ghost{ background:transparent; color:var(--text); border:1px solid var(--border); }
+  button.ghost:hover{ border-color:var(--muted); }
+  button:focus-visible, .stage:focus-visible, select:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .field{ display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--muted); }
+  select{
+    padding:9px 10px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.9rem; font-family:inherit;
+  }
+
+  .urlrow{ display:flex; gap:8px; margin-bottom:16px; }
+  .urlrow input{
+    flex:1; min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
+  }
+  .urlrow input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+
+  /* Arbeitsfläche + Ebenen nebeneinander, auf dem Handy untereinander */
+  .work{ display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:16px; align-items:start; }
+  @media (max-width:860px){ .work{ grid-template-columns:minmax(0,1fr); } }
+
+  /* Bühne: Rahmen in der Mitte, Überstand der aktiven Ebene halbtransparent sichtbar */
+  .stage{
+    position:relative; overflow:hidden; background:var(--mono);
+    border-radius:12px; padding:48px 9%; touch-action:none; user-select:none;
+  }
+  .frame{ position:relative; width:100%; margin:0 auto; }
+  .frame-bg{ position:absolute; inset:0; background:#fff; }
+  .frame-bg.clear{ background-color:#fff;
+    background-image:linear-gradient(45deg,#cfcfd4 25%,transparent 25%,transparent 75%,#cfcfd4 75%),linear-gradient(45deg,#cfcfd4 25%,transparent 25%,transparent 75%,#cfcfd4 75%);
+    background-size:20px 20px; background-position:0 0,10px 10px; }
+  .frame img, .frame canvas.lay, .frame canvas.ghost-img{ position:absolute; max-width:none; pointer-events:none; }
+  .blurbg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .ghost-img{ opacity:.3; }
+  .clip{ position:absolute; inset:0; overflow:hidden; z-index:1; }
+  .gridov{ position:absolute; inset:0; z-index:2; pointer-events:none; filter:drop-shadow(0 0 1px rgba(0,0,0,.9));
+    background-image:linear-gradient(to right, rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.6) 1px, transparent 1px); }
+  .frame-line{ position:absolute; inset:0; z-index:2; outline:1px solid rgba(255,77,100,.8); pointer-events:none; }
+  .box{ position:absolute; z-index:3; cursor:move; outline:1px dashed rgba(255,77,100,.7); }
+  .handle{
+    position:absolute; width:22px; height:22px; margin:-11px 0 0 -11px;
+    background:#fff; border:3px solid var(--accent); border-radius:50%; touch-action:none;
+  }
+  .handle[data-c="nw"], .handle[data-c="se"]{ cursor:nwse-resize; }
+  .handle[data-c="ne"], .handle[data-c="sw"]{ cursor:nesw-resize; }
+  .empty{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:6px; text-align:center; cursor:pointer; color:#121214; z-index:4; padding:0 12px;
+  }
+  .empty strong{ font-size:1.05rem; }
+  .empty span{ font-size:0.85rem; color:#555; }
+  .stage.over{ outline:2px dashed var(--accent); outline-offset:-2px; }
+
+  /* Ebenen-Liste */
+  .layers h2{ font-size:0.95rem; margin:0 0 2px; }
+  .layers .note{ font-size:0.8rem; color:var(--muted); margin:0 0 10px; }
+  .list{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; user-select:none; -webkit-user-select:none; position:relative; z-index:1; }
+  .row{
+    display:grid; grid-template-columns:18px 44px minmax(0,1fr); gap:6px 10px; align-items:center; position:relative;
+    padding:8px; border:1px solid var(--border); border-radius:10px; background:var(--mono); cursor:pointer;
+  }
+  .row.active{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  .row.off .thumb, .row.off .name{ opacity:.45; }
+  .row.off{ background:rgba(255,77,100,.10); }
+  .row.drag{ z-index:5; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.45); cursor:grabbing; }
+  .row.before::before, .row.after::after{
+    content:""; position:absolute; left:6px; right:6px; height:3px; border-radius:2px; background:var(--accent);
+  }
+  .row.before::before{ top:-6px; } .row.after::after{ bottom:-6px; }
+  .grip{ color:var(--muted); font-size:1.1rem; line-height:1; text-align:center; cursor:grab; touch-action:none; user-select:none; padding:10px 0; }
+  .grip:hover{ color:var(--text); }
+  .row.locked .name::after{ content:" 🔒"; }
+  .thumb{
+    width:44px; height:44px; border-radius:6px; object-fit:contain;
+    background:repeating-conic-gradient(#888 0 25%, #bbb 0 50%) 0 0/10px 10px;
+  }
+  .meta{ min-width:0; }
+  .name{ font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row.active .name{ cursor:text; }
+  .row.active .name::after{ content:" ✎"; color:var(--muted); font-weight:400; }
+  .row.locked .name::after{ content:" 🔒"; }
+  .rename{ width:100%; font:inherit; font-size:0.85rem; font-weight:600; padding:3px 6px; border:1px solid var(--accent);
+    border-radius:6px; background:var(--card); color:var(--text); }
+  .info{ font-size:0.75rem; color:var(--muted); }
+  .btns{ grid-column:1 / -1; display:flex; gap:4px; flex-wrap:wrap; }
+  .btns button{
+    background:transparent; color:var(--text); border:1px solid var(--border);
+    padding:5px 8px; font-size:0.8rem; border-radius:7px; line-height:1.2;
+  }
+  .btns button:hover:not(:disabled){ border-color:var(--muted); background:transparent; }
+  .btns button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
+  .btns .del{ margin-left:auto; }
+  .btns .btnbr{ flex-basis:100%; height:0; }
+  .btns .lockb{ margin-left:auto; }
+  .btns .lockb, .btns .del{ min-width:36px; }
+  .layers .add{ width:100%; }
+  .nolayers{ font-size:0.85rem; color:var(--muted); margin:0 0 10px; }
+  h1 .acc{ color:var(--accent); white-space:nowrap; }
+  .tabrow{ display:flex; align-items:flex-end; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--border); margin:0 0 16px; }
+  .tabs{ display:flex; gap:4px; flex:1 1 auto; min-width:0; overflow-x:auto; scrollbar-width:none; }
+  .histbar{ display:flex; gap:4px; margin-left:auto; padding-bottom:6px; }
+  .histbar .hb{ padding:6px 10px; font-size:.8rem; font-weight:600; line-height:1.2; }
+  .histbar .hb[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
+  .histbar .hb:disabled{ opacity:.35; }
+  @media (max-width:600px){ .histbar .hb span{ display:none; } .histbar .hb{ padding:6px 9px; font-size:.95rem; } }
+  .beforetag{ display:none; position:absolute; top:10px; left:10px; z-index:9; background:rgba(0,0,0,.72); color:#fff;
+    font-size:.75rem; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:6px; pointer-events:none; }
+  body.before .beforetag{ display:block; }
+  body.before .box, body.before #ghost{ display:none !important; }
+  .presets{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .pchip{ display:inline-flex; align-items:stretch; border:1px solid var(--border); border-radius:999px; overflow:hidden; background:var(--mono); }
+  .pchip button{ background:transparent; color:var(--text); border:none; border-radius:0; padding:5px 10px; font-size:.8rem; font-weight:600; }
+  .pchip button:hover{ background:var(--accent); color:var(--on-sel,#fff); }
+  .pchip .pdel{ padding:5px 8px; color:var(--muted); font-weight:400; border-left:1px solid var(--border); }
+  .nopresets{ font-size:.8rem; color:var(--muted); margin:0 0 8px; }
+  .presetadd{ display:flex; gap:6px; }
+  .presetadd input{ flex:1; min-width:0; padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--mono); color:var(--text); font:inherit; font-size:.85rem; }
+  .presetadd input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .presetadd button{ padding:7px 12px; font-size:.82rem; }
+  .plink2{ display:block; margin-top:8px; background:none; border:none; padding:0; color:var(--accent); font-size:.8rem; font-weight:600; text-decoration:underline; cursor:pointer; text-align:left; }
+  .plink2:hover{ background:none; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tabs button{ background:transparent; color:var(--muted); border:none; border-bottom:2px solid transparent; border-radius:0;
+    padding:10px 14px; margin-bottom:-1px; font-size:0.92rem; white-space:nowrap; }
+  .tabrow .tabs button{ margin-bottom:-1px; }
+  .tabs button:hover{ background:transparent; color:var(--text); }
+  .tabs button[aria-selected="true"]{ color:var(--text); border-bottom-color:var(--accent); }
+  .tabs em{ font-style:normal; color:var(--accent); }
+  .tabs button[aria-selected="true"] em{ color:inherit; }
+  .edit .ctl label{ cursor:pointer; }
+  .edit .ctl label:hover{ color:var(--accent); }
+  .secreset{ background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:6px;
+    padding:0 7px; font-size:0.85rem; line-height:1.5; margin-left:6px; vertical-align:1px; }
+  .guiderow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .guiderow .ghost{ padding:7px 10px; font-size:.82rem; }
+  .gstate{ font-size:.78rem; color:var(--muted); }
+  .guiderow .link{ background:none; border:none; padding:0; color:var(--accent); font-size:.8rem; font-weight:600; text-decoration:underline; cursor:pointer; }
+  .guiderow .link:hover{ background:none; }
+  .gmodal{ position:fixed; inset:0; z-index:80; background:rgba(0,0,0,.72); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .gbox{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; width:min(1200px, 100%); max-height:100%; display:flex; flex-direction:column; gap:10px; }
+  .ghead b{ font-size:.95rem; }
+  .ghead p{ margin:4px 0 0; font-size:.82rem; color:var(--muted); line-height:1.45; }
+  .gv{ color:#ff4d64; font-weight:600; } .gh{ color:#4da3ff; font-weight:600; }
+  .gwrap{ display:flex; justify-content:center; min-height:0; }
+  #gCanvas{ display:block; max-width:100%; touch-action:none; cursor:crosshair; border-radius:6px; }
+  .gfoot{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .edit h3.resettable{ cursor:pointer; user-select:none; }
+  .edit h3.resettable:hover{ color:var(--accent); }
+  .secreset:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
+  .tabs .tcount{ font-size:0.75rem; color:inherit; opacity:.9; font-weight:400; }
+  @media (max-width:600px){ .tabs button{ padding:9px 9px; font-size:0.85rem; } }
+  .side h3:first-of-type{ margin-top:4px; }
+  .who{ font-size:0.82rem; color:var(--muted); margin:0 0 4px; display:flex; gap:6px; align-items:baseline; min-width:0; }
+  .who b{ color:var(--text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .who .link{ background:none; border:none; padding:0; color:var(--accent); font-size:0.8rem; font-weight:600; text-decoration:underline; cursor:pointer; margin-left:auto; }
+  .who .link:hover{ background:none; }
+  .edit{ }
+  .edit.off{ opacity:.45; pointer-events:none; }
+  .edit h2{ font-size:0.95rem; margin:0 0 2px; }
+  .edit h3{ font-size:0.85rem; margin:16px 0 8px; }
+  .rot{ display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+  .rot button{ padding:7px 4px; font-size:0.8rem; }
+  .rot button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
+  .ctl{ margin-bottom:10px; }
+  .ctl .top{ display:flex; justify-content:space-between; align-items:baseline; font-size:0.82rem; margin-bottom:2px; }
+  .ctl .val{ color:var(--muted); font-variant-numeric:tabular-nums; cursor:pointer; }
+  .ctl .val:hover{ color:var(--accent); }
+  .ctl .wbhint{ margin-left:auto; margin-right:10px; font-size:0.72rem; color:var(--muted); }
+  .ctl input[type=range]{ width:100%; accent-color:var(--accent); }
+  .sizeseg{ display:inline-flex; gap:3px; background:var(--mono); border:1px solid var(--border); border-radius:10px; padding:3px; }
+  .sizeseg button{ background:transparent; color:var(--muted); padding:6px 10px; font-size:0.82rem; border-radius:7px; line-height:1.25; }
+  .sizeseg button:hover{ background:transparent; color:var(--text); }
+  .sizeseg button[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); }
+  .sizeseg small{ display:block; font-weight:400; font-size:0.72rem; opacity:.85; }
+
+  /* Collage */
+  .cstage{ padding:24px 4%; }
+  .cstage canvas{ display:block; width:100%; height:auto; margin:0 auto; cursor:grab; touch-action:none; }
+
+  .cstage canvas.drag{ cursor:grabbing; }
+  #collage .side h3{ font-size:0.85rem; margin:16px 0 8px; }
+  #collage .side h3:first-child{ margin-top:4px; }
+  .lays{ display:flex; flex-wrap:wrap; gap:6px; }
+  .lays button{ background:var(--mono); border:1px solid var(--border); color:var(--muted); padding:6px; border-radius:8px; line-height:0; }
+  .lays button:hover{ background:var(--mono); color:var(--text); border-color:var(--muted); }
+  .lays button[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  .lays svg{ display:block; height:24px; width:auto; }
+  .crow{ display:flex; flex-wrap:wrap; gap:8px; }
+  #cFmt small{ white-space:nowrap; font-size:.66rem; }
+  .lrow{ margin-top:8px; }
+  .cmore{ display:block; margin-top:8px; }
+  .lrow:not(:has(button:not([hidden]))){ display:none; }
+  .ghost.sm{ padding:6px 10px; font-size:.8rem; }
+  .cpick{ position:relative; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; font-size:.82rem; font-weight:600; color:var(--muted); border-radius:7px; cursor:pointer; line-height:1.25; }
+  .cpick:hover{ color:var(--text); }
+  .cpick.on{ background:var(--accent); color:var(--on-sel,#fff); }
+  .cpick input{ position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; border:0; padding:0; }
+  .cpick i{ width:12px; height:12px; border-radius:50%; border:1px solid rgba(127,127,127,.6); background:#ff4d64; flex:none; }
+  .lwin{ display:inline-flex; align-items:center; gap:4px; padding:0 6px 0 4px; font-size:.82rem; color:var(--muted); }
+  .lwin input{ width:52px; padding:5px 6px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--text); font:inherit; font-size:.82rem; text-align:right; }
+  .lwin input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .cbtns{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .cbtns button{ padding:8px 6px; font-size:0.82rem; }
+  .cbtns .wide{ grid-column:1 / -1; }
+  .cbtns em{ font-style:normal; color:var(--accent); }
+  .cpool{ margin-top:12px; border:1px dashed var(--border); border-radius:12px; padding:10px 12px; transition:border-color .15s, background .15s; }
+  .cpool.over{ border-color:var(--accent); background:rgba(255,77,100,.06); }
+  .cpool-h{ display:flex; align-items:baseline; gap:8px; font-size:.85rem; margin-bottom:8px; }
+  .cpool-h .plink{ margin-left:auto; background:none; border:none; padding:0; color:var(--accent); font-size:.8rem; font-weight:600; cursor:pointer; }
+  .cpool-h .plink:hover{ background:none; text-decoration:underline; }
+  .cpool-list{ display:flex; flex-wrap:wrap; gap:8px; }
+  .cpool-empty{ margin:0; font-size:.8rem; color:var(--muted); }
+  .pthumb{ position:relative; width:104px; height:70px; border-radius:8px; overflow:hidden; border:1px solid var(--border); cursor:grab; touch-action:none; background:#000; user-select:none; -webkit-user-select:none; }
+  .pthumb:hover{ border-color:var(--muted); }
+  .pthumb canvas{ display:block; width:100%; height:100%; pointer-events:none; }
+  .pthumb .x{ position:absolute; top:3px; right:3px; width:20px; height:20px; padding:0; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; font-size:12px; line-height:20px; text-align:center; }
+  .pthumb .x:hover{ background:var(--accent); }
+  .pghost{ position:fixed; z-index:60; pointer-events:none; width:104px; height:70px; border-radius:8px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,.45); opacity:.9; transform:translate(-50%,-50%); }
+  .pghost canvas{ width:100%; height:100%; display:block; }
+  .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
+  .msg.err{ color:var(--err,#ff6b7d); }
+  @media (max-width:600px){
+    body{ padding:20px 12px; }
+    .card{ padding:14px; }
+    .stage{ padding:36px 6%; }
+    .empty strong{ font-size:.9rem; }
+    .empty span{ font-size:.75rem; }
+  }
+  .sub3{ font-size:.78rem; color:var(--muted); margin:-4px 0 10px; line-height:1.45; }
+  .rowc{ display:flex; gap:14px; align-items:center; margin:0 0 10px; font-size:.82rem; color:var(--muted); }
+  .rowc label{ display:flex; align-items:center; gap:6px; }
+  .rowc input[type=color]{ width:34px; height:26px; padding:0; border:1px solid var(--border); border-radius:6px; background:var(--mono); cursor:pointer; }
+  .fxbtns{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 8px; }
+  .fxbtns button{ padding:8px 12px; font-size:.82rem; }
+  .frame canvas#view{ position:absolute; inset:0; width:100%; height:100%; }
+  #note{ margin:0 0 14px; padding:9px 12px; border-radius:10px; font-size:.85rem; font-weight:600; background:rgba(95,210,154,.12); border:1px solid rgba(95,210,154,.45); color:#2fae72; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="homelink" href="/">← Tools</a>
+  <h1>Photo<span class="acc">editor</span></h1>
+  <p class="subtitle">Expert / experimental: «Clerezza + colurs» cun parameters supplementars – aguzzar, reducir il rumur, vignetta, nair/alv, duoton, grana ed allontanar il funs. Tut vegn elavurà en tes browser.</p>
+
+  <div class="card">
+    <div class="toolbar">
+      <button type="button" class="ghost" id="pickBtn">Tscherner maletg</button>
+    </div>
+
+    <div class="urlrow">
+      <input type="url" id="urlInput" placeholder="Integrar il link d'in maletg RTR u l'URL d'in artitgel" spellcheck="false" autocomplete="off">
+      <button type="button" class="ghost" id="urlBtn">Chargiar</button>
+    </div>
+
+    <div class="tabrow">
+    <div class="tabs" role="tablist" aria-label="Elavuraziun">
+      <button type="button" role="tab" aria-selected="true">Clerezza <em>+</em> colurs</button>
+    </div>
+    <div class="histbar">
+      <button type="button" class="ghost hb" id="undoBtn" title="Pass enavos (Ctrl/Cmd+Z)" aria-label="Pass enavos" disabled>↶ <span>Pass enavos</span></button>
+      <button type="button" class="ghost hb" id="redoBtn" title="Repeter (Ctrl/Cmd+Shift+Z)" aria-label="Repeter" disabled>↷ <span>Repeter</span></button>
+      <button type="button" class="ghost hb" id="baBtn" aria-pressed="false" title="Tegnair smatgà per vesair il maletg avant l'elavuraziun (u tegnair smatgà la tasta A)" aria-label="Avant / suenter"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" style="vertical-align:-2px"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg> <span>Avant / suenter</span></button>
+    </div>
+    </div>
+
+    <div class="work">
+      <div>
+        <div class="stage" id="stage" tabindex="0" aria-label="Surfatscha da lavur">
+          <div class="beforetag">Avant</div>
+          <div class="frame" id="frame">
+            <div class="frame-bg" id="frameBg"></div>
+            <canvas id="view"></canvas>
+            <div class="frame-line"></div>
+            <div class="empty" id="empty">
+              <strong>Trair qua il maletg</strong>
+              <span>u cliccar per tscherner, integrar cun Ctrl/Cmd+V u inditgar survart in link RTR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side" id="side">
+        <div class="pane" data-pane="0">
+            <h3>Clerezza <button type="button" class="secreset" data-reset="bri,con,hil,sha" title="Reset clerezza, cuntrast, clers e stgirs" aria-label="Reset clerezza, cuntrast, clers e stgirs">↺</button></h3>
+          <div class="ctl"><div class="top"><label for="c_bri">Clerezza</label><span class="val" data-for="bri" title="Reset">0</span></div><input type="range" id="c_bri" data-c="bri" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_con">Cuntrast</label><span class="val" data-for="con" title="Reset">0</span></div><input type="range" id="c_con" data-c="con" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_hil">Clers</label><span class="val" data-for="hil" title="Reset">0</span></div><input type="range" id="c_hil" data-c="hil" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_sha">Stgirs</label><span class="val" data-for="sha" title="Reset">0</span></div><input type="range" id="c_sha" data-c="sha" min="-100" max="100" step="1" value="0"></div>
+            <h3>Colurs <button type="button" class="secreset" data-reset="sat,vib,wb,hue" title="Reset saturaziun, dinamica, balantscha da l'alv e nianza" aria-label="Reset saturaziun, dinamica, balantscha da l'alv e nianza">↺</button></h3>
+          <div class="ctl"><div class="top"><label for="c_sat">Saturaziun</label><span class="val" data-for="sat" title="Reset">0</span></div><input type="range" id="c_sat" data-c="sat" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_vib">Dinamica</label><span class="wbhint">surtut colurs pallidas</span><span class="val" data-for="vib" title="Reset">0</span></div><input type="range" id="c_vib" data-c="vib" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_wb">WB Balantscha da l'alv</label><span class="wbhint">fraid ↔ chaud</span><span class="val" data-for="wb" title="Reset">0</span></div><input type="range" id="c_wb" data-c="wb" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_hue">Nianza da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="c_hue" data-c="hue" min="-180" max="180" step="1" value="0"></div>
+            <h3>Detagls <button type="button" class="secreset" data-reset="shp,cla,dns,blr" title="Reset aguzzar, structura, rumur e blur" aria-label="Reset aguzzar, structura, rumur e blur">↺</button></h3>
+          <div class="ctl"><div class="top"><label for="c_shp">Aguzzar</label><span class="val" data-for="shp" title="Reset">0</span></div><input type="range" id="c_shp" data-c="shp" min="0" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_cla">Structura</label><span class="wbhint">cuntrast local</span><span class="val" data-for="cla" title="Reset">0</span></div><input type="range" id="c_cla" data-c="cla" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_dns">Reducir rumur</label><span class="val" data-for="dns" title="Reset">0</span></div><input type="range" id="c_dns" data-c="dns" min="0" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_blr">Blur</label><span class="val" data-for="blr" title="Reset">0</span></div><input type="range" id="c_blr" data-c="blr" min="0" max="100" step="1" value="0"></div>
+            <h3>Nivels <button type="button" class="secreset" data-reset="blk,wht,gam" title="Reset nivels" aria-label="Reset nivels">↺</button></h3>
+          <div class="ctl"><div class="top"><label for="c_blk">Punct nair</label><span class="val" data-for="blk" title="Reset">0</span></div><input type="range" id="c_blk" data-c="blk" min="0" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_wht">Punct alv</label><span class="val" data-for="wht" title="Reset">0</span></div><input type="range" id="c_wht" data-c="wht" min="0" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_gam">Gamma</label><span class="wbhint">tuns mezzans</span><span class="val" data-for="gam" title="Reset">0</span></div><input type="range" id="c_gam" data-c="gam" min="-100" max="100" step="1" value="0"></div>
+            <h3>Nair/alv e duoton <button type="button" class="secreset" data-reset="bw,duo" title="Reset nair/alv e duoton" aria-label="Reset nair/alv e duoton">↺</button></h3>
+          <div class="ctl"><div class="top"><label for="c_bw">Nair/alv</label><span class="val" data-for="bw" title="Reset">0</span></div><input type="range" id="c_bw" data-c="bw" min="0" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_duo">Duoton</label><span class="val" data-for="duo" title="Reset">0</span></div><input type="range" id="c_duo" data-c="duo" min="0" max="100" step="1" value="0"></div>
+          <div class="rowc">
+            <label>Stgirs <input type="color" id="dc1" value="#1b2a4a"></label>
+            <label>Clers <input type="color" id="dc2" value="#f3c98b"></label>
+          </div>
+            <h3>Stil <button type="button" class="secreset" data-reset="vig,gra" title="Reset vignetta e grana" aria-label="Reset vignetta e grana">↺</button></h3>
+          <div class="ctl"><div class="top"><label for="c_vig">Vignetta</label><span class="wbhint">stgir ↔ cler</span><span class="val" data-for="vig" title="Reset">0</span></div><input type="range" id="c_vig" data-c="vig" min="-100" max="100" step="1" value="0"></div>
+          <div class="ctl"><div class="top"><label for="c_gra">Grana</label><span class="val" data-for="gra" title="Reset">0</span></div><input type="range" id="c_gra" data-c="gra" min="0" max="100" step="1" value="0"></div>
+            <button type="button" class="ghost" id="resetCol">Reset tut</button>
+
+            <h3>Funs</h3>
+            <p class="sub3">Allontanar il funs: <b>tenor colur</b> parta dals chantuns dal maletg (funs unitar), <b>cun IA</b> renconuscha il suject (chargia ina pitschna rait neurala, ca. 40 MB, be l'emprima giada).</p>
+            <div class="ctl"><div class="top"><label for="tol">Tolleranza (tenor colur)</label><span class="val" id="tolVal" title="Reset">30</span></div><input type="range" id="tol" min="5" max="100" step="1" value="30"></div>
+            <div class="fxbtns">
+              <button type="button" class="ghost" id="cutCol" disabled>Tenor colur</button>
+              <button type="button" class="ghost" id="cutAI" disabled>Cun IA</button>
+              <button type="button" class="ghost" id="cutUndo" disabled>Restaurar funs</button>
+            </div>
+
+            <h3>Arcunar parameters</h3>
+            <div class="presets" id="presets"></div>
+            <p class="nopresets" id="noPresets">Anc nagins parameters arcunads. Arcunescha tut ils parameters actuals cun in num, per las applitgar pli tard cun in clic.</p>
+            <div class="presetadd">
+              <input type="text" id="presetName" maxlength="40" placeholder="Num, p.ex. Il di saira" autocomplete="off" spellcheck="false">
+              <button type="button" class="ghost" id="presetSave">Arcunar</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">Clicca sin il num d'in regulatur per al metter enavos sin 0, ↺ metta enavos l'entira gruppa. Tegnair smatgà «Avant / suenter» (u la tasta A) mussa il maletg original. «Aguzzar» e «Structura» vegnan applitgads suenter las colurs. L'IA per allontanar il funs vegn chargiada ina giada dad in server public (be il model, betg il maletg) – il maletg resta en tes browser.</p>
+
+    <div class="actions">
+      <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
+      <span class="msg" id="msg"></span>
+    </div>
+  </div>
+  <input type="file" id="file" accept="image/*" hidden>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const stage = $('stage'), frame = $('frame'), view = $('view'), frameBg = $('frameBg'), empty = $('empty'), msg = $('msg');
+function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
+
+/* ---------- Parameter ---------- */
+const CIDS = ['bri','con','hil','sha','sat','vib','wb','hue'];                       // wie «Clerezza + colurs» in /maletgs
+const FIDS = ['shp','cla','dns','blr','blk','wht','gam','bw','duo','vig','gra'];     // neu
+const NIDS = [...CIDS, ...FIDS];
+const PREVIEW_MAX = 1600, FULL_MAX = 6000;
+const newCol = () => { const o = {}; NIDS.forEach(k => o[k] = 0); o.dc1 = '#1b2a4a'; o.dc2 = '#f3c98b'; return o; };
+const isNeutral = c => NIDS.every(k => !c[k]);
+let col = newCol();
+
+function mul(a, b){
+  const r = [];
+  for (let i = 0; i < 3; i++){
+    for (let j = 0; j < 3; j++) r[i*4+j] = a[i*4]*b[j] + a[i*4+1]*b[4+j] + a[i*4+2]*b[8+j];
+    r[i*4+3] = a[i*4]*b[3] + a[i*4+1]*b[7] + a[i*4+2]*b[11] + a[i*4+3];
+  }
+  return r;
+}
+// Helligkeit/Kontrast (linear) → Clers/Stgirs (Tonkurve) → Weissabgleich, Sättigung, Farbton (linear)
+function params(col){
+  const b = 1 + col.bri / 100, c = 1 + col.con / 100;
+  const A = mul([c,0,0,127.5*(1-c), 0,c,0,127.5*(1-c), 0,0,c,127.5*(1-c)], [b,0,0,0, 0,b,0,0, 0,0,b,0]);
+  const w = col.wb / 100 * 0.25;
+  let B = [1+w,0,0,0, 0,1+w*0.1,0,0, 0,0,1-w,0];
+  const s = 1 + col.sat / 100;
+  B = mul([.213+.787*s, .715-.715*s, .072-.072*s, 0, .213-.213*s, .715+.285*s, .072-.072*s, 0, .213-.213*s, .715-.715*s, .072+.928*s, 0], B);
+  const h = col.hue * Math.PI / 180, co = Math.cos(h), si = Math.sin(h);
+  B = mul([.213+co*.787-si*.213, .715-co*.715-si*.715, .072-co*.072+si*.928, 0,
+           .213-co*.213+si*.143, .715+co*.285+si*.140, .072-co*.072-si*.283, 0,
+           .213-co*.213-si*.787, .715-co*.715+si*.715, .072+co*.928+si*.072, 0], B);
+  const hl = col.hil / 100, sh = col.sha / 100;
+  let T = null;
+  if (hl || sh){
+    T = new Float32Array(256);
+    for (let i = 0; i < 256; i++){
+      const L = i / 255, wS = Math.pow(1 - L, 2), wH = Math.pow(L, 2);
+      T[i] = 110 * (sh * wS * (1 - L * 0.3) + hl * wH * (1 - (1 - L) * 0.3));
+    }
+  }
+  return { A, B, T, V: (col.vib || 0) / 100 };
+}
+function applyColor(src, dst, P){
+  const s = src.data, d = dst.data, A = P.A, B = P.B, T = P.T, V = P.V;
+  for (let i = 0; i < s.length; i += 4){
+    let r = A[0]*s[i] + A[1]*s[i+1] + A[2]*s[i+2] + A[3];
+    let g = A[4]*s[i] + A[5]*s[i+1] + A[6]*s[i+2] + A[7];
+    let b = A[8]*s[i] + A[9]*s[i+1] + A[10]*s[i+2] + A[11];
+    if (T){
+      let L = (0.2126*r + 0.7152*g + 0.0722*b) | 0;
+      L = L < 0 ? 0 : L > 255 ? 255 : L;
+      const dl = T[L]; r += dl; g += dl; b += dl;
+    }
+    let r2 = B[0]*r + B[1]*g + B[2]*b + B[3];
+    let g2 = B[4]*r + B[5]*g + B[6]*b + B[7];
+    let b2 = B[8]*r + B[9]*g + B[10]*b + B[11];
+    if (V){
+      // Dinamica: schwach gesättigte Farben stärker anheben, Hauttöne schonen
+      const mx = r2 > g2 ? (r2 > b2 ? r2 : b2) : (g2 > b2 ? g2 : b2), mn = r2 < g2 ? (r2 < b2 ? r2 : b2) : (g2 < b2 ? g2 : b2);
+      const st = mx > 0 ? (mx - mn) / mx : 0;
+      let f = V > 0 ? V * (1 - st) * (1 - st) * 1.4 : V;
+      if (V > 0 && r2 > g2 && g2 > b2) f *= 0.45;
+      const lum = 0.2126*r2 + 0.7152*g2 + 0.0722*b2;
+      r2 = lum + (r2 - lum) * (1 + f); g2 = lum + (g2 - lum) * (1 + f); b2 = lum + (b2 - lum) * (1 + f);
+    }
+    d[i] = r2; d[i+1] = g2; d[i+2] = b2;
+    d[i+3] = s[i+3];
+  }
+}
+const dimsOf = im => [im.naturalWidth || im.width, im.naturalHeight || im.height];
+function scaled(im, tw, th){
+  let src = im, [w, h] = dimsOf(im);
+  while (w / 2 > tw && h / 2 > th){
+    w = Math.round(w / 2); h = Math.round(h / 2);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const cx = c.getContext('2d'); cx.imageSmoothingQuality = 'high';
+    cx.drawImage(src, 0, 0, w, h); src = c;
+  }
+  return src;
+}
+function hasAlpha(im){
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const cx = c.getContext('2d', { willReadFrequently:true }); cx.drawImage(im, 0, 0, 64, 64);
+    const d = cx.getImageData(0, 0, 64, 64).data;
+    for (let i = 3; i < d.length; i += 4) if (d[i] < 250) return true;
+  } catch(e){}
+  return false;
+}
+
+/* ---------- Filter (Detagls) ---------- */
+function blurLine(s, d, off, step, n, r, ch){
+  let sum = 0; const win = 2 * r + 1;
+  for (let i = -r; i <= r; i++){ const j = i < 0 ? 0 : i >= n ? n - 1 : i; sum += s[off + j * step + ch]; }
+  for (let i = 0; i < n; i++){
+    d[off + i * step + ch] = sum / win;
+    const a = i - r, b = i + r + 1, ja = a < 0 ? 0 : a, jb = b >= n ? n - 1 : b;
+    sum += s[off + jb * step + ch] - s[off + ja * step + ch];
+  }
+}
+// Box-Blur nur auf RGB (Alpha bleibt), `passes` Durchgänge ≈ Gauss
+function blurRGB(d, w, h, r, passes){
+  r = Math.max(1, Math.round(r)); passes = passes || 1;
+  let cur = new Uint8ClampedArray(d), tmp = new Uint8ClampedArray(d);
+  for (let p = 0; p < passes; p++){
+    for (let y = 0; y < h; y++) for (let c = 0; c < 3; c++) blurLine(cur, tmp, y * w * 4, 4, w, r, c);
+    for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) blurLine(tmp, cur, x * 4, w * 4, h, r, c);
+  }
+  return cur;
+}
+const lumAt = (a, i) => 0.2126 * a[i] + 0.7152 * a[i + 1] + 0.0722 * a[i + 2];
+function unsharp(d, w, h, r, amt, mid){
+  const bl = blurRGB(d, w, h, r, mid ? 2 : 1);
+  for (let i = 0; i < d.length; i += 4){
+    let a = amt;
+    if (mid){ const t = lumAt(d, i) / 127.5 - 1; a *= 0.25 + 0.75 * (1 - t * t); }   // Struktur: v. a. Mitteltöne
+    d[i] += (d[i] - bl[i]) * a; d[i+1] += (d[i+1] - bl[i+1]) * a; d[i+2] += (d[i+2] - bl[i+2]) * a;
+  }
+}
+function denoise(d, w, h, amount, S){
+  const bl = blurRGB(d, w, h, Math.max(1, 1.5 * S * (1 + amount / 60)), 2);
+  const thr = 6 + amount * 0.6, st = Math.min(1, amount / 60);
+  for (let i = 0; i < d.length; i += 4){
+    const t = 1 - Math.min(1, Math.abs(lumAt(d, i) - lumAt(bl, i)) / thr), k = st * t * t;
+    d[i] += (bl[i] - d[i]) * k; d[i+1] += (bl[i+1] - d[i+1]) * k; d[i+2] += (bl[i+2] - d[i+2]) * k;
+  }
+}
+const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16) || 0);
+// Nivels, Nair/alv, Duoton, Vignetta, Grana in einem Durchgang
+function pixelPass(d, w, h, c, S){
+  let lut = null;
+  if (c.blk || c.wht || c.gam){
+    lut = new Uint8ClampedArray(256);
+    const bp = c.blk / 100 * 0.4 * 255, wp = 255 - c.wht / 100 * 0.4 * 255, g = Math.pow(2, c.gam / 100 * 1.2);
+    for (let i = 0; i < 256; i++){ const t = Math.min(1, Math.max(0, (i - bp) / Math.max(1, wp - bp))); lut[i] = 255 * Math.pow(t, 1 / g); }
+  }
+  const bw = c.bw / 100, duo = c.duo / 100, vig = c.vig / 100, gra = c.gra / 100 * 38;
+  if (!lut && !bw && !duo && !vig && !gra) return;
+  const c1 = hex(c.dc1), c2 = hex(c.dc2), gs = Math.max(1, Math.round(S / 1.5));
+  const cx = w / 2, cy = h / 2;
+  for (let y = 0; y < h; y++){
+    const ny = (y - cy) / cy;
+    for (let x = 0; x < w; x++){
+      const i = (y * w + x) * 4;
+      let r = d[i], g = d[i+1], b = d[i+2];
+      if (lut){ r = lut[r < 0 ? 0 : r > 255 ? 255 : r | 0]; g = lut[g < 0 ? 0 : g > 255 ? 255 : g | 0]; b = lut[b < 0 ? 0 : b > 255 ? 255 : b | 0]; }
+      if (bw || duo){
+        const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (bw){ r += (l - r) * bw; g += (l - g) * bw; b += (l - b) * bw; }
+        if (duo){ const t = l / 255; r += (c1[0] + (c2[0] - c1[0]) * t - r) * duo; g += (c1[1] + (c2[1] - c1[1]) * t - g) * duo; b += (c1[2] + (c2[2] - c1[2]) * t - b) * duo; }
+      }
+      if (vig){
+        const nx = (x - cx) / cx, q = (nx * nx + ny * ny) / 2, f0 = (q - 0.25) / 0.75, f = f0 <= 0 ? 0 : f0 >= 1 ? 1 : f0 * f0 * (3 - 2 * f0);
+        if (vig > 0){ const m = 1 - vig * f * 0.85; r *= m; g *= m; b *= m; }
+        else { const a = -vig * f * 0.8; r += (255 - r) * a; g += (255 - g) * a; b += (255 - b) * a; }
+      }
+      if (gra){
+        let n = ((((x / gs) | 0) * 374761393) ^ (((y / gs) | 0) * 668265263)) | 0;
+        n = Math.imul(n ^ (n >>> 13), 1274126177); n ^= n >>> 16;
+        const v = ((n >>> 0) % 2048 / 1024 - 1) * gra; r += v; g += v; b += v;
+      }
+      d[i] = r; d[i+1] = g; d[i+2] = b;
+    }
+  }
+}
+// Reihenfolge: Rumur/Blur → Colurs → Aguzzar/Structura → Nivels, Nair/alv, Duoton, Vignetta, Grana
+function process(base, c){
+  if (isNeutral(c)) return base;
+  const w = base.width, h = base.height, S = Math.min(w, h) / 1000;
+  let cur = new ImageData(new Uint8ClampedArray(base.data), w, h);
+  if (c.dns) denoise(cur.data, w, h, c.dns, S);
+  if (c.blr){ const r = c.blr / 100 * 0.03 * Math.min(w, h); if (r >= 1) cur.data.set(blurRGB(cur.data, w, h, r / 1.7, 3)); }
+  if (CIDS.some(k => c[k])){ const out = new ImageData(w, h); applyColor(cur, out, params(c)); cur = out; }
+  if (c.shp) unsharp(cur.data, w, h, Math.max(1, Math.round(1.2 * S)), c.shp / 100 * 1.6, false);
+  if (c.cla) unsharp(cur.data, w, h, Math.max(2, Math.round(22 * S)), c.cla / 100 * 0.9, true);
+  pixelPass(cur.data, w, h, c, S);
+  return cur;
+}
+
+/* ---------- Quelle, Vorschau ---------- */
+let src = null, src0 = null, base = null, name = 'maletg', before = false;
+function setSrc(c){
+  src = c;
+  const k = Math.min(1, PREVIEW_MAX / Math.max(c.width, c.height));
+  const pw = Math.max(1, Math.round(c.width * k)), ph = Math.max(1, Math.round(c.height * k));
+  const pc = document.createElement('canvas'); pc.width = pw; pc.height = ph;
+  const px = pc.getContext('2d', { willReadFrequently: true }); px.imageSmoothingQuality = 'high';
+  px.drawImage(scaled(c, pw, ph), 0, 0, pw, ph);
+  base = px.getImageData(0, 0, pw, ph);
+  view.width = pw; view.height = ph;
+  frame.style.aspectRatio = c.width + '/' + c.height;
+  frame.style.maxWidth = `min(100%, calc(70vh * ${c.width / c.height}))`;
+  frameBg.classList.toggle('clear', hasAlpha(c));
+  empty.hidden = true;
+  $('dlBtn').disabled = false; $('cutCol').disabled = false; $('cutAI').disabled = false;
+  $('cutUndo').disabled = src === src0;
+  paint();
+}
+function paint(){
+  if (!base) return;
+  view.getContext('2d').putImageData(before ? base : process(base, col), 0, 0);
+}
+let raf = 0;
+const redraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); }); };
+
+/* ---------- Verlauf (Pass enavos / Repeter) ---------- */
+let committed = null, undoS = [], redoS = [];
+const snap = () => ({ col: { ...col }, src });
+const same = (a, b) => a && b && a.src === b.src && JSON.stringify(a.col) === JSON.stringify(b.col);
+function histUI(){ $('undoBtn').disabled = !undoS.length; $('redoBtn').disabled = !redoS.length; }
+function commit(){
+  if (!src) return;
+  const s = snap(); if (same(s, committed)) return;
+  undoS.push(committed); if (undoS.length > 60) undoS.shift();
+  committed = s; redoS = []; histUI();
+}
+function restore(S){
+  col = { ...newCol(), ...S.col };
+  if (S.src !== src) setSrc(S.src); else paint();
+  $('cutUndo').disabled = src === src0;
+  syncUI();
+}
+function undo(){ if (!undoS.length) return; redoS.push(committed); committed = undoS.pop(); restore(committed); histUI(); }
+function redo(){ if (!redoS.length) return; undoS.push(committed); committed = redoS.pop(); restore(committed); histUI(); }
+$('undoBtn').onclick = undo; $('redoBtn').onclick = redo;
+const typing = t => t && (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && !['range', 'checkbox', 'color'].includes(t.type)));
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && (k === 'z' || k === 'y') && !typing(e.target)){ e.preventDefault(); if (k === 'y' || e.shiftKey) redo(); else undo(); return; }
+  if (k === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && !typing(e.target)) setBefore(true);
+});
+document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'a') setBefore(false); });
+function setBefore(on){
+  if (on === before) return;
+  before = on; document.body.classList.toggle('before', on); $('baBtn').setAttribute('aria-pressed', on); paint();
+}
+const ba = $('baBtn');
+ba.addEventListener('pointerdown', e => { e.preventDefault(); ba.setPointerCapture(e.pointerId); setBefore(true); });
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => ba.addEventListener(t, () => setBefore(false)));
+ba.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat){ e.preventDefault(); setBefore(true); } });
+ba.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') setBefore(false); });
+window.addEventListener('blur', () => setBefore(false));
+
+/* ---------- Regler ---------- */
+const showVal = id => { const el = document.querySelector(`.val[data-for="${id}"]`); if (el) el.textContent = col[id] + (id === 'hue' ? '°' : ''); };
+function syncUI(){
+  NIDS.forEach(id => { $('c_' + id).value = col[id]; showVal(id); });
+  $('dc1').value = col.dc1; $('dc2').value = col.dc2;
+}
+document.querySelectorAll('input[type=range][data-c]').forEach(inp => {
+  inp.addEventListener('input', () => { col[inp.dataset.c] = +inp.value; showVal(inp.dataset.c); redraw(); });
+  inp.addEventListener('change', commit);
+});
+['dc1', 'dc2'].forEach(id => {
+  $(id).addEventListener('input', () => { col[id] = $(id).value; redraw(); });
+  $(id).addEventListener('change', commit);
+});
+document.querySelectorAll('.ctl label[for^="c_"]').forEach(l => l.addEventListener('click', e => {
+  e.preventDefault(); const inp = $(l.htmlFor); inp.value = 0; inp.dispatchEvent(new Event('input')); commit();
+}));
+document.querySelectorAll('.val[data-for]').forEach(v => v.onclick = () => { col[v.dataset.for] = 0; syncUI(); redraw(); commit(); });
+document.querySelectorAll('.secreset').forEach(b => b.onclick = () => {
+  b.dataset.reset.split(',').forEach(id => col[id] = 0);
+  if (b.dataset.reset.includes('duo')){ col.dc1 = '#1b2a4a'; col.dc2 = '#f3c98b'; }
+  syncUI(); redraw(); commit();
+});
+$('resetCol').onclick = () => { col = newCol(); syncUI(); redraw(); commit(); };
+
+/* ---------- Bild laden ---------- */
+function toCanvas(im, q, fh, fv){
+  let w0 = im.naturalWidth || im.width, h0 = im.naturalHeight || im.height;
+  const k = Math.min(1, FULL_MAX / Math.max(w0, h0)), w1 = Math.max(1, Math.round(w0 * k)), h1 = Math.max(1, Math.round(h0 * k));
+  const w = q % 2 ? h1 : w1, h = q % 2 ? w1 : h1;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.imageSmoothingQuality = 'high';
+  x.translate(w / 2, h / 2); x.scale(fh ? -1 : 1, fv ? -1 : 1); x.rotate((q || 0) * Math.PI / 2);
+  x.drawImage(scaled(im, w1, h1), -w1 / 2, -h1 / 2, w1, h1);
+  return c;
+}
+function addFile(file, label, opt){
+  opt = opt || {};
+  return new Promise(res => {
+    if (!file || !file.type.startsWith('image/')){ setMsg("Quai n'è nagin file da maletg.", true); return res(false); }
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const c = toCanvas(im, opt.q || 0, opt.fh, opt.fv); URL.revokeObjectURL(url);
+      name = (label || file.name || 'maletg').replace(/\.[a-z0-9]+$/i, '');
+      src0 = c; col = { ...newCol(), ...(opt.col || {}) };
+      undoS = []; redoS = []; setSrc(c); syncUI(); committed = snap(); histUI();
+      setMsg(`${name}: ${c.width} × ${c.height} px`);
+      res(true);
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); setMsg("Il maletg n'ha betg pudì vegnir legì.", true); res(false); };
+    im.src = url;
+  });
+}
+$('pickBtn').onclick = () => $('file').click(); empty.onclick = () => $('file').click();
+$('file').onchange = e => { if (e.target.files[0]) addFile(e.target.files[0]); e.target.value = ''; };
+stage.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('Files')){ e.preventDefault(); stage.classList.add('over'); } });
+stage.addEventListener('dragleave', () => stage.classList.remove('over'));
+stage.addEventListener('drop', e => { if (!e.dataTransfer.files.length) return; e.preventDefault(); stage.classList.remove('over'); addFile(e.dataTransfer.files[0]); });
+document.addEventListener('paste', e => {
+  if (e.target === urlInput) return;
+  const f = [...e.clipboardData.items].filter(i => i.type.startsWith('image/')).map(i => i.getAsFile())[0];
+  if (f){ addFile(f); return; }
+  const txt = (e.clipboardData.getData('text') || '').trim();
+  if (/^https?:\/\//i.test(txt) || /^\/.*\/cms\/images\//i.test(txt)){ urlInput.value = txt; loadFromUrl(txt); }
+});
+
+const urlInput = $('urlInput');
+const DEFAULT_BASE = 'https://www.rtr.ch/static/cms/images/dynamic/noop/';
+function convertOne(raw){
+  const v = (raw || '').trim();
+  if (!v) return { error:'Vid.' };
+  if (!/^[a-z]+:\/\//i.test(v) && /^[\w-]+\.\w+$/i.test(v)) return { url: DEFAULT_BASE + v, filename: v };
+  let toParse = /^\/.*\/cms\/images\//i.test(v) ? 'https://www.rtr.ch' + v : v;
+  let u;
+  try { u = new URL(toParse); } catch(e){ return { error:'Nagina URL valida.' }; }
+  if (u.searchParams.has('imageUrl')){
+    u.searchParams.set('width', '1920');
+    // Dateiname aus der eigentlichen Bildadresse im Parameter imageUrl
+    let fn = 'maletg';
+    try { fn = new URL(u.searchParams.get('imageUrl')).pathname.split('/').pop() || fn; } catch(e){}
+    return { url: u.toString(), filename: fn };
+  }
+  const marker = '/cms/images/', idx = u.pathname.indexOf(marker);
+  if (idx === -1) return { error:'Nagin format da maletg enconuschent identifitgà.' };
+  const filename = u.pathname.slice(u.pathname.lastIndexOf('/') + 1);
+  if (!filename) return { error:'Nagin num da file en il link.' };
+  return { url: u.origin + u.pathname.slice(0, idx + marker.length) + 'dynamic/noop/' + filename, filename };
+}
+function decodeHtml(s){
+  return s.replace(/&quot;/g,'"').replace(/&#0?39;|&apos;/g,"'").replace(/&amp;/g,'&')
+          .replace(/\\u002[fF]/g,'/').replace(/\\\//g,'/');
+}
+function firstCandidate(html){
+  const d = decodeHtml(html);
+  const pats = [
+    /data-image-id="([a-z0-9]+)"/i,
+    /https?:\/\/[^\s"'<>\\]+\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif)/i,
+    /(?:^|["'\s,])(\/[a-z0-9/_-]*\/cms\/images\/[^\s"'<>\\]+\.(?:webp|jpg|jpeg|png|gif|avif))/i,
+    /https?:\/\/il\.[a-z0-9-]+\.ch\/images\/\?[^\s"'<>\\]+/i
+  ];
+  const og = /<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i.exec(d);
+  for (let i = 0; i < pats.length; i++){
+    const m = pats[i].exec(d);
+    if (!m) continue;
+    if (i === 0) return DEFAULT_BASE + m[1] + '.webp';
+    return (m[1] || m[0]).replace(/[)\].,;:'"]+$/, '');
+  }
+  return og ? og[1] : null;
+}
+async function fetchOk(url){
+  const r = await fetch(url, { mode:'cors', cache:'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r;
+}
+let urlToken = 0;
+async function loadFromUrl(raw){
+  const my = ++urlToken;
+  const v = (raw || '').trim();
+  if (!v) return;
+  const say = setMsg;
+  let res = convertOne(v);
+  say('Chargel il maletg…');
+  try {
+    if (res.error){
+      if (!/^https?:\/\//i.test(v)) { say(res.error, true); return; }
+      say('Tschertg il maletg en l\'artitgel…');
+      const html = await (await fetchOk(v)).text();
+      if (my !== urlToken) return;
+      const c = firstCandidate(html);
+      if (!c) { say('Chattà nagin maletg sin questa pagina.', true); return; }
+      res = convertOne(c);
+      if (res.error) { say(res.error, true); return; }
+    }
+    let blob = await (await fetchOk(res.url)).blob();
+    if (my !== urlToken) return;
+    if (!blob.type.startsWith('image/')) blob = new Blob([blob], { type:'image/webp' });
+    if (await addFile(blob, res.filename || 'Maletg RTR')) urlInput.value = '';
+  } catch(e){
+    if (my !== urlToken) return;
+    say('Il maletg n\'ha betg pudì vegnir chargià directamain. Al telechargiar cun «RTR Picture-downloader» e trair qua.', true);
+  }
+}
+$('urlBtn').onclick = () => loadFromUrl(urlInput.value);
+urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadFromUrl(urlInput.value); });
+urlInput.addEventListener('paste', () => setTimeout(() => loadFromUrl(urlInput.value), 0));
+
+/* ---------- Funs allontanar ---------- */
+function applyMask(mc){            // mc: Maske (beliebige Grösse), Alpha bestimmt, was bleibt
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  const x = c.getContext('2d', { willReadFrequently: true });
+  x.drawImage(src, 0, 0);
+  x.globalCompositeOperation = 'destination-in'; x.imageSmoothingQuality = 'high';
+  x.drawImage(mc, 0, 0, c.width, c.height);
+  return c;
+}
+function cutByColor(tol){
+  const k = Math.min(1, 1600 / Math.max(src.width, src.height)), w = Math.max(1, Math.round(src.width * k)), h = Math.max(1, Math.round(src.height * k));
+  const mc = document.createElement('canvas'); mc.width = w; mc.height = h;
+  const mx = mc.getContext('2d', { willReadFrequently: true }); mx.imageSmoothingQuality = 'high'; mx.drawImage(scaled(src, w, h), 0, 0, w, h);
+  const id = mx.getImageData(0, 0, w, h), d = id.data;
+  // Schlüsselfarbe: Mittel aller Randpixel
+  let sr = 0, sg = 0, sb = 0, n = 0;
+  const edge = (x, y) => { const i = (y * w + x) * 4; sr += d[i]; sg += d[i+1]; sb += d[i+2]; n++; };
+  for (let x = 0; x < w; x++){ edge(x, 0); edge(x, h - 1); }
+  for (let y = 1; y < h - 1; y++){ edge(0, y); edge(w - 1, y); }
+  const kr = sr / n, kg = sg / n, kb = sb / n, T = tol / 100 * 180, T2 = T * T;
+  const near = i => { const a = d[i] - kr, b = d[i+1] - kg, c = d[i+2] - kb; return a * a + b * b + c * c <= T2; };
+  const bg = new Uint8Array(w * h), st = new Int32Array(w * h); let sp = 0;
+  const push = p => { if (!bg[p] && near(p * 4)){ bg[p] = 1; st[sp++] = p; } };
+  for (let x = 0; x < w; x++){ push(x); push((h - 1) * w + x); }
+  for (let y = 0; y < h; y++){ push(y * w); push(y * w + w - 1); }
+  while (sp){
+    const p = st[--sp], x = p % w, y = (p / w) | 0;
+    if (x > 0) push(p - 1); if (x < w - 1) push(p + 1); if (y > 0) push(p - w); if (y < h - 1) push(p + w);
+  }
+  let cnt = 0; for (let p = 0; p < bg.length; p++) cnt += bg[p];
+  // Maske: Funs = 0, Rest = 255, Rand leicht weichgezeichnet (3×3)
+  const a = new Float32Array(w * h); for (let p = 0; p < a.length; p++) a[p] = bg[p] ? 0 : 255;
+  const mk = new ImageData(w, h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    let s = 0, m = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < w && yy < h){ s += a[yy * w + xx]; m++; } }
+    const i = (y * w + x) * 4; mk.data[i] = mk.data[i+1] = mk.data[i+2] = 0; mk.data[i+3] = s / m;
+  }
+  const mm = document.createElement('canvas'); mm.width = w; mm.height = h; mm.getContext('2d').putImageData(mk, 0, 0);
+  return { canvas: applyMask(mm), share: cnt / (w * h), key: [kr, kg, kb] };
+}
+$('tol').addEventListener('input', () => $('tolVal').textContent = $('tol').value);
+$('tolVal').onclick = () => { $('tol').value = 30; $('tolVal').textContent = 30; };
+$('cutCol').onclick = () => {
+  if (!src) return;
+  setMsg('Allontanar il funs …');
+  setTimeout(() => {
+    try {
+      const r = cutByColor(+$('tol').value);
+      if (r.share < 0.02){ setMsg("Chattà nagin funs unitar vi dals chantuns – pruvar in'autra tolleranza u «Cun IA».", true); return; }
+      setSrc(r.canvas); commit();
+      setMsg(`Funs allontanà (${Math.round(r.share * 100)}% dal maletg). Cun «Restaurar funs» u «Pass enavos» turnas ti enavos.`);
+    } catch (e) { setMsg("Il funs n'ha betg pudì vegnir allontanà.", true); }
+  }, 20);
+};
+let aiBusy = false;
+$('cutAI').onclick = async () => {
+  if (!src || aiBusy) return;
+  aiBusy = true; $('cutAI').disabled = true;
+  try {
+    setMsg("Chargel l'IA (emprima giada ca. 40 MB) …");
+    const mod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+    const inBlob = await new Promise(r => src.toBlob(r, 'image/png'));
+    const out = await mod.removeBackground(inBlob, {
+      model: 'isnet_quint8', output: { format: 'image/png' },
+      progress: (key, cur, tot) => setMsg((/fetch/.test(key) ? 'Chargel il model' : 'Elavurar') + (tot ? ' … ' + Math.round(cur / tot * 100) + '%' : ' …'))
+    });
+    const url = URL.createObjectURL(out), im = new Image();
+    await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = url; });
+    const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    setSrc(c); commit(); setMsg('Funs allontanà cun IA.');
+  } catch (e) {
+    setMsg("L'IA n'ha betg pudì vegnir chargiada u rulada. Pruvar «Tenor colur» u verifitgar la colliaziun.", true);
+  }
+  aiBusy = false; $('cutAI').disabled = !src;
+};
+$('cutUndo').onclick = () => { if (src0 && src !== src0){ setSrc(src0); commit(); setMsg('Funs restaurà.'); } };
+
+/* ---------- Export ---------- */
+$('dlBtn').onclick = () => {
+  if (!src) return;
+  setMsg('Elavurel…');
+  setTimeout(() => { try {
+    const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(src, 0, 0);
+    if (!isNeutral(col)) x.putImageData(process(x.getImageData(0, 0, c.width, c.height), col), 0, 0);
+    c.toBlob(b => {
+      if (!b){ setMsg('Il maletg è memia grond per quest browser.', true); return; }
+      const d = new Date(), z = n => String(n).padStart(2, '0');
+      const fn = `photoeditor_${c.width}x${c.height}_${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = fn;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      setMsg(`Memorisà: ${fn} (${c.width} × ${c.height} px)`);
+    }, 'image/png');
+  } catch (e) { setMsg("Export betg reussì: il maletg è forsa memia grond.", true); } }, 30);
+};
+
+/* ---------- Arcunar parameters ---------- */
+const PKEY = 'photoeditor-presets';
+let presets = [];
+try {
+  presets = (JSON.parse(localStorage.getItem(PKEY) || 'null') || null);
+  if (!presets) presets = (JSON.parse(localStorage.getItem('maletgs-presets') || '[]') || []);   // erstmals: Voreinstellungen aus /maletgs übernehmen
+  presets = presets.filter(p => p && p.name && p.col);
+} catch (e) { presets = []; }
+const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch (e) {} };
+function renderPresets(){
+  const box = $('presets'); box.innerHTML = '';
+  presets.forEach((p, i) => {
+    const chip = document.createElement('span'); chip.className = 'pchip';
+    const a = document.createElement('button'); a.type = 'button'; a.textContent = p.name; a.title = 'Applitgar «' + p.name + '»';
+    a.onclick = () => { col = { ...newCol(), ...p.col }; syncUI(); paint(); commit(); setMsg(`Applitgà «${p.name}».`); };
+    const d = document.createElement('button'); d.type = 'button'; d.className = 'pdel'; d.textContent = '×';
+    d.title = 'Stizzar «' + p.name + '»'; d.setAttribute('aria-label', d.title);
+    d.onclick = () => { presets.splice(i, 1); savePresets(); renderPresets(); };
+    chip.append(a, d); box.append(chip);
+  });
+  $('noPresets').hidden = presets.length > 0;
+}
+function savePreset(){
+  const inp = $('presetName'), nm = inp.value.trim() || 'Parameters ' + (presets.length + 1);
+  const j = presets.findIndex(p => p.name.toLowerCase() === nm.toLowerCase()), c = { ...col };
+  if (j >= 0) presets[j] = { name: nm, col: c }; else presets.push({ name: nm, col: c });
+  savePresets(); renderPresets(); inp.value = '';
+  setMsg(j >= 0 ? `«${nm}» actualisà.` : `«${nm}» arcunà.`);
+}
+$('presetSave').onclick = savePreset;
+$('presetName').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); savePreset(); } });
+renderPresets(); syncUI(); histUI();
+
+/* ---------- Übernahme aus «Elavurar maletgs» (expert / experimental) ---------- */
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('dbz-photoeditor', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const idbGet = async k => { const db = await idb(); return new Promise((res, rej) => { const q = db.transaction('h').objectStore('h').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); };
+const idbDel = async k => { const db = await idb(); return new Promise(res => { const t = db.transaction('h', 'readwrite'); t.objectStore('h').delete(k); t.oncomplete = res; t.onerror = res; }); };
+(async () => {
+  if (new URLSearchParams(location.search).get('from') !== 'maletgs') return;
+  history.replaceState(null, '', location.pathname);
+  for (let i = 0; i < 24; i++){                       // maletgs schreibt das Bild parallel, bis ca. 6 s warten
+    let rec = null; try { rec = await idbGet('in'); } catch (e) { return; }
+    if (rec && Date.now() - rec.t < 60000){
+      await idbDel('in').catch(() => {});
+      if (!rec.blob) return;
+      if (await addFile(rec.blob, rec.name, { q: rec.q, fh: rec.fh, fv: rec.fv, col: rec.col })){
+        const n = document.createElement('p'); n.id = 'note'; n.textContent = '✓ Maletg surpiglià dad Elavurar maletgs';
+        document.querySelector('.subtitle').after(n);
+      }
+      return;
+    }
+    await new Promise(r => setTimeout(r, 250));
+  }
+})();
+window.addEventListener('resize', () => {});
+
+</script>
+<script src="/handoff.js"></script>
+<script src="/like.js" defer></script>
+</body>
+</html>
