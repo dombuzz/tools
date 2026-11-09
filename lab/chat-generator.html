@@ -57,6 +57,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
 button{background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer}
 button:hover{background:var(--accent-dark)}
 button:disabled{opacity:.5;cursor:wait}
+button:disabled.btn,.btn:disabled{cursor:default}
 button.ghost,.btn{background:transparent;color:var(--muted);border:1px solid var(--line)}
 button.ghost:hover,.btn:hover{color:var(--text);background:transparent}
 .btn.sm{padding:5px 10px;font-size:.82rem}
@@ -443,7 +444,7 @@ function changed(opt){
   $('seek').max=Math.round(P.duration*1000);
   if(opt.seekTo!=null)t=opt.seekTo;
   t=Core.clamp(t,0,P.duration);
-  updCmd();
+  updCmd();updColReset();
   const n=Math.ceil(P.duration*S.fps);
   $('expInfo').textContent=S.width+'×'+S.height+' · '+S.fps+' fps · '+fmt(P.duration)+' s · '+n+' Einzelbilder';
   draw();saveSoon();
@@ -544,6 +545,11 @@ function field(parent,def){
   parent.appendChild(lab);
   ctlRefs.push(sync);
 }
+const COLK=['colL','txtL','colR','txtR'];
+function updColReset(){
+  const b=$('colReset');if(!b)return;
+  b.disabled=!COLK.some(k=>String(S[k]).toLowerCase()!==String(DEFAULTS[k]).toLowerCase());
+}
 function buildSettings(){
   const gl=$('gridLook');
   // Preset
@@ -573,6 +579,10 @@ function buildSettings(){
     {k:'colR',label:'RTR: Blase',type:'color'},{k:'txtR',label:'RTR: Text',type:'color'},
     {k:'shadow',label:'Weicher Schatten unter den Blasen',type:'chk',full:true}
   ].forEach(d=>field(gl,d));
+  const rw=document.createElement('div');rw.className='full';
+  rw.innerHTML='<button type="button" class="btn sm" id="colReset">Standardfarben wiederherstellen</button>';
+  gl.appendChild(rw);
+  $('colReset').onclick=()=>{COLK.forEach(k=>{S[k]=DEFAULTS[k];});ctlRefs.forEach(f=>f());changed();};
   const gt=$('gridTime');
   [
     {k:'cps',label:'Lesetempo (Zeichen/s)',type:'num',min:4,max:40,step:1},
