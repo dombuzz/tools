@@ -43,12 +43,11 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .meta .sp{flex:1}
 .text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:.95rem}
 .empty{color:var(--muted);text-align:center;padding:24px 0}
-.tabs{display:inline-flex;flex-wrap:wrap;gap:2px;background:var(--mono);border:1px solid var(--border);border-radius:10px;padding:3px}
-.tabs button{background:transparent;color:var(--muted);font-weight:600;padding:7px 14px;border-radius:7px;display:inline-flex;gap:8px;align-items:center}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--border)}
+.tabs button{background:transparent;color:var(--muted);font-weight:600;padding:10px 14px;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:8px 8px 0 0;display:inline-flex;gap:8px;align-items:center}
 .tabs button:hover{color:var(--text)}
-.tabs button[aria-selected="true"]{background:var(--accent);color:#121214}
+.tabs button[aria-selected="true"]{background:transparent;color:var(--text);border-bottom-color:var(--accent)}
 .cnt{font-variant-numeric:tabular-nums;font-size:.78rem;min-width:1.6em;padding:1px 6px;border-radius:999px;background:var(--border);color:var(--text)}
-.tabs button[aria-selected="true"] .cnt{background:rgba(0,0,0,.18);color:#121214}
 .acts{display:flex;flex-wrap:wrap;gap:6px}
 #view:not([hidden]){display:flex;flex-direction:column;gap:14px}
 .trash{border:1px solid var(--border);border-radius:12px;background:var(--card)}

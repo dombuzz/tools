@@ -40,10 +40,10 @@ input.txt:focus{border-color:var(--accent)}
 .status{min-height:1.4em;margin:8px 0 18px;font-size:.85rem;color:var(--muted)}
 .status.warn{color:var(--warn)}
 .status code{font-size:.8rem;color:var(--muted)}
-.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
-.tab{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 15px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
-.tab:hover{border-color:var(--accent);color:var(--text)}
-.tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:0 0 14px}
+.tab{background:transparent;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--muted);border-radius:8px 8px 0 0;padding:10px 14px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+.tab:hover{color:var(--text)}
+.tab[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent)}
 .out{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .url{word-break:break-all;user-select:all;font-size:.95rem;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
