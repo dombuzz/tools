@@ -176,6 +176,15 @@
   .tabrow .tabs button{ margin-bottom:-1px; }
   .tabs button:hover{ background:transparent; color:var(--text); }
   .tabs button[aria-selected="true"]{ color:var(--text); border-bottom-color:var(--accent); }
+  /* Bearbeitung einer Collascha-Part: Clerezza/Rotar rot, Collascha blasser rot, verbunden durch eine Linie */
+  .tabrow{ position:relative; }
+  .tabs button.tedit{ background:var(--accent); color:var(--on-accent,#fff); border-radius:8px 8px 0 0; border-bottom-color:var(--accent); }
+  .tabs button.tedit:hover{ background:var(--accent); color:var(--on-accent,#fff); }
+  .tabs button.tedit em{ color:inherit; }
+  .tabs button.tcolw{ background:color-mix(in srgb, var(--accent) 20%, transparent); border-radius:8px 8px 0 0; border-bottom-color:var(--accent); }
+  .tabs button.tcolw:hover{ background:color-mix(in srgb, var(--accent) 20%, transparent); }
+  #tabLink{ position:absolute; bottom:-1px; height:3px; background:var(--accent); pointer-events:none; }
+  #tabLink[hidden]{ display:none; }
   .tabs em{ font-style:normal; color:var(--accent); }
   .tabs button[aria-selected="true"] em{ color:inherit; }
   .edit .ctl label{ cursor:pointer; }
@@ -1500,8 +1509,19 @@ function setTab(i){
   });
   if (i === 3 && window.colFromLayers) colFromLayers();
   if (typeof colSel === 'function') syncEdit();
+  updateTabLink();
   try { localStorage.setItem('layers-tab', i); } catch(e){}
 }
+const tabLink = document.createElement('div'); tabLink.id = 'tabLink'; tabLink.hidden = true; document.querySelector('.tabrow').append(tabLink);
+function updateTabLink(){
+  const lk = ectx === 'collage' && (curTab === 0 || curTab === 1);
+  tabBtns.forEach(b => { b.classList.toggle('tedit', lk && b.dataset.tab === String(curTab)); b.classList.toggle('tcolw', lk && b.dataset.tab === '3'); });
+  tabLink.hidden = !lk; if (!lk) return;
+  const row = document.querySelector('.tabrow').getBoundingClientRect(), a = tabBtns.find(b => b.dataset.tab === String(curTab)).getBoundingClientRect(), c = tabBtns.find(b => b.dataset.tab === '3').getBoundingClientRect();
+  const x0 = Math.min(a.left, c.left) - row.left, x1 = Math.max(a.right, c.right) - row.left;
+  tabLink.style.left = x0 + 'px'; tabLink.style.width = (x1 - x0) + 'px';
+}
+window.addEventListener('resize', updateTabLink);
 tabBtns.forEach(b => b.onclick = () => setTab(+b.dataset.tab));
 document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => setTab(ectx === 'collage' ? 3 : +b.dataset.goto));
 document.querySelectorAll('[data-etab]').forEach(b => b.onclick = () => setTab(+b.dataset.etab));
