@@ -268,6 +268,12 @@
   .pthumb .x:hover{ background:var(--accent); }
   .pghost{ position:fixed; z-index:60; pointer-events:none; width:104px; height:70px; border-radius:8px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,.45); opacity:.9; transform:translate(-50%,-50%); }
   .pghost canvas{ width:100%; height:100%; display:block; }
+  .rowc{ display:flex; gap:14px; align-items:center; margin:0 0 10px; font-size:.82rem; color:var(--muted); }
+  .rowc label{ display:flex; align-items:center; gap:6px; }
+  .rowc input[type=color]{ width:34px; height:26px; padding:0; border:1px solid var(--border); border-radius:6px; background:var(--mono); cursor:pointer; }
+  #expertBtn[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
+  #expertBtn.act::after{ content:' ●'; color:var(--accent); }
+  #expertBtn[aria-pressed="true"].act::after{ color:inherit; }
   .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
   .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
@@ -381,6 +387,24 @@
           <div class="ctl"><div class="top"><label for="c_vib">Dinamica</label><span class="wbhint">surtut colurs pallidas</span><span class="val" data-for="vib" title="Reset">0</span></div><input type="range" id="c_vib" data-c="vib" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_wb">WB Balantscha da l'alv</label><span class="wbhint">fraid ↔ chaud</span><span class="val" data-for="wb" title="Reset">0</span></div><input type="range" id="c_wb" data-c="wb" min="-100" max="100" step="1" value="0"></div>
           <div class="ctl"><div class="top"><label for="c_hue">Nianza da colur</label><span class="val" data-for="hue" title="Reset">0°</span></div><input type="range" id="c_hue" data-c="hue" min="-180" max="180" step="1" value="0"></div>
+          <div id="expertBox" hidden>
+            <h3>Detagls <button type="button" class="secreset" data-reset="shp,cla,dns,blr" title="Reset gizzar, structura, schuschuri e blur" aria-label="Reset gizzar, structura, schuschuri e blur">↺</button></h3>
+            <div class="ctl"><div class="top"><label for="c_shp">Gizzar</label><span class="val" data-for="shp" title="Reset">0</span></div><input type="range" id="c_shp" data-c="shp" min="0" max="100" step="1" value="0"></div>
+            <div class="ctl"><div class="top"><label for="c_cla">Structura</label><span class="wbhint">cuntrast local</span><span class="val" data-for="cla" title="Reset">0</span></div><input type="range" id="c_cla" data-c="cla" min="-100" max="100" step="1" value="0"></div>
+            <div class="ctl"><div class="top"><label for="c_dns">Reducir schuschuri</label><span class="val" data-for="dns" title="Reset">0</span></div><input type="range" id="c_dns" data-c="dns" min="0" max="100" step="1" value="0"></div>
+            <div class="ctl"><div class="top"><label for="c_blr">Blur</label><span class="val" data-for="blr" title="Reset">0</span></div><input type="range" id="c_blr" data-c="blr" min="0" max="100" step="1" value="0"></div>
+            <h3>Valurs da tun <button type="button" class="secreset" data-reset="blk,wht,gam" title="Reset valurs da tun" aria-label="Reset valurs da tun">↺</button></h3>
+            <div class="ctl"><div class="top"><label for="c_blk">Punct nair</label><span class="val" data-for="blk" title="Reset">0</span></div><input type="range" id="c_blk" data-c="blk" min="0" max="100" step="1" value="0"></div>
+            <div class="ctl"><div class="top"><label for="c_wht">Punct alv</label><span class="val" data-for="wht" title="Reset">0</span></div><input type="range" id="c_wht" data-c="wht" min="0" max="100" step="1" value="0"></div>
+            <div class="ctl"><div class="top"><label for="c_gam">Gamma</label><span class="wbhint">tuns medians</span><span class="val" data-for="gam" title="Reset">0</span></div><input type="range" id="c_gam" data-c="gam" min="-100" max="100" step="1" value="0"></div>
+            <h3>Nair/alv e duoton <button type="button" class="secreset" data-reset="bw,duo" title="Reset nair/alv e duoton" aria-label="Reset nair/alv e duoton">↺</button></h3>
+            <div class="ctl"><div class="top"><label for="c_bw">Nair/alv</label><span class="val" data-for="bw" title="Reset">0</span></div><input type="range" id="c_bw" data-c="bw" min="0" max="100" step="1" value="0"></div>
+            <div class="ctl"><div class="top"><label for="c_duo">Duoton</label><span class="val" data-for="duo" title="Reset">0</span></div><input type="range" id="c_duo" data-c="duo" min="0" max="100" step="1" value="0"></div>
+            <div class="rowc"><label>Stgirs <input type="color" id="dc1" value="#1b2a4a"></label><label>Clers <input type="color" id="dc2" value="#f3c98b"></label></div>
+            <h3>Stil <button type="button" class="secreset" data-reset="vig,gra" title="Reset vignetta e granulaziun" aria-label="Reset vignetta e granulaziun">↺</button></h3>
+            <div class="ctl"><div class="top"><label for="c_vig">Vignetta</label><span class="wbhint">stgir ↔ cler</span><span class="val" data-for="vig" title="Reset">0</span></div><input type="range" id="c_vig" data-c="vig" min="-100" max="100" step="1" value="0"></div>
+            <div class="ctl"><div class="top"><label for="c_gra">Granulaziun</label><span class="val" data-for="gra" title="Reset">0</span></div><input type="range" id="c_gra" data-c="gra" min="0" max="100" step="1" value="0"></div>
+          </div>
             <button type="button" class="ghost" id="resetCol">Reset colurs</button>
             <h3>Arcunar parameters</h3>
             <div class="presets" id="presets"></div>
@@ -391,7 +415,7 @@
             </div>
             <button type="button" class="plink2" id="presetAll">Applitgar parameters sin tut ils maletgs</button>
           </div>
-          <a class="plink2" style="margin-top:14px" id="expertLink" href="/photoeditor?from=maletgs" target="_blank" rel="noopener" title="Avrir il maletg tschernì en in nov tab, cun parameters supplementars">expert / experimental</a>
+          <button type="button" class="ghost" id="expertBtn" aria-pressed="false" style="margin-top:14px">expert / experimental</button>
         </div>
 
         <div class="pane" data-pane="1" hidden>
@@ -528,9 +552,11 @@ let nextId = 1;
 function setMsg(text, err){ msg.textContent = text; msg.classList.toggle('err', !!err); }
 
 /* ---------- Farben (wie «Clerezza + colurs», pro Layer) ---------- */
-const CIDS = ['bri','con','hil','sha','sat','vib','wb','hue'];
+const BASEC = ['bri','con','hil','sha','sat','vib','wb','hue'];
+const XIDS = ['shp','cla','dns','blr','blk','wht','gam','bw','duo','vig','gra'];   // «expert / experimental»
+const CIDS = [...BASEC, ...XIDS];
 const PREVIEW_MAX = 1600;
-const newCol = () => ({ bri:0, con:0, hil:0, sha:0, sat:0, vib:0, wb:0, hue:0 });
+const newCol = () => { const o = {}; CIDS.forEach(k => o[k] = 0); o.dc1 = '#1b2a4a'; o.dc2 = '#f3c98b'; return o; };
 const isNeutral = col => CIDS.every(id => !col[id]);
 function mul(a, b){
   const r = [];
@@ -590,6 +616,95 @@ function applyColor(src, dst, P){
     d[i+3] = s[i+3];
   }
 }
+/* ---------- Expert / experimental: Detagls, Valurs da tun, Nair/alv, Duoton, Stil ---------- */
+function blurLine(s, d, off, step, n, r, ch){
+  let sum = 0; const win = 2 * r + 1;
+  for (let i = -r; i <= r; i++){ const j = i < 0 ? 0 : i >= n ? n - 1 : i; sum += s[off + j * step + ch]; }
+  for (let i = 0; i < n; i++){
+    d[off + i * step + ch] = sum / win;
+    const a = i - r, b = i + r + 1, ja = a < 0 ? 0 : a, jb = b >= n ? n - 1 : b;
+    sum += s[off + jb * step + ch] - s[off + ja * step + ch];
+  }
+}
+// Box-Blur nur auf RGB (Alpha bleibt), `passes` Durchgänge ≈ Gauss
+function blurRGB(d, w, h, r, passes){
+  r = Math.max(1, Math.round(r)); passes = passes || 1;
+  let cur = new Uint8ClampedArray(d), tmp = new Uint8ClampedArray(d);
+  for (let p = 0; p < passes; p++){
+    for (let y = 0; y < h; y++) for (let c = 0; c < 3; c++) blurLine(cur, tmp, y * w * 4, 4, w, r, c);
+    for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) blurLine(tmp, cur, x * 4, w * 4, h, r, c);
+  }
+  return cur;
+}
+const lumAt = (a, i) => 0.2126 * a[i] + 0.7152 * a[i + 1] + 0.0722 * a[i + 2];
+function unsharp(d, w, h, r, amt, mid){
+  const bl = blurRGB(d, w, h, r, mid ? 2 : 1);
+  for (let i = 0; i < d.length; i += 4){
+    let a = amt;
+    if (mid){ const t = lumAt(d, i) / 127.5 - 1; a *= 0.25 + 0.75 * (1 - t * t); }   // Struktur: v. a. Mitteltöne
+    d[i] += (d[i] - bl[i]) * a; d[i+1] += (d[i+1] - bl[i+1]) * a; d[i+2] += (d[i+2] - bl[i+2]) * a;
+  }
+}
+function denoise(d, w, h, amount, S){
+  const bl = blurRGB(d, w, h, Math.max(1, 1.5 * S * (1 + amount / 60)), 2);
+  const thr = 6 + amount * 0.6, st = Math.min(1, amount / 60);
+  for (let i = 0; i < d.length; i += 4){
+    const t = 1 - Math.min(1, Math.abs(lumAt(d, i) - lumAt(bl, i)) / thr), k = st * t * t;
+    d[i] += (bl[i] - d[i]) * k; d[i+1] += (bl[i+1] - d[i+1]) * k; d[i+2] += (bl[i+2] - d[i+2]) * k;
+  }
+}
+const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16) || 0);
+// Nivels, Nair/alv, Duoton, Vignetta, Grana in einem Durchgang
+function pixelPass(d, w, h, c, S){
+  let lut = null;
+  if (c.blk || c.wht || c.gam){
+    lut = new Uint8ClampedArray(256);
+    const bp = c.blk / 100 * 0.4 * 255, wp = 255 - c.wht / 100 * 0.4 * 255, g = Math.pow(2, c.gam / 100 * 1.2);
+    for (let i = 0; i < 256; i++){ const t = Math.min(1, Math.max(0, (i - bp) / Math.max(1, wp - bp))); lut[i] = 255 * Math.pow(t, 1 / g); }
+  }
+  const bw = c.bw / 100, duo = c.duo / 100, vig = c.vig / 100, gra = c.gra / 100 * 38;
+  if (!lut && !bw && !duo && !vig && !gra) return;
+  const c1 = hex(c.dc1), c2 = hex(c.dc2), gs = Math.max(1, Math.round(S / 1.5));
+  const cx = w / 2, cy = h / 2;
+  for (let y = 0; y < h; y++){
+    const ny = (y - cy) / cy;
+    for (let x = 0; x < w; x++){
+      const i = (y * w + x) * 4;
+      let r = d[i], g = d[i+1], b = d[i+2];
+      if (lut){ r = lut[r < 0 ? 0 : r > 255 ? 255 : r | 0]; g = lut[g < 0 ? 0 : g > 255 ? 255 : g | 0]; b = lut[b < 0 ? 0 : b > 255 ? 255 : b | 0]; }
+      if (bw || duo){
+        const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (bw){ r += (l - r) * bw; g += (l - g) * bw; b += (l - b) * bw; }
+        if (duo){ const t = l / 255; r += (c1[0] + (c2[0] - c1[0]) * t - r) * duo; g += (c1[1] + (c2[1] - c1[1]) * t - g) * duo; b += (c1[2] + (c2[2] - c1[2]) * t - b) * duo; }
+      }
+      if (vig){
+        const nx = (x - cx) / cx, q = (nx * nx + ny * ny) / 2, f0 = (q - 0.25) / 0.75, f = f0 <= 0 ? 0 : f0 >= 1 ? 1 : f0 * f0 * (3 - 2 * f0);
+        if (vig < 0){ const m = 1 + vig * f * 0.85; r *= m; g *= m; b *= m; }
+        else { const a = vig * f * 0.8; r += (255 - r) * a; g += (255 - g) * a; b += (255 - b) * a; }
+      }
+      if (gra){
+        let n = ((((x / gs) | 0) * 374761393) ^ (((y / gs) | 0) * 668265263)) | 0;
+        n = Math.imul(n ^ (n >>> 13), 1274126177); n ^= n >>> 16;
+        const v = ((n >>> 0) % 2048 / 1024 - 1) * gra; r += v; g += v; b += v;
+      }
+      d[i] = r; d[i+1] = g; d[i+2] = b;
+    }
+  }
+}
+// Reihenfolge: Rumur/Blur → Colurs → Aguzzar/Structura → Nivels, Nair/alv, Duoton, Vignetta, Grana
+function process(base, c){
+  if (isNeutral(c)) return base;
+  const w = base.width, h = base.height, S = Math.min(w, h) / 1000;
+  let cur = new ImageData(new Uint8ClampedArray(base.data), w, h);
+  if (c.dns) denoise(cur.data, w, h, c.dns, S);
+  if (c.blr){ const r = c.blr / 100 * 0.03 * Math.min(w, h); if (r >= 1) cur.data.set(blurRGB(cur.data, w, h, r / 1.7, 3)); }
+  if (BASEC.some(k => c[k])){ const out = new ImageData(w, h); applyColor(cur, out, params(c)); cur = out; }
+  if (c.shp) unsharp(cur.data, w, h, Math.max(1, Math.round(1.2 * S)), c.shp / 100 * 1.6, false);
+  if (c.cla) unsharp(cur.data, w, h, Math.max(2, Math.round(22 * S)), c.cla / 100 * 0.9, true);
+  pixelPass(cur.data, w, h, c, S);
+  return cur;
+}
+
 const dimsOf = im => [im.naturalWidth || im.width, im.naturalHeight || im.height];
 
 /* Perspectiva: Trapez aus dem Bild auf die ganze Fläche ziehen (keine leeren Ecken, Rand wird beschnitten).
@@ -740,7 +855,7 @@ function recolor(L){
   const el = L.el;
   if (el.width !== L.base.width || el.height !== L.base.height){ el.width = L.base.width; el.height = L.base.height; }
   if (isNeutral(L.col)) el.getContext('2d').putImageData(L.base, 0, 0);
-  else { const out = new ImageData(L.base.width, L.base.height); applyColor(L.base, out, params(L.col)); el.getContext('2d').putImageData(out, 0, 0); }
+  else el.getContext('2d').putImageData(process(L.base, L.col), 0, 0);
   L.ver = (L.ver || 0) + 1;
   if (L.blur) makeBlur(L);
 }
@@ -1317,7 +1432,7 @@ $('dlBtn').onclick = () => {
       const [sw, sh] = dimsOf(src);
       const t2 = document.createElement('canvas'); t2.width = sw; t2.height = sh;
       const tx = t2.getContext('2d', { willReadFrequently:true }); tx.drawImage(src, 0, 0);
-      const d = tx.getImageData(0, 0, sw, sh); applyColor(d, d, params(L.col)); tx.putImageData(d, 0, 0);
+      tx.putImageData(process(tx.getImageData(0, 0, sw, sh), L.col), 0, 0);
       src = t2;
     }
     cx.save();
@@ -1376,6 +1491,7 @@ document.querySelectorAll('[data-etab]').forEach(b => b.onclick = () => setTab(+
 try { const s = localStorage.getItem('layers-tab'); if (s !== null && /^[0-3]$/.test(s)) setTab(+s); } catch(e){}
 // Direktlink auf einen Tab, z. B. /maletgs?tab=collascha (bzw. /collascha)
 { const t = { colurs:0, rotar:1, layers:2, collascha:3 }[(new URLSearchParams(location.search).get('tab') || '').toLowerCase()]; if (t !== undefined) setTab(t); }
+const vals0 = A => ({ ...newCol(), ...A.col });
 function syncEdit(){
   const A = editTarget(), on = !!A && !A.locked, col = ectx === 'collage';
   edits.forEach(e => e.classList.toggle('off', !on));
@@ -1383,8 +1499,10 @@ function syncEdit(){
   document.querySelectorAll('.whoName').forEach(w => w.textContent = col
     ? (A ? `part ${colSelIndex() + 1} · ${A.name}` : 'nagina part cun maletg tschernida')
     : (A ? A.name + (A.locked ? ' · bloccà' : '') : 'anc nagin layer'));
+  $('expertBtn').classList.toggle('act', !!A && XIDS.some(k => A.col[k]));
   $('tcount').textContent = layers.length ? `(${layers.length}/${MAX})` : '';
   if (A){
+    $('dc1').value = vals0(A).dc1; $('dc2').value = vals0(A).dc2;
     $('flipH').setAttribute('aria-pressed', !!A.fh); $('flipV').setAttribute('aria-pressed', !!A.fv);
     const vals = { ...newCol(), ...A.col, ang: A.ang || 0, pv: A.pv || 0, ph: A.ph || 0 };
     for (const id of [...CIDS, 'ang', 'pv', 'ph']){
@@ -1861,14 +1979,14 @@ function cellOrient(C){
 function cellRecolor(C){
   const x = C.prev.getContext('2d');
   if (isNeutral(C.col)) x.putImageData(C.base, 0, 0);
-  else { const out = new ImageData(C.base.width, C.base.height); applyColor(C.base, out, params(C.col)); x.putImageData(out, 0, 0); }
+  else x.putImageData(process(C.base, C.col), 0, 0);
   C.full = null;
 }
 // volle Auflösung erst beim Export (zwischengespeichert, bis die Part wieder bearbeitet wird)
 function cellFull(C){
   if (C.full) return C.full;
   const c = persp(orientCanvas(C.orig, C.q, C.fh, C.fv, 6000), C.pv, C.ph, C.gq);
-  if (!isNeutral(C.col)){ const x = c.getContext('2d', { willReadFrequently:true }), d = x.getImageData(0, 0, c.width, c.height); applyColor(d, d, params(C.col)); x.putImageData(d, 0, 0); }
+  if (!isNeutral(C.col)){ const x = c.getContext('2d', { willReadFrequently:true }), d = x.getImageData(0, 0, c.width, c.height); x.putImageData(process(d, C.col), 0, 0); }
   return C.full = c;
 }
 const colSel = () => cells[sel] || null;
@@ -2156,7 +2274,7 @@ function fromLayer(L){
   const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
   const x = c.getContext('2d', { willReadFrequently:true }); x.imageSmoothingQuality = 'high';
   x.drawImage(scaled(srcFull(L), c.width, c.height), 0, 0, c.width, c.height);
-  if (!isNeutral(L.col)){ const d = x.getImageData(0, 0, c.width, c.height); applyColor(d, d, params(L.col)); x.putImageData(d, 0, 0); }
+  if (!isNeutral(L.col)){ x.putImageData(process(x.getImageData(0, 0, c.width, c.height), L.col), 0, 0); }
   const C = mkItem(c, L.name); C.lid = L.id; C.ver = L.ver + '|' + (L.ang || 0); C.ang = L.ang || 0; return C;
 }
 function colFromLayers(){
@@ -2362,23 +2480,18 @@ $('presetAll').onclick = () => {
 };
 renderPresets();
 
-/* ---------- expert / experimental: Maletg + parameters en il «Photoeditor» (nov tab) ---------- */
+/* ---------- expert / experimental: zusätzliche Regler ein-/ausblenden ---------- */
 (() => {
-  const idb = () => new Promise((res, rej) => { const r = indexedDB.open('dbz-photoeditor', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-  const put = async v => { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('h', 'readwrite'); t.objectStore('h').put(v, 'in'); t.oncomplete = res; t.onerror = () => rej(t.error); }); };
-  $('expertLink').addEventListener('click', async () => {      // der Link öffnet den Tab, der Editor wartet kurz auf das Bild
-    try {
-      const A = editTarget();
-      if (!A) { await put({ t: Date.now() }); return; }
-      let blob;
-      if (A.url) blob = await (await fetch(A.url)).blob();
-      else {
-        const [w, h] = dimsOf(A.orig), c = document.createElement('canvas'); c.width = w; c.height = h;
-        c.getContext('2d').drawImage(A.orig, 0, 0); blob = await new Promise(r => c.toBlob(r, 'image/png'));
-      }
-      await put({ t: Date.now(), blob, name: A.name, q: A.q || 0, fh: !!A.fh, fv: !!A.fv, col: { ...A.col } });
-    } catch (e) {}
-  });
+  const btn = $('expertBtn'), boxEl = $('expertBox');
+  const set = on => { boxEl.hidden = !on; btn.setAttribute('aria-pressed', on); };
+  try { set(localStorage.getItem('maletgs-expert') === '1'); } catch (e) {}
+  btn.onclick = () => { const on = boxEl.hidden; set(on); try { localStorage.setItem('maletgs-expert', on ? '1' : '0'); } catch (e) {} };
+  ['dc1', 'dc2'].forEach(id => $(id).addEventListener('input', () => {
+    const A = editTarget(); if (!A || A.locked) return;
+    A.col[id] = $(id).value;
+    cancelAnimationFrame(colRaf);
+    colRaf = requestAnimationFrame(() => { if (isCell(A)){ cellRecolor(A); paint(); renderPool(); } else { recolor(A); render(); updateThumb(A); } });
+  }));
 })();
 </script>
 <script src="/handoff.js"></script>

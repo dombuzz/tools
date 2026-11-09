@@ -43,7 +43,7 @@ const NAMES = { 'info': 'Infus & datas',
 // «Magazin / Il di / #mument»: das frühere Einzeltool /mument zählt zu /visual
 // «Elavurar maletgs»: die Einzeltools im Hintergrund (/colurs, /rotar, /ebenas) und die frühere Adresse /layers zählen zu /maletgs
 // «Subtitle Studio»: die früheren Einzeltools /spustar, /cumparegliar und /subs zählen zu /studio
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', photoeditor: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
 const NO_STATS = new Set(['stats', 'votgr', 'lab-vischnanca', 'lab-svizra', 'lab-chartas']);
