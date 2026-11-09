@@ -498,6 +498,7 @@
             <button type="button" class="ghost sm" id="cFlip" title="Spievlar la trav" hidden>⇋ Spievlar la trav</button>
             <button type="button" class="ghost sm" id="cSpReset" title="Lingias da separaziun puspè en il center" hidden>Reposiziunar las lingias</button>
           </div>
+          <div class="ctl" id="cAngBox" hidden><div class="top"><label for="cAng">Angul da la lingia</label><span class="val" id="cAngVal" title="Reset">15°</span></div><input type="range" id="cAng" min="-35" max="35" step="1" value="15"></div>
           <h3>Lingia da separaziun</h3>
           <div class="crow">
             <div class="sizeseg" role="group" aria-label="Colur da la lingia" id="cLine">
@@ -1740,7 +1741,10 @@ const CL = {
   s5:  { n:5, more:true, f:['16:9'], sl:true, d:[.2,.4,.6,.8], ord:[[0,1,2,3]] },
   sr5: { n:5, more:true, f:['9:16'], sl:'h', d:[.2,.4,.6,.8], ord:[[0,1,2,3]] },
 };
-const SL = 0.13;            // halbe horizontale Verschiebung der schrägen Kante, im Verhältnis zur Höhe
+const SL = 0.13;
+const SA0 = 15;             // Standardwinkel der schrägen Linie (Grad), nur 2-teilige Disposiziuns s2 / sr2 einstellbar
+const SAOK = k => k === 's2' || k === 'sr2';
+const slOf = k => SAOK(k) && cs.sa && cs.sa[k] != null ? Math.tan(cs.sa[k] * Math.PI / 180) / 2 : SL;            // halbe horizontale Verschiebung der schrägen Kante, im Verhältnis zur Höhe
 const stageC = $('cStage'), cv = $('cCanvas'), cx2 = cv.getContext('2d'), cMsgEl = $('cMsg');
 const cells = [null, null, null, null, null];   // pro Part: { img, prev, iw, ih, name, z, fx, fy }
 const cs = { fmt:'16:9', lay:'c2', line:'', lw:5, sp:{}, flip:false };
@@ -1769,7 +1773,7 @@ function spOf(k, W, H){
 }
 function clampSp(L, v, W, H){
   let lo = .1, hi = .9;
-  if (L.sl && W){ const m = (L.sl === 'h' ? SL * W / H : SL * H / W) + .04; lo = Math.max(lo, m); hi = Math.min(hi, 1 - m); }
+  if (L.sl && W){ const sv = L === CL[cs.lay] ? slOf(cs.lay) : SL, m = (L.sl === 'h' ? sv * W / H : sv * H / W) + .04; lo = Math.max(lo, m); hi = Math.min(hi, 1 - m); }
   v = v.map(x => Math.max(lo, Math.min(hi, x)));
   // geordnete Linien: mindestens 10 % Abstand
   for (const g of L.ord || []){
@@ -1779,18 +1783,19 @@ function clampSp(L, v, W, H){
   }
   return v;
 }
-function polyOf(L, i, W, H, g, sp, flip){
+function polyOf(L, i, W, H, g, sp, flip, sv){
+  sv = sv == null ? SL : sv;
   const e = 1e-6;
   sp = sp || L.d;
   if (L.sl === 'h'){
     // schräge Linien quer: links tiefer als rechts (gespiegelt umgekehrt)
-    const d = SL * W * (flip ? -1 : 1), hs = g * Math.hypot(2 * d, W) / W, n = L.n, cut = j => sp[j - 1] * H;
+    const d = sv * W * (flip ? -1 : 1), hs = g * Math.hypot(2 * d, W) / W, n = L.n, cut = j => sp[j - 1] * H;
     const tl = i ? cut(i) + d + hs : 0, tr = i ? cut(i) - d + hs : 0;
     const bl = i < n - 1 ? cut(i + 1) + d - hs : H, br = i < n - 1 ? cut(i + 1) - d - hs : H;
     return [[0, tl], [W, tr], [W, br], [0, bl]];
   }
   if (L.sl){
-    const d = SL * H * (flip ? -1 : 1), hs = g * Math.hypot(2 * d, H) / H, n = L.n, cut = j => sp[j - 1] * W;
+    const d = sv * H * (flip ? -1 : 1), hs = g * Math.hypot(2 * d, H) / H, n = L.n, cut = j => sp[j - 1] * W;
     const lt = i ? cut(i) + d + hs : 0, lb = i ? cut(i) - d + hs : 0;
     const rt = i < n - 1 ? cut(i + 1) + d - hs : W, rb = i < n - 1 ? cut(i + 1) - d - hs : W;
     return [[lt, 0], [rt, 0], [rb, H], [lb, H]];
@@ -1801,7 +1806,7 @@ function polyOf(L, i, W, H, g, sp, flip){
   if (b > e) y0 += g; if (b + h < 1 - e) y1 -= g;
   return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
 }
-const poly = (i, W, H) => polyOf(CL[cs.lay], i, W, H, cs.line ? cs.lw / 2 : 0, spOf(cs.lay, W, H), cs.flip);
+const poly = (i, W, H) => polyOf(CL[cs.lay], i, W, H, cs.line ? cs.lw / 2 : 0, spOf(cs.lay, W, H), cs.flip, slOf(cs.lay));
 function bbox(P){
   const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
   const x = Math.min(...xs), y = Math.min(...ys);
@@ -1926,8 +1931,10 @@ function syncLineUI(){
   document.querySelectorAll('#cLw button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === +cs.lw));
   const inp = $('cLwIn'); if (document.activeElement !== inp) inp.value = cs.lw;
   const L = CL[cs.lay];
+  $('cAngBox').hidden = !SAOK(cs.lay);
+  { const a = (cs.sa && cs.sa[cs.lay] != null) ? cs.sa[cs.lay] : SA0; $('cAng').value = a; $('cAngVal').textContent = a + '°'; }
   $('cFlip').hidden = !L.sl; $('cFlip').setAttribute('aria-pressed', !!cs.flip);
-  $('cSpReset').hidden = !(cs.sp && cs.sp[cs.lay] && cs.sp[cs.lay].some((v, i) => Math.abs(v - L.d[i]) > .004));
+  $('cSpReset').hidden = !((cs.sp && cs.sp[cs.lay] && cs.sp[cs.lay].some((v, i) => Math.abs(v - L.d[i]) > .004)) || (SAOK(cs.lay) && cs.sa && cs.sa[cs.lay] != null && cs.sa[cs.lay] !== SA0));
 }
 
 /* Steuerung: Format, Disposiziun, Lingia */
@@ -2051,9 +2058,9 @@ const toPx = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r
 function partAt(px, py){
   const [W, H] = dims();
   const sp = spOf(cs.lay, W, H);
-  for (let i = 0; i < nParts(); i++) if (inPoly(polyOf(CL[cs.lay], i, W, H, 0, sp, cs.flip), px, py)) return i;
+  for (let i = 0; i < nParts(); i++) if (inPoly(polyOf(CL[cs.lay], i, W, H, 0, sp, cs.flip, slOf(cs.lay)), px, py)) return i;
   // auf der Linie: nächste Part
-  for (let i = 0; i < nParts(); i++){ const R = bbox(polyOf(CL[cs.lay], i, W, H, 0, sp, cs.flip)); if (px >= R.x && px <= R.x + R.w && py >= R.y && py <= R.y + R.h) return i; }
+  for (let i = 0; i < nParts(); i++){ const R = bbox(polyOf(CL[cs.lay], i, W, H, 0, sp, cs.flip, slOf(cs.lay))); if (px >= R.x && px <= R.x + R.w && py >= R.y && py <= R.y + R.h) return i; }
   return -1;
 }
 function zoomPart(i, z, px, py){
@@ -2072,8 +2079,8 @@ function zoomPart(i, z, px, py){
 let sepHL = null;   // { j, drag }
 function seps(W, H){
   const k = cs.lay, L = CL[k], sp = spOf(k, W, H), out = [];
-  if (L.sl === 'h'){ const d = SL * W * (cs.flip ? -1 : 1); sp.forEach((v, j) => out.push({ j, ax:'sh', x1:0, y1:v * H + d, x2:W, y2:v * H - d })); return out; }
-  if (L.sl){ const d = SL * H * (cs.flip ? -1 : 1); sp.forEach((v, j) => out.push({ j, ax:'s', x1:v * W + d, y1:0, x2:v * W - d, y2:H })); return out; }
+  if (L.sl === 'h'){ const d = slOf(k) * W * (cs.flip ? -1 : 1); sp.forEach((v, j) => out.push({ j, ax:'sh', x1:0, y1:v * H + d, x2:W, y2:v * H - d })); return out; }
+  if (L.sl){ const d = slOf(k) * H * (cs.flip ? -1 : 1); sp.forEach((v, j) => out.push({ j, ax:'s', x1:v * W + d, y1:0, x2:v * W - d, y2:H })); return out; }
   for (const [j, ax, p, q1, q2] of L.s(...sp))
     out.push(ax === 'x' ? { j, ax, x1:p * W, y1:q1 * H, x2:p * W, y2:q2 * H } : { j, ax, x1:q1 * W, y1:p * H, x2:q2 * W, y2:p * H });
   return out;
@@ -2091,7 +2098,7 @@ function sepAt(px, py){
 }
 function moveSep(S, px, py){
   const [W, H] = dims(), L = CL[cs.lay], sp = spOf(cs.lay, W, H);
-  let v = S.ax === 'x' ? px / W : S.ax === 'y' ? py / H : S.ax === 'sh' ? (py - SL * W * (cs.flip ? -1 : 1) * (1 - 2 * px / W)) / H : (px - SL * H * (cs.flip ? -1 : 1) * (1 - 2 * py / H)) / W;
+  let v = S.ax === 'x' ? px / W : S.ax === 'y' ? py / H : S.ax === 'sh' ? (py - slOf(cs.lay) * W * (cs.flip ? -1 : 1) * (1 - 2 * px / W)) / H : (px - slOf(cs.lay) * H * (cs.flip ? -1 : 1) * (1 - 2 * py / H)) / W;
   for (const snapV of [.2, .25, 1/3, .4, .5, .6, 2/3, .75, .8]) if (Math.abs(v - snapV) < .012) v = snapV;   // einrasten
   for (const g of L.ord || []){ const k = g.indexOf(S.j); if (k < 0) continue;
     if (k > 0) v = Math.max(v, sp[g[k - 1]] + .1);
@@ -2128,8 +2135,10 @@ cv.addEventListener('dblclick', e => {
   e.stopImmediatePropagation();
   const L = CL[cs.lay], sp = spOf(cs.lay, ...dims()); sp[S.j] = L.d[S.j]; cs.sp[cs.lay] = sp; save(); paint();
 }, true);
+$('cAng').oninput = () => { (cs.sa ||= {})[cs.lay] = +$('cAng').value; $('cAngVal').textContent = $('cAng').value + '°'; save(); paint(); };
+$('cAngVal').onclick = () => { if (cs.sa) delete cs.sa[cs.lay]; save(); paint(); };
 $('cFlip').onclick = () => { cs.flip = !cs.flip; save(); buildLays(); paint(); };
-$('cSpReset').onclick = () => { delete cs.sp[cs.lay]; save(); paint(); };
+$('cSpReset').onclick = () => { delete cs.sp[cs.lay]; if (cs.sa) delete cs.sa[cs.lay]; save(); paint(); };
 $('cLineCol').addEventListener('input', e => { cs.line = e.target.value; save(); paint(); });
 $('cLwIn').addEventListener('input', e => {
   const v = Math.round(+e.target.value); if (!(v >= 1)) return;
