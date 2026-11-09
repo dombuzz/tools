@@ -274,6 +274,22 @@
   #expertBtn[aria-pressed="true"]{ background:var(--accent); color:var(--on-sel,#fff); border-color:var(--accent); }
   #expertBtn.act::after{ content:' ●'; color:var(--accent); }
   #expertBtn[aria-pressed="true"].act::after{ color:inherit; }
+
+  /* Bild beim Scrollen im Blick behalten: Desktop = Bild bleibt stehen, die Regler scrollen; Mobil = Bild bleibt oben */
+  .frame{ max-width:min(100%, calc(56vh * var(--ar, 1.7778))); }
+  @media (min-width:861px){
+    #layWork > div:first-child, #collage .work > div:first-child{ position:sticky; top:12px; }
+  }
+  @media (max-width:860px){
+    #layWork, #collage .work{ display:block; }
+    #layWork > div:first-child{ position:sticky; top:0; z-index:20; background:var(--card); padding:0 0 8px; box-shadow:0 8px 8px -8px rgba(0,0,0,.4); }
+    #layWork .stage{ padding:12px 6%; }
+    #layWork .frame{ max-width:min(100%, calc(30vh * var(--ar, 1.7778))); }
+    #collage .work > div:first-child{ display:contents; }
+    #collage .cstage{ position:sticky; top:0; z-index:20; padding:10px 4%; }
+    #collage .cstage canvas{ width:auto; max-width:100%; max-height:32vh; }
+    #layWork .side, #collage .side{ margin-top:12px; }
+  }
   .hint{ color:var(--muted); font-size:0.85rem; margin:12px 0 0; line-height:1.5; }
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
   .msg{ font-size:0.85rem; color:var(--muted); align-self:center; }
@@ -876,7 +892,7 @@ function applyFmt(){
   [W, H] = fmtDims();
   frame.style.aspectRatio = W + '/' + H;
   // Hochformate nicht höher als ca. 70 % des Fensters
-  frame.style.maxWidth = `min(100%, calc(70vh * ${W / H}))`;
+  frame.style.setProperty('--ar', W / H); frame.style.maxWidth = '';
   layers.forEach(L => { fitLayer(L); if (L.blur) makeBlur(L); });   // bei neuem Format alle Layer neu einpassen
   render();
 }
