@@ -47,8 +47,8 @@ h1 .acc{color:var(--accent)}
 .meta,.hint{color:var(--muted);font-size:.85rem;line-height:1.45;margin:0}
 .hint{margin-top:12px}
 .meta b{color:var(--text)}
-select,input[type=number],textarea{border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text);font:inherit;font-size:.9rem}
-select,input[type=number]{width:100%;padding:8px 10px}
+select,input[type=number],input[type=text],textarea{border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text);font:inherit;font-size:.9rem}
+select,input[type=number],input[type=text]{width:100%;padding:8px 10px}
 input[type=color]{width:100%;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--field);padding:3px}
 input[type=range]{accent-color:var(--accent)}
 input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
@@ -119,7 +119,7 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
   <header>
     <a class="homelink" href="/lab/">← Lab</a>
     <h1>Chat-<span class="acc">Generator</span><span class="labbadge">Labor</span></h1>
-    <p class="lead">Transparentes Chat-Overlay mit Animation: Nachrichten eintippen, links = Gianna, rechts = RTR. Keine Namen, keine Uhrzeiten im Bild. Export als PNG-Sequenz mit Alpha für den Schnitt – alles bleibt im Browser.</p>
+    <p class="lead">Transparentes Chat-Overlay mit Animation: Nachrichten eintippen, links = Gianna, rechts = RTR. Keine Uhrzeiten im Bild, auf Wunsch mit Kontakt oben. Export als PNG-Sequenz mit Alpha für den Schnitt – alles bleibt im Browser.</p>
   </header>
 
   <div class="cols">
@@ -183,6 +183,10 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
         <details class="sec">
           <summary>Format &amp; Aussehen</summary>
           <div class="grid" id="gridLook"></div>
+        </details>
+        <details class="sec">
+          <summary>Kontakt oben</summary>
+          <div class="grid" id="gridHead"></div>
         </details>
         <details class="sec">
           <summary>Timing &amp; Animation</summary>
@@ -283,7 +287,8 @@ const Core=(function(){
     ctx.setTransform(scale,0,0,scale,0,0);
     const fs=P.fs,colW=S.columnWidth;
     const colL=S.hAlign==='left'?S.marginH:S.hAlign==='right'?W-S.marginH-colW:(W-colW)/2;
-    const areaTop=S.marginV,areaBottom=H-S.marginV,areaH=areaBottom-areaTop;
+    const hasH=!!S.header,hH=hasH?Math.round(fs*1.9):0,hGap=hasH?Math.round(fs*0.55):0;
+    const areaTop=S.marginV+hH+hGap,areaBottom=H-S.marginV,areaH=areaBottom-areaTop;
     const gapSame=fs*0.14,gapDiff=fs*0.5;
 
     // Layout
@@ -312,6 +317,42 @@ const Core=(function(){
     const fadeA=S.fadeOut?clamp((P.duration-t)/Math.max(0.05,S.fadeOutDur),0,1):1;
     ctx.font=fs+'px '+S.fontFamily;ctx.textBaseline='alphabetic';ctx.textAlign='left';
     const R=fs*0.8,small=fs*0.14;
+
+    // Kontaktkopf (optional): Profilbild/Initiale, Name, Untertitel
+    if(hasH){
+      const hp=easeOut(clamp(t/0.35,0,1)),ha=fadeA*hp;
+      if(ha>0.003){
+        const hx=colL,hy=S.marginV-(1-hp)*fs*0.25,hr=hH/2;
+        const name=String(S.headerName||'').trim(),sub=String(S.headerSub||'').trim();
+        const ns=fs*0.82,ss=fs*0.58,ad0=Math.round(hH*0.72),pre=(hH-ad0)/2+ad0+fs*0.4,post=hH*0.45;
+        ctx.font=ns+'px '+S.fontFamily;let tw=name?ctx.measureText(name).width:0;
+        ctx.font=ss+'px '+S.fontFamily;if(sub)tw=Math.max(tw,ctx.measureText(sub).width);
+        const hw=Math.min(colW,Math.ceil(pre+tw+post)); // Kopf passt sich dem Inhalt an, linksbündig wie Gianna
+        ctx.save();ctx.globalAlpha=ha;
+        rr(ctx,hx,hy,hw,hH,hr,hr,hr,hr);
+        if(S.shadow){ctx.shadowColor='rgba(0,0,0,0.28)';ctx.shadowBlur=fs*0.35*scale;ctx.shadowOffsetY=fs*0.07*scale;}
+        ctx.fillStyle=S.headerBg;ctx.fill();
+        ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+        const ad=Math.round(hH*0.72),ax=hx+(hH-ad)/2,ay=hy+(hH-ad)/2,cy=hy+hH/2,mr=P.mid/fs;
+        ctx.save();ctx.beginPath();ctx.arc(ax+ad/2,ay+ad/2,ad/2,0,Math.PI*2);ctx.closePath();
+        if(P.avatarImg){
+          ctx.clip();ctx.drawImage(P.avatarImg,ax,ay,ad,ad);
+        }else{
+          ctx.fillStyle=S.colR;ctx.fill();
+          ctx.fillStyle=S.txtR;ctx.textAlign='center';ctx.font=Math.round(ad*0.5)+'px '+S.fontFamily;
+          ctx.fillText((name[0]||'?').toUpperCase(),ax+ad/2,ay+ad/2+mr*ad*0.5/2);
+        }
+        ctx.restore();
+        const tx=ax+ad+fs*0.4,maxW=hx+hw-tx-hH*0.4;
+        const fit=(str,px)=>{ctx.font=px+'px '+S.fontFamily;if(ctx.measureText(str).width<=maxW)return str;let a=Array.from(str);while(a.length>1&&ctx.measureText(a.join('')+'…').width>maxW)a.pop();return a.join('')+'…';};
+        ctx.textAlign='left';ctx.fillStyle=S.headerTxt;
+        const nh=ns*1.15,sh=ss*1.15,tot=nh+(sub?sh:0),y0=cy-tot/2;
+        if(name){const str=fit(name,ns);ctx.font=ns+'px '+S.fontFamily;ctx.fillText(str,tx,y0+nh/2+mr*ns/2);}
+        if(sub){const str=fit(sub,ss);ctx.globalAlpha=ha*0.65;ctx.font=ss+'px '+S.fontFamily;ctx.fillText(str,tx,y0+nh+sh/2+mr*ss/2);}
+        ctx.restore();
+      }
+      ctx.font=fs+'px '+S.fontFamily;ctx.textBaseline='alphabetic';ctx.textAlign='left';
+    }
 
     for(const c of cells){
       const it=c.it,x=it.side==='L'?colL:colL+colW-c.w,yy=off+c.top;
@@ -409,6 +450,7 @@ const DEFAULTS={
   fontSize:46,fontFamily:FONTS['System (Standard)'],
   columnWidth:1100,bubbleMaxPct:80,hAlign:'center',vAlign:'bottom',marginH:80,marginV:90,
   colL:'#ECECEF',txtL:'#101114',colR:'#2F7BFF',txtR:'#FFFFFF',shadow:true,
+  header:false,headerName:'Gianna',headerSub:'',headerBg:'#2B2D33',headerTxt:'#FFFFFF',headerImg:'',
   cps:15,typingFactor:1,startDelay:0.5,endHold:1.5,fadeOut:true,fadeOutDur:0.6
 };
 const normMsg=m=>({side:m&&m.side==='R'?'R':'L',text:String((m&&m.text)||''),typing:!(m&&m.typing===false),pause:+(m&&m.pause)||0});
@@ -431,8 +473,20 @@ function save(){try{localStorage.setItem('chatgen.v1',JSON.stringify({S,messages
 let saveT=0;const saveSoon=()=>{clearTimeout(saveT);saveT=setTimeout(save,300);};
 
 function fmt(x){x=Math.max(0,x);const m=Math.floor(x/60),s=x-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1);}
+let avImg=null,avSrc='';
+function avatarFor(src){
+  if(!src){avImg=null;avSrc='';return null;}
+  if(src!==avSrc){avSrc=src;avImg=new Image();avImg.onload=()=>draw();avImg.src=src;}
+  return avImg&&avImg.complete&&avImg.naturalWidth?avImg:null;
+}
+async function avatarReady(){
+  avatarFor(S.headerImg);
+  if(S.headerImg&&avImg&&!avImg.complete){try{await avImg.decode();}catch(e){}}
+  return avatarFor(S.headerImg);
+}
 function draw(){
   if(!P)return;
+  P.avatarImg=avatarFor(S.headerImg);
   const sc=cv.width/S.width;
   Core.renderFrame(cctx,P,t,sc);
   $('seek').value=Math.round(t*1000);
@@ -526,7 +580,7 @@ function field(parent,def){
   else{
     lab.appendChild(document.createTextNode(def.label));
     if(def.type==='sel'){inp=document.createElement('select');def.opts.forEach(o=>{const op=document.createElement('option');op.value=o[0];op.textContent=o[1];inp.appendChild(op);});}
-    else{inp=document.createElement('input');inp.type=def.type==='color'?'color':'number';if(def.type!=='color'){inp.min=def.min;inp.max=def.max;inp.step=def.step||1;}}
+    else{inp=document.createElement('input');inp.type=def.type==='color'?'color':def.type==='txt'?'text':'number';if(def.type==='txt'){inp.maxLength=def.max||40;if(def.ph)inp.placeholder=def.ph;}else if(def.type!=='color'){inp.min=def.min;inp.max=def.max;inp.step=def.step||1;}}
     if(def.id)inp.id=def.id;
     lab.appendChild(inp);
   }
@@ -583,6 +637,31 @@ function buildSettings(){
   rw.innerHTML='<button type="button" class="btn sm" id="colReset">Standardfarben wiederherstellen</button>';
   gl.appendChild(rw);
   $('colReset').onclick=()=>{COLK.forEach(k=>{S[k]=DEFAULTS[k];});ctlRefs.forEach(f=>f());changed();};
+  const gh=$('gridHead');
+  [
+    {k:'header',label:'Kontakt oben anzeigen',type:'chk',full:true},
+    {k:'headerName',label:'Name',type:'txt',max:40,ph:'Gianna'},
+    {k:'headerSub',label:'Untertitel (optional)',type:'txt',max:60,ph:'z. B. online'},
+    {k:'headerBg',label:'Kopf: Hintergrund',type:'color'},{k:'headerTxt',label:'Kopf: Text',type:'color'}
+  ].forEach(d=>field(gh,d));
+  const aw=document.createElement('div');aw.className='full';
+  aw.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center';
+  aw.innerHTML='<button type="button" class="btn sm" id="avBtn">Profilbild laden …</button><button type="button" class="btn sm" id="avClear">Profilbild entfernen</button><input type="file" id="avFile" accept="image/*" hidden><span class="meta" style="flex-basis:100%">Ohne Bild erscheint die Initiale. Das Bild bleibt im Browser (wird auf 192 px verkleinert und im Projekt gespeichert).</span>';
+  gh.appendChild(aw);
+  $('avBtn').onclick=()=>$('avFile').click();
+  $('avClear').onclick=()=>{S.headerImg='';changed();};
+  $('avFile').addEventListener('change',e=>{
+    const f=e.target.files[0];e.target.value='';if(!f)return;
+    const url=URL.createObjectURL(f),im=new Image();
+    im.onload=()=>{
+      const n=192,c=document.createElement('canvas');c.width=c.height=n;
+      const k=Math.max(n/im.naturalWidth,n/im.naturalHeight),w=im.naturalWidth*k,h=im.naturalHeight*k;
+      c.getContext('2d').drawImage(im,(n-w)/2,(n-h)/2,w,h);
+      S.headerImg=c.toDataURL('image/jpeg',0.88);URL.revokeObjectURL(url);S.header=true;ctlRefs.forEach(f=>f());changed();
+    };
+    im.onerror=()=>{URL.revokeObjectURL(url);alert('Bild konnte nicht geladen werden.');};
+    im.src=url;
+  });
   const gt=$('gridTime');
   [
     {k:'cps',label:'Lesetempo (Zeichen/s)',type:'num',min:4,max:40,step:1},
@@ -656,6 +735,7 @@ async function exportPreview(){
   const btn=$('expWebm'),lbl=btn.textContent;btn.disabled=true;
   try{
     const Pp=Core.prepare(mctx,messages,S),W=S.width,H=S.height;
+    Pp.avatarImg=await avatarReady();
     const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');
     const o=document.createElement('canvas');o.width=W;o.height=H;const octx=o.getContext('2d',{alpha:true});
     const v=$('bgSel').value,col=BGCOL[v]||BGCOL.dark;
@@ -693,6 +773,7 @@ async function exportZip(opts){
   btn.disabled=true;bar.style.display='block';bi.style.width='0%';
   try{
     const Pp=Core.prepare(mctx,messages,S);
+    Pp.avatarImg=await avatarReady();
     const n=Math.ceil(Pp.duration*S.fps);
     const c=document.createElement('canvas');c.width=S.width;c.height=S.height;
     const ctx=c.getContext('2d',{alpha:true});
