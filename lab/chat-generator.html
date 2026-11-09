@@ -174,6 +174,7 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
         <div class="actions">
           <button id="expZip">⬇ PNG-Sequenz mit Transparenz (.zip)</button>
           <button class="ghost" id="expFrame">Einzelbild (PNG)</button>
+          <button class="ghost" id="expWebm" title="Abspielbares Video mit Hintergrund, ohne Transparenz">Vorschau-Video (.webm)</button>
           <button class="ghost" id="saveJson">Projekt speichern</button>
           <button class="ghost" id="loadJson">Projekt laden</button>
           <input type="file" id="jsonFile" accept=".json,application/json" hidden>
@@ -229,6 +230,8 @@ const Core=(function(){
     const fs=S.fontSize,lineH=Math.round(fs*1.32),padX=Math.round(fs*0.62),padY=Math.round(fs*0.42);
     const maxBubble=S.columnWidth*S.bubbleMaxPct/100;
     mctx.font=fs+'px '+S.fontFamily;
+    const mH=mctx.measureText('H').actualBoundingBoxAscent,mx=mctx.measureText('x').actualBoundingBoxAscent;
+    const mid=((mH>0&&mx>0)?(mH+mx)/2:fs*0.36); // optische Mitte der Schrift über der Grundlinie
     const items=messages.filter(m=>m.text&&m.text.trim()!=='').map(m=>{
       const lines=wrapText(mctx,m.text.replace(/\s+$/,''),maxBubble-2*padX);
       let tw=0;for(const l of lines)tw=Math.max(tw,mctx.measureText(l).width);
@@ -256,7 +259,7 @@ const Core=(function(){
     });
     const last=items[items.length-1];
     const duration=last?last.tAppear+last.read+S.endHold:1;
-    return{S,items,fs,lineH,padX,padY,typW,typH,duration};
+    return{S,items,fs,lineH,padX,padY,typW,typH,duration,mid};
   }
 
   function rr(ctx,x,y,w,h,tl,tr,br,bl){
@@ -306,7 +309,7 @@ const Core=(function(){
     else off=areaBottom-contentH;
 
     const fadeA=S.fadeOut?clamp((P.duration-t)/Math.max(0.05,S.fadeOutDur),0,1):1;
-    ctx.font=fs+'px '+S.fontFamily;ctx.textBaseline='middle';ctx.textAlign='left';
+    ctx.font=fs+'px '+S.fontFamily;ctx.textBaseline='alphabetic';ctx.textAlign='left';
     const R=fs*0.8,small=fs*0.14;
 
     for(const c of cells){
@@ -349,7 +352,7 @@ const Core=(function(){
           ctx.save();
           rr(ctx,x,yy,c.w,c.h,R,R,tailR,tailL);ctx.clip();
           ctx.globalAlpha=a*ta;ctx.fillStyle=tx;
-          for(let i=0;i<it.lines.length;i++)ctx.fillText(it.lines[i],x+P.padX,yy+P.padY+i*P.lineH+P.lineH/2);
+          for(let i=0;i<it.lines.length;i++)ctx.fillText(it.lines[i],x+P.padX,yy+P.padY+i*P.lineH+P.lineH/2+P.mid/2);
           ctx.restore();
         }
       }
@@ -610,6 +613,7 @@ $('bgFile').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;
   const url=URL.createObjectURL(f),st=$('stage');
   st.style.backgroundImage='url('+url+')';st.style.backgroundSize='cover';
+  bgImg=new Image();bgImg.src=url;
 });
 
 /* ---------- Export ---------- */
@@ -633,7 +637,45 @@ document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',(
   else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}
 }));
 
-let exporting=false;
+let bgImg=null,exporting=false;
+const BGCOL={checker:'#2c2c2c',dark:'#15171b',light:'#f2f2f2',green:'#00b140',img:'#2c2c2c'};
+async function exportPreview(){
+  if(exporting)return;
+  if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){alert('Dieser Browser kann das Video nicht aufnehmen (Chrome verwenden).');return;}
+  exporting=true;playing=false;updPlay();
+  const btn=$('expWebm'),lbl=btn.textContent;btn.disabled=true;
+  try{
+    const Pp=Core.prepare(mctx,messages,S),W=S.width,H=S.height;
+    const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');
+    const o=document.createElement('canvas');o.width=W;o.height=H;const octx=o.getContext('2d',{alpha:true});
+    const v=$('bgSel').value,col=BGCOL[v]||BGCOL.dark;
+    const frame=t=>{
+      ctx.globalAlpha=1;ctx.fillStyle=col;ctx.fillRect(0,0,W,H);
+      if(v==='img'&&bgImg&&bgImg.complete&&bgImg.naturalWidth){
+        const k=Math.max(W/bgImg.naturalWidth,H/bgImg.naturalHeight),w=bgImg.naturalWidth*k,h=bgImg.naturalHeight*k;
+        ctx.drawImage(bgImg,(W-w)/2,(H-h)/2,w,h);
+      }
+      Core.renderFrame(octx,Pp,t,1);ctx.drawImage(o,0,0);
+    };
+    frame(0);
+    const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
+    const rec=new MediaRecorder(c.captureStream(S.fps),{mimeType:mime,videoBitsPerSecond:Math.round(W*H*4)});
+    const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+    const done=new Promise(r=>rec.onstop=r);
+    rec.start(500);
+    const t0=performance.now();
+    await new Promise(res=>{(function step(){
+      const t=(performance.now()-t0)/1000;
+      if(t>=Pp.duration){frame(Pp.duration);setTimeout(res,150);return;}
+      frame(t);btn.textContent='Nehme auf … '+Math.round(100*t/Pp.duration)+' %';
+      requestAnimationFrame(step);
+    })();});
+    rec.stop();await done;
+    download(new Blob(chunks,{type:'video/webm'}),'chat_vorschau_'+W+'x'+H+'.webm');
+    $('expInfo').textContent='Vorschau-Video gespeichert (mit Hintergrund, ohne Transparenz – nur zum Ansehen).';
+  }finally{exporting=false;btn.disabled=false;btn.textContent=lbl;}
+}
+$('expWebm').onclick=exportPreview;
 async function exportZip(opts){
   if(exporting)return null;
   exporting=true;opts=opts||{};
