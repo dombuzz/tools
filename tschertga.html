@@ -114,6 +114,8 @@
     try {
       const r = await fetch(API + '?' + params(page)), d = await r.json();
       if (!r.ok) throw 0;
+      // Tagesbudget erreicht: die Suche pausiert bis zur Erneuerung des Kontingents (00:00 UTC)
+      if (d.paused) { $('meta').textContent = 'Il contingent da tschertga per oz è consumà. La tschertga è puspè disponibla damaun.'; $('more').hidden = true; busy = false; return; }
       if (!more) {
         const tot = d.years.reduce((t, y) => t + y.n, 0);
         $('meta').textContent = d.items.length ? (d.years.length ? tot + (tot === 1 ? ' artitgel' : ' artitgels') + ' en tut (senza filter da data)' : '') : 'Nagins resultats.';
@@ -140,6 +142,7 @@
     try {
       const d = await fetch(API + '/status').then(r => r.json());
       $('st').textContent = d.articles ? 'Index: ' + d.articles.toLocaleString('de-CH') + ' artitgels (' + fmt(d.oldest) + ' – ' + fmt(d.newest) + ')' + (d.complete && !d.open ? '' : ' · vegn anc complettà') : 'L\'index vegn construì …';
+      if (d.budget) $('st').textContent += ' · contingent oz: ' + Math.min(100, Math.round(d.used / d.budget * 100)) + ' %';
     } catch (e) {}
   }
   $('f').onsubmit = e => { e.preventDefault(); run(); };
@@ -147,8 +150,7 @@
   $('more').onclick = () => run(true);
   const u = new URLSearchParams(location.search);
   for (const [k, id] of [['q', 'q'], ['from', 'from'], ['to', 'to'], ['sort', 'sort']]) if (u.get(k)) $(id).value = u.get(k);
-  // Suche seit 07.11.2026 aus (Cloudflare-Kontingent): keine Abfragen mehr; die Artitgel-challenge läuft weiter.
-  document.querySelector('main').innerHTML = '<h1>Tschertga rtr.ch</h1><p class="lead">La tschertga è deactivada per il mument.</p><p class="lead"><a href="/artitgel-challenge">→ Artitgel-challenge</a></p>';
+  drawSpans(); status(); run().then(() => { if (u.get('section')) { $('sec').value = u.get('section'); } });
 })();
 </script>
 <script src="/like.js" defer></script>

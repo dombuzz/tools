@@ -303,7 +303,7 @@ async function fbMail(env, tool, name, text) {
   await Promise.allSettled(jobs);
 }
 
-import { SEARCH_ON, searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth, challengeMonth } from './artsearch.js';
+import { SEARCH_ON, TSCHERTGA_BUDGET, readsToday, searchArt, artStatus, crawlStep, countArt, chattaOverview, chattaOpen, chattaRecheck, countArtMonth, challengeMonth } from './artsearch.js';
 import { gameRoute, gameAggregate, gameAdminList, gameAdminDelete, gameAdminReset, gameMonthStats, gameDropCache } from './game.js';
 
 export default {
@@ -596,11 +596,14 @@ async function handle(request, env, ctx) {
           const st = await artStatus(env);
           // Nur falls der Cron ausgefallen ist (letzter Lauf > 45 Min.): Aufruf der Seite stösst einen Crawl-Lauf an – sonst würde jeder Seitenaufruf zusätzlich crawlen
           if (!st.last || Date.now() - Date.parse(st.last.at) > 45 * 60e3) ctx.waitUntil(crawlStep(env).catch(() => {}));
+          st.used = await readsToday(env); st.budget = TSCHERTGA_BUDGET; // für die Anzeige «Contingent oz»
           return json(st, request);
         }
         if (parts[1] === 'count') return json(await countArt(env), request);
         if (parts[1]) return json({ error: 'notfound' }, request, 404);
-        if (!SEARCH_ON) return json({ disabled: true, items: [], total: 0 }, request, 503); // Suche aus seit 07.11.2026 (Kontingent); Artitgel-challenge läuft weiter
+        if (!SEARCH_ON) return json({ disabled: true, items: [], total: 0 }, request, 503);
+        // Tagesbudget: ab 20 % des Lesekontingents (alle Tools zusammen) pausiert die Suche bis 00:00 UTC
+        if (await readsToday(env) >= TSCHERTGA_BUDGET) return json({ paused: true, items: [], more: false, years: [], sections: [] }, request);
         const g = k => (url.searchParams.get(k) || '').slice(0, 200);
         const out = await searchArt(env, { q: g('q'), from: g('from'), to: g('to'), section: g('section'), sort: g('sort'), page: g('page'), size: g('size') });
         return json(out, request);

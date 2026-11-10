@@ -6,10 +6,14 @@ const UA = 'Mozilla/5.0 (compatible; dombuzz-tools; +https://tools.dombuzz.ch/in
 const SKIP = /\/(interpresa\/organisaziun|uffants\/lexicon)\//;
 // SCHALTER: false = keine automatischen Abrufe von rtr.ch mehr (weder Crawler noch Nachprüfen geöffneter Artikel).
 export const CRAWL_ON = true;
-// Seit 07.11.2026 ist die Suche (Tschertga) aus: Der Crawler liest nur noch den aktuellen und den Vormonat (reicht für die Artitgel-challenge, die
-// die letzten 30 Tage zeigt) und füllt das Archiv bis 2016 nicht mehr auf. Zum Wiederaufnehmen des Archivs auf true setzen (und SEARCH_ON in index.js).
-export const ARCHIVE_ON = false;
-export const SEARCH_ON = false;
+// Tschertga (Suche + Archiv bis 2016) läuft seit 10.11.2026 wieder, aber mit TAGESBUDGET: Sobald heute (UTC) insgesamt – alle Tools zusammen –
+// 20 % des Cloudflare-Lesekontingents verbraucht sind, pausiert die Suche bis zur Erneuerung um 00:00 UTC; das Archiv wird schon ab 12 % nicht
+// mehr aufgefüllt (die Suche hat Vorrang). So bleiben rund 80 % Reserve für unerwartet starke Nutzung der Toolbox.
+// Die Artitgel-challenge (aktueller + Vormonat) läuft unabhängig davon immer weiter. Ganz ausschalten: SEARCH_ON / ARCHIVE_ON = false.
+export const SEARCH_ON = true, ARCHIVE_ON = true;
+export const QUOTA_READ = 5e6, TSCHERTGA_BUDGET = 0.20 * QUOTA_READ, ARCHIVE_BUDGET = 0.12 * QUOTA_READ;
+// heute gelesene Zeilen (alle Tools), aus der Tabelle «usage» des Workers
+export const readsToday = async env => { try { const { results: [u] } = await env.DB.prepare("SELECT r FROM usage WHERE day = date('now')").all(); return (u && u.r) || 0; } catch (e) { return 0; } };
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Stabile Artikel-ID: rtr.ch liefert eine UUID (früher eine Zahl). Fehlt beides, ist die ID nur der Pfad und taugt nicht zum Wiedererkennen.
 export const stableId = id => UUID.test(id || '') || /^\d+$/.test(id || '');
@@ -155,13 +159,14 @@ export async function crawlStep(env) {
 async function crawlInner(env) {
   await ensureArt(env);
   await dedupeOnce(env);
-  const { results: [u] } = await env.DB.prepare("SELECT w FROM usage WHERE day = date('now')").all().catch(() => ({ results: [] }));
+  const { results: [u] } = await env.DB.prepare("SELECT r, w FROM usage WHERE day = date('now')").all().catch(() => ({ results: [] }));
   if (u && u.w > WRITE_PAUSE) return { paused: true };
+  const archive = ARCHIVE_ON && ((u && u.r) || 0) < ARCHIVE_BUDGET; // Archiv nur, solange das Tagesbudget reicht
   // Aktueller Monat zuerst: dessen Sitemap alle CUR_EVERY neu lesen, auch wenn noch ältere Artikel in der Warteschlange sind
   let fresh = null;
   if (Date.now() - Number(await stGet(env, 'cur_ts') || 0) >= CUR_EVERY) fresh = await sitemapStep(env, true);
-  const rows = (await env.DB.prepare('SELECT url FROM art_seen WHERE ok = 0 AND tries < ?1 AND ym >= ?3 ORDER BY ym DESC, rowid ASC LIMIT ?2').bind(MAX_TRIES, PER_RUN, ARCHIVE_ON ? '' : prevYm(ymOf(new Date()))).all()).results;
-  if (!rows.length) return fresh || sitemapStep(env);
+  const rows = (await env.DB.prepare('SELECT url FROM art_seen WHERE ok = 0 AND tries < ?1 AND ym >= ?3 ORDER BY ym DESC, rowid ASC LIMIT ?2').bind(MAX_TRIES, PER_RUN, archive ? '' : prevYm(ymOf(new Date()))).all()).results;
+  if (!rows.length) return fresh || sitemapStep(env, false, archive);
   let done = 0, failed = 0;
   for (const { url } of rows) {
     const r = await getText(url).catch(() => ({ ok: false, status: 0 }));
@@ -178,13 +183,13 @@ async function crawlInner(env) {
   }
   return { done, failed };
 }
-async function sitemapStep(env, forceCur) {
+async function sitemapStep(env, forceCur, archive) {
   const cur = ymOf(new Date()), lastCur = Number(await stGet(env, 'cur_ts') || 0);
   let ym = cur;
   if (!forceCur && Date.now() - lastCur < CUR_EVERY) {
     if (await stGet(env, 'complete')) return { idle: true };
     ym = (await stGet(env, 'back')) || prevYm(cur);
-    if (!ARCHIVE_ON && ym < prevYm(cur)) return { idle: true }; // Archiv ruht: nur aktueller und Vormonat
+    if (!archive && ym < prevYm(cur)) return { idle: true }; // Archiv ruht (aus oder Tagesbudget erreicht): nur aktueller und Vormonat
   }
   const sm = await getText('https://www.rtr.ch/sitemaps/aron/articles/' + ym + '.xml').catch(() => ({ ok: false, status: 0 }));
   if (sm.ok) {
@@ -228,9 +233,15 @@ export async function searchArt(env, p) {
   // Jahre und Sparten für die Filter (ohne Datums-/Sparten-Einschränkung, nur mit Suchbegriff)
   let years = [], sections = [];
   if (!off) {
-    const f2 = fts ? 'art_fts JOIN art ON art.id = art_fts.rowid WHERE art_fts MATCH ?' : 'art WHERE 1=1';
-    years = (await env.DB.prepare("SELECT substr(art.d,1,4) y, COUNT(*) n FROM " + f2 + " GROUP BY y ORDER BY y DESC").bind(...base).all()).results;
-    sections = (await env.DB.prepare("SELECT art.section s, COUNT(*) n FROM " + f2 + " AND art.section <> '' GROUP BY s ORDER BY n DESC LIMIT 20".replace('WHERE art_fts MATCH ? AND', 'WHERE art_fts MATCH ? AND')).bind(...base).all().catch(() => ({ results: [] }))).results;
+    // ohne Suchbegriff sind die Zähler für alle gleich: 6 Std. zwischenspeichern (das Zählen liest sonst bei jedem Seitenaufruf die ganze Tabelle zweimal)
+    const c = fts ? null : JSON.parse((await stGet(env, 'facets')) || 'null');
+    if (c && Date.now() - c.ts < 6 * 3600e3) ({ years, sections } = c);
+    else {
+      const f2 = fts ? 'art_fts JOIN art ON art.id = art_fts.rowid WHERE art_fts MATCH ?' : 'art WHERE 1=1';
+      years = (await env.DB.prepare("SELECT substr(art.d,1,4) y, COUNT(*) n FROM " + f2 + " GROUP BY y ORDER BY y DESC").bind(...base).all()).results;
+      sections = (await env.DB.prepare("SELECT art.section s, COUNT(*) n FROM " + f2 + " AND art.section <> '' GROUP BY s ORDER BY n DESC LIMIT 20".replace('WHERE art_fts MATCH ? AND', 'WHERE art_fts MATCH ? AND')).bind(...base).all().catch(() => ({ results: [] }))).results;
+      if (!fts) await stSet(env, 'facets', JSON.stringify({ ts: Date.now(), years, sections })).catch(() => {});
+    }
   }
   return { items, more, years, sections };
 }

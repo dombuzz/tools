@@ -67,14 +67,31 @@ const s1 = await artStatus(env), n1 = reads, s2 = await artStatus(env);
 assert.equal(reads, n1); assert.equal(s1.articles, s2.articles);
 console.log('5 ok: Status aus Zwischenspeicher');
 
-// 6) Archiv ruht: Crawler holt nur aktuellen und Vormonat; ältere Monate werden weder eingelesen noch geholt
-db.exec("DELETE FROM art_seen");
+// 6) Tagesbudget: unter 12 % wird auch das Archiv geholt, darüber nur aktueller und Vormonat
+db.exec("CREATE TABLE IF NOT EXISTS usage (day TEXT PRIMARY KEY, r INTEGER NOT NULL DEFAULT 0, w INTEGER NOT NULL DEFAULT 0)");
 const now = new Date(), ym = d => d.getUTCFullYear() + '_' + String(d.getUTCMonth() + 1).padStart(2, '0');
 const cur = ym(now), prev = ym(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)));
-db.prepare("INSERT OR REPLACE INTO art_state (k, v) VALUES ('back', '2019_05'), ('cur_ts', ?)").run(String(Date.now()));
-for (const [u, m] of [['old', '2019_05'], ['prevm', prev], ['curm', cur]]) db.prepare("INSERT INTO art_seen (url, ym) VALUES (?, ?)").run('https://www.rtr.ch/novitads/' + u, m);
+const seed = r => {
+  db.exec("DELETE FROM art_seen; DELETE FROM usage");
+  db.prepare("INSERT INTO usage (day, r) VALUES (date('now'), ?)").run(r);
+  db.prepare("INSERT OR REPLACE INTO art_state (k, v) VALUES ('back', '2019_05'), ('cur_ts', ?)").run(String(Date.now()));
+  for (const [u, m] of [['old', '2019_05'], ['prevm', prev], ['curm', cur]]) db.prepare("INSERT INTO art_seen (url, ym) VALUES (?, ?)").run('https://www.rtr.ch/novitads/' + u, m);
+};
 const asked = []; globalThis.fetch = async u => { asked.push(String(u)); return { ok: false, status: 404, text: async () => '' }; };
+seed(700000); // 14 % verbraucht: Archiv pausiert
 for (let i = 0; i < 3; i++) await crawlStep(env).catch(() => {});
 assert.ok(asked.some(u => u.endsWith('/curm')) && asked.some(u => u.endsWith('/prevm')), 'aktueller und Vormonat werden geholt');
-assert.ok(!asked.some(u => /old|2019/.test(u)), 'Archiv wird nicht angefasst: ' + asked.join(','));
-console.log('6 ok: nur aktueller + Vormonat, kein Archiv');
+assert.ok(!asked.some(u => /old|2019/.test(u)), 'ueber Budget: Archiv wird nicht angefasst: ' + asked.join(','));
+asked.length = 0; seed(1000); // fast nichts verbraucht: Archiv läuft
+for (let i = 0; i < 3; i++) await crawlStep(env).catch(() => {});
+assert.ok(asked.some(u => u.endsWith('/old')), 'unter Budget: Archiv wird geholt');
+const { readsToday, TSCHERTGA_BUDGET } = await import('./artsearch.js');
+assert.equal(await readsToday(env), 1000); assert.equal(TSCHERTGA_BUDGET, 1e6);
+console.log('6 ok: Archiv nur unter Tagesbudget');
+
+// 7) Filter-Zähler ohne Suchbegriff kommen beim zweiten Mal aus dem Zwischenspeicher
+db.exec("DELETE FROM art_state WHERE k = 'facets'");
+let groups = 0; const orig2 = db.prepare.bind(db); db.prepare = sql => { if (/GROUP BY y/.test(sql)) groups++; return orig2(sql); };
+const f1 = await searchArt(env, {}), g1 = groups, f2 = await searchArt(env, {});
+assert.equal(g1, 1); assert.equal(groups, 1); assert.equal(JSON.stringify(f1.years), JSON.stringify(f2.years));
+console.log('7 ok: Filter-Zaehler zwischengespeichert');
