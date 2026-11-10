@@ -224,6 +224,12 @@
   .cf-t::before,.cf-t::after{content:"";position:absolute;top:0;bottom:0;width:1px;background:var(--muted);opacity:.35}
   .cf-t::before{left:50%}.cf-t::after{left:80%}
   .cf-m.wa i{background:var(--cf-wa)}.cf-m.cr i{background:var(--cf-cr)}
+  .cf-tog{margin:0;justify-self:start}.cf-tog button{padding:3px 11px;font-size:.75rem}
+  .cf-bars{grid-column:1/-1;display:flex;align-items:flex-end;gap:2px;height:64px;padding:0 2px;border-radius:4px;background:var(--field);position:relative;overflow:hidden}
+  .cf-bars i{flex:1 1 0;min-width:1px;border-radius:2px 2px 0 0;background:var(--muted);position:relative;z-index:1}
+  #cfu .cf-bars i{background:var(--muted)}#cfu .cf-bars i.wa{background:var(--cf-wa)}#cfu .cf-bars i.cr{background:var(--cf-cr)} /* Farbe pro Tag, nicht nach dem Höchstwert der Kachel */
+  .cf-bars::before,.cf-bars::after{content:"";position:absolute;left:0;right:0;height:1px;background:var(--muted);opacity:.35}
+  .cf-bars::before{bottom:50%}.cf-bars::after{bottom:80%}
   .cf-p{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:999px;color:var(--cf-ok);background:color-mix(in srgb,var(--cf-ok) 15%,transparent)}
   .cf-p.wa{color:var(--cf-wa);background:color-mix(in srgb,var(--cf-wa) 15%,transparent)}
   .cf-p.cr{color:var(--cf-cr);background:color-mix(in srgb,var(--cf-cr) 18%,transparent)}
@@ -766,28 +772,60 @@
     loadGame();
   });
 
+  // Cloudflare-Verbrauch: umschaltbar heute / diese Woche (Mo–heute) / letzte 30 Tage. Tage sind UTC-Tage (das Kontingent beginnt um 00:00 UTC neu).
+  let cfData = null, cfRange = 'today';
+  try { cfRange = localStorage.getItem('dbz-cf-range') || 'today'; } catch (e) {}
   async function loadUsage() {
-    const el = document.getElementById('cfu');
     try {
       const r = await fetch(`${API}/usage`, AUTH()); if (!r.ok) throw new Error(r.status);
-      const u = await r.json();
-      const lvl = p => p >= 80 ? 'cr' : p >= 50 ? 'wa' : 'ok';
-      const big = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : fmt(n);
+      cfData = await r.json(); drawUsage();
+    } catch (e) { /* Kachel bleibt verborgen */ }
+  }
+  function drawUsage() {
+    const el = document.getElementById('cfu'), u = cfData; if (!u) return;
+    const lvl = p => p >= 80 ? 'cr' : p >= 50 ? 'wa' : 'ok';
+    const big = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : fmt(Math.round(n));
+    const pct = (n, p) => (p < 1 && n ? '<1' : Math.round(p)) + ' %';
+    const tog = `<div class="ctog cf-tog" role="group" aria-label="Perioda">${[['today', 'oz'], ['week', 'emna'], ['30d', '30 dis']].map(([k, l]) => `<button type="button" data-cf="${k}" aria-pressed="${cfRange === k}">${l}</button>`).join('')}</div>`;
+    const badge = c => c === 'ok' ? '' : `<span class="cf-p ${c}">${{ wa: 'attenziun', cr: 'stretg' }[c]}</span>`;
+    let body, c;
+    if (cfRange === 'today') {
       const L = u.logs || {}, hasLogs = L.configured && !L.error && L.limitBytes;
       const pl = hasLogs ? L.bytes / L.limitBytes * 100 : 0;
       const mb = b => (b / 1e6 >= 100 ? Math.round(b / 1e6) : (b / 1e6).toFixed(1).replace('.', ',')) + ' MB';
-      const pr = u.read / u.limitRead * 100, pw = u.written / u.limitWritten * 100, c = lvl(Math.max(pr, pw, pl));
-      const meter = (lab, n, max, p, f = big) => `<div class="cf-m ${lvl(p)}"><span class="l">${lab}</span><span class="v">${f(n)} <em>/ ${f(max)} · ${p < 1 && n ? '<1' : Math.round(p)} %</em></span><div class="cf-t"><i style="width:${Math.min(100, p)}%"></i></div></div>`;
+      const pr = u.read / u.limitRead * 100, pw = u.written / u.limitWritten * 100;
+      c = lvl(Math.max(pr, pw, pl));
+      const meter = (lab, n, max, p, f = big) => `<div class="cf-m ${lvl(p)}"><span class="l">${lab}</span><span class="v">${f(n)} <em>/ ${f(max)} · ${pct(n, p)}</em></span><div class="cf-t"><i style="width:${Math.min(100, p)}%"></i></div></div>`;
       const d = new Date(); const reset = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1));
-      el.className = 'ib cfb';
-      el.innerHTML = `<h3 class="cf-h">Cloudflare oz${c === 'ok' ? '' : `<span class="cf-p ${c}">${{ wa: 'attenziun', cr: 'stretg' }[c]}</span>`}</h3>
-        ${meter('lingias legidas', u.read, u.limitRead, pr)}${meter('lingias scrittas', u.written, u.limitWritten, pw)}
+      body = `${meter('lingias legidas', u.read, u.limitRead, pr)}${meter('lingias scrittas', u.written, u.limitWritten, pw)}
         ${hasLogs ? meter(`logs <em title="${fmt(L.events)} ${L.events === 1 ? 'endataziun' : 'endataziuns'} × Ø 5 kB${(L.services || []).length ? ' · ' + L.services.map(x => x.name + ' ' + fmt(x.events)).join(', ') : ''}">≈</em>`, L.bytes, L.limitBytes, pl, mb)
           : `<div class="cf-m"><span class="l">logs</span><span class="v"><em>${L.configured ? 'betg disponibel' : 'anc betg configurà'}</em></span></div>`}
         <div class="cf-h"><small>Nov contingent a las ${pad2(reset.getHours())}:${pad2(reset.getMinutes())}</small><small>Plan gratuit</small></div>`;
-      el.hidden = false;
-    } catch (e) { /* Kachel bleibt verborgen */ }
+    } else {
+      // Tagesliste lückenlos aufbauen (Tage ohne Eintrag = 0); Woche: Montag bis heute
+      const byDay = Object.fromEntries((u.days || []).map(x => [x.day, x]));
+      const t = new Date(), today = Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate());
+      const n = cfRange === 'week' ? (new Date(today).getUTCDay() + 6) % 7 + 1 : 30;
+      const days = Array.from({ length: n }, (_, i) => { const k = new Date(today - (n - 1 - i) * 864e5).toISOString().slice(0, 10); return { day: k, r: byDay[k]?.r || 0, w: byDay[k]?.w || 0 }; });
+      const dm = k => +k.slice(8) + '.' + +k.slice(5, 7) + '.';
+      const chart = (lab, key, max) => {
+        const vals = days.map(x => x[key]), top = Math.max(...vals), avg = vals.reduce((a, b) => a + b, 0) / vals.length, pTop = top / max * 100;
+        return `<div class="cf-m ${lvl(pTop)}"><span class="l">${lab}</span><span class="v">Ø ${big(avg)} <em>· max ${big(top)} · ${pct(top, pTop)}</em></span>
+          <div class="cf-bars" role="img" aria-label="${lab} per di: media ${big(avg)}, maximum ${big(top)} (${pct(top, pTop)} dal contingent)">${days.map(x => { const p = x[key] / max * 100; return `<i class="${lvl(p)}" style="height:${Math.max(x[key] ? 3 : 0, Math.min(100, p))}%" title="${dm(x.day)}: ${big(x[key])} (${pct(x[key], p)})"></i>`; }).join('')}</div></div>`;
+      };
+      c = lvl(Math.max(...days.map(x => Math.max(x.r / u.limitRead, x.w / u.limitWritten))) * 100);
+      body = `${chart('lingias legidas', 'r', u.limitRead)}${chart('lingias scrittas', 'w', u.limitWritten)}
+        <div class="cf-h"><small>${dm(days[0].day)} – ${dm(days[n - 1].day)} · per di (UTC)</small><small>Marcas: 50 % e 80 %</small></div>`;
+    }
+    el.className = 'ib cfb';
+    el.innerHTML = `<h3 class="cf-h">Cloudflare${badge(c)}</h3>${tog}${body}`;
+    el.hidden = false;
   }
+  document.getElementById('cfu').addEventListener('click', e => {
+    const b = e.target.closest('button[data-cf]'); if (!b) return;
+    cfRange = b.dataset.cf; try { localStorage.setItem('dbz-cf-range', cfRange); } catch (x) {}
+    drawUsage();
+  });
   function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
   function renderInto(d, range, ids) {
     const meta = document.getElementById(ids[3]);

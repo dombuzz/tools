@@ -355,7 +355,9 @@ export default {
       if (request.method === 'GET' && parts[0] === 'usage' && parts.length === 1) {
         await ensureViews(env);
         const { results: [u] } = await env.DB.prepare("SELECT day, r, w FROM usage WHERE day = date('now')").all();
-        res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE, logs: await logsToday(env) }, request);
+        // Verlauf der letzten 30 UTC-Tage (für die Umschaltung oz / emna / 30 dis im Dashboard)
+        const { results: days } = await env.DB.prepare("SELECT day, r, w FROM usage WHERE day >= date('now', '-29 days') ORDER BY day").all();
+        res = json({ day: u?.day || new Date().toISOString().slice(0, 10), read: u?.r || 0, written: u?.w || 0, limitRead: LIMIT_READ, limitWritten: LIMIT_WRITE, logs: await logsToday(env), days }, request);
       } else if (request.method === 'GET' && (parts[0] === 'ranking' || parts[0] === 'hourly' || parts[0] === 'insights') && parts.length === 1) {
         res = await cached(request, env, parts, url, () => handle(request, env, ctx));
       } else res = await handle(request, env, ctx);
