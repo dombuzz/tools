@@ -274,7 +274,15 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi details.find summary{cursor:pointer;font-weight:600;font-size:.9rem}
 #tab-vi details.find .row{margin-top:8px}
 #tab-vi .tools .note,#tab-vi p.note#vi-rules{margin:0 0 8px}
+#tab-vi .wave{position:sticky;top:0;z-index:6;background:var(--panel);display:grid;gap:4px;padding:0 0 6px}
+#tab-vi .wave canvas{display:block;width:100%;height:120px;border:1px solid var(--line);border-radius:8px;touch-action:none;background:var(--field)}
+#tab-vi .wbar{display:flex;gap:8px;align-items:center;font-size:.78rem;color:var(--muted);flex-wrap:wrap}
+#tab-vi .wbar .wh{margin-left:auto}
+#tab-vi .wave-on .player{top:calc(var(--wh, 160px) + 8px)}
 @media (max-width:900px){
+#tab-vi .wave canvas{height:80px}
+#tab-vi .wbar .wh{display:none}
+#tab-vi .wave-on .player{top:var(--wh, 120px)}
 #tab-vi .work{grid-template-columns:minmax(0,1fr)}
 #tab-vi .player{top:0;z-index:5;background:var(--panel);padding-bottom:8px}
 #tab-vi video{max-height:30vh}
@@ -485,12 +493,17 @@ p.sub{margin:0;color:var(--muted)}
   </section>
 
   <section class="card" id="vi-work" hidden>
+    <div class="wave" id="vi-wave" hidden>
+      <canvas id="vi-cv" aria-label="Ondas dal tun"></canvas>
+      <div class="wbar"><button class="ib" id="vi-wzo" type="button" title="Zoom ora">−</button><button class="ib" id="vi-wzi" type="button" title="Zoom ainten">+</button><button class="ib" id="vi-wfit" type="button" title="Tut la durada">tut</button><span id="vi-wmsg"></span><span class="wh">Trair cunfins = Start/Fin · trair bloc tschernì = spustar · Ctrl + rodella = zoom</span></div>
+    </div>
     <div class="work" id="vi-workgrid">
       <div class="player" id="vi-player" hidden>
         <div class="stage" id="vi-stage"><video id="vi-media" controls playsinline preload="metadata"></video><div class="ov" id="vi-ov"></div></div>
         <div class="strip" id="vi-strip" title="Cliccar per sautar"><div class="ph" id="vi-playhead"></div></div>
         <div class="nav"><button class="ib" data-n="pb" type="button" title="Bloc avant (↑)">⏮ Bloc</button><button class="ib" data-n="f-" type="button" title="1 maletg enavos (,)">◀ 1 maletg</button><button class="ib" data-n="f+" type="button" title="1 maletg enavant (.)">1 maletg ▶</button><button class="ib" data-n="nb" type="button" title="Proxim bloc (↓)">Bloc ⏭</button></div>
         <div class="pbar"><span class="clock" id="vi-clock">00:00,000 / 00:00,000</span>
+          <label class="chk"><input type="checkbox" id="vi-wavetog"> Ondas dal tun</label>
           <label>Sperta <select id="vi-rate"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div>
       </div>
       <div class="lst" id="vi-lst" hidden>
@@ -1308,6 +1321,12 @@ let cues = [], orig = new Map(), sel = null, hist = [], uid = 0, fmt = null, bas
 let mediaUrl = null, stopAt = 0, raf = 0, lastA = null, lastT = null;
 const marked = new Set(); let lastMk = null;
 const rows = new Map(), segs = new Map();
+// Wellenform (optional)
+const wave = $('wave'), cv = $('cv'), cctx = cv.getContext('2d'), wcache = document.createElement('canvas');
+let peaks = null, pscale = 1, vs = 0, vd = 30000, waveOn = false, wkey = '', wdrag = null, col = {}, mediaFile = null;
+const BIN = 10, WAVE_MAX = 400 * 1024 * 1024; // ms je Wert · max. Dateigrösse für die Analyse
+try { waveOn = localStorage.getItem('dbz-vi-wave') === '1'; } catch (e) {}
+$('wavetog').checked = waveOn;
 
 const fmtN = (v, d = 1) => v.toFixed(d).replace('.', ',');
 const byId = id => cues.find(c => c.id === +id);
@@ -1384,6 +1403,7 @@ function select(c, scroll) {
   if (!c) return;
   const el = rows.get(c.id); el?.classList.add('sel'); segs.get(c.id)?.classList.add('sel');
   if (scroll && el) list.scrollTo({ top: Math.max(0, el.offsetTop - list.clientHeight / 3), behavior: 'smooth' });
+  drawWave();
 }
 
 // ---- Zeitleiste ----
@@ -1592,12 +1612,13 @@ function markNow(a) {
   lastA = a; if (a) rows.get(a.id)?.classList.add('now');
   ov.textContent = a ? a.lines.join('\n') : '';
 }
-function silentNow() { const { a, tgt } = nowState(nowMs()); markNow(a); lastT = tgt; }
+function silentNow() { const { a, tgt } = nowState(nowMs()); markNow(a); lastT = tgt; drawWave(); }
 function tick() {
   const t = nowMs(), D = dur();
   $('clock').textContent = SUB.show(t) + ' / ' + SUB.show(D);
   playhead.style.left = Math.min(100, t / D * 100) + '%';
   if (stopAt && t >= stopAt && !media.paused) { media.pause(); stopAt = 0; }
+  if (!wave.hidden) { if (!wdrag && (t < vs || t > vs + vd * 0.92)) vs = Math.max(0, t - vd * 0.08); drawWave(); }
   const { a, tgt } = nowState(t);
   if (a !== lastA) markNow(a);
   if (tgt !== lastT) { lastT = tgt; if ($('follow').checked && tgt && tgt !== sel && !editing()) select(tgt, true); }
@@ -1610,21 +1631,139 @@ media.addEventListener('loadedmetadata', () => {
   $('stage').classList.toggle('audio', !vid);
   $('mInfo').textContent = `${vid ? 'Video' : 'Audio'} · ${SUB.show(media.duration * 1000)} · cliccar per midar`;
   media.playbackRate = +$('rate').value;
+  vd = Math.min(30000, Math.max(2000, media.duration * 1000 || 30000)); vs = 0; wkey = '';
   renderStrip(); tick();
 });
 media.addEventListener('error', () => msg('Quest file na po betg vegnir reproducì en quest navigatur (format?).', true));
 $('rate').onchange = () => { media.playbackRate = +$('rate').value; };
+
+// ---- Ondas dal tun (Wellenform, optional) ----
+async function decodeWave() {
+  const f = mediaFile; if (!f || peaks) return;
+  if (f.size > WAVE_MAX) { $('wmsg').textContent = 'File memia grond per las ondas dal tun.'; return; }
+  $('wmsg').textContent = 'Chargia las ondas dal tun …';
+  try {
+    const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const buf = await new AC(1, 1, 4000).decodeAudioData(await f.arrayBuffer());
+    if (f !== mediaFile) return;
+    const n = buf.length, step = Math.max(1, Math.round(buf.sampleRate * BIN / 1000)), bins = Math.ceil(n / step), p = new Float32Array(bins);
+    for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let b = 0; b < bins; b++) { let m = 0; const e = Math.min(n, (b + 1) * step); for (let i = b * step; i < e; i++) { const v = d[i] < 0 ? -d[i] : d[i]; if (v > m) m = v; } if (m > p[b]) p[b] = m; }
+    }
+    const sorted = Float32Array.from(p).sort();
+    pscale = sorted[Math.floor(sorted.length * 0.98)] || sorted[sorted.length - 1] || 1;
+    peaks = p; wkey = ''; $('wmsg').textContent = ''; drawWave();
+  } catch (e) { if (f === mediaFile) $('wmsg').textContent = 'Il tun na pudeva betg vegnir legì (format?).'; }
+}
+function syncWave() {
+  const on = waveOn && hasMedia();
+  wave.hidden = !on; $('work').classList.toggle('wave-on', on);
+  if (!on) return;
+  if (!peaks) decodeWave();
+  drawWave(); ROOT.style.setProperty('--wh', wave.offsetHeight + 'px');
+}
+const tAt = x => vs + x * (vd / cv.clientWidth);
+const xAt = t => (t - vs) / (vd / cv.clientWidth);
+const clampV = () => { const D = dur(); vd = Math.min(Math.max(vd, 2000), Math.max(2000, D)); vs = Math.min(Math.max(0, vs), Math.max(0, D - vd)); };
+function drawWave() {
+  if (wave.hidden) return;
+  const W = cv.clientWidth, H = cv.clientHeight; if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); wkey = ''; }
+  clampV();
+  const mspp = vd / W, theme = document.documentElement.dataset.theme || '', key = [vs, vd, W, H, theme, !!peaks].join('|');
+  if (key !== wkey) {
+    const cs = getComputedStyle(ROOT); col = { bg: cs.getPropertyValue('--field').trim(), wv: cs.getPropertyValue('--muted').trim(), acc: cs.getPropertyValue('--accent').trim(), ink: cs.getPropertyValue('--ink').trim(), line: cs.getPropertyValue('--line').trim() };
+    wcache.width = cv.width; wcache.height = cv.height;
+    const g = wcache.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = col.bg; g.fillRect(0, 0, W, H);
+    // Lineal
+    const steps = [100, 200, 500, 1000, 2000, 5000, 10000, 15000, 30000, 60000, 120000, 300000, 600000], st = steps.find(x => x / mspp >= 80) || 600000;
+    g.font = '11px system-ui,sans-serif'; g.textBaseline = 'bottom'; g.fillStyle = col.wv; g.strokeStyle = col.line; g.lineWidth = 1;
+    for (let t = Math.ceil(vs / st) * st; t < vs + vd; t += st) {
+      const x = Math.round((t - vs) / mspp) + .5; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
+      g.fillText(st < 1000 ? SUB.show(t) : SUB.show(t).replace(/,\d+$/, ''), x + 3, H - 2);
+    }
+    if (peaks) {
+      g.fillStyle = col.wv; const mid = (H - 14) / 2 + 2, amp = (H - 14) / 2;
+      for (let x = 0; x < W; x++) {
+        const i0 = Math.floor((vs + x * mspp) / BIN), i1 = Math.max(i0 + 1, Math.floor((vs + (x + 1) * mspp) / BIN));
+        let m = 0; for (let i = i0; i < i1 && i < peaks.length; i++) if (peaks[i] > m) m = peaks[i];
+        const h = Math.min(1, m / pscale) * amp; g.fillRect(x, mid - h, 1, Math.max(1, 2 * h));
+      }
+    }
+    wkey = key;
+  }
+  cctx.setTransform(1, 0, 0, 1, 0, 0); cctx.drawImage(wcache, 0, 0); cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cctx.font = '600 11px system-ui,sans-serif'; cctx.textBaseline = 'top';
+  cues.forEach((c, i) => {
+    if (c.end < vs || c.start > vs + vd) return;
+    const x1 = (c.start - vs) / mspp, x2 = (c.end - vs) / mspp, s = c === sel;
+    cctx.globalAlpha = s ? .3 : .15; cctx.fillStyle = col.acc; cctx.fillRect(x1, 0, Math.max(1, x2 - x1), H - 14); cctx.globalAlpha = 1;
+    cctx.fillStyle = s ? col.acc : col.wv; cctx.fillRect(x1 - 1, 0, 2, H - 14); cctx.fillRect(x2 - 1, 0, 2, H - 14);
+    if (x2 - x1 > 18) { cctx.fillStyle = s ? col.acc : col.ink; cctx.fillText(String(i + 1), x1 + 4, 3); }
+  });
+  const px = xAt(nowMs()); cctx.fillStyle = col.ink; cctx.fillRect(px - 1, 0, 2, H);
+}
+function waveHit(x) {
+  let best = null, bd = 8;
+  cues.forEach(c => { const a = Math.abs(xAt(c.start) - x), b = Math.abs(xAt(c.end) - x); if (a < bd) { bd = a; best = { c, part: 'start' }; } if (b < bd) { bd = b; best = { c, part: 'end' }; } });
+  if (best) return best;
+  const t = tAt(x), c = cues.find(c => c.start <= t && t < c.end); return c ? { c, part: 'body' } : null;
+}
+cv.addEventListener('pointerdown', e => {
+  const x = e.clientX - cv.getBoundingClientRect().left, h = waveHit(x);
+  wdrag = { x0: x, vs0: vs, moved: false, h, o: h ? { s: h.c.start, e: h.c.end } : null, snapped: false };
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => {
+  const x = e.clientX - cv.getBoundingClientRect().left;
+  if (!wdrag) { const h = waveHit(x); cv.style.cursor = h ? (h.part === 'body' ? (h.c === sel ? 'grab' : 'pointer') : 'ew-resize') : 'default'; return; }
+  const dx = x - wdrag.x0; if (!wdrag.moved && Math.abs(dx) < 3) return; wdrag.moved = true;
+  const mspp = vd / cv.clientWidth, h = wdrag.h;
+  if (h && (h.part !== 'body' || h.c === sel)) {
+    if (!wdrag.snapped) { snap(); wdrag.snapped = true; }
+    const d = Math.round(dx * mspp / 10) * 10, c = h.c;
+    if (h.part === 'start') { c.end = wdrag.o.e; setStart(c, wdrag.o.s + d); afterChange([c]); }
+    else if (h.part === 'end') { setEnd(c, wdrag.o.e + d); afterChange([c]); }
+    else { const want = wdrag.o.s + d, aff = moveBlock(c, want - c.start); afterChange(aff); }
+  } else { vs = wdrag.vs0 - dx * mspp; drawWave(); }
+});
+cv.addEventListener('pointerup', e => {
+  const d = wdrag; wdrag = null; if (!d) return;
+  if (!d.moved) {
+    const x = e.clientX - cv.getBoundingClientRect().left;
+    if (hasMedia()) media.currentTime = Math.max(0, tAt(x) / 1000);
+    if (d.h) select(d.h.c, true);
+    tick();
+  }
+});
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, mspp = vd / r.width;
+  if (e.ctrlKey || e.metaKey) { const tc = tAt(x); vd *= e.deltaY > 0 ? 1.25 : 0.8; clampV(); vs = tc - x * (vd / r.width); }
+  else vs += (e.deltaX || e.deltaY) * mspp;
+  drawWave();
+}, { passive: false });
+const zoom = f => { const c = nowMs(), mid = c >= vs && c <= vs + vd ? c : vs + vd / 2, k = (mid - vs) / vd; vd *= f; clampV(); vs = mid - k * vd; drawWave(); };
+$('wzi').onclick = () => zoom(0.5); $('wzo').onclick = () => zoom(2);
+$('wfit').onclick = () => { vd = dur(); vs = 0; drawWave(); };
+$('wavetog').onchange = () => { waveOn = $('wavetog').checked; try { localStorage.setItem('dbz-vi-wave', waveOn ? '1' : '0'); } catch (e) {} syncWave(); };
+window.addEventListener('resize', () => { if (!wave.hidden) { wkey = ''; drawWave(); ROOT.style.setProperty('--wh', wave.offsetHeight + 'px'); } });
 
 // ---- Dateien laden ----
 function showWork() {
   $('work').hidden = !(cues.length || hasMedia());
   $('workgrid').classList.toggle('nomedia', !hasMedia());
   $('player').hidden = !hasMedia(); $('lst').hidden = !cues.length; $('exp').hidden = !cues.length;
+  syncWave();
 }
 function loadMedia(f) {
   if (mediaUrl) URL.revokeObjectURL(mediaUrl);
   media.pause(); stopAt = 0;
   mediaUrl = URL.createObjectURL(f); media.src = mediaUrl;
+  mediaFile = f; peaks = null; wkey = ''; vs = 0; $('wmsg').textContent = '';
   $('mName').textContent = f.name; $('mInfo').textContent = 'Chargia …'; $('dropM').classList.add('ok');
   msg(''); showWork();
 }
@@ -1750,7 +1889,7 @@ $('dl').onclick = () => {
 window.addEventListener('beforeunload', e => { if (dirty && mods()) { e.preventDefault(); e.returnValue = ''; } });
 new MutationObserver(() => { if (ROOT.hidden) media.pause(); }).observe(ROOT, { attributes: true, attributeFilter: ['hidden'] });
 
-window.__vi = { take, get cues() { return cues; }, act, select };
+window.__vi = { take, get cues() { return cues; }, act, select, get peaks() { return peaks; }, get view() { return [vs, vd]; } };
 })();
 
 </script>
