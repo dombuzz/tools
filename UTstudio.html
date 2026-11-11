@@ -1488,7 +1488,7 @@ function loadSubs(f) {
     cues.sort((a, b) => a.start - b.start);
     sel = cues[0]; lastA = lastT = null;
     $('sName').textContent = f.name; $('sInfo').textContent = `${SUB.FORMATS[fmt] || fmt} · ${cues.length} blocs · cliccar per midar`; $('dropS').classList.add('ok');
-    $('fmt').value = SUB.SAME[fmt] === 'ttml' ? 'ttml' : 'srt';
+    $('fmt').value = 'ttml';
     $('undo').disabled = true; msg(''); showWork(); renderList(); renderStrip(); silentNow(); info();
     if (sel) select(sel, false);
   }).catch(() => msg('Il file na pudeva betg vegnir legì.', true));
