@@ -404,7 +404,7 @@ const Core=(function(){
     }
     ctx.restore();
     if(hasH){ // weicher Auslauf: die letzten 10 px unter der Kante blenden von voll sichtbar auf transparent aus
-      const fh=10,g=ctx.createLinearGradient(0,areaTop,0,areaTop+fh);
+      const fh=Math.max(0,+S.headerFade>=0?+S.headerFade:10),g=ctx.createLinearGradient(0,areaTop,0,areaTop+fh);
       g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');
       ctx.save();ctx.globalCompositeOperation='destination-out';ctx.fillStyle=g;ctx.fillRect(0,areaTop,W,fh);ctx.restore();
     }
@@ -458,7 +458,7 @@ const DEFAULTS={
   fontSize:46,fontFamily:FONTS['System (Standard)'],
   columnWidth:1100,bubbleMaxPct:80,hAlign:'center',vAlign:'bottom',marginH:80,marginV:90,
   colL:'#ECECEF',txtL:'#101114',colR:'#2F7BFF',txtR:'#FFFFFF',shadow:true,
-  header:false,headerGap:40,headerName:'Protagonistin',headerSub:'',headerBg:'#2B2D33',headerTxt:'#FFFFFF',headerImg:'',
+  header:false,headerGap:40,headerFade:10,headerName:'Protagonistin',headerSub:'',headerBg:'#2B2D33',headerTxt:'#FFFFFF',headerImg:'',
   cps:15,typingFactor:1,startDelay:0.5,endHold:1.5,fadeOut:true,fadeOutDur:0.6
 };
 const normMsg=m=>({side:m&&m.side==='R'?'R':'L',text:String((m&&m.text)||''),typing:!(m&&m.typing===false),pause:+(m&&m.pause)||0});
@@ -654,6 +654,7 @@ function buildSettings(){
     {k:'headerName',label:'Name',type:'txt',max:40,ph:'Name der Protagonistin'},
     {k:'headerSub',label:'Untertitel (optional)',type:'txt',max:60,ph:'z. B. online'},
     {k:'headerGap',label:'Abstand Kopf → Textbereich (px)',type:'num',min:0,max:400,full:true},
+    {k:'headerFade',label:'Verlauf an der Kante (px, 0 = hart)',type:'num',min:0,max:100,full:true},
     {k:'headerBg',label:'Kopf: Hintergrund',type:'color'},{k:'headerTxt',label:'Kopf: Text',type:'color'}
   ].forEach(d=>field(gh,d));
   const aw=document.createElement('div');aw.className='full';
