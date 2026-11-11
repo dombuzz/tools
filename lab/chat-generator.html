@@ -358,7 +358,7 @@ const Core=(function(){
       const it=c.it,x=it.side==='L'?colL:colL+colW-c.w,yy=off+c.top;
       if(c.h<1)continue;
       let a=fadeA;
-      if(yy<areaTop)a*=clamp(1-(areaTop-yy)/Math.max(c.h,1),0,1);
+      if(yy<areaTop)a*=clamp(1-(areaTop-yy)/Math.max(hasH?Math.min(c.h,fs*2.2):c.h,1),0,1); // mit Kopf: früher ausblenden, damit nichts hinter dem Kopf durchscheint
       if(a<=0.003)continue;
       const isL=it.side==='L';
       const bg=isL?S.colL:S.colR,tx=isL?S.txtL:S.txtR;
