@@ -265,6 +265,15 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi .ib{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 8px;border-radius:7px;cursor:pointer;line-height:1.2}
 #tab-vi .ib:hover{border-color:var(--accent)}
 #tab-vi textarea{width:100%;resize:vertical;min-height:2.7em;font-size:14px;line-height:1.35}
+#tab-vi .nav{display:flex;flex-wrap:wrap;gap:6px}
+#tab-vi .c-txt{display:flex;flex-wrap:wrap;gap:6px}
+#tab-vi .mk{width:auto;margin:0}
+#tab-vi .cue.hit{background:var(--warn-bg)}
+#tab-vi .mbar{align-items:center}
+#tab-vi details.find{margin:0 0 10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+#tab-vi details.find summary{cursor:pointer;font-weight:600;font-size:.9rem}
+#tab-vi details.find .row{margin-top:8px}
+#tab-vi .tools .note,#tab-vi p.note#vi-rules{margin:0 0 8px}
 @media (max-width:900px){
 #tab-vi .work{grid-template-columns:minmax(0,1fr)}
 #tab-vi .player{top:0;z-index:5;background:var(--panel);padding-bottom:8px}
@@ -480,6 +489,7 @@ p.sub{margin:0;color:var(--muted)}
       <div class="player" id="vi-player" hidden>
         <div class="stage" id="vi-stage"><video id="vi-media" controls playsinline preload="metadata"></video><div class="ov" id="vi-ov"></div></div>
         <div class="strip" id="vi-strip" title="Cliccar per sautar"><div class="ph" id="vi-playhead"></div></div>
+        <div class="nav"><button class="ib" data-n="pb" type="button" title="Bloc avant (↑)">⏮ Bloc</button><button class="ib" data-n="f-" type="button" title="1 maletg enavos (,)">◀ 1 maletg</button><button class="ib" data-n="f+" type="button" title="1 maletg enavant (.)">1 maletg ▶</button><button class="ib" data-n="nb" type="button" title="Proxim bloc (↓)">Bloc ⏭</button></div>
         <div class="pbar"><span class="clock" id="vi-clock">00:00,000 / 00:00,000</span>
           <label>Sperta <select id="vi-rate"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div>
       </div>
@@ -489,9 +499,19 @@ p.sub{margin:0;color:var(--muted)}
           <label class="chk"><input type="checkbox" id="vi-ripple"> Ils blocs suandants era spustar</label>
           <label class="chk"><input type="checkbox" id="vi-follow" checked> Suandar il video</label>
           <button class="btn" id="vi-undo" type="button" disabled>↶ Annullar</button>
+          <button class="btn" id="vi-add" type="button" title="Nov bloc vuid a la posiziun dal video">+ Nov bloc</button>
+          <button class="btn" id="vi-fixlong" type="button" title="Rumper tut las lingias che sa surpassan la norma">Rumper lingias lungas</button>
+          <button class="btn" id="vi-fixsp" type="button" title="Spazis dubels e spazis a l'ur stizzar">Stizzar spazis dubels</button>
+          <button class="btn" id="vi-all" type="button">☑ Marcar tut</button>
         </div>
+        <div class="tools mbar" id="vi-mbar" hidden><b id="vi-mcount"></b><button class="btn" data-m="-" type="button">◀ spustar</button><button class="btn" data-m="+" type="button">spustar ▶</button><button class="btn" data-m="del" type="button">🗑 Stizzar</button><button class="btn" data-m="none" type="button">Deselectar</button></div>
+        <details class="find"><summary>Chattar e remplazzar</summary>
+          <div class="row"><label>Chattar <input id="vi-q" autocomplete="off"></label><label>Remplazzar cun <input id="vi-r" autocomplete="off"></label><label class="chk"><input type="checkbox" id="vi-case"> Majuscul/minuscul</label></div>
+          <div class="row"><button class="btn" id="vi-fnext" type="button">Chattar</button><button class="btn" id="vi-frep" type="button">Remplazzar</button><button class="btn" id="vi-fall" type="button">Remplazzar tut</button><span class="note" id="vi-fcount"></span></div>
+        </details>
+        <p class="note" id="vi-rules"></p>
         <div class="cues" id="vi-list"></div>
-        <p class="note keys">Scursanidas: Spazi = play/pausa · I = Start ussa · O = Fin ussa · M = Bloc ussa · ←/→ ±1 s (Shift ±0,1 s) · Ctrl+Z = annullar · Ctrl+Enter en il text = spartir il bloc al cursor</p>
+        <p class="note keys">Scursanidas: Spazi = play/pausa · I = Start ussa · O = Fin ussa · M = Bloc ussa · ←/→ ±1 s (Shift ±0,1 s) · Ctrl+Z = annullar · Ctrl+Enter en il text = spartir il bloc al cursor · , / . = 1 maletg · ↑/↓ = bloc avant/suenter</p>
       </div>
     </div>
   </section>
@@ -1279,11 +1299,14 @@ window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
 'use strict';
 const ROOT = document.getElementById('tab-vi');
 const $ = id => document.getElementById('vi-' + id);
-const LIM = { cps: 15, min: 1, max: 7, line: 37 }, MINMS = 200; // gleiche Normen wie RM → DE
+const dn = (id, d) => { const e = document.getElementById('de-' + id); return +(e && e.value) || d; };
+const lim = () => ({ cps: dn('maxCps', 15), min: dn('minDur', 1), max: dn('maxDur', 7), line: dn('maxLine', 37), lines: dn('maxLines', 2) }); // gleiche Normen wie RM → DE
+const MINMS = 200;
 const MEDIA_EXT = /\.(mp4|m4v|mov|webm|mkv|ogv|mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i;
 const media = $('media'), list = $('list'), strip = $('strip'), playhead = $('playhead'), ov = $('ov');
 let cues = [], orig = new Map(), sel = null, hist = [], uid = 0, fmt = null, base = 'suttitels', dirty = false;
 let mediaUrl = null, stopAt = 0, raf = 0, lastA = null, lastT = null;
+const marked = new Set(); let lastMk = null;
 const rows = new Map(), segs = new Map();
 
 const fmtN = (v, d = 1) => v.toFixed(d).replace('.', ',');
@@ -1312,23 +1335,25 @@ function undo() {
 
 // ---- Kontrolle pro Block ----
 function check(c, i) {
-  const d = (c.end - c.start) / 1000, chars = c.lines.join(' ').length, cps = d > 0 ? chars / d : Infinity, out = [];
-  if (d < LIM.min) out.push(['warn', 'memia curt']);
-  if (d > LIM.max) out.push(['warn', 'memia lung']);
-  if (cps > LIM.cps * 1.2) out.push(['err', 'memia svelt']); else if (cps > LIM.cps) out.push(['warn', 'memia svelt']);
-  if (c.lines.some(l => l.length > LIM.line)) out.push(['warn', 'lingia memia lunga']);
+  const L = lim(), d = (c.end - c.start) / 1000, chars = c.lines.join(' ').length, cps = d > 0 ? chars / d : Infinity, out = [];
+  if (d < L.min) out.push(['warn', 'memia curt']);
+  if (d > L.max) out.push(['warn', 'memia lung']);
+  if (cps > L.cps * 1.2) out.push(['err', 'memia svelt']); else if (cps > L.cps) out.push(['warn', 'memia svelt']);
+  if (c.lines.some(l => l.length > L.line)) out.push(['warn', 'lingia memia lunga']);
+  if (c.lines.length > L.lines) out.push(['warn', 'memia blers lingias']);
   const n = cues[i + 1]; if (n && c.end > n.start) out.push(['err', 'surposiziun']);
   return { d, cps, out };
 }
 
 // ---- Liste ----
-const ROW = `<div class="c-top"><b class="c-n" title="Sautar a quest bloc"></b><button class="ib" data-a="play" type="button" title="Ascultar il bloc">▶</button><button class="ib" data-a="split" type="button" title="Spartir il bloc a la posiziun dal cursor (Ctrl+Enter) – il text suenter il cursor daventa in nov bloc">✂ spartir</button><span class="c-meta"></span><button class="ib" data-a="reset" type="button" title="Turnar a l'original">↺</button></div>
+const ROW = `<div class="c-top"><input type="checkbox" class="mk" aria-label="Marcar quest bloc" title="Marcar (Shift = champ)"><b class="c-n" title="Sautar a quest bloc"></b><span class="c-meta"></span><button class="ib" data-a="reset" type="button" title="Turnar a l'original">↺</button><button class="ib" data-a="del" type="button" title="Stizzar il bloc">🗑</button></div>
 <div class="c-times">
 <div class="tf"><span>Start</span><button class="ib" data-a="s-" type="button">−</button><input data-f="start" inputmode="decimal" aria-label="Start"><button class="ib" data-a="s+" type="button">+</button><button class="ib" data-a="s-now" type="button" title="Start = posiziun dal video (I)">⇤ ussa</button></div>
 <div class="tf"><span>Fin</span><button class="ib" data-a="e-" type="button">−</button><input data-f="end" inputmode="decimal" aria-label="Fin"><button class="ib" data-a="e+" type="button">+</button><button class="ib" data-a="e-now" type="button" title="Fin = posiziun dal video (O)">ussa ⇥</button></div>
-<div class="tf"><span>Bloc</span><button class="ib" data-a="b-" type="button">−</button><button class="ib" data-a="b+" type="button">+</button><button class="ib" data-a="b-now" type="button" title="Bloc cun il start a la posiziun dal video (M)">⇆ ussa</button></div>
+<div class="tf"><span>Bloc</span><button class="ib" data-a="b-" type="button">−</button><button class="ib" data-a="b+" type="button">+</button><button class="ib" data-a="b-now" type="button" title="Bloc cun il start a la posiziun dal video (M)">⇆ ussa</button><button class="ib" data-a="play" type="button" title="Ascultar il bloc">▶</button></div>
 </div>
-<textarea data-f="text" rows="2" spellcheck="false" aria-label="Text"></textarea>`;
+<textarea data-f="text" rows="2" spellcheck="false" aria-label="Text"></textarea>
+<div class="c-txt"><button class="ib" data-a="split" type="button" title="Spartir il bloc a la posiziun dal cursor (Ctrl+Enter)">✂ spartir</button><button class="ib" data-a="merge" type="button" title="Colliar cun il proxim bloc">⤓ colliar</button><button class="ib" data-a="balance" type="button" title="Rumper las lingias da maniera equilibrada">⇌ lingias</button></div>`;
 
 function renderList() {
   list.textContent = ''; rows.clear();
@@ -1348,6 +1373,8 @@ function updateRow(c, i = cues.indexOf(c)) {
   if (act !== tx) tx.value = c.lines.join('\n');
   el.querySelector('.c-meta').innerHTML = `${fmtN(r.d)} s · ${isFinite(r.cps) ? fmtN(r.cps) : '–'} car./s` + r.out.map(o => `<span class="bdg ${o[0]}">${o[1]}</span>`).join('');
   el.classList.toggle('mod', isMod(c));
+  el.querySelector('.mk').checked = marked.has(c.id);
+  el.classList.toggle('hit', qtest(c.lines.join('\n')));
   el.classList.toggle('err', r.out.some(o => o[0] === 'err'));
   const sg = segs.get(c.id); if (sg) setSeg(sg, c, r.out.some(o => o[0] === 'err'));
 }
@@ -1399,6 +1426,9 @@ function act(a, c) {
   switch (a) {
     case 'play': return playBlock(c);
     case 'reset': return reset(c);
+    case 'merge': return merge(c);
+    case 'del': return del(c);
+    case 'balance': return balanceRow(c);
     case 's-': return edit(c, () => setStart(c, c.start - s));
     case 's+': return edit(c, () => setStart(c, c.start + s));
     case 'e-': return edit(c, () => setEnd(c, c.end - s));
@@ -1426,6 +1456,125 @@ function split(c, pos) {
   select(n, false); dirty = true; silentNow(); info();
   rows.get(n.id)?.querySelector('textarea')?.focus({ preventScroll: true });
 }
+// ---- Strukturänderungen: einfügen, löschen, verbinden ----
+function restructure(fn) {
+  snap(); const top = list.scrollTop; fn(); dirty = true;
+  marked.forEach(id => { if (!cues.some(c => c.id === id)) marked.delete(id); });
+  renderList(); renderStrip(); list.scrollTop = top; silentNow(); info(); markBar(); showWork();
+}
+function merge(c) {
+  const i = cues.indexOf(c), n = cues[i + 1];
+  if (!n) return msg('Nagin bloc suenter quest.', true);
+  msg('');
+  restructure(() => {
+    const dlg = [c, n].every(x => x.lines.every(l => /^\s*[-–—]/.test(l)));
+    c.lines = dlg ? c.lines.concat(n.lines) : wrapLines([c.lines.join(' ') + ' ' + n.lines.join(' ')]);
+    c.end = Math.max(c.end, n.end); cues.splice(i + 1, 1);
+  });
+  select(c, false);
+}
+function del(c) {
+  const i = cues.indexOf(c);
+  restructure(() => { cues.splice(i, 1); });
+  select(cues[Math.min(i, cues.length - 1)] || null, false);
+}
+function addBlock() {
+  const at = hasMedia() ? nowMs() : (sel ? sel.end + 100 : 0);
+  const n = { id: ++uid, start: at, end: at + 2000, lines: [''] };
+  restructure(() => { cues.push(n); cues.sort((a, b) => a.start - b.start); });
+  select(n, true); rows.get(n.id)?.querySelector('textarea').focus({ preventScroll: true });
+}
+
+// ---- Zeilenumbruch (gleichmässig) und Aufräumen ----
+function wrap(text) {
+  const L = lim().line, t = text.replace(/\s+/g, ' ').trim();
+  if (t.length <= L) return [t];
+  const w = t.split(' '), n = Math.ceil(t.length / L), INF = 1e15;
+  const len = (i, j) => w.slice(i, j).join(' ').length;
+  const dp = Array.from({ length: n + 1 }, () => Array(w.length + 1).fill(INF)), br = Array.from({ length: n + 1 }, () => Array(w.length + 1).fill(0));
+  dp[0][0] = 0;
+  for (let k = 1; k <= n; k++) for (let j = k; j <= w.length; j++) for (let i = k - 1; i < j; i++) {
+    if (dp[k - 1][i] >= INF) continue;
+    const l = len(i, j), v = dp[k - 1][i] + (l > L ? 1e6 * (l - L) + l * l : l * l);
+    if (v < dp[k][j]) { dp[k][j] = v; br[k][j] = i; }
+  }
+  if (dp[n][w.length] >= INF) return [t];
+  const out = []; let j = w.length;
+  for (let k = n; k >= 1; k--) { const i = br[k][j]; out.unshift(w.slice(i, j).join(' ')); j = i; }
+  return out;
+}
+const wrapLines = lines => lines.length > 1 && lines.every(l => /^\s*[-–—]/.test(l)) ? lines.flatMap(l => wrap(l)) : wrap(lines.join(' '));
+function balanceRow(c) { snap(); c.lines = wrapLines(c.lines); afterChange([c]); }
+function fixAll(label, fn) {
+  const ch = [], h = hist.length; snap();
+  cues.forEach(c => { const nl = fn(c); if (nl && nl.join('\n') !== c.lines.join('\n')) { c.lines = nl; ch.push(c); } });
+  if (!ch.length) { if (hist.length > h) hist.pop(); $('undo').disabled = !hist.length; return msg('Nagins blocs da midar.'); }
+  afterChange(ch); msg(`${ch.length} bloc${ch.length === 1 ? '' : 's'} ${label}.`);
+}
+
+// ---- Markieren (mehrere Blöcke) ----
+function markBar() { $('mbar').hidden = !marked.size; $('mcount').textContent = `${marked.size} marcads`; }
+function syncMarks() { cues.forEach(c => { const e = rows.get(c.id)?.querySelector('.mk'); if (e) e.checked = marked.has(c.id); }); markBar(); }
+function markedShift(sign) {
+  const grp = cues.filter(c => marked.has(c.id)); if (!grp.length) return;
+  snap(); const d = Math.max(sign * step(), -Math.min(...grp.map(x => x.start)));
+  grp.forEach(x => { x.start += d; x.end += d; }); afterChange(grp);
+}
+
+// ---- Suchen und Ersetzen ----
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const qre = g => { const q = $('q').value; return q ? new RegExp(esc(q), ($('case').checked ? '' : 'i') + (g ? 'g' : '')) : null; };
+const qtest = t => { const re = qre(); return !!re && re.test(t); };
+function hits() {
+  const re = qre(); let n = 0, b = 0;
+  if (re) { const rg = qre(true); cues.forEach(c => { const m = (c.lines.join('\n').match(rg) || []).length; n += m; if (m) b++; }); }
+  $('fcount').textContent = re ? `${n} chattads en ${b} bloc${b === 1 ? '' : 's'}` : '';
+  cues.forEach(c => updateRow(c));
+}
+function findNext() {
+  const re = qre(true); if (!re || !cues.length) return false;
+  const start = Math.max(0, cues.indexOf(sel)), ta0 = sel && rows.get(sel.id)?.querySelector('textarea');
+  const off = ta0 && (document.activeElement === ta0 || ta0.selectionStart !== ta0.selectionEnd) ? ta0.selectionEnd : 0;
+  for (let k = 0; k <= cues.length; k++) {
+    const c = cues[(start + k) % cues.length]; re.lastIndex = 0;
+    const text = c.lines.join('\n'), from = k === 0 ? off : 0; re.lastIndex = from;
+    const m = re.exec(text); if (!m) continue;
+    select(c, true);
+    const ta = rows.get(c.id).querySelector('textarea'); ta.focus({ preventScroll: true }); ta.setSelectionRange(m.index, m.index + m[0].length);
+    if (hasMedia()) { media.currentTime = c.start / 1000; tick(); }
+    return true;
+  }
+  msg('Nagins resultats.', true); return false;
+}
+function replaceOne() {
+  const ta = sel && rows.get(sel.id)?.querySelector('textarea'), q = $('q').value, r = $('r').value;
+  if (ta && q && ta.selectionStart !== ta.selectionEnd) {
+    const cur = ta.value.slice(ta.selectionStart, ta.selectionEnd);
+    if ($('case').checked ? cur === q : cur.toLowerCase() === q.toLowerCase()) {
+      snap(); const v = ta.value, p = ta.selectionStart;
+      ta.value = v.slice(0, p) + r + v.slice(ta.selectionEnd); ta.setSelectionRange(p + r.length, p + r.length);
+      sel.lines = ta.value.split('\n'); dirty = true; updateRow(sel); silentNow(); info(); hits();
+    }
+  }
+  findNext();
+}
+function replaceAll() {
+  const re = qre(true), r = $('r').value; if (!re) return;
+  const h = hist.length; snap(); let tot = 0; const ch = [];
+  cues.forEach(c => { let n = 0; const nt = c.lines.join('\n').replace(re, () => (n++, r)); if (n) { c.lines = nt.split('\n'); tot += n; ch.push(c); } });
+  if (!tot) { if (hist.length > h) hist.pop(); $('undo').disabled = !hist.length; return msg('Nagins resultats.', true); }
+  afterChange(ch); hits(); msg(`${tot} remplazzamant${tot === 1 ? '' : 's'}.`);
+}
+
+// ---- Navigation: Einzelbild und Block ----
+function frame(d) { if (hasMedia()) { media.currentTime = Math.max(0, media.currentTime + d * 0.04); tick(); } }
+function gotoBlock(dir) {
+  const t = nowMs(), c = dir > 0 ? cues.find(x => x.start > t + 10) : [...cues].reverse().find(x => x.start < t - 300);
+  if (!c) return; if (hasMedia()) { media.currentTime = c.start / 1000; tick(); } select(c, true);
+}
+function rules() { const L = lim(); $('rules').textContent = `Normas (da RM → DE): max. ${L.line} car. per lingia · ${L.lines} lingias · ${L.cps} car./s · ${L.min}–${L.max} s`; }
+function refreshAll() { cues.forEach((c, i) => updateRow(c, i)); renderStrip(); rules(); }
+
 function info() {
   const n = mods();
   $('dlinfo').textContent = n ? `${n} bloc${n === 1 ? ' midà' : 's midads'}` : 'Anc nagins blocs midads';
@@ -1512,6 +1661,13 @@ $('fmt').innerHTML = ['ttml', 'srt'].map(k => `<option value="${k}">${SUB.OUT[k]
 list.addEventListener('click', e => {
   const el = e.target.closest('.cue'); if (!el) return;
   const c = byId(el.dataset.id); if (!c) return;
+  const mk = e.target.closest('.mk');
+  if (mk) {
+    const i = cues.indexOf(c), j = e.shiftKey && lastMk ? cues.indexOf(byId(lastMk)) : -1;
+    if (j >= 0) cues.slice(Math.min(i, j), Math.max(i, j) + 1).forEach(x => mk.checked ? marked.add(x.id) : marked.delete(x.id));
+    else mk.checked ? marked.add(c.id) : marked.delete(c.id);
+    lastMk = c.id; syncMarks(); return;
+  }
   const b = e.target.closest('button[data-a]');
   if (b) { select(c); if (b.dataset.a === 'split') split(c, el.querySelector('textarea').selectionStart); else act(b.dataset.a, c); b.blur(); return; }
   if (e.target.closest('.c-n') && hasMedia()) { media.currentTime = c.start / 1000; select(c); tick(); return; }
@@ -1545,6 +1701,26 @@ strip.addEventListener('click', e => {
   const r = strip.getBoundingClientRect(); media.currentTime = Math.max(0, (e.clientX - r.left) / r.width * dur() / 1000); tick();
 });
 $('undo').onclick = undo;
+$('add').onclick = addBlock;
+$('fixlong').onclick = () => fixAll('curregì', c => c.lines.some(l => l.length > lim().line) ? wrapLines(c.lines) : null);
+$('fixsp').onclick = () => fixAll('pulì', c => { const nl = c.lines.map(l => l.replace(/[ \t\u00a0]{2,}/g, ' ').trim()).filter(Boolean); return nl.length ? nl : [''];});
+$('all').onclick = () => { if (marked.size === cues.length) marked.clear(); else cues.forEach(c => marked.add(c.id)); syncMarks(); };
+$('mbar').addEventListener('click', e => {
+  const b = e.target.closest('button[data-m]'); if (!b) return; const m = b.dataset.m;
+  if (m === '-') markedShift(-1); else if (m === '+') markedShift(1);
+  else if (m === 'none') { marked.clear(); syncMarks(); }
+  else if (m === 'del') { const n = marked.size; restructure(() => { cues = cues.filter(c => !marked.has(c.id)); }); sel = cues[0] || null; if (sel) select(sel, false); msg(`${n} bloc${n === 1 ? '' : 's'} stizzads.`); }
+});
+$('player').addEventListener('click', e => {
+  const b = e.target.closest('button[data-n]'); if (!b) return; const n = b.dataset.n;
+  if (n === 'pb') gotoBlock(-1); else if (n === 'nb') gotoBlock(1); else if (n === 'f-') frame(-1); else if (n === 'f+') frame(1);
+  b.blur();
+});
+$('q').addEventListener('input', hits); $('case').addEventListener('change', hits);
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); findNext(); } });
+$('fnext').onclick = findNext; $('frep').onclick = replaceOne; $('fall').onclick = replaceAll;
+['maxLine', 'maxLines', 'maxCps', 'minDur', 'maxDur'].forEach(id => document.getElementById('de-' + id)?.addEventListener('change', refreshAll));
+rules();
 
 // ---- Tastatur ----
 document.addEventListener('keydown', e => {
@@ -1556,6 +1732,8 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (k === ' ') { if (!hasMedia()) return; e.preventDefault(); if (media.paused) media.play().catch(() => {}); else media.pause(); }
   else if (k === 'arrowleft' || k === 'arrowright') { if (!hasMedia()) return; e.preventDefault(); media.currentTime = Math.max(0, media.currentTime + (k === 'arrowleft' ? -1 : 1) * (e.shiftKey ? 0.1 : 1)); }
+  else if (k === ',' || k === '.') { e.preventDefault(); frame(k === ',' ? -1 : 1); }
+  else if (k === 'arrowup' || k === 'arrowdown') { e.preventDefault(); gotoBlock(k === 'arrowdown' ? 1 : -1); }
   else if (sel && (k === 'i' || k === 'o' || k === 'm')) { e.preventDefault(); act(k === 'i' ? 's-now' : k === 'o' ? 'e-now' : 'b-now', sel); }
 });
 
