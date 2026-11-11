@@ -205,6 +205,71 @@ p.sub{margin:0;color:var(--muted)}
 #tab-de .notice.err{background:var(--err-bg);color:var(--err)}
 @media (max-width:760px){#tab-de .seg-head{grid-template-columns:1fr}
 #tab-de .cue{grid-template-columns:1fr}}
+/* ---- sincronisar (video/audio + timing da singuls blocs) ---- */
+#tab-vi{display:grid;gap:16px}
+#tab-vi .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
+#tab-vi .card h2{font-size:.95rem;margin:0;display:flex;gap:8px;align-items:center}
+#tab-vi .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.75rem;font-weight:700}
+#tab-vi .drops{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+#tab-vi .drop{border:2px dashed var(--line);border-radius:12px;padding:20px 14px;text-align:center;cursor:pointer;background:var(--bg);min-width:0}
+#tab-vi .drop:hover,#tab-vi .drop.over,#tab-vi .drop:focus-visible{border-color:var(--accent);outline:none}
+#tab-vi .drop.ok{border-style:solid}
+#tab-vi .drop b{display:block;word-break:break-all}
+#tab-vi .drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
+#tab-vi .note{color:var(--muted);font-size:13px;margin:0}
+#tab-vi .note.err{color:var(--err)}
+#tab-vi .keys{margin-top:10px}
+#tab-vi .work{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px;align-items:start}
+#tab-vi .work.nomedia{grid-template-columns:minmax(0,1fr)}
+#tab-vi .player{position:sticky;top:8px;display:grid;gap:8px;min-width:0}
+#tab-vi .stage{position:relative;background:#000;border-radius:10px;overflow:hidden}
+#tab-vi video{display:block;width:100%;max-height:52vh;background:#000}
+#tab-vi .stage.audio video{height:54px}
+#tab-vi .ov{position:absolute;left:4%;right:4%;bottom:14%;text-align:center;color:#fff;font-weight:600;font-size:clamp(14px,1.8vw,20px);line-height:1.3;white-space:pre-line;text-shadow:0 1px 3px #000,0 0 2px #000;pointer-events:none}
+#tab-vi .stage.audio .ov{position:static;padding:12px;min-height:4.2em;display:grid;place-items:center}
+#tab-vi .strip{position:relative;height:30px;background:var(--field);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer}
+#tab-vi .seg{position:absolute;top:6px;bottom:6px;min-width:2px;background:var(--muted);opacity:.55;border-radius:2px}
+#tab-vi .seg.sel{background:var(--accent);opacity:1}
+#tab-vi .seg.err{background:var(--err);opacity:.95}
+#tab-vi .ph{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);pointer-events:none;z-index:2}
+#tab-vi .pbar{display:flex;gap:12px;align-items:end;justify-content:space-between;flex-wrap:wrap}
+#tab-vi .clock{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem}
+#tab-vi label{display:grid;gap:4px;font-size:.82rem;color:var(--muted)}
+#tab-vi label.chk{display:flex;gap:6px;align-items:center;color:var(--ink)}
+#tab-vi input,#tab-vi select,#tab-vi textarea{font:inherit;font-size:15px;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+#tab-vi input[type=checkbox]{width:auto;padding:0}
+#tab-vi input:focus,#tab-vi select:focus,#tab-vi textarea:focus{outline:none;border-color:var(--accent)}
+#tab-vi input.bad{border-color:var(--err)}
+#tab-vi .tools{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:end;margin-bottom:10px}
+#tab-vi .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+#tab-vi button.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+#tab-vi button.btn:hover:not(:disabled){border-color:var(--accent)}
+#tab-vi button.btn:disabled{opacity:.45;cursor:default}
+#tab-vi button.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#tab-vi .cues{display:grid;gap:8px;max-height:68vh;overflow:auto;position:relative;padding-right:4px}
+#tab-vi .cue{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);display:grid;gap:6px}
+#tab-vi .cue.now{border-left-color:var(--accent)}
+#tab-vi .cue.sel{border-color:var(--accent)}
+#tab-vi .cue.err .c-n{color:var(--err)}
+#tab-vi .cue.mod .c-n::after{content:" •";color:var(--warn)}
+#tab-vi .c-top{display:flex;gap:8px;align-items:center}
+#tab-vi .c-n{font-weight:700;min-width:2.4em;cursor:pointer;color:var(--muted)}
+#tab-vi .c-meta{flex:1;font-size:.78rem;color:var(--muted)}
+#tab-vi .bdg{display:inline-block;margin-left:6px;padding:0 6px;border-radius:5px;font-size:.72rem;font-weight:700}
+#tab-vi .bdg.warn{background:var(--warn-bg);color:var(--warn)}
+#tab-vi .bdg.err{background:var(--err-bg);color:var(--err)}
+#tab-vi .c-times{display:flex;flex-wrap:wrap;gap:6px 14px}
+#tab-vi .tf{display:flex;align-items:center;gap:3px}
+#tab-vi .tf>span{font-size:.75rem;color:var(--muted);min-width:2.4em}
+#tab-vi .tf input{width:7.4em;font-variant-numeric:tabular-nums;text-align:center;padding:5px 6px;font-size:14px}
+#tab-vi .ib{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 8px;border-radius:7px;cursor:pointer;line-height:1.2}
+#tab-vi .ib:hover{border-color:var(--accent)}
+#tab-vi textarea{width:100%;resize:vertical;min-height:2.7em;font-size:14px;line-height:1.35}
+@media (max-width:900px){
+#tab-vi .work{grid-template-columns:minmax(0,1fr)}
+#tab-vi .player{top:0;z-index:5;background:var(--panel);padding-bottom:8px}
+#tab-vi video{max-height:30vh}
+#tab-vi .cues{max-height:60vh}}
 </style>
 </head>
 <body>
@@ -217,6 +282,7 @@ p.sub{margin:0;color:var(--muted)}
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
     <button type="button" role="tab" data-tab="cu" aria-selected="false" aria-controls="tab-cu">Cumparegliar</button>
     <button type="button" role="tab" data-tab="de" aria-selected="false" aria-controls="tab-de">RM <em>→</em> DE</button>
+    <button type="button" role="tab" data-tab="vi" aria-selected="false" aria-controls="tab-vi">Sincronisar</button>
   </div>
   <section class="pane" id="tab-sp" role="tabpanel">
 <div class="intro"><p class="sub">Spustar ils suttitels pli tard u pli baud – en uras, minutas, secundas e maletgs.</p></div>
@@ -397,6 +463,48 @@ p.sub{margin:0;color:var(--muted)}
 
 
   </section>
+  <section class="pane" id="tab-vi" role="tabpanel" hidden>
+<div class="intro"><p class="sub">Chargiar video u audio ed ils suttitels, controllar ils blocs sin il filmat e meglierar il timing da singuls blocs.</p></div>
+
+  <section class="card">
+    <h2><span class="num">1</span> Video u audio e suttitels</h2>
+    <div class="drops">
+      <div class="drop" id="vi-dropM" tabindex="0" role="button" aria-label="Tscherner video u audio"><b id="vi-mName">Video u audio</b><small id="vi-mInfo">Trair qua u cliccar · il file resta en tes navigatur</small><input id="vi-fileM" type="file" accept="video/*,audio/*,.mkv,.mov,.m4a,.mp3,.wav" hidden></div>
+      <div class="drop" id="vi-dropS" tabindex="0" role="button" aria-label="Tscherner in file da suttitels"><b id="vi-sName">Suttitels</b><small id="vi-sInfo">SRT, TTML, VTT … · trair qua u cliccar</small><input id="vi-fileS" type="file" accept=".srt,.ttml,.xml,.vtt,.sbv,.ass,.ssa,.txt" hidden></div>
+    </div>
+    <p class="note" id="vi-msg" aria-live="polite"></p>
+  </section>
+
+  <section class="card" id="vi-work" hidden>
+    <div class="work" id="vi-workgrid">
+      <div class="player" id="vi-player" hidden>
+        <div class="stage" id="vi-stage"><video id="vi-media" controls playsinline preload="metadata"></video><div class="ov" id="vi-ov"></div></div>
+        <div class="strip" id="vi-strip" title="Cliccar per sautar"><div class="ph" id="vi-playhead"></div></div>
+        <div class="pbar"><span class="clock" id="vi-clock">00:00,000 / 00:00,000</span>
+          <label>Sperta <select id="vi-rate"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div>
+      </div>
+      <div class="lst" id="vi-lst" hidden>
+        <div class="tools">
+          <label>Pass <select id="vi-step"><option value="40">1 maletg (40 ms)</option><option value="100" selected>0,1 s</option><option value="250">0,25 s</option><option value="500">0,5 s</option><option value="1000">1 s</option></select></label>
+          <label class="chk"><input type="checkbox" id="vi-ripple"> Ils blocs suandants era spustar</label>
+          <label class="chk"><input type="checkbox" id="vi-follow" checked> Suandar il video</label>
+          <button class="btn" id="vi-undo" type="button" disabled>↶ Annullar</button>
+        </div>
+        <div class="cues" id="vi-list"></div>
+        <p class="note keys">Scursanidas: Spazi = play/pausa · I = Start ussa · O = Fin ussa · M = Bloc ussa · ←/→ ±1 s (Shift ±0,1 s) · Ctrl+Z = annullar</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="vi-exp" hidden>
+    <h2><span class="num">2</span> Exportar</h2>
+    <div class="row">
+      <label>Format <select id="vi-fmt"></select></label>
+      <button class="btn primary" id="vi-dl" type="button">Telechargiar</button>
+      <span class="note" id="vi-dlinfo"></span>
+    </div>
+  </section>
+  </section>
 </main>
 <script>
 // ---- Suttitels: lesen und schreiben (gleich in srt2ttml, spustar, cumparegliar) ----
@@ -543,18 +651,18 @@ const SUB = (() => {
 
 // ---- Tabs ----
 (() => {
-  const HASH = { spustar: 'sp', cumparegliar: 'cu', 'rm-de': 'de', 'de-rm': 'de', subs: 'de' }, NAME = { sp: 'spustar', cu: 'cumparegliar', de: 'rm-de' };
+  const HASH = { spustar: 'sp', cumparegliar: 'cu', 'rm-de': 'de', 'de-rm': 'de', subs: 'de', sincronisar: 'vi' }, NAME = { sp: 'spustar', cu: 'cumparegliar', de: 'rm-de', vi: 'sincronisar' };
   const btns = [...document.querySelectorAll('.tabs [data-tab]')];
   function setTab(t, push) {
     btns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-    for (const k of ['sp', 'cu', 'de']) document.getElementById('tab-' + k).hidden = k !== t;
+    for (const k of ['sp', 'cu', 'de', 'vi']) document.getElementById('tab-' + k).hidden = k !== t;
     try { localStorage.setItem('studio-tab', t); } catch (e) {}
     if (push) history.replaceState(null, '', '#' + (t === 'de' && window.__utDir && window.__utDir() === 'derm' ? 'de-rm' : NAME[t]));
   }
   btns.forEach(b => b.onclick = () => setTab(b.dataset.tab, true));
   let t = HASH[location.hash.slice(1)];
   if (!t) try { t = localStorage.getItem('studio-tab'); } catch (e) {}
-  setTab(/^(sp|cu|de)$/.test(t || '') ? t : 'sp');
+  setTab(/^(sp|cu|de|vi)$/.test(t || '') ? t : 'sp');
   addEventListener('hashchange', () => { const h = HASH[location.hash.slice(1)]; if (h) setTab(h); });
 })();
 // ---- spustar.html ----
@@ -1164,6 +1272,288 @@ applyDir();
 
 // Test-Hook
 window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
+})();
+
+// ---- sincronisar: video/audio + timing da singuls blocs ----
+(() => {
+'use strict';
+const ROOT = document.getElementById('tab-vi');
+const $ = id => document.getElementById('vi-' + id);
+const LIM = { cps: 15, min: 1, max: 7, line: 37 }, MINMS = 200; // gleiche Normen wie RM → DE
+const MEDIA_EXT = /\.(mp4|m4v|mov|webm|mkv|ogv|mp3|m4a|aac|wav|ogg|oga|opus|flac)$/i;
+const media = $('media'), list = $('list'), strip = $('strip'), playhead = $('playhead'), ov = $('ov');
+let cues = [], orig = new Map(), sel = null, hist = [], uid = 0, fmt = null, base = 'suttitels', dirty = false;
+let mediaUrl = null, stopAt = 0, raf = 0, lastA = null, lastT = null;
+const rows = new Map(), segs = new Map();
+
+const fmtN = (v, d = 1) => v.toFixed(d).replace('.', ',');
+const byId = id => cues.find(c => c.id === +id);
+const hasMedia = () => !!media.getAttribute('src');
+const nowMs = () => Math.round(media.currentTime * 1000);
+const dur = () => isFinite(media.duration) && media.duration > 0 ? media.duration * 1000 : Math.max(1, ...cues.map(c => c.end));
+const isMod = c => { const o = orig.get(c.id); return !o || o.start !== c.start || o.end !== c.end || o.lines.join('\n') !== c.lines.join('\n'); };
+const mods = () => cues.filter(isMod).length;
+const msg = (t, err) => { $('msg').textContent = t || ''; $('msg').classList.toggle('err', !!err); };
+const parseT = s => { let v = SUB.time(s, 25); if (!isFinite(v) && /^\d+([.,]\d+)?$/.test(s.trim())) v = parseFloat(s.replace(',', '.')) * 1000; return v; };
+
+// ---- Verlauf (Annullar) ----
+const snapStr = () => JSON.stringify(cues.map(c => [c.id, c.start, c.end, c.lines]));
+function snap() { const s = snapStr(); if (hist[hist.length - 1] !== s) { hist.push(s); if (hist.length > 100) hist.shift(); } $('undo').disabled = !hist.length; }
+function undo() {
+  const cur = snapStr(); let s;
+  while (hist.length && (s = hist.pop()) === cur) s = null;
+  $('undo').disabled = !hist.length;
+  if (!s) return;
+  const keep = sel && sel.id;
+  cues = JSON.parse(s).map(([id, start, end, lines]) => ({ id, start, end, lines }));
+  sel = cues.find(c => c.id === keep) || cues[0] || null;
+  renderList(); renderStrip(); silentNow(); info();
+}
+
+// ---- Kontrolle pro Block ----
+function check(c, i) {
+  const d = (c.end - c.start) / 1000, chars = c.lines.join(' ').length, cps = d > 0 ? chars / d : Infinity, out = [];
+  if (d < LIM.min) out.push(['warn', 'memia curt']);
+  if (d > LIM.max) out.push(['warn', 'memia lung']);
+  if (cps > LIM.cps * 1.2) out.push(['err', 'memia svelt']); else if (cps > LIM.cps) out.push(['warn', 'memia svelt']);
+  if (c.lines.some(l => l.length > LIM.line)) out.push(['warn', 'lingia memia lunga']);
+  const n = cues[i + 1]; if (n && c.end > n.start) out.push(['err', 'surposiziun']);
+  return { d, cps, out };
+}
+
+// ---- Liste ----
+const ROW = `<div class="c-top"><b class="c-n" title="Sautar a quest bloc"></b><button class="ib" data-a="play" type="button" title="Ascultar il bloc">▶</button><span class="c-meta"></span><button class="ib" data-a="reset" type="button" title="Turnar a l'original">↺</button></div>
+<div class="c-times">
+<div class="tf"><span>Start</span><button class="ib" data-a="s-" type="button">−</button><input data-f="start" inputmode="decimal" aria-label="Start"><button class="ib" data-a="s+" type="button">+</button><button class="ib" data-a="s-now" type="button" title="Start = posiziun dal video (I)">⇤ ussa</button></div>
+<div class="tf"><span>Fin</span><button class="ib" data-a="e-" type="button">−</button><input data-f="end" inputmode="decimal" aria-label="Fin"><button class="ib" data-a="e+" type="button">+</button><button class="ib" data-a="e-now" type="button" title="Fin = posiziun dal video (O)">ussa ⇥</button></div>
+<div class="tf"><span>Bloc</span><button class="ib" data-a="b-" type="button">−</button><button class="ib" data-a="b+" type="button">+</button><button class="ib" data-a="b-now" type="button" title="Bloc cun il start a la posiziun dal video (M)">⇆ ussa</button></div>
+</div>
+<textarea data-f="text" rows="2" spellcheck="false" aria-label="Text"></textarea>`;
+
+function renderList() {
+  list.textContent = ''; rows.clear();
+  const fr = document.createDocumentFragment();
+  cues.forEach((c, i) => { const el = document.createElement('div'); el.className = 'cue'; el.dataset.id = c.id; el.innerHTML = ROW; rows.set(c.id, el); fr.append(el); });
+  list.append(fr);
+  cues.forEach((c, i) => updateRow(c, i));
+  if (sel) rows.get(sel.id)?.classList.add('sel');
+}
+function updateRow(c, i = cues.indexOf(c)) {
+  const el = rows.get(c.id); if (!el) return;
+  const r = check(c, i), act = document.activeElement;
+  el.querySelector('.c-n').textContent = i + 1;
+  const sI = el.querySelector('[data-f=start]'), eI = el.querySelector('[data-f=end]'), tx = el.querySelector('[data-f=text]');
+  if (act !== sI) { sI.value = SUB.show(c.start); sI.classList.remove('bad'); }
+  if (act !== eI) { eI.value = SUB.show(c.end); eI.classList.remove('bad'); }
+  if (act !== tx) tx.value = c.lines.join('\n');
+  el.querySelector('.c-meta').innerHTML = `${fmtN(r.d)} s · ${isFinite(r.cps) ? fmtN(r.cps) : '–'} car./s` + r.out.map(o => `<span class="bdg ${o[0]}">${o[1]}</span>`).join('');
+  el.classList.toggle('mod', isMod(c));
+  el.classList.toggle('err', r.out.some(o => o[0] === 'err'));
+  const sg = segs.get(c.id); if (sg) setSeg(sg, c, r.out.some(o => o[0] === 'err'));
+}
+function select(c, scroll) {
+  if (sel) rows.get(sel.id)?.classList.remove('sel'), segs.get(sel.id)?.classList.remove('sel');
+  sel = c;
+  if (!c) return;
+  const el = rows.get(c.id); el?.classList.add('sel'); segs.get(c.id)?.classList.add('sel');
+  if (scroll && el) list.scrollTo({ top: Math.max(0, el.offsetTop - list.clientHeight / 3), behavior: 'smooth' });
+}
+
+// ---- Zeitleiste ----
+function setSeg(el, c, err) {
+  const D = dur();
+  el.style.left = (c.start / D * 100) + '%'; el.style.width = Math.max(0.12, (c.end - c.start) / D * 100) + '%';
+  el.classList.toggle('err', !!err); el.classList.toggle('sel', sel === c);
+}
+function renderStrip() {
+  strip.querySelectorAll('.seg').forEach(e => e.remove()); segs.clear();
+  const fr = document.createDocumentFragment();
+  cues.forEach((c, i) => { const el = document.createElement('div'); el.className = 'seg'; el.dataset.id = c.id; segs.set(c.id, el); setSeg(el, c, check(c, i).out.some(o => o[0] === 'err')); fr.append(el); });
+  strip.insertBefore(fr, playhead);
+}
+
+// ---- Änderungen ----
+const step = () => +$('step').value || 100;
+function setStart(c, t) { c.start = Math.max(0, Math.round(t)); if (c.end < c.start + MINMS) c.end = c.start + MINMS; return [c]; }
+function setEnd(c, t) { c.end = Math.max(c.start + MINMS, Math.round(t)); return [c]; }
+function moveBlock(c, d) {
+  const i = cues.indexOf(c), grp = $('ripple').checked ? cues.slice(i) : [c];
+  d = Math.max(Math.round(d), -Math.min(...grp.map(x => x.start)));
+  grp.forEach(x => { x.start += d; x.end += d; });
+  return grp;
+}
+function afterChange(aff) {
+  dirty = true;
+  let sorted = true; for (let i = 1; i < cues.length; i++) if (cues[i].start < cues[i - 1].start) { sorted = false; break; }
+  if (!sorted) { cues.sort((a, b) => a.start - b.start); renderList(); renderStrip(); }
+  else {
+    const set = new Set(); aff.forEach(c => { const i = cues.indexOf(c); [i - 1, i, i + 1].forEach(j => cues[j] && set.add(cues[j])); });
+    set.forEach(c => updateRow(c));
+  }
+  silentNow(); info();
+}
+function edit(c, fn) { snap(); afterChange(fn()); }
+function reset(c) { snap(); const o = orig.get(c.id); c.start = o.start; c.end = o.end; c.lines = o.lines.slice(); afterChange([c]); }
+function act(a, c) {
+  const s = step();
+  switch (a) {
+    case 'play': return playBlock(c);
+    case 'reset': return reset(c);
+    case 's-': return edit(c, () => setStart(c, c.start - s));
+    case 's+': return edit(c, () => setStart(c, c.start + s));
+    case 'e-': return edit(c, () => setEnd(c, c.end - s));
+    case 'e+': return edit(c, () => setEnd(c, c.end + s));
+    case 'b-': return edit(c, () => moveBlock(c, -s));
+    case 'b+': return edit(c, () => moveBlock(c, s));
+    case 's-now': if (!hasMedia()) return msg('Chargia l\'emprim in video u audio.', true); return edit(c, () => setStart(c, nowMs()));
+    case 'e-now': if (!hasMedia()) return msg('Chargia l\'emprim in video u audio.', true); return edit(c, () => setEnd(c, nowMs()));
+    case 'b-now': if (!hasMedia()) return msg('Chargia l\'emprim in video u audio.', true); return edit(c, () => moveBlock(c, nowMs() - c.start));
+  }
+}
+function info() {
+  const n = mods();
+  $('dlinfo').textContent = n ? `${n} bloc${n === 1 ? ' midà' : 's midads'}` : 'Anc nagins blocs midads';
+}
+
+// ---- Wiedergabe ----
+function playBlock(c) {
+  if (!hasMedia()) return msg('Chargia l\'emprim in video u audio.', true);
+  media.currentTime = Math.max(0, c.start - 500) / 1000; stopAt = c.end + 200; media.play().catch(() => {});
+}
+const editing = () => { const a = document.activeElement; return a && ROOT.contains(a) && /^(INPUT|TEXTAREA)$/.test(a.tagName) && a.type !== 'checkbox'; };
+function nowState(t) { const a = cues.find(c => c.start <= t && t < c.end); return { a, tgt: a || cues.find(c => c.start > t) }; }
+function markNow(a) {
+  if (lastA) rows.get(lastA.id)?.classList.remove('now');
+  lastA = a; if (a) rows.get(a.id)?.classList.add('now');
+  ov.textContent = a ? a.lines.join('\n') : '';
+}
+function silentNow() { const { a, tgt } = nowState(nowMs()); markNow(a); lastT = tgt; }
+function tick() {
+  const t = nowMs(), D = dur();
+  $('clock').textContent = SUB.show(t) + ' / ' + SUB.show(D);
+  playhead.style.left = Math.min(100, t / D * 100) + '%';
+  if (stopAt && t >= stopAt && !media.paused) { media.pause(); stopAt = 0; }
+  const { a, tgt } = nowState(t);
+  if (a !== lastA) markNow(a);
+  if (tgt !== lastT) { lastT = tgt; if ($('follow').checked && tgt && tgt !== sel && !editing()) select(tgt, true); }
+}
+function loop() { tick(); raf = media.paused ? 0 : requestAnimationFrame(loop); }
+media.addEventListener('play', () => { if (!raf) raf = requestAnimationFrame(loop); });
+['pause', 'seeked', 'seeking', 'timeupdate', 'ended'].forEach(ev => media.addEventListener(ev, tick));
+media.addEventListener('loadedmetadata', () => {
+  const vid = media.videoWidth > 0;
+  $('stage').classList.toggle('audio', !vid);
+  $('mInfo').textContent = `${vid ? 'Video' : 'Audio'} · ${SUB.show(media.duration * 1000)} · cliccar per midar`;
+  media.playbackRate = +$('rate').value;
+  renderStrip(); tick();
+});
+media.addEventListener('error', () => msg('Quest file na po betg vegnir reproducì en quest navigatur (format?).', true));
+$('rate').onchange = () => { media.playbackRate = +$('rate').value; };
+
+// ---- Dateien laden ----
+function showWork() {
+  $('work').hidden = !(cues.length || hasMedia());
+  $('workgrid').classList.toggle('nomedia', !hasMedia());
+  $('player').hidden = !hasMedia(); $('lst').hidden = !cues.length; $('exp').hidden = !cues.length;
+}
+function loadMedia(f) {
+  if (mediaUrl) URL.revokeObjectURL(mediaUrl);
+  media.pause(); stopAt = 0;
+  mediaUrl = URL.createObjectURL(f); media.src = mediaUrl;
+  $('mName').textContent = f.name; $('mInfo').textContent = 'Chargia …'; $('dropM').classList.add('ok');
+  msg(''); showWork();
+}
+function loadSubs(f) {
+  SUB.read(f).then(text => {
+    const r = SUB.parse(text, 25);
+    if (!r.format || !r.cues.length) { msg('Chattà nagins suttitels – è quai in file SRT?', true); return; }
+    fmt = r.format; base = SUB.base(f.name); uid = 0; hist = []; dirty = false; orig.clear();
+    cues = r.cues.map(c => { const x = { id: ++uid, start: Math.round(c.start), end: Math.round(c.end), lines: c.lines.slice() }; orig.set(x.id, { start: x.start, end: x.end, lines: x.lines.slice() }); return x; });
+    cues.sort((a, b) => a.start - b.start);
+    sel = cues[0]; lastA = lastT = null;
+    $('sName').textContent = f.name; $('sInfo').textContent = `${SUB.FORMATS[fmt] || fmt} · ${cues.length} blocs · cliccar per midar`; $('dropS').classList.add('ok');
+    $('fmt').value = SUB.SAME[fmt] || 'srt';
+    $('undo').disabled = true; msg(''); showWork(); renderList(); renderStrip(); silentNow(); info();
+    if (sel) select(sel, false);
+  }).catch(() => msg('Il file na pudeva betg vegnir legì.', true));
+}
+function take(files) {
+  for (const f of files) { if (/^(video|audio)\//.test(f.type) || MEDIA_EXT.test(f.name)) loadMedia(f); else loadSubs(f); }
+}
+for (const [d, i] of [['dropM', 'fileM'], ['dropS', 'fileS']]) {
+  const drop = $(d), inp = $(i);
+  drop.addEventListener('click', () => inp.click());
+  inp.addEventListener('click', e => e.stopPropagation());
+  inp.addEventListener('change', () => { take([...inp.files]); inp.value = ''; });
+  drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); inp.click(); } });
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => take([...e.dataTransfer.files]));
+}
+$('fmt').innerHTML = Object.entries(SUB.OUT).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
+
+// ---- Ereignisse in der Liste ----
+list.addEventListener('click', e => {
+  const el = e.target.closest('.cue'); if (!el) return;
+  const c = byId(el.dataset.id); if (!c) return;
+  const b = e.target.closest('button[data-a]');
+  if (b) { select(c); act(b.dataset.a, c); b.blur(); return; }
+  if (e.target.closest('.c-n') && hasMedia()) { media.currentTime = c.start / 1000; select(c); tick(); return; }
+  select(c);
+});
+list.addEventListener('focusin', e => {
+  const el = e.target.closest('.cue'); if (!el) return;
+  const c = byId(el.dataset.id); if (c && c !== sel) select(c);
+  if (e.target.matches('textarea')) snap();
+});
+list.addEventListener('input', e => {
+  if (!e.target.matches('textarea')) return;
+  const c = byId(e.target.closest('.cue').dataset.id); c.lines = e.target.value.split('\n'); dirty = true;
+  updateRow(c); silentNow(); info();
+});
+list.addEventListener('change', e => {
+  const inp = e.target.closest('input[data-f]'); if (!inp) return;
+  const c = byId(inp.closest('.cue').dataset.id), ms = parseT(inp.value);
+  if (!isFinite(ms) || ms < 0) { inp.classList.add('bad'); return; }
+  snap(); (inp.dataset.f === 'start' ? setStart : setEnd)(c, ms); afterChange([c]);
+  inp.value = SUB.show(inp.dataset.f === 'start' ? c.start : c.end);
+});
+list.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input[data-f]')) { e.preventDefault(); e.target.blur(); } });
+strip.addEventListener('click', e => {
+  if (!hasMedia()) return;
+  const sg = e.target.closest('.seg');
+  if (sg) { const c = byId(sg.dataset.id); select(c, true); media.currentTime = c.start / 1000; tick(); return; }
+  const r = strip.getBoundingClientRect(); media.currentTime = Math.max(0, (e.clientX - r.left) / r.width * dur() / 1000); tick();
+});
+$('undo').onclick = undo;
+
+// ---- Tastatur ----
+document.addEventListener('keydown', e => {
+  if (ROOT.hidden) return;
+  const t = e.target, tag = t && t.tagName;
+  const typing = (tag === 'INPUT' && t.type !== 'checkbox') || tag === 'TEXTAREA' || tag === 'SELECT';
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { if (!typing) { e.preventDefault(); undo(); } return; }
+  if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { if (!hasMedia()) return; e.preventDefault(); if (media.paused) media.play().catch(() => {}); else media.pause(); }
+  else if (k === 'arrowleft' || k === 'arrowright') { if (!hasMedia()) return; e.preventDefault(); media.currentTime = Math.max(0, media.currentTime + (k === 'arrowleft' ? -1 : 1) * (e.shiftKey ? 0.1 : 1)); }
+  else if (sel && (k === 'i' || k === 'o' || k === 'm')) { e.preventDefault(); act(k === 'i' ? 's-now' : k === 'o' ? 'e-now' : 'b-now', sel); }
+});
+
+// ---- Export ----
+$('dl').onclick = () => {
+  const out = cues.slice().sort((a, b) => a.start - b.start)
+    .map(c => ({ start: c.start, end: c.end, lines: c.lines.map(l => l.trim()).filter(Boolean) })).filter(c => c.lines.length);
+  const o = SUB.write(out, $('fmt').value);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([o.text], { type: o.mime })); a.download = base + '_sincronisà' + o.ext;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  dirty = false; window.dispatchEvent(new Event('dbz-success'));
+};
+window.addEventListener('beforeunload', e => { if (dirty && mods()) { e.preventDefault(); e.returnValue = ''; } });
+new MutationObserver(() => { if (ROOT.hidden) media.pause(); }).observe(ROOT, { attributes: true, attributeFilter: ['hidden'] });
+
+window.__vi = { take, get cues() { return cues; }, act, select };
 })();
 
 </script>
