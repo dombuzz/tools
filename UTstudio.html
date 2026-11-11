@@ -1488,7 +1488,7 @@ function loadSubs(f) {
     cues.sort((a, b) => a.start - b.start);
     sel = cues[0]; lastA = lastT = null;
     $('sName').textContent = f.name; $('sInfo').textContent = `${SUB.FORMATS[fmt] || fmt} · ${cues.length} blocs · cliccar per midar`; $('dropS').classList.add('ok');
-    $('fmt').value = SUB.SAME[fmt] || 'srt';
+    $('fmt').value = SUB.SAME[fmt] === 'ttml' ? 'ttml' : 'srt';
     $('undo').disabled = true; msg(''); showWork(); renderList(); renderStrip(); silentNow(); info();
     if (sel) select(sel, false);
   }).catch(() => msg('Il file na pudeva betg vegnir legì.', true));
@@ -1506,7 +1506,7 @@ for (const [d, i] of [['dropM', 'fileM'], ['dropS', 'fileS']]) {
   ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
   drop.addEventListener('drop', e => take([...e.dataTransfer.files]));
 }
-$('fmt').innerHTML = Object.entries(SUB.OUT).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('');
+$('fmt').innerHTML = ['ttml', 'srt'].map(k => `<option value="${k}">${SUB.OUT[k][0]}</option>`).join('');
 
 // ---- Ereignisse in der Liste ----
 list.addEventListener('click', e => {
