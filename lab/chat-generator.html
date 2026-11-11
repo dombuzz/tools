@@ -150,7 +150,7 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
         <h2><span class="num">3</span>Export</h2>
         <div class="actions">
           <button id="expZip">⬇ PNG-Sequenz mit Transparenz (.zip)</button>
-          <button class="ghost" id="expFrame">Einzelbild (PNG)</button>
+          <button class="ghost" id="expFrame" title="Mit Schachbrett: transparent. Mit Dunkel/Hell/Grün/eigenem Bild: Hintergrund wird eingebrannt">Einzelbild (PNG)</button>
           <button class="ghost" id="expWebm" title="Abspielbares Video mit Hintergrund, ohne Transparenz">Vorschau-Video (.webm)</button>
           <button class="ghost" id="saveJson">Projekt speichern</button>
           <button class="ghost" id="loadJson">Projekt laden</button>
@@ -832,9 +832,20 @@ async function exportZip(opts){
 }
 $('expZip').onclick=()=>exportZip();
 $('expFrame').onclick=async()=>{
-  const c=document.createElement('canvas');c.width=S.width;c.height=S.height;
-  Core.renderFrame(c.getContext('2d',{alpha:true}),P,t,1);
-  download(await toBlob(c),'chat_bild_'+t.toFixed(2)+'s.png');
+  // Einzelbild: bei Schachbrett transparent, sonst mit dem gewählten Hintergrund (Dunkel/Hell/Grün/eigenes Bild)
+  const W=S.width,H=S.height,v=$('bgSel').value,withBg=v!=='checker';
+  const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d',{alpha:true});
+  if(withBg){
+    ctx.fillStyle=BGCOL[v]||BGCOL.dark;ctx.fillRect(0,0,W,H);
+    if(v==='img'&&bgImg&&bgImg.complete&&bgImg.naturalWidth){
+      const k=Math.max(W/bgImg.naturalWidth,H/bgImg.naturalHeight),w=bgImg.naturalWidth*k,h=bgImg.naturalHeight*k;
+      ctx.drawImage(bgImg,(W-w)/2,(H-h)/2,w,h);
+    }
+    const o=document.createElement('canvas');o.width=W;o.height=H;
+    Core.renderFrame(o.getContext('2d',{alpha:true}),P,t,1);ctx.drawImage(o,0,0);
+  }else Core.renderFrame(ctx,P,t,1);
+  download(await toBlob(c),'chat_bild_'+t.toFixed(2)+'s'+(withBg?'_mit_hintergrund':'')+'.png');
+  $('expInfo').textContent=withBg?'Einzelbild mit Hintergrund gespeichert (nicht transparent).':'Einzelbild mit Transparenz gespeichert.';
 };
 $('saveJson').onclick=()=>download(new Blob([JSON.stringify({version:1,S,messages},null,1)],{type:'application/json'}),'chat_projekt.json');
 $('loadJson').onclick=()=>$('jsonFile').click();
