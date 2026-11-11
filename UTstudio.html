@@ -491,7 +491,7 @@ p.sub{margin:0;color:var(--muted)}
           <button class="btn" id="vi-undo" type="button" disabled>↶ Annullar</button>
         </div>
         <div class="cues" id="vi-list"></div>
-        <p class="note keys">Scursanidas: Spazi = play/pausa · I = Start ussa · O = Fin ussa · M = Bloc ussa · ←/→ ±1 s (Shift ±0,1 s) · Ctrl+Z = annullar</p>
+        <p class="note keys">Scursanidas: Spazi = play/pausa · I = Start ussa · O = Fin ussa · M = Bloc ussa · ←/→ ±1 s (Shift ±0,1 s) · Ctrl+Z = annullar · Ctrl+Enter en il text = spartir il bloc al cursor</p>
       </div>
     </div>
   </section>
@@ -1322,7 +1322,7 @@ function check(c, i) {
 }
 
 // ---- Liste ----
-const ROW = `<div class="c-top"><b class="c-n" title="Sautar a quest bloc"></b><button class="ib" data-a="play" type="button" title="Ascultar il bloc">▶</button><span class="c-meta"></span><button class="ib" data-a="reset" type="button" title="Turnar a l'original">↺</button></div>
+const ROW = `<div class="c-top"><b class="c-n" title="Sautar a quest bloc"></b><button class="ib" data-a="play" type="button" title="Ascultar il bloc">▶</button><button class="ib" data-a="split" type="button" title="Spartir il bloc a la posiziun dal cursor (Ctrl+Enter) – il text suenter il cursor daventa in nov bloc">✂ spartir</button><span class="c-meta"></span><button class="ib" data-a="reset" type="button" title="Turnar a l'original">↺</button></div>
 <div class="c-times">
 <div class="tf"><span>Start</span><button class="ib" data-a="s-" type="button">−</button><input data-f="start" inputmode="decimal" aria-label="Start"><button class="ib" data-a="s+" type="button">+</button><button class="ib" data-a="s-now" type="button" title="Start = posiziun dal video (I)">⇤ ussa</button></div>
 <div class="tf"><span>Fin</span><button class="ib" data-a="e-" type="button">−</button><input data-f="end" inputmode="decimal" aria-label="Fin"><button class="ib" data-a="e+" type="button">+</button><button class="ib" data-a="e-now" type="button" title="Fin = posiziun dal video (O)">ussa ⇥</button></div>
@@ -1393,7 +1393,7 @@ function afterChange(aff) {
   silentNow(); info();
 }
 function edit(c, fn) { snap(); afterChange(fn()); }
-function reset(c) { snap(); const o = orig.get(c.id); c.start = o.start; c.end = o.end; c.lines = o.lines.slice(); afterChange([c]); }
+function reset(c) { const o = orig.get(c.id); if (!o) return msg('Quest bloc è nov – nagin original.', true); snap(); c.start = o.start; c.end = o.end; c.lines = o.lines.slice(); afterChange([c]); }
 function act(a, c) {
   const s = step();
   switch (a) {
@@ -1409,6 +1409,22 @@ function act(a, c) {
     case 'e-now': if (!hasMedia()) return msg('Chargia l\'emprim in video u audio.', true); return edit(c, () => setEnd(c, nowMs()));
     case 'b-now': if (!hasMedia()) return msg('Chargia l\'emprim in video u audio.', true); return edit(c, () => moveBlock(c, nowMs() - c.start));
   }
+}
+function split(c, pos) {
+  const text = rows.get(c.id).querySelector('textarea').value;
+  const before = text.slice(0, pos).replace(/\s+$/, ''), after = text.slice(pos).replace(/^\s+/, '');
+  if (!before || !after) return msg('Metta il cursor en il text, avant il toc che duai daventar in nov bloc.', true);
+  msg(''); snap();
+  const t = nowMs(); let at;
+  if (hasMedia() && t > c.start + MINMS && t < c.end - MINMS) at = t; // Position dal video
+  else at = Math.round(c.start + (c.end - c.start) * before.length / (before.length + after.length)); // sinaquai: tenor la dimensiun dal text
+  at = Math.min(Math.max(at, c.start + MINMS), Math.max(c.start + MINMS, c.end - MINMS));
+  const n = { id: ++uid, start: at, end: Math.max(c.end, at + MINMS), lines: after.split('\n') };
+  c.end = at; c.lines = before.split('\n');
+  cues.splice(cues.indexOf(c) + 1, 0, n);
+  const top = list.scrollTop; renderList(); renderStrip(); list.scrollTop = top;
+  select(n, false); dirty = true; silentNow(); info();
+  rows.get(n.id)?.querySelector('textarea')?.focus({ preventScroll: true });
 }
 function info() {
   const n = mods();
@@ -1497,7 +1513,7 @@ list.addEventListener('click', e => {
   const el = e.target.closest('.cue'); if (!el) return;
   const c = byId(el.dataset.id); if (!c) return;
   const b = e.target.closest('button[data-a]');
-  if (b) { select(c); act(b.dataset.a, c); b.blur(); return; }
+  if (b) { select(c); if (b.dataset.a === 'split') split(c, el.querySelector('textarea').selectionStart); else act(b.dataset.a, c); b.blur(); return; }
   if (e.target.closest('.c-n') && hasMedia()) { media.currentTime = c.start / 1000; select(c); tick(); return; }
   select(c);
 });
@@ -1518,7 +1534,10 @@ list.addEventListener('change', e => {
   snap(); (inp.dataset.f === 'start' ? setStart : setEnd)(c, ms); afterChange([c]);
   inp.value = SUB.show(inp.dataset.f === 'start' ? c.start : c.end);
 });
-list.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input[data-f]')) { e.preventDefault(); e.target.blur(); } });
+list.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('input[data-f]')) { e.preventDefault(); e.target.blur(); }
+  else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && e.target.matches('textarea')) { e.preventDefault(); split(byId(e.target.closest('.cue').dataset.id), e.target.selectionStart); }
+});
 strip.addEventListener('click', e => {
   if (!hasMedia()) return;
   const sg = e.target.closest('.seg');
