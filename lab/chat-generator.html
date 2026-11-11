@@ -403,6 +403,11 @@ const Core=(function(){
       ctx.restore();
     }
     ctx.restore();
+    if(hasH){ // weicher Auslauf: die letzten 10 px unter der Kante blenden von voll sichtbar auf transparent aus
+      const fh=10,g=ctx.createLinearGradient(0,areaTop,0,areaTop+fh);
+      g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.save();ctx.globalCompositeOperation='destination-out';ctx.fillStyle=g;ctx.fillRect(0,areaTop,W,fh);ctx.restore();
+    }
     ctx.globalAlpha=1;
   }
 
