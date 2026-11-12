@@ -213,7 +213,7 @@
   // Gruppen und Reihenfolge im Dropdown.
   const GROUPS = [
     // Ein Eintrag [Name, [...]] innerhalb einer Gruppe wird zur aufklappbaren Untergruppe.
-    ['Maletgs',           ['rtr-picture.html', 'visual.html', 'social.html', 'maletgs.html', 'Resizer2000.html']],
+    ['Maletgs',           ['rtr-picture.html', 'visual.html', 'maletgs.html', 'Resizer2000.html', 'social.html']],
     ['Redacziun',         ['Plan.html', 'artitgel.html']],
     ['Audio e suttitels', ['audio-recorder.html', 'srt2ttml.html', 'UTstudio.html']],
     ['Grafica',           ['data.html', 'votaziuns.html']]
@@ -427,7 +427,7 @@
 // Lauftext mit Zahlen (wie /cifras), Link auf /cifras
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', fmt = n => n.toLocaleString('de-CH');
-  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social': 'Social', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'tschertga': 'Tschertga rtr.ch' };
+  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'social': 'Social', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'tschertga': 'Tschertga rtr.ch' };
   Promise.all([fetch(API + '/top?range=month').then(r => r.json()).catch(() => null), fetch(API + '/art/count').then(r => r.json()).catch(() => null)]).then(([d, a]) => {
     const items = [];
     if (d && d.uses) {
@@ -448,7 +448,7 @@
 // Top 5 als Pop-up am Symbol (ohne Seitenwechsel; /cifras bleibt als Ausweichlink)
 (() => {
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev', SHOW = 5;
-  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social': 'Social', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge',
+  const PN = { 'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'maletgs': 'Colurar, rotar e cumbinar', 'Resizer2000': 'Resizer 2000', 'social': 'Social', 'Plan': 'Plans da teams', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge',
     'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio', 'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns' };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = n => n.toLocaleString('de-CH');
