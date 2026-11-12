@@ -380,6 +380,9 @@ function own(){return pairOf(cur)}
 function buildTabs(){
   const t=$('tabs');t.innerHTML='';
   S.slides.forEach((s,i)=>{const b=document.createElement('button');b.className='pill'+(i===cur?' on':'');const Pp=pairOf(i);b.innerHTML='<span class="sw" style="background:'+slideColor(s)+'"></span>'+(i+1)+(Pp.left===i&&Pp.right!==i?' ⇄':'');b.onclick=()=>{cur=i;fill();buildTabs();redraw()};t.appendChild(b)});
+  const pl=document.createElement('button');pl.className='pill';pl.textContent='+';pl.title='Agiuntar ina pagina';pl.setAttribute('aria-label','Agiuntar ina pagina');
+  pl.onclick=()=>{const last=S.slides[S.slides.length-1];S.slides.push(mk({colSrc:last.colSrc==='A'?'B':'A'}));cur=S.slides.length-1;fill();buildTabs();redraw();save()};
+  t.appendChild(pl);
 }
 function buildColPills(){
   const p=$('colPills');p.innerHTML='';
