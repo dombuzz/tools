@@ -99,6 +99,11 @@ input[type=file]{display:none}
           <input type="text" id="credit" placeholder="p.ex. Keystone">
           <div class="hint">Maletgs da RTR: desactivar, la funtauna na dastga betg vegnir inditgada.</div>
         </div>
+        <div class="f" id="rotBox" style="display:none">
+          <label>Rotaziun dals funs <span class="val" id="rotV"></span></label>
+          <input type="range" id="rot" min="-15" max="15" step="1">
+          <div class="hint">Mo cun dapli che dus lingias: ils funs colurads vegnan sbittads fin a 15° en mintga direcziun (0° = sco la program).</div>
+        </div>
         <div class="f"><label class="chk"><input type="checkbox" id="logoOn"> Logo RTR</label></div>
       </div>
 
@@ -140,8 +145,8 @@ const LOGO_SRC='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcEAAAEkCAYAAABXMo
 /* Vorlage: Affinity «thumbnail» (1080 × 1920, 9:16). Alle Masse stammen aus dem SVG-Export der Vorlage (Faktor 0.24). */
 const PAGES=1,H=1920,VER=1,KEY='social2-thumbnail.v1',PREFIX='thumbnail',NEED=['bdit','light'];
 const SLOTS=[{id:'A',page:0}];
-const FIELDS=[['title','title'],['logoOn','logoOn'],['credit','credit'],['showCr','showCr']];
-function defaults(){return{v:VER,col:'N',title:'Qua tes\ntitel',logoOn:true,credit:'',showCr:true}}
+const FIELDS=[['title','title'],['logoOn','logoOn'],['credit','credit'],['showCr','showCr'],['rot','rot']];
+function defaults(){return{v:VER,col:'N',title:'Qua tes\ntitel',rot:0,logoOn:true,credit:'',showCr:true}}
 function blank(){const d=defaults();d.title='';d.credit='';return d}
 function slugSrc(){return S.title}
 function render(c,pv){
@@ -153,14 +158,17 @@ function render(c,pv){
     c.font=fi(162);
     const tl=wrap(c,S.title,860),n=tl.length,LH=184.6,Y0=998.2-(n-1)*LH/2,TR=[2.35,-0.2],XR=[1.5,-2.5],PW=[82,61],PL=[36,24];
     info.cnt.tCnt=n;
+    const rb=$('rotBox');if(rb)rb.style.display=n>2?'':'none';toolFill();
     const ws=tl.map(l=>c.measureText(l).width);
-    for(let i=n-1;i>=0;i--)if(tl[i])tagR(c,540-(ws[i]+PW[i%2])/2,Y0+LH*i-143,ws[i]+PW[i%2],168,TR[i%2],col);
+    for(let i=n-1;i>=0;i--)if(tl[i])tagC(c,540-(ws[i]+PW[i%2])/2,Y0+LH*i-143,ws[i]+PW[i%2],168,TR[i%2],col,n>2?Number(S.rot)||0:0);
     tl.forEach((l,i)=>{if(l)txtR(c,l,540-(ws[i]+PW[i%2])/2+PL[i%2],Y0+LH*i,XR[i%2],'#fff',fi(162),true)});
     if(n>5)info.warn.push('Il titel è fitg lung – pli paucas lingias èn meglier legiblas.');
     credit(c,70,1596);
   });
   return info;
 }
+
+function toolFill(){const v=Number(S.rot)||0;$('rotV').textContent=(v>0?'+':'')+v+'°'}
 
 /* ===== gemeinsamer Teil aller Social2-Tabs (Zustand, Schriften, Zeichenhilfen, Bild, Export) ===== */
 const W=1080,FULL=PAGES*W;
@@ -170,7 +178,7 @@ const IMG={},SL={};SLOTS.forEach(s=>SL[s.id]=s);
 let S,view=PAGES>1?'all':0,pickT=null;
 const logoImg=new Image();logoImg.onload=()=>redraw();logoImg.src=LOGO_SRC;
 /* Titelfarben wie in «Novitads dal di» */
-const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9']};
+const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9'],U:['Uffants','#70bf88']};
 function acc(){return(ACCS[S.col]||ACCS.N)[1]}
 function mkIm(){const o={};SLOTS.forEach(s=>o[s.id]={zoom:1,ox:0,oy:0});return o}
 function load(){const d=defaults();d.im=mkIm();try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.v===VER){const im=Object.assign(mkIm(),j.im);Object.assign(d,j);d.im=im}}catch(e){}return d}
@@ -322,6 +330,8 @@ function textSolo(c,text,col,info){
 }
 /* gedrehte Fläche bzw. gedrehter Text (Drehpunkt = Ecke oben links bzw. Textanfang) */
 function tagR(c,x,y,w,h,deg,col){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle=col;c.fillRect(0,0,w,h);c.restore()}
+/* wie tagR, zusätzlich um den Mittelpunkt der Fläche um «extra» Grad gedreht */
+function tagC(c,x,y,w,h,deg,col,extra){const a=deg*Math.PI/180,cx=x+w/2*Math.cos(a)-h/2*Math.sin(a),cy=y+w/2*Math.sin(a)+h/2*Math.cos(a);c.save();c.translate(cx,cy);c.rotate((deg+(extra||0))*Math.PI/180);c.fillStyle=col;c.fillRect(-w/2,-h/2,w,h);c.restore()}
 function txtR(c,t,x,y,deg,col,font,it){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle=col;c.font=font;if(it)itText(c,t,0,0);else c.fillText(t,0,0);c.restore()}
 function quoted(t,g){const q=(t||'').trim().replace(/^[«»"„“”]+|[«»"„“”]+$/g,'').trim();return q?(g!==false?'«'+q+'»':q):''}
 function logo(c,x,y){if(logoImg.complete&&logoImg.naturalWidth)c.drawImage(logoImg,x,y,108,70)}

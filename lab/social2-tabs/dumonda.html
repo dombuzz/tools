@@ -173,7 +173,7 @@ const IMG={},SL={};SLOTS.forEach(s=>SL[s.id]=s);
 let S,view=PAGES>1?'all':0,pickT=null;
 const logoImg=new Image();logoImg.onload=()=>redraw();logoImg.src=LOGO_SRC;
 /* Titelfarben wie in «Novitads dal di» */
-const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9']};
+const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9'],U:['Uffants','#70bf88']};
 function acc(){return(ACCS[S.col]||ACCS.N)[1]}
 function mkIm(){const o={};SLOTS.forEach(s=>o[s.id]={zoom:1,ox:0,oy:0});return o}
 function load(){const d=defaults();d.im=mkIm();try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.v===VER){const im=Object.assign(mkIm(),j.im);Object.assign(d,j);d.im=im}}catch(e){}return d}
@@ -325,6 +325,8 @@ function textSolo(c,text,col,info){
 }
 /* gedrehte Fläche bzw. gedrehter Text (Drehpunkt = Ecke oben links bzw. Textanfang) */
 function tagR(c,x,y,w,h,deg,col){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle=col;c.fillRect(0,0,w,h);c.restore()}
+/* wie tagR, zusätzlich um den Mittelpunkt der Fläche um «extra» Grad gedreht */
+function tagC(c,x,y,w,h,deg,col,extra){const a=deg*Math.PI/180,cx=x+w/2*Math.cos(a)-h/2*Math.sin(a),cy=y+w/2*Math.sin(a)+h/2*Math.cos(a);c.save();c.translate(cx,cy);c.rotate((deg+(extra||0))*Math.PI/180);c.fillStyle=col;c.fillRect(-w/2,-h/2,w,h);c.restore()}
 function txtR(c,t,x,y,deg,col,font,it){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle=col;c.font=font;if(it)itText(c,t,0,0);else c.fillText(t,0,0);c.restore()}
 function quoted(t,g){const q=(t||'').trim().replace(/^[«»"„“”]+|[«»"„“”]+$/g,'').trim();return q?(g!==false?'«'+q+'»':q):''}
 function logo(c,x,y){if(logoImg.complete&&logoImg.naturalWidth)c.drawImage(logoImg,x,y,108,70)}

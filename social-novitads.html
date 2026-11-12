@@ -181,7 +181,7 @@ function uid(){return Math.random().toString(36).slice(2,9)}
 function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'N',zoom:1,ox:0,oy:0,dark:0,span:false,frizza:false,frizzaStyle:'w',logo:true},o)}
 function today(){const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear()}
 function ymd(){const m=(S.date||'').match(/^(\d{1,2})[-.](\d{1,2})[-.](\d{4})$/);if(m)return m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0');const t=today().split('-');return t[2]+t[1]+t[0]}
-function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#FFA529',V:'#8F44C9'},size:52,date:today(),slides:[
+function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#FFA529',V:'#8F44C9',U:'#70bf88'},size:52,date:today(),slides:[
   mk({type:'cover',frizza:true,title:'News dal di',credit:'Polizia chantunala grischuna',colSrc:'N'}),
   mk({title:'Incendi a Poschiavo',text:"En la Val da Camp dasper Poschiavo hai brischà gievgia en in cumplex da chasas. Persunas na sajan betg vegnidas blessadas. Daco ch'i ha brischà n'è anc betg cler.",colSrc:'N'}),
   mk({title:'Gieus olimpics da juniors',text:"Als Youth Olympic Games a Dakar en il Senegal hai dà l'emprima medaglia dad aur per la Svizra. La Turitgaisa Kimey Casanova ha gudagnà aur en il triatlon.",credit:'imago images/teamsprint media',colSrc:'N'}),
@@ -408,7 +408,7 @@ function buildTabs(){
 }
 function buildColPills(){
   const p=$('colPills');p.innerHTML='';
-  [['N','Novitads'],['O','Sport'],['V','Cultura']].forEach(([k,n])=>{
+  [['N','Novitads'],['O','Sport'],['V','Cultura'],['U','Uffants']].forEach(([k,n])=>{
     const b=document.createElement('button');b.className='pill'+(cs().colSrc===k?' on':'');b.innerHTML='<span class="sw" style="background:'+S.pre[k]+'"></span>'+n;
     b.onclick=()=>{cs().colSrc=k;fill();buildTabs();redraw();save()};p.appendChild(b)});
 }

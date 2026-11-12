@@ -114,7 +114,6 @@ input[type=file]{display:none}
           <textarea id="tbText" class="sm" placeholder="Il text …"></textarea>
           <div class="hint">Laschar vids titel e text, sche la pagina 2 duai mussar mo il maletg.</div>
         </div>
-        <div class="f"><label>Colur dal titel</label><div class="pills" id="tbPills"></div></div>
       </div>
 
       <div class="card">
@@ -166,8 +165,7 @@ const LOGO_SRC='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcEAAAEkCAYAAABXMo
 const PAGES=3,H=1350,VER=1,KEY='social2-focus.v1',PREFIX='focus',NEED=['bold','light','bdit'];
 const SLOTS=[{id:'A',page:0,span:2}];
 const FIELDS=[['kicker','kicker'],['title','title'],['credit','credit'],['showCr','showCr'],['arrow','frizza'],['tbTitle','tbTitle'],['tbText','tbText'],['bullets','bullets']];
-const TBC={G:['Verd','#70bf88'],A:['Colur dal focus',null]};
-function defaults(){return{v:VER,col:'N',kicker:'Nova uniun',title:'La stagiun\nd’alp viva',credit:'',showCr:true,frizza:true,tbTitle:'Titel',tbText:'text',tbCol:'G',
+function defaults(){return{v:VER,col:'N',kicker:'Nova uniun',title:'La stagiun\nd’alp viva',credit:'',showCr:true,frizza:true,tbTitle:'Titel',tbText:'text',
   bullets:'Text supplementar Aquas nem etur, omnis *doluptat* etustin venihilibus.\nIn porttitor rutrum leo. Ut eget leo. Nulla quis nibh.\nProin ac pede vel ligula\nDuis lobortis, quam non volutpat suscipit, magna sem consequat libero, ac hendrerit urna ante id mi.'}}
 function blank(){const d=defaults();d.kicker='';d.title='';d.tbTitle='';d.tbText='';d.bullets='';d.credit='';return d}
 function slugSrc(){return S.title}
@@ -190,7 +188,7 @@ function render(c,pv){
   /* ===== Seite 2: zweite Hälfte des Bilds, Textbox ===== */
   pg(c,1,()=>{
     drawSlot(c,'A',1,pv,{label:''});
-    const r=bars(c,{title:(S.tbTitle||'').toUpperCase(),text:S.tbText,tBg:TBC[S.tbCol]&&TBC[S.tbCol][1]||col,lFg:'#000'});
+    const r=bars(c,{title:(S.tbTitle||'').toUpperCase(),text:S.tbText,tBg:col,lFg:'#000'});
     info.cnt.c2=r.n;if(r.top!==null&&r.top<60)info.warn.push('Il text sin pagina 2 è memia lung.');
   });
   /* ===== Seite 3: Punkte mit Frizza (Light 60, Zeilenabstand 70, Abstand zwischen Punkten 100), Block senkrecht eingemittet ===== */
@@ -205,11 +203,6 @@ function render(c,pv){
   });
   return info;
 }
-function toolFill(){
-  const p=$('tbPills');p.innerHTML='';
-  Object.keys(TBC).forEach(k=>{const b=document.createElement('button');b.type='button';b.className='pill'+(S.tbCol===k?' on':'');
-    b.innerHTML='<span class="sw" style="background:'+(TBC[k][1]||acc())+'"></span>'+TBC[k][0];b.onclick=()=>{S.tbCol=k;toolFill();redraw();save()};p.appendChild(b)});
-}
 
 /* ===== gemeinsamer Teil aller Social2-Tabs (Zustand, Schriften, Zeichenhilfen, Bild, Export) ===== */
 const W=1080,FULL=PAGES*W;
@@ -219,7 +212,7 @@ const IMG={},SL={};SLOTS.forEach(s=>SL[s.id]=s);
 let S,view=PAGES>1?'all':0,pickT=null;
 const logoImg=new Image();logoImg.onload=()=>redraw();logoImg.src=LOGO_SRC;
 /* Titelfarben wie in «Novitads dal di» */
-const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9']};
+const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9'],U:['Uffants','#70bf88']};
 function acc(){return(ACCS[S.col]||ACCS.N)[1]}
 function mkIm(){const o={};SLOTS.forEach(s=>o[s.id]={zoom:1,ox:0,oy:0});return o}
 function load(){const d=defaults();d.im=mkIm();try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.v===VER){const im=Object.assign(mkIm(),j.im);Object.assign(d,j);d.im=im}}catch(e){}return d}
@@ -371,6 +364,8 @@ function textSolo(c,text,col,info){
 }
 /* gedrehte Fläche bzw. gedrehter Text (Drehpunkt = Ecke oben links bzw. Textanfang) */
 function tagR(c,x,y,w,h,deg,col){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle=col;c.fillRect(0,0,w,h);c.restore()}
+/* wie tagR, zusätzlich um den Mittelpunkt der Fläche um «extra» Grad gedreht */
+function tagC(c,x,y,w,h,deg,col,extra){const a=deg*Math.PI/180,cx=x+w/2*Math.cos(a)-h/2*Math.sin(a),cy=y+w/2*Math.sin(a)+h/2*Math.cos(a);c.save();c.translate(cx,cy);c.rotate((deg+(extra||0))*Math.PI/180);c.fillStyle=col;c.fillRect(-w/2,-h/2,w,h);c.restore()}
 function txtR(c,t,x,y,deg,col,font,it){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle=col;c.font=font;if(it)itText(c,t,0,0);else c.fillText(t,0,0);c.restore()}
 function quoted(t,g){const q=(t||'').trim().replace(/^[«»"„“”]+|[«»"„“”]+$/g,'').trim();return q?(g!==false?'«'+q+'»':q):''}
 function logo(c,x,y){if(logoImg.complete&&logoImg.naturalWidth)c.drawImage(logoImg,x,y,108,70)}
