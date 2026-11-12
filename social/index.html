@@ -37,6 +37,7 @@ a.tool{display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--
 a.tool:hover,a.tool:focus-visible{border-color:var(--accent);outline:none}
 a.tool svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 a.tool b{font-size:1rem}
+a.tool em.beta{font-style:normal;font-size:.62rem;font-weight:700;letter-spacing:.08em;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 7px;vertical-align:2px}
 a.tool span{font-size:.82rem;color:var(--muted);line-height:1.4}
 </style>
 </head>
@@ -63,14 +64,16 @@ const TOOLS = [
   { id: 'quote',     t: 'Quote solo',        d: 'In citat cun num, funcziun e maletg.', i: '<path d="M5 8h5v5c0 2-1 3.5-3 4"/><path d="M14 8h5v5c0 2-1 3.5-3 4"/>' },
   { id: 'cifra',     t: 'Cifra da l’emna',   d: 'Duas paginas cun cifra e text.', i: '<path d="M9 4 7 20"/><path d="M17 4l-2 16"/><path d="M4 9h17"/><path d="M3 15h17"/>' },
   { id: 'pled',      t: 'Pled da l’emna',    d: 'Maletg senza funs, pled ed idioms.', i: '<path d="M5 19 10 5h4l5 14"/><path d="M7.5 14h9"/>' },
-  { id: 'dumonda',   t: 'Dumonda da l’emna', d: 'Maletg cun segn da dumonda e banda.', i: '<path d="M8.5 9a3.5 3.5 0 1 1 5 3.2c-1 .6-1.5 1.3-1.5 2.3"/><path d="M12 18.5v.01"/>' }
+  { id: 'dumonda',   t: 'Dumonda da l’emna', d: 'Maletg cun segn da dumonda e banda.', i: '<path d="M8.5 9a3.5 3.5 0 1 1 5 3.2c-1 .6-1.5 1.3-1.5 2.3"/><path d="M12 18.5v.01"/>' },
+  { id: 'reels',     t: 'Reels',             d: 'Videos per social preparar: tagls, maletg centrar, tetels e texts – export sco MP4.', href: '/lab/reels', beta: true, i: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/>' }
 ];
 /* Alte Adressen: /social#novitads, /social#quote … führen direkt zum Tool */
 { const h = ({ novitads: 'newsdaldi' })[location.hash.slice(1)] || location.hash.slice(1), t = TOOLS.find(x => x.id === h); if (t) location.replace('/social/' + t.id); }
 for (const t of TOOLS) {
-  const a = document.createElement('a'); a.className = 'tool'; a.href = '/social/' + t.id;
+  const a = document.createElement('a'); a.className = 'tool'; a.href = t.href || '/social/' + t.id;
   a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + t.i + '</svg><b></b><span></span>';
-  a.querySelector('b').textContent = t.t; a.querySelector('span').textContent = t.d;
+  a.querySelector('b').textContent = t.t;
+  if (t.beta) { const m = document.createElement('em'); m.className = 'beta'; m.textContent = 'BETA'; a.querySelector('b').append(' ', m); } a.querySelector('span').textContent = t.d;
   document.getElementById('g').appendChild(a);
 }
 </script>
