@@ -44,12 +44,12 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .meta .pg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);text-decoration:none;border-bottom:1px dashed var(--muted)}
 .meta .pg:hover{color:var(--accent)}
 .text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:.95rem}
-.note{border-left:3px solid var(--accent);background:var(--mono);border-radius:0 8px 8px 0;padding:8px 12px;font-size:.88rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.note{border-left:3px solid var(--lab);background:var(--mono);border-radius:0 8px 8px 0;padding:8px 12px;font-size:.88rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .note small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
 .nedit{display:flex;flex-direction:column;gap:8px}
 .item{position:relative}
 .nbtn{position:absolute;top:12px;right:14px;border:1.5px solid var(--lab)!important;color:var(--lab)!important;background:transparent!important}
-.nbtn:hover{background:var(--lab)!important;color:var(--on-accent,#121214)!important}
+.nbtn:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(255,77,100,.1)!important}
 .item:has(.nbtn) .meta{padding-right:128px}
 .nedit textarea{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:.92rem;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
 .nedit textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
