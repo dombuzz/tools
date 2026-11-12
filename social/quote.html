@@ -389,7 +389,8 @@ function bars(c,o){
 function pg(c,p,fn){c.save();c.beginPath();c.rect(p*W,0,W,H);c.clip();c.translate(p*W,0);c.textAlign='left';c.textBaseline='alphabetic';fn();c.restore()}
 
 /* ---------- Bild-Felder ---------- */
-function slotRect(s){return s.rect||{x:s.page*W,y:0,w:W*(s.span||1),h:H}}
+function spanOf(s){return s.tog&&S&&S[s.tog]===false?1:(s.span||1)}
+function slotRect(s){return s.rect||{x:s.page*W,y:0,w:W*spanOf(s),h:H}}
 function slotHit(s){return s.free?{x:s.page*W,y:0,w:W,h:H}:slotRect(s)}
 function geom(v,R,im,free){
   if(free){const sc=Math.min(R.w/im.naturalWidth,R.h/im.naturalHeight)*v.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;return{dw,dh,x:R.x+R.w/2-dw/2+v.ox*R.w,y:R.y+R.h/2-dh/2+v.oy*R.h}}
@@ -499,7 +500,7 @@ function setImage(f,k){
 }
 /* Feld, das zur gerade gezeigten Seite gehört (für Ctrl/Cmd+V) */
 function curSlot(){
-  if(view!=='all'){const s=SLOTS.find(s=>view>=s.page&&view<s.page+(s.span||1));if(s)return s.id}
+  if(view!=='all'){const s=SLOTS.find(s=>view>=s.page&&view<s.page+spanOf(s));if(s)return s.id}
   return SLOTS[0].id;
 }
 window.addEventListener('paste',e=>{const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));if(it){setImage(it.getAsFile());e.preventDefault()}});
