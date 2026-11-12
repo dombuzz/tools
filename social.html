@@ -44,8 +44,8 @@ h1 .acc{color:var(--accent)}
 .fontbox .btn:hover{color:var(--text)}
 .fontbox input{display:none}
 @media (max-width:860px){.fontbox{position:static;max-width:none;align-self:flex-end}body{padding-bottom:12px}.wrap{gap:12px}.dbz-like{margin-top:8px!important}.dbz-like p{margin-bottom:6px}}
-.tool{min-width:0}
-.tool .loading{color:var(--muted);font-size:.9rem}
+.sc-tool{min-width:0}
+.sc-tool .loading{color:var(--muted);font-size:.9rem}
 </style>
 </head>
 <body>
@@ -89,7 +89,7 @@ function scopeCss(text, t, ids) {
     else outer += r.cssText;   /* @font-face, @keyframes … */
   } return o; };
   inner = walk(sh.cssRules);
-  return outer + '@scope (.tool-' + t.id + '){' + inner + '}';
+  return outer + '@scope (.sc-' + t.id + '){' + inner + '}';
 }
 const EXTRA = {
   profil: '.wrap>div:first-child{display:none}',
@@ -120,7 +120,7 @@ function guardWin(real, active, isDoc, root, pre, ids) {
 
 async function mount(t) {
   if (mounted[t.id]) return mounted[t.id].ready;
-  const el = document.createElement('div'); el.className = 'tool tool-' + t.id; el.hidden = true;
+  const el = document.createElement('div'); el.className = 'sc-tool sc-' + t.id; el.hidden = true;
   el.innerHTML = '<p class="loading">Chargiar …</p>';
   $('tools').appendChild(el);
   const m = mounted[t.id] = { el };
@@ -136,7 +136,7 @@ async function mount(t) {
     frag.querySelectorAll('[id]').forEach(x => x.id = pre + x.id);
     frag.querySelectorAll('[for]').forEach(x => { if (ids.has(x.htmlFor)) x.htmlFor = pre + x.htmlFor; });
     const st = document.createElement('style');
-    st.textContent = scopeCss(css, t, ids) + '@scope (.tool-' + t.id + '){' + COMMON_CSS + (EXTRA[t.id] || '') + '}';
+    st.textContent = scopeCss(css, t, ids) + '@scope (.sc-' + t.id + '){' + COMMON_CSS + (EXTRA[t.id] || '') + '}';
     el.textContent = ''; el.appendChild(st); el.appendChild(frag);
     const active = () => cur.id === t.id && !document.hidden;
     const D = guardWin(document, active, true, el, pre, ids), W = guardWin(window, active, false);
