@@ -140,7 +140,7 @@ const $=id=>document.getElementById(id);
 $("bmlink").href=bookmarkletHref("/persunal");
 
 // Dienst-Code -> Zeilenname (wie in Plans da teams; «Producers» ist nur eine Doppelansicht und wird uebersprungen)
-const NA=new Set(["0130","0135","0120"]); // Zelltexte, die «Betg disponibel» bedeuten
+const NA=new Set(["0130","0135","0120","?"]); // Zelltexte, die «Betg disponibel» bedeuten
 const LABEL={}, ORDER={}; let ord=0;
 for(const k of ["newsdesk","radio","televisiun","ondemand"]) for(const [lab,cs] of SPARTEN[k].blocks.flat()){
   if(!(lab in ORDER)) ORDER[lab]=ord++;
