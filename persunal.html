@@ -115,7 +115,7 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
       <ol class="bmsteps">
         <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="#" onclick="return false">⇣ Persunal</a></li>
         <li>Cliccar sin il segnapagina. Sche ti n'es betg sin SharePoint, s'avra l'emprim il plan da lavur sin SharePoint (s'annunziar sche necessari).</li>
-        <li>Cliccar anc ina giada sin il segnapagina. Questa pagina s'avra e chargia omadus plans actuals.</li>
+        <li>Cliccar anc ina giada sin il segnapagina. Questa pagina s'avra sin SharePoint (sche quai n'è betg pussaivel, en ina nova fanestra) e chargia omadus plans actuals.</li>
       </ol>
       <p class="note">Il segnapagina da <a href="/Plan" style="color:var(--accent)">Plans da teams</a> chargia il plan là.</p>
     </details>
@@ -291,10 +291,12 @@ window.addEventListener("message",e=>{
   }
 });
 if(window.name==="plan") window.name=""; // damit jeder Bookmarklet-Klick ein frisches Fenster oeffnet
+// Gegenstelle: bei neuem Fenster window.opener, beim Overlay im SharePoint-Tab das uebergeordnete Fenster
+const hostWin=window.opener||(window.top!==window?window.parent:null);
 if(location.hash==="#sharepoint"){
-  if(window.opener){
+  if(hostWin){
     $("status").textContent="Spetg sin il plan da SharePoint \u2026";
-    let n=0; const iv=setInterval(()=>{try{window.opener.postMessage("planonline-ready",SP_ORIGIN)}catch(_){} if(++n>40||plan) clearInterval(iv)},500);
+    let n=0; const iv=setInterval(()=>{try{hostWin.postMessage("planonline-ready",SP_ORIGIN)}catch(_){} if(++n>40||plan) clearInterval(iv)},500);
   } else {
     $("status").className="status err"; $("status").textContent="La colliaziun cun SharePoint \u00e8 vegnida interrutta. Chargia il PDF a maun.";
   }

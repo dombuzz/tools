@@ -126,6 +126,9 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
 .sparte-note{text-transform:none;letter-spacing:0;font-weight:400;font-size:.8rem;width:0;min-width:100%}
 .notes{text-align:center;margin:28px auto 0}
 .notes .note{max-width:none;margin:0 auto}
+.note.quiet{margin-top:10px;font-size:.8rem;opacity:.7}
+.note.quiet a{color:inherit;text-decoration:none}
+.note.quiet a:hover,.note.quiet a:focus-visible{color:var(--accent);text-decoration:underline}
 .bm summary{cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted);list-style:none;display:flex;gap:10px;align-items:center}
 .bm summary::-webkit-details-marker{display:none}
 .bm summary::after{content:"▸";margin-left:auto;color:var(--muted)}
@@ -165,7 +168,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
       <ol class="bmsteps">
         <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="#" onclick="return false">⇣ Plans lavur</a></li>
         <li>Cliccar sin il segnapagina «Plans lavur». Sche ti n'es betg sin SharePoint, s'avra l'emprim il plan da lavur sin SharePoint (s'annunziar sche necessari).</li>
-        <li>Cliccar anc ina giada sin il segnapagina. Questa pagina s'avra e chargia omadus plans actuals (radio/online e televisiun/ondemand).</li>
+        <li>Cliccar anc ina giada sin il segnapagina. Questa pagina s'avra sin SharePoint (sche quai n'è betg pussaivel, en ina nova fanestra) e chargia omadus plans actuals (radio/online e televisiun/ondemand).</li>
       </ol>
       <p class="note">Sin il telefonin: copiar il code e crear manualmain in segnapagina cun quest code sco adressa. <button type="button" class="link" id="bmcopy">Copiar il code</button></p>
     </details>
@@ -223,6 +226,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
     <p class="note" id="note-nd">Cotschen vul dir: in servetsch online manca en il plan.</p>
     <p class="note">Dus nums en ina cella vul probanel dir ch'i dat in'introducziun en il servetsch.</p>
     <p class="note">Ils dis avant la data tschernida èn pli clers.</p>
+    <p class="note quiet"><a href="/persunal">Persunal →</a></p>
   </div>
 </div>
 
@@ -462,10 +466,12 @@ window.addEventListener("message",e=>{
 // (aus einem neuen SharePoint-Tab) das bestehende Fenster nur wiederverwenden: kein Neuladen, window.opener
 // zeigt noch auf den alten Tab, der Handshake laeuft ins Leere. Name loeschen -> jeder Klick oeffnet ein frisches Fenster.
 if(window.name==="plan") window.name="";
+// Gegenstelle: bei neuem Fenster window.opener, beim Overlay im SharePoint-Tab das uebergeordnete Fenster
+const hostWin=window.opener||(window.top!==window?window.parent:null);
 if(location.hash==="#sharepoint"){
-  if(window.opener){
+  if(hostWin){
     $("status").textContent="Spetg sin il plan da SharePoint …";
-    let n=0; const iv=setInterval(()=>{try{window.opener.postMessage("planonline-ready",SP_ORIGIN)}catch(_){} if(++n>40||plan) clearInterval(iv)},500);
+    let n=0; const iv=setInterval(()=>{try{hostWin.postMessage("planonline-ready",SP_ORIGIN)}catch(_){} if(++n>40||plan) clearInterval(iv)},500);
   } else {
     $("status").className="status err"; $("status").textContent="La colliaziun cun SharePoint è vegnida interrutta. Chargia il PDF a maun.";
   }
