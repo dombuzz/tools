@@ -498,7 +498,7 @@ addEventListener('hashchange',()=>setTab(fromHash(),false));
 function fontState(){
   const ok=have.heavy;
   $('#fontState').innerHTML=ok?'<span class="ok">✓ Scrittira «SRG SSR Type Heavy» chargiada</span>':
-   '<span class="no">Scrittira «SRG SSR Type Heavy» manca – igl è duvrà '+(have.bold?'«SRG SSR Type Bold»':'Arial')+'.</span> Chargiar la scrittira Heavy (.ttf) ina giada, ella resta memorisada en quest browser.';
+   '<span class="no">Scrittira «SRG SSR Type Heavy» manca – igl è duvrà '+(have.bold?'«SRG SSR Type Bold»':'Arial')+'.</span> Chargiar la scrittira Heavy (.ttf) ina giada, ella resta memorisada en quest browser.<br>Copiar quellas or da <code>C:\\Windows\\Fonts</code> sin Desktop, Downloads u auter ordinatur e chargia da là cun cliccar sin quest buttun:';
   $('#fontBtn').firstChild.textContent=ok?'Midar la scrittira':'Chargiar scrittiras';
 }
 function fontNames(buf){

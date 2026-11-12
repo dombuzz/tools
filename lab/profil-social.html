@@ -219,7 +219,7 @@ const prefSet=(k,v)=>tx('prefs','readwrite',st=>st.put(v,k));
 function fontState(){
   const ok=have.bdit&&have.light,miss=[!have.bdit&&'Bold Italic',!have.light&&'Light'].filter(Boolean).join(' e ');
   $('fState').innerHTML=ok?'<span style="color:#4cc38a">✓ Scrittiras «SRG SSR Type Bold Italic» e «Light» chargiadas</span>':
-   '<span style="color:var(--warn)">Scrittiras mancan ('+miss+') – '+(!have.bdit&&have.bold?'per il cursiv vegn «Bold» inclinà artifizialmain':'igl è duvrà Arial')+'.</span><br>Chargiar ina giada las files da <code>C:\\Windows\\Fonts</code>: «SRG SSR Type Bold Italic» e «SRG SSR Type Light» (omaduas ensemen) – ellas valan era per ils auters tools.';
+   '<span style="color:var(--warn)">Scrittiras mancan ('+miss+') – '+(!have.bdit&&have.bold?'per il cursiv vegn «Bold» inclinà artifizialmain':'igl è duvrà Arial')+'.</span><br>Chargiar «SRG SSR Type Bold Italic» e «SRG SSR Type Light» ina giada (omaduas ensemen) – ellas valan era per ils auters tools.<br>Copiar quellas or da <code>C:\\Windows\\Fonts</code> sin Desktop, Downloads u auter ordinatur e chargia da là cun cliccar sin quest buttun:';
   $('fBtn').firstChild.textContent=ok?'Midar las scrittiras':'Chargiar scrittiras';
 }
 function fontNames(buf){
