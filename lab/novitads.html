@@ -341,8 +341,11 @@ function render(c,idx,preview){
       let wl=0;if(isCover&&suffix){c.font=fb(tN);wl=c.measureText(suffix).width}
       y-=tH;lastRowY=y;
       c.fillStyle=slideColor(s);c.fillRect(X0,y,Math.ceil(wb+wl+2*padX),tH);
-      c.fillStyle='#fff';c.font=fb(tN);c.fillText(tl[i],X0+padX,y+tH/2+2);
-      if(wl){c.font=fb(tN);c.fillText(suffix,X0+padX+wb,y+tH/2+2)}
+      c.fillStyle='#fff';c.font=fb(tN);
+      c.textBaseline='alphabetic';const cap=c.measureText('H').actualBoundingBoxAscent||tN*.7,by=y+tH/2+cap/2;
+      c.textBaseline='alphabetic';c.fillText(tl[i],X0+padX,by);
+      if(wl){c.font=fb(tN);c.fillText(suffix,X0+padX+wb,by)}
+      c.textBaseline='middle';
       y-=gap;
     }
   }
