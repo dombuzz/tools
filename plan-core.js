@@ -54,23 +54,26 @@ function parsePlan(pages, SVC){
       }
       if(!rows.length) continue;
       for(const r of rows) r.name=r.parts.join(" ").replace(/\s*,\s*/g,", ").replace(/-\s+/g,"-").replace(/\s+/g," ").replace(/,\s*$/,"");
+      // Zeile fuer unbekannte Zelltexte: Zellen sind hoch (Name oben, Text mittig) -> naechste Namenszeile ueber dem Text, max. ein Zeilenabstand
+      const gaps=rows.slice(1).map((r,i)=>rows[i].y-r.y).sort((a,b)=>a-b), gap=gaps.length?gaps[gaps.length>>1]:h.step*3;
+      const rowBelow=y=>{let best=null;for(const r of rows){if(r.y+6>=y&&(!best||r.y<best.y))best=r} return best&&best.y-y<gap?best:null;};
       const rowOf=y=>{let best=null,bd=1e9;for(const r of rows){const d=Math.abs(r.y-y);if(d<bd){bd=d;best=r}}return bd<h.step*1.2?best:null;};
       for(const o of inB){
         const known=SVCL.has(o.t.toLowerCase());
-        if(!known&&(nameItems.has(o.raw)||/^[\W_]+$/.test(o.t))) continue;
+        if(!known&&(nameItems.has(o.raw)||/^[-–—·.,:;_]+$/.test(o.t)||/^\d{1,2}:\d{2}$/.test(o.t))) continue; // Name, Satzzeichen, Uhrzeit (8:00)
         if(o.x<h.firstX-h.step*0.6) continue;
         let day=null,bd=1e9; for(const [d,x] of Object.entries(h.cols)){const dd=Math.abs(x-o.cx);if(dd<bd){bd=dd;day=+d}}
         if(bd>h.step*0.6) continue;
-        const r=rowOf(o.y); if(!r) continue; const name=r.name;
-        const date=`${h.year}-${String(h.month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-        if(!known){ // Text in der Zelle, der kein bekannter Dienst-Code ist (z. B. 0130 = nicht verfuegbar): nur Zellen genau auf der Namenszeile
-          if(o.y<r.lastY-4||o.y>r.y+4) continue;
-          (oth[name+"|"+date]??={name,date,toks:[]}).toks.push(o); continue;
+        const date=(d=>`${h.year}-${String(h.month).padStart(2,"0")}-${String(d).padStart(2,"0")}`)(day);
+        if(!known){ // Text in der Zelle, der kein bekannter Dienst-Code ist (z. B. 0130 = nicht verfuegbar)
+          const r=rowBelow(o.y); if(!r) continue;
+          (oth[r.name+"|"+date]??={name:r.name,date,toks:[]}).toks.push(o); continue;
         }
+        const r=rowOf(o.y); if(!r) continue; const name=r.name;
         people.add(name);
         entries.push({date,svc:o.t,name});
       }
-      for(const g of Object.values(oth)){ g.toks.sort((a,b)=>a.x-b.x); other.push({date:g.date,name:g.name,text:g.toks.map(t=>t.t).join(" ")}); }
+      for(const g of Object.values(oth)){ g.toks.sort((a,b)=>Math.abs(a.y-b.y)>2?b.y-a.y:a.x-b.x); other.push({date:g.date,name:g.name,text:g.toks.map(t=>t.t).join(" ")}); }
     }
   }
   return {entries,people:[...people],other};
