@@ -51,6 +51,9 @@ canvas:active{cursor:grabbing}
 .is-cover .only-cover{display:block}
 input[type=file]{display:none}
 .val{color:var(--muted);font-size:.8rem;float:right}
+#strip{display:flex;gap:2px;overflow-x:auto;background:var(--line);border:2px solid var(--line);border-radius:8px}
+#strip canvas{flex:1 0 0;min-width:150px;width:auto;border-radius:0;aspect-ratio:4/5;margin:0;cursor:pointer;touch-action:auto;outline-offset:-3px}
+#strip canvas.cur{outline:3px solid var(--accent)}
 </style>
 </head>
 <body>
@@ -77,6 +80,7 @@ input[type=file]{display:none}
         <div class="row" style="margin-top:14px">
           <button class="pri" id="exp">Exportar PNG</button>
           <button id="expAll">Exportar tut</button>
+          <button id="reset" style="margin-left:auto">Nova seria</button>
         </div>
       </div>
     </div>
@@ -120,7 +124,7 @@ input[type=file]{display:none}
         <div class="pills" id="colPills" style="margin-bottom:12px"></div>
         <div class="row">
           <input type="color" id="colPick">
-          <input type="text" id="colHex" class="grow" placeholder="#ff8a1f" style="flex:1">
+          <input type="text" id="colHex" class="grow" placeholder="#d92a5d" style="flex:1">
         </div>
         <div class="hint" id="colHint"></div>
       </div>
@@ -145,19 +149,7 @@ input[type=file]{display:none}
       </div>
 
       <div class="card">
-        <h2><span class="n">4</span>Parameters generals</h2>
-        <div class="row" style="margin-bottom:12px">
-          <div>
-            <label>Colur A</label>
-            <div class="row" style="gap:6px"><input type="color" id="aPick"><input type="text" id="aHex" style="width:100px"></div>
-          </div>
-          <div>
-            <label>Colur B</label>
-            <div class="row" style="gap:6px"><input type="color" id="bPick"><input type="text" id="bHex" style="width:100px"></div>
-          </div>
-        </div>
-        <div class="f"><label>Grondezza dal text <span class="val" id="sv"></span></label><input type="range" id="size" min="40" max="70" step="1"></div>
-        <div class="sep"></div>
+        <h2><span class="n">4</span>Scrittira</h2>
         <div class="f">
           <label>Scrittira SRG SSR Type (memorisada en quest browser, la medema sco en ils auters tools)</label>
           <div class="row" style="flex-direction:column;align-items:flex-start;gap:8px">
@@ -165,13 +157,13 @@ input[type=file]{display:none}
             <label class="btn" id="fBtn" style="margin:0;color:var(--text)">Chargiar scrittiras<input type="file" id="fFile" accept=".ttf,.otf,.woff,.woff2" multiple></label>
           </div>
         </div>
-        <div class="sep"></div>
-        <div class="row">
-          <button id="addP">+ Agiuntar pagina</button>
-          <button id="reset">Nova seria</button>
-        </div>
       </div>
     </div>
+  </div>
+
+  <div class="card" id="stripCard">
+    <h2 style="margin-bottom:12px">Survista da tut las paginas</h2>
+    <div id="strip"></div>
   </div>
 </div>
 
@@ -186,21 +178,25 @@ let S,cur=0,dateEdited=false;
 const imgs={};
 
 function uid(){return Math.random().toString(36).slice(2,9)}
-function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'A',colC:'#d92a5d',zoom:1,ox:0,oy:0,dark:0,span:false,frizza:false,logo:true},o)}
+function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'N',zoom:1,ox:0,oy:0,dark:0,span:false,frizza:false,logo:true},o)}
 function today(){const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear()}
 function ymd(){const m=(S.date||'').match(/^(\d{1,2})[-.](\d{1,2})[-.](\d{4})$/);if(m)return m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0');const t=today().split('-');return t[2]+t[1]+t[0]}
-function defaults(){return{v:2,colA:'#ff8a1f',colB:'#8b5cf6',size:52,date:today(),slides:[
-  mk({type:'cover',frizza:true,title:'News dal di',credit:'Polizia chantunala grischuna',colSrc:'C',colC:'#d92a5d'}),
-  mk({title:'Incendi a Poschiavo',text:"En la Val da Camp dasper Poschiavo hai brischà gievgia en in cumplex da chasas. Persunas na sajan betg vegnidas blessadas. Daco ch'i ha brischà n'è anc betg cler.",colSrc:'A'}),
-  mk({title:'Gieus olimpics da juniors',text:"Als Youth Olympic Games a Dakar en il Senegal hai dà l'emprima medaglia dad aur per la Svizra. La Turitgaisa Kimey Casanova ha gudagnà aur en il triatlon.",credit:'imago images/teamsprint media',colSrc:'B'}),
-  mk({title:'Segund chaud onn insumma',text:"Tenor il Servetsch europeic da clima Copernicus, vegn il 2026 robablamain ad esser il segund onn il pli chaud dapi ch'ins mesira las temperaturas.",credit:'Reuters',colSrc:'A'})
+function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#ff8a1f',V:'#8b5cf6'},size:52,date:today(),slides:[
+  mk({type:'cover',frizza:true,title:'News dal di',credit:'Polizia chantunala grischuna',colSrc:'N'}),
+  mk({title:'Incendi a Poschiavo',text:"En la Val da Camp dasper Poschiavo hai brischà gievgia en in cumplex da chasas. Persunas na sajan betg vegnidas blessadas. Daco ch'i ha brischà n'è anc betg cler.",colSrc:'N'}),
+  mk({title:'Gieus olimpics da juniors',text:"Als Youth Olympic Games a Dakar en il Senegal hai dà l'emprima medaglia dad aur per la Svizra. La Turitgaisa Kimey Casanova ha gudagnà aur en il triatlon.",credit:'imago images/teamsprint media',colSrc:'N'}),
+  mk({title:'Segund chaud onn insumma',text:"Tenor il Servetsch europeic da clima Copernicus, vegn il 2026 robablamain ad esser il segund onn il pli chaud dapi ch'ins mesira las temperaturas.",credit:'Reuters',colSrc:'N'})
 ]}}
-function load(){try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.slides&&j.slides.length){j.slides=j.slides.map(s=>{if(s.frizza===undefined)s.frizza=(s.type==='cover'&&s.arrow!==false);delete s.arrow;if(s.type==='cover'&&s.colC==='#e0245e')s.colC='#d92a5d';return mk(s)});if(j.v!==2)j.size=52;j.v=2;j.date=today();return Object.assign(defaults(),j)}}catch(e){}return defaults()}
-function save(){try{const c=JSON.parse(JSON.stringify(S));delete c.date;localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}}
+function load(){try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.slides&&j.slides.length){
+  j.slides=j.slides.map(s=>{if(s.frizza===undefined)s.frizza=(s.type==='cover'&&s.arrow!==false);delete s.arrow;delete s.colC;s.colSrc='N';return mk(s)});
+  const d=defaults(),pre=Object.assign({},d.pre);
+  if(j.pre){if(j.pre.O)pre.O=j.pre.O;if(j.pre.V)pre.V=j.pre.V}else{if(j.colA)pre.O=j.colA;if(j.colB)pre.V=j.colB}
+  d.pre=pre;d.slides=j.slides;return d}}catch(e){}return defaults()}
+function save(){try{const c=JSON.parse(JSON.stringify(S));delete c.date;c.pre={O:S.pre.O,V:S.pre.V};localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}}
 S=load();
 
 function normHex(v,f){v=(v||'').trim().replace(/^#?/,'#');if(/^#[0-9a-f]{3}$/i.test(v))v='#'+[...v.slice(1)].map(c=>c+c).join('');return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():f}
-function slideColor(s){return s.colSrc==='A'?S.colA:s.colSrc==='B'?S.colB:s.colC}
+function slideColor(s){return S.pre[s.colSrc]||S.pre.N}
 
 /* ---------- Scrittiras: gemeinsamer Speicher mit /votaziuns und den Grafik-Tools (IndexedDB «vischnanca», prefs: font = Bold, fontLt = Light) ---------- */
 const FB='SRG SSR Type Bold',FL='SRG SSR Type Light',have={bold:false,light:false};
@@ -307,7 +303,7 @@ function render(c,idx,preview){
   if(o.dark>0){c.fillStyle='rgba(0,0,0,'+(o.dark/100)+')';c.fillRect(0,0,W,H)}
 
   /* Masse nach Affinity-Vorlage (Zeilenabstand 91): Text 52, Titel 58.5, Quelle 30; Faktor k über den Regler */
-  const k=S.size/52,n=52*k,tN=58.5*k,padX=Math.round(17*k),boxH=Math.round(80*k),tH=Math.round(82*k),gap=Math.round(11*k);
+  const k=1,n=52*k,tN=58.5*k,padX=Math.round(17*k),boxH=Math.round(80*k),tH=Math.round(82*k),gap=Math.round(11*k);
   const X0=70,MAXBOX=W-2*X0,maxW=MAXBOX-2*padX;
   const isCover=idx===0;
   let y=1280;
@@ -351,7 +347,21 @@ function render(c,idx,preview){
   return {lines:lines.length,top:y+gap};
 }
 let raf=0;
-function redraw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const r=render(ctx,cur,true);$('lineCnt').textContent=r.lines?r.lines+' lingias':''})}
+function redraw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const r=render(ctx,cur,true);$('lineCnt').textContent=r.lines?r.lines+' lingias':'';drawStrip()})}
+/* Survista: alle Seiten nebeneinander (live), Klick wählt die Seite */
+let stTimer=0;const off=document.createElement('canvas');off.width=W;off.height=H;const offc=off.getContext('2d');
+function drawStrip(){
+  clearTimeout(stTimer);stTimer=setTimeout(()=>{
+    const st=$('strip');
+    while(st.children.length>S.slides.length)st.lastChild.remove();
+    S.slides.forEach((sl,i)=>{
+      let c=st.children[i];
+      if(!c){c=document.createElement('canvas');c.width=360;c.height=450;c.onclick=()=>{cur=+c.dataset.i;fill();buildTabs();redraw()};st.appendChild(c)}
+      c.dataset.i=i;c.classList.toggle('cur',i===cur);
+      render(offc,i,false);const g=c.getContext('2d');g.clearRect(0,0,360,450);g.drawImage(off,0,0,360,450);
+    });
+  },60);
+}
 
 /* ---------- UI ---------- */
 function cs(){return S.slides[cur]}
@@ -361,13 +371,13 @@ function buildTabs(){
   const t=$('tabs');t.innerHTML='';
   S.slides.forEach((s,i)=>{const b=document.createElement('button');b.className='pill'+(i===cur?' on':'');const Pp=pairOf(i);b.innerHTML='<span class="sw" style="background:'+slideColor(s)+'"></span>'+(i+1)+(Pp.left===i&&Pp.right!==i?' ⇄':'');b.onclick=()=>{cur=i;fill();buildTabs();redraw()};t.appendChild(b)});
   const pl=document.createElement('button');pl.className='pill';pl.textContent='+';pl.title='Agiuntar ina pagina';pl.setAttribute('aria-label','Agiuntar ina pagina');
-  pl.onclick=()=>{const last=S.slides[S.slides.length-1];S.slides.push(mk({colSrc:last.colSrc==='A'?'B':'A'}));cur=S.slides.length-1;fill();buildTabs();redraw();save()};
+  pl.onclick=()=>{const last=S.slides[S.slides.length-1];S.slides.push(mk({colSrc:last.colSrc}));cur=S.slides.length-1;fill();buildTabs();redraw();save()};
   t.appendChild(pl);
 }
 function buildColPills(){
   const p=$('colPills');p.innerHTML='';
-  [['A','Colur A',S.colA],['B','Colur B',S.colB],['C','Atgna colur',cs().colC]].forEach(([k,n,c])=>{
-    const b=document.createElement('button');b.className='pill'+(cs().colSrc===k?' on':'');b.innerHTML='<span class="sw" style="background:'+c+'"></span>'+n;
+  [['N','Novitads'],['O','Orange'],['V','Violet']].forEach(([k,n])=>{
+    const b=document.createElement('button');b.className='pill'+(cs().colSrc===k?' on':'');b.innerHTML='<span class="sw" style="background:'+S.pre[k]+'"></span>'+n;
     b.onclick=()=>{cs().colSrc=k;fill();buildTabs();redraw();save()};p.appendChild(b)});
 }
 function fill(){
@@ -377,7 +387,7 @@ function fill(){
   $('arrow').checked=!!s.frizza;
   $('showCr').checked=s.showCr!==false;$('credit').disabled=s.showCr===false;$('credit').style.opacity=s.showCr===false?.45:1;
   const col=slideColor(s);$('colPick').value=col;$('colHex').value=col;
-  $('colHint').textContent=s.colSrc==='C'?'Atgna colur da questa pagina.':'Midar la colur '+s.colSrc+' vala per tut las paginas che la utiliseschan (vesair parameters generals).';
+  $('colHint').textContent='Il code da questa colur vala per tut las paginas che la utiliseschan. «Novitads» (#d92a5d) è adina la colur standard ed è puspè quella suenter avrir il tool.';
   buildColPills();
   const P=own(),o=P.o,linked=P.left!==P.right;
   $('span').checked=linked;
@@ -385,8 +395,6 @@ function fill(){
   $('zoom').value=Math.round(o.zoom*100);$('zv').textContent=Math.round(o.zoom*100)+'%';
   $('ox').value=Math.round(o.ox*100);$('oy').value=Math.round(o.oy*100);
   $('dark').value=o.dark;$('dv').textContent=o.dark+'%';
-  $('aPick').value=S.colA;$('aHex').value=S.colA;$('bPick').value=S.colB;$('bHex').value=S.colB;
-  $('size').value=S.size;$('sv').textContent=S.size+' px';
 }
 function upd(fn){fn();redraw();save()}
 $('title').oninput=e=>upd(()=>cs().title=e.target.value);
@@ -398,7 +406,7 @@ $('span').onchange=e=>{
   const P=own();
   if(e.target.checked){
     if(P.left===P.right){
-      if(cur===S.slides.length-1)S.slides.push(mk({colSrc:cs().colSrc==='A'?'B':'A'}));
+      if(cur===S.slides.length-1)S.slides.push(mk({colSrc:cs().colSrc}));
       S.slides[cur+1].span=false;cs().span=true;
     }
   }else{P.o.span=false}
@@ -407,14 +415,9 @@ $('span').onchange=e=>{
 $('showCr').onchange=e=>{cs().showCr=e.target.checked;fill();redraw();save()};
 $('arrow').onchange=e=>upd(()=>cs().frizza=e.target.checked);
 
-function setCol(hex){const s=cs();if(s.colSrc==='A')S.colA=hex;else if(s.colSrc==='B')S.colB=hex;else s.colC=hex;fill();buildTabs();redraw();save()}
+function setCol(hex,fromHex){S.pre[cs().colSrc]=hex;$('colPick').value=hex;if(!fromHex)$('colHex').value=hex;buildColPills();buildTabs();redraw();save()}
 $('colPick').oninput=e=>setCol(e.target.value);
-$('colHex').oninput=e=>{const h=normHex(e.target.value,null);if(h){const s=cs();if(s.colSrc==='A')S.colA=h;else if(s.colSrc==='B')S.colB=h;else s.colC=h;$('colPick').value=h;buildColPills();buildTabs();redraw();save()}};
-$('aPick').oninput=e=>{S.colA=e.target.value;$('aHex').value=S.colA;fill();buildTabs();redraw();save()};
-$('bPick').oninput=e=>{S.colB=e.target.value;$('bHex').value=S.colB;fill();buildTabs();redraw();save()};
-$('aHex').oninput=e=>{const h=normHex(e.target.value,null);if(h){S.colA=h;$('aPick').value=h;buildColPills();buildTabs();redraw();save()}};
-$('bHex').oninput=e=>{const h=normHex(e.target.value,null);if(h){S.colB=h;$('bPick').value=h;buildColPills();buildTabs();redraw();save()}};
-$('size').oninput=e=>{S.size=+e.target.value;$('sv').textContent=S.size+' px';redraw();save()};
+$('colHex').oninput=e=>{const h=normHex(e.target.value,null);if(h)setCol(h,true)};
 
 $('zoom').oninput=e=>{own().o.zoom=e.target.value/100;$('zv').textContent=e.target.value+'%';redraw();save()};
 $('ox').oninput=e=>{own().o.ox=e.target.value/100;redraw();save()};
@@ -475,11 +478,10 @@ const tEnd=e=>{if(tg&&e.touches.length<2){tg=null;save()}};
 cv.addEventListener('touchend',tEnd);cv.addEventListener('touchcancel',tEnd);
 
 /* slides */
-$('addP').onclick=()=>{own().o.span=false;S.slides.splice(cur+1,0,mk({colSrc:cs().colSrc==='A'?'B':'A'}));cur++;fill();buildTabs();redraw();save()};
 $('del').onclick=()=>{if(cur===0){alert('Pagina 1 (cover) stat adina.');return}if(S.slides.length<2){alert('Almain ina pagina stat.');return}if(!confirm('Stizzar questa pagina?'))return;own().o.span=false;delete imgs[cs().id];S.slides.splice(cur,1);cur=Math.min(cur,S.slides.length-1);fill();buildTabs();redraw();save()};
 $('mvL').onclick=()=>{if(cur>1){own().o.span=false;pairOf(cur-1).o.span=false;[S.slides[cur-1],S.slides[cur]]=[S.slides[cur],S.slides[cur-1]];cur--;buildTabs();redraw();save()}};
 $('mvR').onclick=()=>{if(cur>0&&cur<S.slides.length-1){own().o.span=false;pairOf(cur+1).o.span=false;[S.slides[cur+1],S.slides[cur]]=[S.slides[cur],S.slides[cur+1]];cur++;buildTabs();redraw();save()}};
-$('reset').onclick=()=>{if(!confirm('Tut ils texts e maletgs stizzar e cumenzar da nov?'))return;Object.keys(imgs).forEach(k=>delete imgs[k]);S.slides=[mk({type:'cover',frizza:true,title:'News dal di',colSrc:'C',colC:'#d92a5d'}),mk({})];cur=0;fill();buildTabs();redraw();save()};
+$('reset').onclick=()=>{if(!confirm('Tut ils texts e maletgs stizzar e cumenzar da nov?'))return;Object.keys(imgs).forEach(k=>delete imgs[k]);S.slides=[mk({type:'cover',frizza:true,title:'News dal di',colSrc:'N'}),mk({})];cur=0;fill();buildTabs();redraw();save()};
 
 /* export */
 function blobOf(i){const c=document.createElement('canvas');c.width=W;c.height=H;render(c.getContext('2d'),i,false);return new Promise(r=>c.toBlob(r,'image/png'))}
