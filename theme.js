@@ -45,6 +45,9 @@
   var saved = function () { try { var t = localStorage.getItem('dbz-theme'); return t === 'light' || t === 'dark' ? t : null; } catch (e) { return null; } };
   r.dataset.theme = saved() || (mq.matches ? 'light' : 'dark');
   window.dbzTheme = function () { return r.dataset.theme; };
+  // Farbstärke: «soft» = alle Akzent- und Statusfarben nur halb so kräftig (Sättigung halbiert); gespeichert in dbz-tone
+  var savedTone = function () { try { return localStorage.getItem('dbz-tone') === 'soft' ? 'soft' : ''; } catch (e) { return ''; } };
+  if (savedTone()) r.dataset.tone = 'soft';
 
   var css = ':root{--on-accent:#121214;--on-sel:#fff;--surface2:#18181b;--surface3:#202024;--dim:#6a6a72;--shadow:rgba(0,0,0,.55);--lab:#ff9a3c;--wash:rgba(255,77,100,.08);--warn-text:#ffd2a8;--ok-text:#8fd9a8}' +
     ':root[data-theme="light"]{color-scheme:light;' +
@@ -64,6 +67,7 @@
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
+    '.themebtn.tonebtn{right:52px}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
     /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
     ':where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent,#ff4d64)!important;outline-offset:2px}' +
     '.themebtn:focus-visible{outline-offset:2px}' +
@@ -107,6 +111,41 @@
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', startGrad); else startGrad();
   window.addEventListener('dbz-theme', function () { dbzGrad(); });
 
+  // ---- Farbstärke: Variablen der Seite lesen, Sättigung halbieren, als Überschreibung an <html> setzen ----
+  var TV = ['--accent', '--acc', '--accent-dark', '--acc2', '--link', '--lab', '--ok', '--warn', '--err', '--bad'], tprobe;
+  function parseCol(c) {
+    var m = /rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/.exec(c); if (m) return [+m[1], +m[2], +m[3]];
+    m = /color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/.exec(c); return m ? [m[1] * 255, m[2] * 255, m[3] * 255] : null;
+  }
+  function soften(c) {
+    var R = c[0] / 255, G = c[1] / 255, B = c[2] / 255, mx = Math.max(R, G, B), mn = Math.min(R, G, B), l = (mx + mn) / 2, h = 0, sat = 0;
+    if (mx !== mn) {
+      var dd = mx - mn; sat = l > .5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+      h = mx === R ? (G - B) / dd + (G < B ? 6 : 0) : mx === G ? (B - R) / dd + 2 : (R - G) / dd + 4; h /= 6;
+    }
+    sat /= 2;
+    var q = l < .5 ? l * (1 + sat) : l + sat - l * sat, p = 2 * l - q;
+    var f = function (t) { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+    var hex = function (v) { return ('0' + Math.round(v * 255).toString(16)).slice(-2); };
+    return sat === 0 && mx === mn ? '#' + hex(l) + hex(l) + hex(l) : '#' + hex(f(h + 1 / 3)) + hex(f(h)) + hex(f(h - 1 / 3));
+  }
+  function applyTone() {
+    TV.forEach(function (v) { r.style.removeProperty(v); }); // zuerst zurücksetzen, damit die ursprünglichen Seitenwerte gelesen werden
+    if (r.dataset.tone === 'soft' && d.body) {
+      if (!tprobe) { tprobe = d.createElement('i'); tprobe.setAttribute('aria-hidden', 'true'); tprobe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;visibility:hidden'; d.body.appendChild(tprobe); }
+      var cs = getComputedStyle(r);
+      TV.forEach(function (v) {
+        var raw = cs.getPropertyValue(v).trim(); if (!raw) return;
+        tprobe.style.color = ''; tprobe.style.color = raw;
+        var c = parseCol(getComputedStyle(tprobe).color); if (c) r.style.setProperty(v, soften(c));
+      });
+    }
+    if (window.dbzGrad) dbzGrad();
+    window.dispatchEvent(new CustomEvent('dbz-tone', { detail: r.dataset.tone === 'soft' ? 'soft' : 'normal' }));
+  }
+  window.dbzTone = function () { return r.dataset.tone === 'soft' ? 'soft' : 'normal'; };
+  window.addEventListener('dbz-theme', function () { if (r.dataset.tone === 'soft') applyTone(); });
+
   var SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   var MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
   var btn;
@@ -118,6 +157,18 @@
     var m = d.querySelector('meta[name="theme-color"]'); if (m) m.content = light ? '#f4f4f7' : '#121214';
     window.dispatchEvent(new CustomEvent('dbz-theme', { detail: r.dataset.theme }));
   }
+  var tbtn, DROP = 'M12 3.5C12 3.5 5.5 10 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10 12 3.5 12 3.5z', HALF = 'M12 3.5C12 3.5 5.5 10 5.5 14.5a6.5 6.5 0 0 0 6.5 6.5z';
+  function paintTone() {
+    var soft = r.dataset.tone === 'soft', label = soft ? 'Colurs normalas' : 'Colurs main intensivas';
+    if (!tbtn) return;
+    tbtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + DROP + '"/>' + (soft ? '<path d="' + HALF + '" fill="currentColor"/>' : '') + '</svg>';
+    tbtn.title = label; tbtn.setAttribute('aria-label', label); tbtn.setAttribute('aria-pressed', soft ? 'true' : 'false');
+  }
+  function setTone(on, store) {
+    if (on) r.dataset.tone = 'soft'; else delete r.dataset.tone;
+    if (store) { try { if (on) localStorage.setItem('dbz-tone', 'soft'); else localStorage.removeItem('dbz-tone'); } catch (e) {} }
+    applyTone(); paintTone();
+  }
   function set(t, store) {
     r.dataset.theme = t;
     if (store) { try { localStorage.setItem('dbz-theme', t); } catch (e) {} }
@@ -127,6 +178,10 @@
     btn = d.createElement('button'); btn.type = 'button'; btn.className = 'themebtn';
     btn.addEventListener('click', function () { set(r.dataset.theme === 'light' ? 'dark' : 'light', true); });
     d.body.appendChild(btn); paint();
+    tbtn = d.createElement('button'); tbtn.type = 'button'; tbtn.className = 'themebtn tonebtn';
+    tbtn.addEventListener('click', function () { setTone(r.dataset.tone !== 'soft', true); });
+    d.body.appendChild(tbtn); paintTone(); applyTone();
+    addEventListener('load', function () { if (r.dataset.tone === 'soft') applyTone(); });
   }
   if (d.body) mount(); else d.addEventListener('DOMContentLoaded', mount);
   // Pfeiltasten in Tab-Leisten und Auswahlgruppen (role=tablist / radiogroup): links/rechts wechselt und wählt, Pos1/Ende springen
