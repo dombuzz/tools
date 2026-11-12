@@ -326,7 +326,9 @@ function render(c,idx,preview){
     const w=c.measureText(lines[i]).width;
     y-=boxH;
     c.fillStyle='#fff';c.fillRect(X0,y,Math.ceil(w+2*padX),boxH);
-    c.fillStyle='#16161a';c.fillText(lines[i],X0+padX,y+boxH/2+2);
+    c.fillStyle='#16161a';c.textBaseline='alphabetic';
+    const capT=c.measureText('H').actualBoundingBoxAscent||n*.7;
+    c.fillText(lines[i],X0+padX,y+boxH/2+capT/2);c.textBaseline='middle';
     y-=gap;
   }
   /* title */
@@ -398,7 +400,7 @@ function buildTabs(){
 }
 function buildColPills(){
   const p=$('colPills');p.innerHTML='';
-  [['N','Novitads'],['O','Orange'],['V','Violet']].forEach(([k,n])=>{
+  [['N','Novitads'],['O','Sport'],['V','Cultura']].forEach(([k,n])=>{
     const b=document.createElement('button');b.className='pill'+(cs().colSrc===k?' on':'');b.innerHTML='<span class="sw" style="background:'+S.pre[k]+'"></span>'+n;
     b.onclick=()=>{cs().colSrc=k;fill();buildTabs();redraw();save()};p.appendChild(b)});
 }
