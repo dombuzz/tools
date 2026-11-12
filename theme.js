@@ -45,7 +45,7 @@
   var saved = function () { try { var t = localStorage.getItem('dbz-theme'); return t === 'light' || t === 'dark' ? t : null; } catch (e) { return null; } };
   r.dataset.theme = saved() || (mq.matches ? 'light' : 'dark');
   window.dbzTheme = function () { return r.dataset.theme; };
-  // Farbstärke: «soft» = alle Akzent- und Statusfarben nur halb so kräftig (Sättigung halbiert); gespeichert in dbz-tone
+  // Farbstärke: «soft» = alle Akzent- und Statusfarben weniger kräftig (Sättigung auf zwei Drittel); gespeichert in dbz-tone
   var savedTone = function () { try { return localStorage.getItem('dbz-tone') === 'soft' ? 'soft' : ''; } catch (e) { return ''; } };
   if (savedTone()) r.dataset.tone = 'soft';
 
@@ -67,7 +67,13 @@
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
-    '.themebtn.tonebtn{right:52px}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    '.themebtn.tonebtn{top:52px}.themebtn.tonebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    /* Zellteilung nach unten: der Tropfen löst sich aus dem Modus-Knopf, dieser streckt sich dabei kurz; beim Schliessen läuft alles rückwärts */
+    '@keyframes dbz-split{0%{transform:translateY(-40px) scale(.9);opacity:0}25%{transform:translateY(-27px) scale(.82,1.32);opacity:.7}68%{transform:translateY(5px) scale(1.12,.9)}}' +
+    '@keyframes dbz-parent{0%{transform:none}30%{transform:scale(.93,1.16)}62%{transform:scale(1.05,.95)}100%{transform:none}}' +
+    '.themebtn.tonebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}' +
+    '.themebtn.tonebtn.closing{animation:dbz-split .45s cubic-bezier(.3,.7,.3,1) reverse forwards}' +
+    '.themebtn.dividing{transform-origin:50% 0;animation:dbz-parent .5s ease-in-out}.themebtn.dividing-rev{transform-origin:50% 0;animation:dbz-parent .45s ease-in-out reverse}' +
     /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
     ':where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent,#ff4d64)!important;outline-offset:2px}' +
     '.themebtn:focus-visible{outline-offset:2px}' +
@@ -123,7 +129,7 @@
       var dd = mx - mn; sat = l > .5 ? dd / (2 - mx - mn) : dd / (mx + mn);
       h = mx === R ? (G - B) / dd + (G < B ? 6 : 0) : mx === G ? (B - R) / dd + 2 : (R - G) / dd + 4; h /= 6;
     }
-    sat /= 2;
+    sat *= 2 / 3; // ein Drittel des Unterschieds (Original − halbe Sättigung) kommt zur halben Sättigung zurück
     var q = l < .5 ? l * (1 + sat) : l + sat - l * sat, p = 2 * l - q;
     var f = function (t) { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
     var hex = function (v) { return ('0' + Math.round(v * 255).toString(16)).slice(-2); };
@@ -164,6 +170,22 @@
     tbtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + DROP + '"/>' + (soft ? '<path d="' + HALF + '" fill="currentColor"/>' : '') + '</svg>';
     tbtn.title = label; tbtn.setAttribute('aria-label', label); tbtn.setAttribute('aria-pressed', soft ? 'true' : 'false');
   }
+  // Tropfen: erscheint nach einem Klick auf den Modus-Knopf, verschwindet nach 6 s (oder sofort nach dem Klick darauf)
+  var tTimer = 0, tOpen = false;
+  function showTone() {
+    if (!tbtn) return; clearTimeout(tTimer);
+    if (!tOpen) {
+      tOpen = true; tbtn.hidden = false; tbtn.classList.remove('closing'); tbtn.classList.add('opening');
+      btn.classList.remove('dividing-rev'); btn.classList.add('dividing');
+      setTimeout(function () { btn.classList.remove('dividing'); tbtn.classList.remove('opening'); }, 560);
+    }
+    tTimer = setTimeout(hideTone, 6000);
+  }
+  function hideTone() {
+    clearTimeout(tTimer); if (!tbtn || !tOpen) return; tOpen = false;
+    tbtn.classList.remove('opening'); tbtn.classList.add('closing'); btn.classList.remove('dividing'); btn.classList.add('dividing-rev');
+    setTimeout(function () { btn.classList.remove('dividing-rev'); if (!tOpen) { tbtn.hidden = true; tbtn.classList.remove('closing'); } }, 480);
+  }
   function setTone(on, store) {
     if (on) r.dataset.tone = 'soft'; else delete r.dataset.tone;
     if (store) { try { if (on) localStorage.setItem('dbz-tone', 'soft'); else localStorage.removeItem('dbz-tone'); } catch (e) {} }
@@ -176,10 +198,11 @@
   }
   function mount() {
     btn = d.createElement('button'); btn.type = 'button'; btn.className = 'themebtn';
-    btn.addEventListener('click', function () { set(r.dataset.theme === 'light' ? 'dark' : 'light', true); });
+    btn.addEventListener('click', function () { set(r.dataset.theme === 'light' ? 'dark' : 'light', true); showTone(); });
     d.body.appendChild(btn); paint();
     tbtn = d.createElement('button'); tbtn.type = 'button'; tbtn.className = 'themebtn tonebtn';
-    tbtn.addEventListener('click', function () { setTone(r.dataset.tone !== 'soft', true); });
+    tbtn.hidden = true;
+    tbtn.addEventListener('click', function () { setTone(r.dataset.tone !== 'soft', true); hideTone(); });
     d.body.appendChild(tbtn); paintTone(); applyTone();
     addEventListener('load', function () { if (r.dataset.tone === 'soft') applyTone(); });
   }
