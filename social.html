@@ -23,11 +23,11 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='2.5' width='12' height='19' rx='2.5'/%3E%3Cpath d='M10 18.5h4'/%3E%3Ccircle cx='12' cy='9' r='2.5'/%3E%3Cpath d='M8.5 14.5c.6-1.6 1.9-2.4 3.5-2.4s2.9.8 3.5 2.4'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
-:root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;color-scheme:dark}
+:root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--border:#2f2f34;--mono:#26262a;--accent:#ff4d64;--accent-dark:#d93a50;--ok:#4caf6f;--warn:#ffb86b;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.wrap{position:relative;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
 .homelink:hover,.homelink:focus-visible{color:var(--accent)}
 h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
@@ -43,11 +43,9 @@ h1 .acc{color:var(--accent)}
 .fontbox .btn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.82rem;font-weight:600;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);padding:5px 10px;cursor:pointer}
 .fontbox .btn:hover{color:var(--text)}
 .fontbox input{display:none}
-.wrap{position:relative}
-@media (max-width:892px){.fontbox{position:static;max-width:none;align-self:flex-end}body{padding-bottom:12px}.wrap{gap:12px}.dbz-like{margin-top:8px!important}.dbz-like p{margin-bottom:6px}}
-.frames{position:relative}
-.frames iframe{display:block;width:100%;height:600px;border:0;background:transparent;color-scheme:normal}
-body.hold .dbz-like{display:none}
+@media (max-width:860px){.fontbox{position:static;max-width:none;align-self:flex-end}body{padding-bottom:12px}.wrap{gap:12px}.dbz-like{margin-top:8px!important}.dbz-like p{margin-bottom:6px}}
+.tool{min-width:0}
+.tool .loading{color:var(--muted);font-size:.9rem}
 </style>
 </head>
 <body>
@@ -59,66 +57,130 @@ body.hold .dbz-like{display:none}
   </div>
   <div class="seg" id="tabs" role="group" aria-label="Tools"></div>
   <div class="fontbox" id="fontBox" hidden><span id="fontState"></span><label class="btn" id="fontBtn"><span id="fontBtnT">Chargiar scrittiras</span><input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" multiple></label></div>
-  <div class="frames" id="frames"></div>
+  <div id="tools"></div>
 </div>
 
 <script>
-/* Tabs: neues Tool = ein Eintrag hier (id = Adresse #id, label = Beschriftung, src = Seite, die im Rahmen geladen wird).
-   Die Seite selbst muss das Skript /social-embed.js laden (Embed-Modus + Nutzungsmeldung). */
+/* Tabs: neues Tool = ein Eintrag hier (id = Adresse #id, label = Beschriftung, src = Tool-Seite).
+   Die Tool-Seiten werden beim ersten Öffnen geladen und direkt in diese Seite eingebaut (kein iframe):
+   Stil wird auf das Tool begrenzt (@scope), IDs bekommen das Kürzel des Tabs, das Skript läuft mit eigenem «document»/«window». */
 const TABS = [
-  { id: 'profil',   label: 'Profil',         src: '/social-profil' },
-  { id: 'novitads', label: 'Novitads dal di', src: '/social-novitads' },
-  { id: 'mument',   label: '#mument',        src: '/social-mument' }
+  { id: 'profil',   label: 'Profil',          src: '/social-profil.html' },
+  { id: 'novitads', label: 'Novitads dal di', src: '/social-novitads.html' },
+  { id: 'mument',   label: '#mument',         src: '/social-mument.html' }
 ];
 const $ = id => document.getElementById(id);
 let cur = TABS[0];
-let firstShow = true;
-const ended = {};
-const frames = {};
-const fontInfo = {};
+const mounted = {};   /* id -> { el, ready } */
+
+/* ---------- Tool einbauen ---------- */
+const SPLIT = s => { const out = []; let d = 0, c = ''; for (const ch of s) { if (ch === '(' || ch === '[') d++; if (ch === ')' || ch === ']') d--; if (ch === ',' && !d) { out.push(c); c = ''; } else c += ch; } out.push(c); return out; };
+function scopeCss(text, t, ids) {
+  const pre = t.id + '--';
+  const fixSel = sel => SPLIT(sel).map(x => x.trim()).filter(x => x !== ':root').map(x =>
+    x.replace(/(^|[\s>+~(])(?:html|body)(?![\w-])/g, '$1:scope').replace(/(^|[\s>+~(])(:root)(?![\w-])/g, '$1:scope')
+     .replace(/#([A-Za-z_][\w-]*)/g, (m, n) => ids.has(n) ? '#' + pre + n : m)).join(',');
+  const sh = new CSSStyleSheet(); sh.replaceSync(text);
+  let inner = '', outer = '';
+  const walk = rules => { let o = ''; for (const r of rules) {
+    if (r instanceof CSSStyleRule) { const s = fixSel(r.selectorText); if (s) o += s + '{' + r.style.cssText + '}'; }
+    else if (r instanceof CSSMediaRule) o += '@media ' + r.conditionText + '{' + walk(r.cssRules) + '}';
+    else if (r instanceof CSSSupportsRule) o += '@supports ' + r.conditionText + '{' + walk(r.cssRules) + '}';
+    else outer += r.cssText;   /* @font-face, @keyframes … */
+  } return o; };
+  inner = walk(sh.cssRules);
+  return outer + '@scope (.tool-' + t.id + '){' + inner + '}';
+}
+const EXTRA = {
+  profil: '.wrap>div:first-child{display:none}',
+  novitads: '.wrap>div:first-child{display:none}',
+  mument: '.homelink,h1,.subtitle{display:none}'
+};
+const COMMON_CSS = ':scope{margin:0;padding:0!important;background:transparent!important;min-height:0!important}' +
+  '.themebtn,.dbz-help,.dbz-helpbox{display:none!important}' +
+  /* einspaltig: Vorschau oben fixiert (wie /maletgs), Einstellungen scrollen darunter */
+  '@media(max-width:860px){.stick{position:sticky!important;top:0!important;z-index:20;background:var(--bg);padding-bottom:4px}.stick .hint,.stick .warn{display:none}.stick .card{padding:10px 12px}.stick .row{gap:6px;margin-bottom:6px!important}}';
+
+function guardWin(real, active, isDoc, root, pre, ids) {
+  const GUARD = new Set(['paste', 'keydown', 'keyup', 'drop', 'dragover', 'dragenter', 'dragleave']);
+  const fixQ = s => String(s).replace(/#([A-Za-z_][\w-]*)/g, (m, n) => ids.has(n) ? '#' + pre + n : m);
+  return new Proxy(real, {
+    get(tg, p) {
+      if (p === 'addEventListener') return (type, fn, o) => tg.addEventListener(type, GUARD.has(type) ? (e => { if (active()) fn.call(tg, e); }) : fn, o);
+      if (isDoc) {
+        if (p === 'getElementById') return id => tg.getElementById(pre + id);
+        if (p === 'querySelector') return s => root.querySelector(fixQ(s));
+        if (p === 'querySelectorAll') return s => root.querySelectorAll(fixQ(s));
+      }
+      const v = Reflect.get(tg, p); return typeof v === 'function' ? v.bind(tg) : v;
+    },
+    set(tg, p, v) { tg[p] = v; return true; }
+  });
+}
+
+async function mount(t) {
+  if (mounted[t.id]) return mounted[t.id].ready;
+  const el = document.createElement('div'); el.className = 'tool tool-' + t.id; el.hidden = true;
+  el.innerHTML = '<p class="loading">Chargiar …</p>';
+  $('tools').appendChild(el);
+  const m = mounted[t.id] = { el };
+  m.ready = (async () => {
+    const html = await (await fetch(t.src)).text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const css = [...doc.querySelectorAll('style')].map(x => x.textContent).join('\n');
+    const js = [...doc.querySelectorAll('script:not([src])')].map(x => x.textContent).join('\n;\n');
+    const ids = new Set([...doc.body.querySelectorAll('[id]')].map(x => x.id));
+    const pre = t.id + '--';
+    const frag = document.createDocumentFragment();
+    [...doc.body.childNodes].forEach(n => { if (n.nodeType === 1 && /^(SCRIPT|STYLE|LINK)$/.test(n.tagName)) return; frag.appendChild(document.importNode(n, true)); });
+    frag.querySelectorAll('[id]').forEach(x => x.id = pre + x.id);
+    frag.querySelectorAll('[for]').forEach(x => { if (ids.has(x.htmlFor)) x.htmlFor = pre + x.htmlFor; });
+    const st = document.createElement('style');
+    st.textContent = scopeCss(css, t, ids) + '@scope (.tool-' + t.id + '){' + COMMON_CSS + (EXTRA[t.id] || '') + '}';
+    el.textContent = ''; el.appendChild(st); el.appendChild(frag);
+    const active = () => cur.id === t.id && !document.hidden;
+    const D = guardWin(document, active, true, el, pre, ids), W = guardWin(window, active, false);
+    try { new Function('document', 'window', js)(D, W); } catch (e) { console.error('social/' + t.id, e); }
+    /* Schriften: Karte des Tools ausblenden, Status und Knopf oben anzeigen */
+    const ff = el.querySelector('input[type=file][id$="fFile"]'), fs = el.querySelector('[id$="fState"]'), fb = el.querySelector('[id$="fBtn"]');
+    if (ff && fs && fb) {
+      const card = ff.closest('.card'); if (card) card.style.display = 'none';
+      m.font = { ff, fs, fb };
+      new MutationObserver(() => { if (cur.id === t.id) showFont(); }).observe(card || fs, { childList: true, subtree: true, characterData: true });
+    }
+    applyVh();
+  })();
+  return m.ready;
+}
+
+/* Handy: Vorschau nur ca. 20 % der Bildschirmhöhe, damit die Einstellungen darunter sichtbar bleiben */
+function applyVh() {
+  const mob = innerWidth <= 860;
+  for (const id in mounted) { const off = id === 'novitads' ? 150 : 210; mounted[id].el.style.setProperty('--vh', mob ? Math.round(innerHeight * 0.2 + off) + 'px' : '100vh'); }
+}
+
+/* ---------- Schriften-Anzeige oben rechts ---------- */
 function showFont() {
-  const i = fontInfo[cur.id];
-  $('fontBox').hidden = !i;
-  if (i) { $('fontState').innerHTML = i.html; $('fontBtnT').textContent = i.btn; }
+  const m = mounted[cur.id], f = m && m.font;
+  $('fontBox').hidden = !f;
+  if (f) { $('fontState').innerHTML = f.fs.innerHTML; $('fontBtnT').textContent = f.fb.firstChild ? f.fb.firstChild.textContent : ''; }
 }
 $('fontFile').onchange = e => {
   const files = [...e.target.files]; e.target.value = '';
-  const f = frames[cur.id]; if (f && f.contentWindow && files.length) f.contentWindow.postMessage({ dbzFontFiles: files }, location.origin);
+  const m = mounted[cur.id]; if (m && m.font && files.length && m.font.ff.onchange) m.font.ff.onchange({ target: { files, value: '' } });
 };
 
+/* ---------- Tabs ---------- */
 function pick(h) { const q = String(h || '').replace(/^#/, '').toLowerCase(); return TABS.find(t => t.id === q); }
-/* Kein eigener Scroll-Container: Rahmen wachsen mit dem Inhalt (Höhe meldet die Seite selbst), die Seite scrollt */
-function sendView() {
-  const f = frames[cur.id]; if (!f || !f.contentWindow) return;
-  const r = f.getBoundingClientRect();
-  f.contentWindow.postMessage({ dbzView: { vh: window.innerHeight, off: -r.top } }, location.origin);
-}
-const mobile = () => innerWidth <= 892; /* Rahmen ≤ 860 px = einspaltiges Layout der Tools */
-function fit() {
-  if (mobile()) {
-    /* Handy: Rahmen füllt den Bildschirm unter den Tabs, innen scrollt es (Vorschau bleibt oben fixiert) */
-    const h = Math.max(360, innerHeight - ($('frames').offsetTop - $('tabs').offsetTop) - 8);
-    for (const k in frames) frames[k].style.height = h + 'px';
-  }
-  sendView();
-}
-function show(t, keepHash) {
+async function show(t, keepHash) {
   cur = t;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === t.id));
-  if (!frames[t.id]) {
-    const f = document.createElement('iframe');
-    f.title = t.label; f.loading = 'eager'; f.src = t.src;
-    f.allow = 'clipboard-read; clipboard-write';
-    $('frames').appendChild(f); frames[t.id] = f;
-  }
-  for (const k in frames) frames[k].hidden = k !== t.id;
-  showFont();
-  /* Handy: Herz/Feedback erst nach dem Durchscrollen der Bearbeitungsoptionen */
-  document.body.classList.toggle('hold', mobile() && t.id !== 'mument' && !ended[t.id]);
-  fit();
+  await mount(t);
+  if (cur !== t) return;
+  for (const k in mounted) mounted[k].el.hidden = k !== t.id;
+  showFont(); applyVh();
+  window.dispatchEvent(new Event('resize'));
   try { localStorage.setItem('social-tab', t.id); } catch (e) {}
-  if (!keepHash && mobile() && !firstShow) { try { $('tabs').scrollIntoView({ block: 'start' }); } catch (e) {} }
-  firstShow = false;
   if (!keepHash) { try { history.replaceState(null, '', '#' + t.id); } catch (e) {} }
 }
 TABS.forEach(t => {
@@ -128,29 +190,10 @@ TABS.forEach(t => {
   $('tabs').appendChild(b);
 });
 addEventListener('hashchange', () => { const t = pick(location.hash); if (t && t !== cur) show(t, true); });
-addEventListener('resize', fit);
-let raf = 0;
-addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; sendView(); }); }, { passive: true });
+addEventListener('resize', applyVh);
 
 /* Nutzung: ein Download in einem Tab zählt als Nutzung von /social (Kennung social-<tab>, vom Worker zu «social» zusammengefasst) */
 window.dbzUseTool = () => 'social-' + cur.id;
-addEventListener('message', e => {
-  if (e.origin !== location.origin || !e.data) return;
-  if (e.data.dbzFont) {
-    const k = Object.keys(frames).find(k => frames[k].contentWindow === e.source);
-    if (k) { fontInfo[k] = e.data.dbzFont; if (k === cur.id) showFont(); }
-    return;
-  }
-  if (e.data.dbzEnd) { if (frames[cur.id] && frames[cur.id].contentWindow === e.source) { ended[cur.id] = true; document.body.classList.remove('hold'); } return; }
-  if (e.data.dbzH || e.data.dbzReady) {
-    const k = Object.keys(frames).find(k => frames[k].contentWindow === e.source);
-    if (k && e.data.dbzH && !mobile()) frames[k].style.height = e.data.dbzH + 'px';
-    sendView(); return;
-  }
-  if (!e.data.dbzUse) return;
-  if (!TABS.some(t => t.id === e.data.dbzUse)) return;
-  window.dispatchEvent(new Event('dbz-success'));
-});
 
 let start = pick(location.hash);
 if (!start) { try { start = pick(localStorage.getItem('social-tab')); } catch (e) {} }
