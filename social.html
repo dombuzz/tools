@@ -43,8 +43,8 @@ h1 .acc{color:var(--accent)}
 .fontbox .btn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.82rem;font-weight:600;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);padding:5px 10px;cursor:pointer}
 .fontbox .btn:hover{color:var(--text)}
 .fontbox input{display:none}
-.head{position:relative}
-@media (max-width:760px){.fontbox{position:static;align-items:flex-start;text-align:left;margin-top:8px}}
+.wrap{position:relative}
+@media (max-width:860px){.fontbox{position:static;max-width:none;align-self:flex-end}}
 .frames{position:relative}
 .frames iframe{display:block;width:100%;height:600px;border:0;background:transparent;color-scheme:normal}
 </style>
@@ -52,12 +52,12 @@ h1 .acc{color:var(--accent)}
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="fontbox" id="fontBox" hidden><span id="fontState"></span><label class="btn" id="fontBtn"><span id="fontBtnT">Chargiar scrittiras</span><input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" multiple></label></div>
     <a class="homelink" href="/">← Tools</a>
     <h1><span class="acc">Social</span></h1>
     <p class="sub">Visuals per las medias socialas – tscherner il tab sut.</p>
   </div>
   <div class="seg" id="tabs" role="group" aria-label="Tools"></div>
+  <div class="fontbox" id="fontBox" hidden><span id="fontState"></span><label class="btn" id="fontBtn"><span id="fontBtnT">Chargiar scrittiras</span><input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" multiple></label></div>
   <div class="frames" id="frames"></div>
 </div>
 
@@ -95,8 +95,7 @@ const mobile = () => innerWidth <= 860;
 function fit() {
   if (mobile()) {
     /* Handy: Rahmen füllt den Bildschirm unter den Tabs, innen scrollt es (Vorschau bleibt oben fixiert) */
-    const top = $('tabs').getBoundingClientRect().bottom + scrollY;
-    const h = Math.max(360, innerHeight - $('tabs').getBoundingClientRect().height - 12);
+    const h = Math.max(360, innerHeight - ($('frames').offsetTop - $('tabs').offsetTop) - 8);
     for (const k in frames) frames[k].style.height = h + 'px';
   }
   sendView();
