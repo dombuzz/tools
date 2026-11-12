@@ -283,7 +283,16 @@ function wrap(c,text,maxW){
   const out=[];
   for(const para of String(text).split(/\n/)){
     const words=para.split(/\s+/).filter(Boolean);let line='';
-    for(const w of words){const t=line?line+' '+w:w;if(line&&c.measureText(t).width>maxW){out.push(line);line=w}else line=t}
+    for(let w of words){
+      const t=line?line+' '+w:w;
+      if(c.measureText(t).width<=maxW){line=t;continue}
+      if(line){out.push(line);line=''}
+      while(c.measureText(w).width>maxW&&w.length>1){ /* zu langes Wort: zeichenweise trennen */
+        let k=1;while(k<w.length&&c.measureText(w.slice(0,k+1)).width<=maxW)k++;
+        out.push(w.slice(0,k));w=w.slice(k);
+      }
+      line=w;
+    }
     if(line)out.push(line);
   }
   return out;
@@ -411,7 +420,7 @@ function fill(){
     $('title').value=s.title;$('text').value=s.text;$('credit').value=s.credit;$('date').value=S.date;
   $('arrow').checked=!!s.frizza;
   const as=$('arrowSty');as.style.display=s.frizza?'flex':'none';as.innerHTML='';
-  [['w','Alva'],['b','Nera'],['g','Alva + contura']].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='pill'+((s.frizzaStyle||'w')===k?' on':'');b.textContent=l;b.onclick=()=>{upd(()=>s.frizzaStyle=k);fill()};as.appendChild(b)});
+  [['w','Alva'],['b','Naira'],['g','Alva + contura']].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='pill'+((s.frizzaStyle||'w')===k?' on':'');b.textContent=l;b.onclick=()=>{upd(()=>s.frizzaStyle=k);fill()};as.appendChild(b)});
   $('showCr').checked=s.showCr!==false;$('credit').disabled=s.showCr===false;$('credit').style.opacity=s.showCr===false?.45:1;
   const col=slideColor(s);$('colPick').value=col;$('colHex').value=col;
   $('colHint').textContent='Il code da questa colur vala per tut las paginas che la utiliseschan. «Novitads» (#d92a5d) è adina la colur standard ed è puspè quella suenter avrir il tool.';
