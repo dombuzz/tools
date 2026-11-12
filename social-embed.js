@@ -8,7 +8,41 @@
     });
     return;
   }
-  document.documentElement.classList.add('embed');
+  var root = document.documentElement;
+  root.classList.add('embed');
+  /* Kein eigener Container: Seite wird in voller Höhe gezeigt (Höhe geht an /social), Hintergrund durchsichtig. */
+  var st = document.createElement('style');
+  st.textContent = 'html.embed,html.embed body{background:transparent!important;background-image:none!important;min-height:0!important;height:auto!important;overflow:hidden!important}' +
+    'html.embed body::before,html.embed body::after{display:none!important}';
+  (document.head || root).appendChild(st);
+  /* Höhe an /social melden */
+  var lastH = 0;
+  function sendH() {
+    if (!document.body) return;
+    var h = Math.ceil(document.body.getBoundingClientRect().bottom + (window.pageYOffset || 0));
+    if (h && h !== lastH) { lastH = h; try { parent.postMessage({ dbzH: h }, location.origin); } catch (e) {} }
+  }
+  /* Sichtfenster von /social (für «100vh»-Masse und mitlaufende Vorschau) */
+  var view = { vh: window.innerHeight, off: 0 };
+  function applyView() {
+    root.style.setProperty('--vh', view.vh + 'px');
+    document.querySelectorAll('.stick').forEach(function (el) {
+      var par = el.parentElement; if (!par) return;
+      el.style.position = 'relative'; el.style.top = '0'; el.style.transform = 'none';
+      var pt = par.getBoundingClientRect().top + (window.pageYOffset || 0);
+      var ty = Math.max(0, Math.min(view.off - pt + 16, par.offsetHeight - el.offsetHeight));
+      el.style.transform = 'translateY(' + ty + 'px)';
+    });
+  }
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data || !e.data.dbzView) return;
+    view = e.data.dbzView; applyView(); sendH();
+  });
+  document.addEventListener('DOMContentLoaded', function () {
+    if ('ResizeObserver' in window) new ResizeObserver(function () { sendH(); applyView(); }).observe(document.body);
+    sendH(); try { parent.postMessage({ dbzReady: true }, location.origin); } catch (e) {}
+  });
+  window.addEventListener('load', sendH);
   var id = (location.pathname.replace(/\.html?$/i, '').split('/').pop() || '').replace(/^social-/, '');
   function use() { try { parent.postMessage({ dbzUse: id }, location.origin); } catch (e) {} }
   var orig = HTMLAnchorElement.prototype.click;

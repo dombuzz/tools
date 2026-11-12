@@ -39,7 +39,7 @@ h1 .acc{color:var(--accent)}
 .seg button[aria-pressed="true"]{background:transparent;color:var(--text);border-bottom-color:var(--accent)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .frames{position:relative}
-.frames iframe{display:block;width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.frames iframe{display:block;width:100%;height:600px;border:0;background:transparent;color-scheme:normal}
 </style>
 </head>
 <body>
@@ -66,11 +66,13 @@ let cur = TABS[0];
 const frames = {};
 
 function pick(h) { const q = String(h || '').replace(/^#/, '').toLowerCase(); return TABS.find(t => t.id === q); }
-function fit() {
-  const f = $('frames'), top = f.getBoundingClientRect().top + window.scrollY;
-  const h = Math.max(560, window.innerHeight - 24 - (top - window.scrollY));
-  for (const k in frames) frames[k].style.height = h + 'px';
+/* Kein eigener Scroll-Container: Rahmen wachsen mit dem Inhalt (Höhe meldet die Seite selbst), die Seite scrollt */
+function sendView() {
+  const f = frames[cur.id]; if (!f || !f.contentWindow) return;
+  const r = f.getBoundingClientRect();
+  f.contentWindow.postMessage({ dbzView: { vh: window.innerHeight, off: -r.top } }, location.origin);
 }
+function fit() { sendView(); }
 function show(t, keepHash) {
   cur = t;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === t.id));
@@ -93,11 +95,19 @@ TABS.forEach(t => {
 });
 addEventListener('hashchange', () => { const t = pick(location.hash); if (t && t !== cur) show(t, true); });
 addEventListener('resize', fit);
+let raf = 0;
+addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; sendView(); }); }, { passive: true });
 
 /* Nutzung: ein Download in einem Tab zählt als Nutzung von /social (Kennung social-<tab>, vom Worker zu «social» zusammengefasst) */
 window.dbzUseTool = () => 'social-' + cur.id;
 addEventListener('message', e => {
-  if (e.origin !== location.origin || !e.data || !e.data.dbzUse) return;
+  if (e.origin !== location.origin || !e.data) return;
+  if (e.data.dbzH || e.data.dbzReady) {
+    const k = Object.keys(frames).find(k => frames[k].contentWindow === e.source);
+    if (k && e.data.dbzH) frames[k].style.height = e.data.dbzH + 'px';
+    sendView(); return;
+  }
+  if (!e.data.dbzUse) return;
   if (!TABS.some(t => t.id === e.data.dbzUse)) return;
   window.dispatchEvent(new Event('dbz-success'));
 });

@@ -44,7 +44,7 @@ button:hover,.btn:hover{border-color:var(--accent)}
 .pill:hover{color:var(--text)}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
 .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
-canvas{display:block;width:min(100%,calc((100vh - 150px)*.8));height:auto;aspect-ratio:4/5;margin:0 auto;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y}
+canvas{display:block;width:min(100%,calc((var(--vh,100vh) - 150px)*.8));height:auto;aspect-ratio:4/5;margin:0 auto;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y}
 canvas:active{cursor:grabbing}
 .hint{font-size:.78rem;color:var(--muted);margin-top:8px}
 .sep{height:1px;background:var(--line);margin:14px 0}
