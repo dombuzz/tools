@@ -38,13 +38,21 @@ h1 .acc{color:var(--accent)}
 .seg button:hover{color:var(--text)}
 .seg button[aria-pressed="true"]{background:transparent;color:var(--text);border-bottom-color:var(--accent)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fontbox{position:absolute;top:0;right:44px;max-width:400px;font-size:.8rem;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:var(--muted)}
+.fontbox code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text)}
+.fontbox .btn{display:inline-block;font:inherit;font-size:.88rem;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text);padding:6px 12px;cursor:pointer}
+.fontbox .btn:hover{border-color:var(--accent)}
+.fontbox input{display:none}
+.head{position:relative}
+@media (max-width:760px){.fontbox{position:static;align-items:flex-start;text-align:left;margin-top:8px}}
 .frames{position:relative}
 .frames iframe{display:block;width:100%;height:600px;border:0;background:transparent;color-scheme:normal}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div>
+  <div class="head">
+    <div class="fontbox" id="fontBox" hidden><span id="fontState"></span><label class="btn" id="fontBtn"><span id="fontBtnT">Chargiar scrittiras</span><input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" multiple></label></div>
     <a class="homelink" href="/">← Tools</a>
     <h1><span class="acc">Social</span></h1>
     <p class="sub">Visuals per las medias socialas – tscherner il tab sut.</p>
@@ -64,6 +72,16 @@ const TABS = [
 const $ = id => document.getElementById(id);
 let cur = TABS[0];
 const frames = {};
+const fontInfo = {};
+function showFont() {
+  const i = fontInfo[cur.id];
+  $('fontBox').hidden = !i;
+  if (i) { $('fontState').innerHTML = i.html; $('fontBtnT').textContent = i.btn; }
+}
+$('fontFile').onchange = e => {
+  const files = [...e.target.files]; e.target.value = '';
+  const f = frames[cur.id]; if (f && f.contentWindow && files.length) f.contentWindow.postMessage({ dbzFontFiles: files }, location.origin);
+};
 
 function pick(h) { const q = String(h || '').replace(/^#/, '').toLowerCase(); return TABS.find(t => t.id === q); }
 /* Kein eigener Scroll-Container: Rahmen wachsen mit dem Inhalt (Höhe meldet die Seite selbst), die Seite scrollt */
@@ -83,6 +101,7 @@ function show(t, keepHash) {
     $('frames').appendChild(f); frames[t.id] = f;
   }
   for (const k in frames) frames[k].hidden = k !== t.id;
+  showFont();
   fit();
   try { localStorage.setItem('social-tab', t.id); } catch (e) {}
   if (!keepHash) { try { history.replaceState(null, '', '#' + t.id); } catch (e) {} }
@@ -102,6 +121,11 @@ addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => {
 window.dbzUseTool = () => 'social-' + cur.id;
 addEventListener('message', e => {
   if (e.origin !== location.origin || !e.data) return;
+  if (e.data.dbzFont) {
+    const k = Object.keys(frames).find(k => frames[k].contentWindow === e.source);
+    if (k) { fontInfo[k] = e.data.dbzFont; if (k === cur.id) showFont(); }
+    return;
+  }
   if (e.data.dbzH || e.data.dbzReady) {
     const k = Object.keys(frames).find(k => frames[k].contentWindow === e.source);
     if (k && e.data.dbzH) frames[k].style.height = e.data.dbzH + 'px';

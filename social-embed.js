@@ -38,7 +38,21 @@
     if (e.origin !== location.origin || !e.data || !e.data.dbzView) return;
     view = e.data.dbzView; applyView(); sendH();
   });
+  /* Scrittira: die Karte in der Seite ausblenden, Status/Knopf stattdessen oben rechts in /social zeigen */
+  function fontSetup() {
+    var fs = document.getElementById('fState'), fb = document.getElementById('fBtn'), ff = document.getElementById('fFile');
+    if (!fs || !fb || !ff) return;
+    var card = ff.closest('.card'); if (card) card.style.display = 'none';
+    function post() { try { parent.postMessage({ dbzFont: { html: fs.innerHTML, btn: fb.firstChild ? fb.firstChild.textContent : '' } }, location.origin); } catch (e) {} }
+    new MutationObserver(post).observe(card || fs, { childList: true, subtree: true, characterData: true });
+    window.addEventListener('message', function (e) {
+      if (e.origin !== location.origin || !e.data || !e.data.dbzFontFiles) return;
+      if (ff.onchange) ff.onchange({ target: { files: e.data.dbzFontFiles, value: '' } });
+    });
+    post();
+  }
   document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(fontSetup, 0);
     if ('ResizeObserver' in window) new ResizeObserver(function () { sendH(); applyView(); }).observe(document.body);
     sendH(); try { parent.postMessage({ dbzReady: true }, location.origin); } catch (e) {}
   });
