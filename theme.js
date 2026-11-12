@@ -151,7 +151,7 @@
   var HELP = {
     '/rtr-picture': ['Sin rtr.ch: clic dretg sin il maletg → «Copiar l’adressa dal maletg», u simplamain copiar il link da l’artitgel.', 'Integrar il link qua – il tool tschertga sez la versiun la pli gronda e la mussa en la prevista.', 'Tip: En il tab «Plirs maletgs» pos ti integrar in link d’artitgel u plirs links ina giada e chargiar giu tut ils maletgs.'],
     '/visual': ['Tscherner il visual: Magazin u Il di.', 'Trair la foto en la surfatscha, integrar cun Ctrl/Cmd+V u inditgar in link da maletg RTR.', 'Spustar e zoomar la foto, lura «Telechargiar il maletg». Tip: La foto emplenescha adina l’entira surfatscha.'],
-    '/social': ['Tscherner il tab: «Profil» (2 paginas), «Novitads dal di» (visuals per las novitads) u «#mument» (format aut 1080 × 1350).', 'Metter il maletg directamain en la surfatscha (trair, zoomar), endatar ils texts ed exportar sco PNG.', 'Tip: Ina adressa directa per in tab è p.ex. tools.dombuzz.ch/social#mument – era #profil e #novitads funcziunan.'],
+    '/social': ['Tscherner il tab: «Profil» (2 paginas), «Novitads dal di» (visuals per las novitads) u «#mument» (format aut 1080 × 1350).', 'Metter il maletg directamain en la surfatscha (trair, zoomar), endatar ils texts ed exportar sco PNG.', 'Tip: Ina adressa directa per in tab è p.ex. tools.dombuzz.ch/social#mument – era #profil e #novitads funcziunan.', '!Auters templates suondan.'],
     '/maletgs': ['«Clerezza + colurs» curregia clerezza e colurs, «Rotar + drizzar» drizza l’orizont e la perspectiva.', '«Collascha» unescha 2 u 3 maletgs en 16:9 u 1:1, «Layers» metta overlays e logos sur il maletg.', 'Tip: Ils maletgs chargiads restan en il «Parcadi» e stattan a disposiziun en tut ils tabs.'],
     '/Resizer2000': ['Trair in u plirs maletgs en la surfatscha u tutgar per tscherner.', 'Tscherner format e qualitad – ils maletgs vegnan reducids sin 2000 px a la vart lunga e telechargiads.', 'Tip: Maletgs che èn gia pli pitschens na vegnan betg engrondids.'],
     '/Plan': ['Chargiar il plan da lavur actual (PDF) – dal computer u cun il bookmarklet directamain da SharePoint.', 'Tscherner la redacziun e la perioda; opziunalmain marcar ina persuna per vesair ses servetschs.', 'Il plan na vegn betg memorisà – chargiar mintga giada la versiun actuala.'],
@@ -170,8 +170,9 @@
     var b = d.createElement('button'); b.type = 'button'; b.className = 'dbz-help'; b.textContent = '?';
     b.setAttribute('aria-expanded', 'false'); b.title = 'Co funcziuna quai?'; b.setAttribute('aria-label', 'Co funcziuna quai?');
     var box = d.createElement('div'); box.className = 'dbz-helpbox'; box.hidden = true; box.id = 'dbz-helpbox'; b.setAttribute('aria-controls', box.id);
-    box.innerHTML = '<ol>' + t.filter(function (x) { return x.indexOf('Tip:') !== 0; }).map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol>' +
-      t.filter(function (x) { return x.indexOf('Tip:') === 0; }).map(function (x) { return '<p><b>Tip:</b>' + x.slice(4) + '</p>'; }).join('');
+    box.innerHTML = '<ol>' + t.filter(function (x) { return x.indexOf('Tip:') !== 0 && x.charAt(0) !== '!'; }).map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol>' +
+      t.filter(function (x) { return x.indexOf('Tip:') === 0; }).map(function (x) { return '<p><b>Tip:</b>' + x.slice(4) + '</p>'; }).join('') +
+      t.filter(function (x) { return x.charAt(0) === '!'; }).map(function (x) { return '<p class="dbz-hot">' + x.slice(1) + '</p>'; }).join('');
     // Tipps können auch am Ende eines Schritts stehen («… Tip: …»): abtrennen
     box.querySelectorAll('li').forEach(function (li) { var i = li.innerHTML.indexOf(' Tip: '); if (i > 0) { var p = d.createElement('p'); p.innerHTML = '<b>Tip:</b> ' + li.innerHTML.slice(i + 6); li.innerHTML = li.innerHTML.slice(0, i); box.appendChild(p); } });
     h1.appendChild(b);
@@ -182,7 +183,7 @@
   var css = '.dbz-help{display:inline-grid;place-items:center;width:24px;height:24px;margin-left:10px;padding:0;border-radius:50%;border:1px solid var(--line,var(--border,#2f2f34));background:transparent!important;color:var(--muted,#9a9aa2);font:600 13px/1 system-ui,sans-serif;vertical-align:5px;cursor:pointer;-webkit-text-fill-color:currentColor}' +
     '.dbz-help:hover,.dbz-help[aria-expanded="true"]{color:var(--text,#ececef);border-color:var(--accent,#ff4d64)}' +
     '.dbz-helpbox{margin:4px 0 18px;padding:12px 16px;border:1px solid color-mix(in srgb,var(--accent,#ff4d64) 40%,transparent);border-radius:12px;background:var(--glass,rgba(255,255,255,.045));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:.88rem;line-height:1.5;color:var(--text,#ececef);max-width:640px}' +
-    '.dbz-helpbox[hidden]{display:none}.dbz-helpbox ol{margin:0;padding-left:1.2em}.dbz-helpbox li{margin:2px 0}.dbz-helpbox p{margin:8px 0 0;color:var(--muted,#9a9aa2)}.dbz-helpbox b{color:var(--text,#ececef)}';
+    '.dbz-helpbox[hidden]{display:none}.dbz-helpbox ol{margin:0;padding-left:1.2em}.dbz-helpbox li{margin:2px 0}.dbz-helpbox p{margin:8px 0 0;color:var(--muted,#9a9aa2)}.dbz-helpbox b{color:var(--text,#ececef)}.dbz-helpbox p.dbz-hot{color:var(--accent,#ff4d64);font-weight:600}';
   var st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
 })();
