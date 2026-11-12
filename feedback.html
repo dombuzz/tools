@@ -44,6 +44,13 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .meta .pg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);text-decoration:none;border-bottom:1px dashed var(--muted)}
 .meta .pg:hover{color:var(--accent)}
 .text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:.95rem}
+.note{border-left:3px solid var(--accent);background:var(--mono);border-radius:0 8px 8px 0;padding:8px 12px;font-size:.88rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.note small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.nedit{display:flex;flex-direction:column;gap:8px}
+.nedit textarea{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:.92rem;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
+.nedit textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.nedit .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.nedit .err{color:var(--accent);font-size:.8rem}
 .empty{color:var(--muted);text-align:center;padding:24px 0}
 .tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--border)}
 .tabs button{background:transparent;color:var(--muted);font-weight:600;padding:10px 14px;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:8px 8px 0 0;display:inline-flex;gap:8px;align-items:center}
@@ -108,9 +115,14 @@ const LBL = { nov: 'Nov', lavur: 'En lavur', liquida: 'Liquidà' };
 let items = [], tab = 'nov';
 try { const s = localStorage.getItem('dbz-fb-tab'); if (LBL[s]) tab = s; } catch (e) {}
 
-const card = (i, acts) => `<article class="item" data-id="${i.id}">
-  <div class="meta"><b>${esc(i.toolName)}</b>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${acts}</div></div>
-  <div class="text">${esc(i.text)}</div></article>`;
+const card = (i, acts, canNote = true) => `<article class="item" data-id="${i.id}">
+  <div class="meta"><b>${esc(i.toolName)}</b>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${canNote ? btn('note', i.note ? 'Mida notizia' : 'Notizia') : ''}${acts}</div></div>
+  <div class="text">${esc(i.text)}</div>${noteBlock(i, canNote)}</article>`;
+// Notiz: Anzeige bzw. Eingabefeld (offen bleibt jeweils nur eine)
+let editing = null, draft = '';
+const noteBlock = (i, canNote) => canNote && editing === i.id
+  ? `<div class="nedit"><textarea maxlength="2000" placeholder="Notizia …" aria-label="Notizia">${esc(draft)}</textarea><div class="row"><button type="button" data-act="note-save">Memorisar</button><button type="button" class="ghost" data-act="note-cancel">Interrumper</button><span class="err" hidden></span></div></div>`
+  : (i.note ? `<div class="note"><small>Notizia</small>${esc(i.note)}</div>` : '');
 const btn = (act, label) => `<button type="button" class="ghost${act === 'to:stizza' || act === 'purge' ? ' danger' : ''}" data-act="${act}">${label}</button>`;
 
 function render() {
@@ -123,7 +135,7 @@ function render() {
     : `<p class="empty">Nagins messadis «${LBL[tab]}».</p>`;
   const del = items.filter(i => st(i) === 'stizza');
   $('trash').hidden = !del.length;
-  $('tlist').innerHTML = del.map(i => card(i, btn('to:nov', 'Restaurar') + btn('purge', 'Stizzar definitivamain'))).join('');
+  $('tlist').innerHTML = del.map(i => card(i, btn('to:nov', 'Restaurar') + btn('purge', 'Stizzar definitivamain'), false)).join('');
 }
 
 async function load() {
@@ -158,6 +170,14 @@ document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click
 document.getElementById('view').addEventListener('click', async e => {
   const b = e.target.closest('button[data-act]'); if (!b) return;
   const id = +b.closest('.item').dataset.id, act = b.dataset.act;
+  if (act === 'note') { editing = id; draft = (items.find(i => i.id === id) || {}).note || ''; render(); const t = document.querySelector('.nedit textarea'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } return; }
+  if (act === 'note-cancel') { editing = null; render(); return; }
+  if (act === 'note-save') {
+    const ta = b.closest('.nedit').querySelector('textarea'), er = b.closest('.nedit').querySelector('.err'); b.disabled = true; er.hidden = true;
+    const r = await fetch(API + '/feedback/' + id + '/note', { method: 'POST', headers: { Authorization: 'Bearer ' + pw, 'Content-Type': 'application/json' }, body: JSON.stringify({ note: ta.value }) }).catch(() => null);
+    if (!r || !r.ok) { b.disabled = false; er.hidden = false; er.textContent = r && r.status === 404 ? 'Il server na sa anc betg memorisar notizias (worker anc betg actualisà).' : 'Betg reussì.'; return; }
+    const j = await r.json().catch(() => ({})); items.find(i => i.id === id).note = j.note || null; editing = null; render(); return;
+  }
   if (act === 'purge' && !b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Propi stizzar?'; setTimeout(() => { delete b.dataset.sure; b.textContent = 'Stizzar definitivamain'; }, 4000); return; }
   b.disabled = true;
   const r = act === 'purge'

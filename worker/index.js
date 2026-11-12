@@ -271,6 +271,7 @@ const ensureFeedback = env => fbReady ||= env.DB.batch([
   env.DB.prepare('CREATE INDEX IF NOT EXISTS feedback_ts ON feedback (ts)'),
 ]).then(() => env.DB.prepare("ALTER TABLE feedback ADD COLUMN status TEXT NOT NULL DEFAULT 'nov'").run().catch(() => {})) // Status: nov | lavur | liquida | stizza
   .then(() => env.DB.prepare('ALTER TABLE feedback ADD COLUMN page TEXT').run().catch(() => {})) // Seite + offener Tab beim Absenden, z. B. /social#novitad
+  .then(() => env.DB.prepare('ALTER TABLE feedback ADD COLUMN note TEXT').run().catch(() => {})) // eigene Notiz zum Eintrag (nur in /feedback sichtbar)
   .catch(e => { fbReady = null; throw e; });
 const FB_STATUS = ['nov', 'lavur', 'liquida', 'stizza'];
 async function sha256(s) {
@@ -855,7 +856,7 @@ async function handle(request, env, ctx) {
         const a = await fbAuth(request, env);
         if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
         await ensureFeedback(env);
-        const { results } = await env.DB.prepare('SELECT id, ts, tool, name, text, status, page FROM feedback ORDER BY id DESC LIMIT 1000').all();
+        const { results } = await env.DB.prepare('SELECT id, ts, tool, name, text, status, page, note FROM feedback ORDER BY id DESC LIMIT 1000').all();
         return json({ items: results.map(r => ({ ...r, toolName: NAMES[r.tool] || r.tool })) }, request);
       }
       // Status ändern (Passwort): nov, lavur (En lavur), liquida (Liquidà), stizza (Stizzà, im Papierkorb)
@@ -867,6 +868,16 @@ async function handle(request, env, ctx) {
         await ensureFeedback(env);
         await env.DB.prepare('UPDATE feedback SET status = ?1 WHERE id = ?2').bind(d.status, +parts[1] || 0).run();
         return json({ ok: true }, request);
+      }
+      // Notiz zu einem Eintrag speichern (Passwort); leere Notiz löscht sie
+      if (request.method === 'POST' && parts[0] === 'feedback' && parts.length === 3 && parts[2] === 'note') {
+        const a = await fbAuth(request, env);
+        if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
+        let d; try { d = await request.json(); } catch (e) { return json({ error: 'json' }, request, 400); }
+        const note = String(d.note ?? '').trim().slice(0, 2000);
+        await ensureFeedback(env);
+        await env.DB.prepare('UPDATE feedback SET note = ?1 WHERE id = ?2').bind(note || null, +parts[1] || 0).run();
+        return json({ ok: true, note: note || null }, request);
       }
       // Feedback endgültig löschen (Passwort; die Seite bietet das nur im Papierkorb an)
       if (request.method === 'DELETE' && parts[0] === 'feedback' && parts.length === 2) {
