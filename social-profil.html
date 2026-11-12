@@ -64,7 +64,7 @@ input[type=file]{display:none}
 <div class="wrap">
   <div>
     <h1>Profil <span class="acc">social</span></h1>
-    <p class="lead">Visual 4:5 en duas paginas per la seria «Profil» – citat, num, text, colur e maletg pon vegnir midads. Exportaziun sco 2 PNG da 1080 × 1350.</p>
+    <p class="lead">Visual 4:5 en duas paginas per la seria «Profil» – citat, num, text e maletg pon vegnir midads. Exportaziun sco 2 PNG da 1080 × 1350.</p>
   </div>
 
   <div class="grid">
@@ -142,18 +142,9 @@ input[type=file]{display:none}
         <div class="row"><button id="posRst">Reset posiziun</button></div>
       </div>
 
-      <div class="card">
-        <h2><span class="n">4</span>Colur</h2>
-        <div class="row">
-          <input type="color" id="colPick">
-          <input type="text" id="colHex" class="grow" style="flex:1" maxlength="7">
-          <button id="colRst">Standard</button>
-        </div>
-        <div class="hint">Vala per num, funcziun, text e la surfatscha sin pagina 2 (là cun 80 %).</div>
-      </div>
 
       <div class="card">
-        <h2><span class="n">5</span>Scrittira</h2>
+        <h2><span class="n">4</span>Scrittira</h2>
         <div class="f">
           <label>Scrittira SRG SSR Type (memorisada en quest browser, la medema sco en ils auters tools)</label>
           <div class="row" style="flex-direction:column;align-items:flex-start;gap:8px">
@@ -300,7 +291,7 @@ function tag(c,x,y,w,deg,col){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180
 function tagText(c,t,x,y,deg){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle='#fff';itText(c,t,0,0);c.restore()}
 
 function render(c,preview){
-  const col=normHex(S.color,COL0),info={over:false};
+  const col=COL0,info={over:false};
   c.save();
   c.textAlign='left';c.textBaseline='alphabetic';
   /* ===== Seite 1 ===== */
@@ -386,7 +377,6 @@ function fill(){
   $('quote').value=S.quote;$('name').value=S.name;$('role').value=S.role;$('text').value=S.text;$('cta').value=S.cta;$('credit').value=S.credit;
   $('showCr').checked=S.showCr!==false;$('credit').disabled=S.showCr===false;$('credit').style.opacity=S.showCr===false?.45:1;
   $('arrow').checked=!!S.frizza;$('guil').checked=S.guil!==false;
-  const col=normHex(S.color,COL0);$('colPick').value=col;$('colHex').value=col;
   sliders();
 }
 function upd(fn){fn();redraw();save()}
@@ -394,10 +384,6 @@ for(const k of ['quote','name','role','text','cta','credit'])$(k).oninput=e=>upd
 $('showCr').onchange=e=>{S.showCr=e.target.checked;fill();redraw();save()};
 $('arrow').onchange=e=>upd(()=>S.frizza=e.target.checked);
 $('guil').onchange=e=>upd(()=>S.guil=e.target.checked);
-$('colPick').oninput=e=>{upd(()=>S.color=e.target.value);$('colHex').value=S.color};
-$('colHex').oninput=e=>{const c=normHex(e.target.value,null);if(c){upd(()=>S.color=c);$('colPick').value=c}};
-$('colHex').onblur=()=>{$('colHex').value=normHex(S.color,COL0)};
-$('colRst').onclick=()=>{upd(()=>S.color=COL0);fill()};
 for(const k of ['A','B']){
   $('zoom'+k).oninput=e=>{S[k].zoom=e.target.value/100;$('zv'+k).textContent=e.target.value+'%';redraw();save()};
   $('ox'+k).oninput=e=>{S[k].ox=e.target.value/100;redraw();save()};
