@@ -149,6 +149,7 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
       <section class="card">
         <h2><span class="num">3</span>Export</h2>
         <div class="actions">
+          <button id="expMov" title="Fertiges Video mit Transparenz (ProRes 4444), direkt für Sony Hive / Schnittprogramme – wird im Browser berechnet">⬇ MOV mit Transparenz (ProRes 4444)</button>
           <button id="expZip">⬇ PNG-Sequenz mit Transparenz (.zip)</button>
           <button class="ghost" id="expFrame" title="Mit Schachbrett: transparent. Mit Dunkel/Hell/Grün/eigenem Bild: Hintergrund wird eingebrannt">Einzelbild (PNG)</button>
           <button class="ghost" id="expWebm" title="Abspielbares Video mit Hintergrund, ohne Transparenz">Vorschau-Video (.webm)</button>
@@ -160,7 +161,7 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
         <p class="meta" id="expInfo" style="margin-top:10px"></p>
         <details class="export-more">
           <summary>Als Video mit Transparenz (ProRes 4444 / WebM) – ffmpeg-Befehl</summary>
-          <p class="hint" style="margin-top:10px">ZIP entpacken, im Ordner ausführen. Die Befehle passen sich der Bildrate an.</p>
+          <p class="hint" style="margin-top:10px">Nur nötig, wenn du das Video selbst umwandeln willst: ZIP entpacken, im Ordner ausführen. Die Befehle passen sich der Bildrate an. Der Knopf «MOV mit Transparenz» macht dasselbe direkt hier im Browser.</p>
           <div class="cmd"><code id="cmdMov"></code><button class="btn" data-copy="cmdMov">Kopieren</button></div>
           <div class="cmd"><code id="cmdWebm"></code><button class="btn" data-copy="cmdWebm">Kopieren</button></div>
           <p class="hint">Premiere / DaVinci Resolve / Final Cut (via ProRes) importieren die PNG-Sequenz auch direkt: erstes Bild wählen, «Bildsequenz» anhaken, Bildrate passend setzen.</p>
@@ -831,6 +832,55 @@ async function exportZip(opts){
   }
 }
 $('expZip').onclick=()=>exportZip();
+
+/* MOV direkt: Bilder rendern und im Browser (ffmpeg.wasm) zu ProRes 4444 mit Alpha verpacken – ohne Umweg über das ZIP.
+   Dieselben Einstellungen wie der ffmpeg-Befehl oben (in Sony Hive geprüft). */
+let ffLoading=null;
+function loadFFmpeg(){
+  if(window.FFmpegWASM)return Promise.resolve();
+  return ffLoading||(ffLoading=new Promise((ok,fail)=>{
+    const sc=document.createElement('script');sc.src='/vendor/ffmpeg/ffmpeg.js';sc.onload=ok;
+    sc.onerror=()=>{ffLoading=null;fail(new Error('Konverter konnte nicht geladen werden'));};
+    document.head.append(sc);
+  }));
+}
+async function exportMov(){
+  if(exporting)return;
+  exporting=true;
+  const btn=$('expMov'),bar=$('bar'),bi=$('barI'),info=$('expInfo');
+  btn.disabled=true;bar.style.display='block';bi.style.width='0%';
+  let ff=null;
+  try{
+    info.textContent='Lade Konverter … (beim ersten Mal ca. 32 MB)';
+    await loadFFmpeg();
+    ff=new FFmpegWASM.FFmpeg();
+    await ff.load({coreURL:location.origin+'/vendor/ffmpeg/ffmpeg-core.js',wasmURL:location.origin+'/vendor/ffmpeg/ffmpeg-core.wasm'});
+    const Pp=Core.prepare(mctx,messages,S);
+    Pp.avatarImg=await avatarReady();
+    const n=Math.ceil(Pp.duration*S.fps);
+    const c=document.createElement('canvas');c.width=S.width;c.height=S.height;
+    const ctx=c.getContext('2d',{alpha:true});
+    for(let i=0;i<n;i++){
+      Core.renderFrame(ctx,Pp,i/S.fps,1);
+      const blob=await toBlob(c);
+      await ff.writeFile('chat_'+String(i).padStart(5,'0')+'.png',new Uint8Array(await blob.arrayBuffer()));
+      if(i%4===0){bi.style.width=(50*i/n).toFixed(1)+'%';info.textContent='Rendere Bild '+(i+1)+' / '+n+' …';await new Promise(r=>setTimeout(r,0));}
+    }
+    ff.on('log',({message})=>{const m=/frame=\s*(\d+)/.exec(message);if(m){const k=Math.min(n,+m[1]);bi.style.width=(50+50*k/n).toFixed(1)+'%';info.textContent='Wandle in MOV um … Bild '+k+' / '+n;}});
+    const rc=await ff.exec(['-framerate',String(S.fps),'-i','chat_%05d.png','-c:v','prores_ks','-profile:v','4444','-pix_fmt','yuva444p10le','-vendor','apl0','-alpha_bits','16','out.mov']);
+    if(rc!==0)throw new Error('ffmpeg '+rc);
+    const data=await ff.readFile('out.mov');
+    bi.style.width='100%';
+    download(new Blob([data],{type:'video/quicktime'}),'chat_overlay_'+S.width+'x'+S.height+'_'+S.fps+'fps.mov');
+    info.textContent='Fertig: MOV mit Transparenz (ProRes 4444), '+n+' Bilder, '+(data.length/1048576).toFixed(1)+' MB.';
+  }catch(e){
+    info.textContent='MOV-Export fehlgeschlagen ('+(e&&e.message||e)+'). Bei sehr langen Overlays kann dem Browser der Speicher ausgehen – dann den ZIP-Weg nehmen.';
+  }finally{
+    try{ff&&ff.terminate();}catch(e){}
+    exporting=false;btn.disabled=false;setTimeout(()=>{bar.style.display='none';},1200);
+  }
+}
+$('expMov').onclick=()=>exportMov();
 $('expFrame').onclick=async()=>{
   // Einzelbild: bei Schachbrett transparent, sonst mit dem gewählten Hintergrund (Dunkel/Hell/Grün/eigenes Bild)
   const W=S.width,H=S.height,v=$('bgSel').value,withBg=v!=='checker';
