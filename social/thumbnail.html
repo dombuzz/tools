@@ -125,6 +125,12 @@ input[type=file]{display:none}
         <div class="f"><label>Zoom <span class="val" id="zvA"></span></label><input type="range" id="zoomA" min="100" max="300" step="1"></div>
         <div class="f"><label>Posiziun orizontala</label><input type="range" id="oxA" min="-100" max="100" step="1"></div>
         <div class="f"><label>Posiziun verticala</label><input type="range" id="oyA" min="-100" max="100" step="1"></div>
+        <div class="f"><label class="chk"><input type="checkbox" id="gOnA"> Gradient stgir (per fotografias cleras)</label></div>
+        <div id="gBoxA" hidden>
+          <div class="f"><label>Direcziun dal gradient <span class="val" id="gAvA"></span></label><input type="range" id="gAA" min="0" max="360" step="1"></div>
+          <div class="f"><label>Stgirezza <span class="val" id="gIvA"></span></label><input type="range" id="gIA" min="10" max="90" step="1"></div>
+          <div class="hint" style="margin:0 0 12px">0° = stgir sutvart, 90° = stgir a dretga, 180° = stgir sissum, 270° = stgir a sanestra.</div>
+        </div>
         <div class="row"><button id="posRst">Reset posiziun</button></div>
       </div>
 
@@ -199,7 +205,7 @@ const logoImg=new Image();logoImg.onload=()=>redraw();logoImg.src=LOGO_SRC;
 /* Titelfarben wie in «News dal di» */
 const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9'],U:['Uffants','#70bf88']};
 function acc(){return(ACCS[S.col]||ACCS.N)[1]}
-function mkIm(){const o={};SLOTS.forEach(s=>o[s.id]={zoom:1,ox:0,oy:0});return o}
+function mkIm(){const o={};SLOTS.forEach(s=>o[s.id]={zoom:1,ox:0,oy:0,gOn:false,gA:0,gI:60});return o}
 function load(){const d=defaults();d.im=mkIm();try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.v===VER){const im=Object.assign(mkIm(),j.im);Object.assign(d,j);d.im=im}}catch(e){}return d}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 S=load();
@@ -417,6 +423,13 @@ function contoured(im,dw,dh,t){
   ctCache={im,dw,dh,t,cv:o,m};return o;
 }
 /* Bild eines Felds auf Seite p zeichnen (innerhalb von pg); ohne Bild: Platzhalter */
+/* schwarzer Verlauf über dem Foto (zuschaltbar): gA = Richtung in Grad (0° = dunkel unten, 90° = dunkel rechts …), gI = Stärke am dunklen Rand in % */
+function gradOverlay(c,R,v){
+  const a=(v.gA||0)*Math.PI/180,dx=Math.sin(a),dy=Math.cos(a),L=(Math.abs(R.w*dx)+Math.abs(R.h*dy))/2,cx=R.x+R.w/2,cy=R.y+R.h/2,al=Math.min(1,Math.max(0,(v.gI==null?60:v.gI)/100));
+  const g=c.createLinearGradient(cx+dx*L,cy+dy*L,cx-dx*L,cy-dy*L);
+  g.addColorStop(0,'rgba(0,0,0,'+al+')');g.addColorStop(.55,'rgba(0,0,0,'+(al*.35)+')');g.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=g;c.fillRect(R.x,R.y,R.w,R.h);
+}
 function drawSlot(c,id,p,pv,o){
   o=o||{};const s=SL[id],R=slotRect(s),im=IMG[id],v=S.im[id];
   c.save();c.translate(-p*W,0);
@@ -425,7 +438,7 @@ function drawSlot(c,id,p,pv,o){
       const g=geom(v,R,im,true);
       if(o.contour){const k=contoured(im,g.dw,g.dh,o.contour);c.drawImage(k,g.x-ctCache.m,g.y-ctCache.m)}
       else c.drawImage(im,g.x,g.y,g.dw,g.dh);
-    }else{c.beginPath();c.rect(R.x,R.y,R.w,R.h);c.clip();const g=geom(v,R,im);c.drawImage(im,g.x,g.y,g.dw,g.dh)}
+    }else{c.beginPath();c.rect(R.x,R.y,R.w,R.h);c.clip();const g=geom(v,R,im);c.drawImage(im,g.x,g.y,g.dw,g.dh);if(v.gOn)gradOverlay(c,R,v)}
   }else if(s.free){
     if(pv){c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=3;c.setLineDash([14,12]);c.strokeRect(R.x,R.y,R.w,R.h);c.setLineDash([]);
       c.fillStyle='rgba(255,255,255,.45)';c.font='500 30px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';
@@ -461,7 +474,7 @@ function setView(v){
   redraw();
 }
 function sliders(){
-  SLOTS.forEach(s=>{const k=s.id,v=S.im[k];$('zoom'+k).value=Math.round(v.zoom*100);$('zv'+k).textContent=Math.round(v.zoom*100)+'%';$('ox'+k).value=Math.round(v.ox*100);$('oy'+k).value=Math.round(v.oy*100)});
+  SLOTS.forEach(s=>{const k=s.id,v=S.im[k];$('zoom'+k).value=Math.round(v.zoom*100);$('zv'+k).textContent=Math.round(v.zoom*100)+'%';$('ox'+k).value=Math.round(v.ox*100);$('oy'+k).value=Math.round(v.oy*100);const go=$('gOn'+k);if(go){go.checked=!!v.gOn;$('gBox'+k).hidden=!v.gOn;const ga=v.gA||0,gi=v.gI==null?60:v.gI;$('gA'+k).value=ga;$('gAv'+k).textContent=ga+'°';$('gI'+k).value=gi;$('gIv'+k).textContent=gi+'%'}});
 }
 function colPills(){
   const p=$('colPills');if(!p)return;p.innerHTML='';
@@ -481,10 +494,15 @@ SLOTS.forEach(s=>{const k=s.id;
   $('zoom'+k).oninput=e=>{S.im[k].zoom=e.target.value/100;$('zv'+k).textContent=e.target.value+'%';redraw();save()};
   $('ox'+k).oninput=e=>{S.im[k].ox=e.target.value/100;redraw();save()};
   $('oy'+k).oninput=e=>{S.im[k].oy=e.target.value/100;redraw();save()};
+  if($('gOn'+k)){
+    $('gOn'+k).onchange=e=>{S.im[k].gOn=e.target.checked;$('gBox'+k).hidden=!e.target.checked;redraw();save()};
+    $('gA'+k).oninput=e=>{S.im[k].gA=+e.target.value;$('gAv'+k).textContent=e.target.value+'°';redraw();save()};
+    $('gI'+k).oninput=e=>{S.im[k].gI=+e.target.value;$('gIv'+k).textContent=e.target.value+'%';redraw();save()};
+  }
   $('imgIn'+k).onchange=e=>{setImage(e.target.files[0],pickT||k);pickT=null;e.target.value=''};
   $('imgClr'+k).onclick=()=>{delete IMG[k];redraw()};
 });
-$('posRst').onclick=()=>{S.im=mkIm();sliders();redraw();save()};
+$('posRst').onclick=()=>{SLOTS.forEach(s=>{const v=S.im[s.id];v.zoom=1;v.ox=0;v.oy=0});sliders();redraw();save()};
 $('reset').onclick=()=>{if(!confirm('Tut ils texts ed ils maletgs stizzar e cumenzar da nov?'))return;const c=S.col;S=blank();S.col=c;S.im=mkIm();for(const k in IMG)delete IMG[k];fill();redraw();save()};
 
 /* Bild */
