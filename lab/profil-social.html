@@ -85,9 +85,9 @@ input[type=file]{display:none}
       <div class="card">
         <h2><span class="n">1</span>Pagina 1 – citat</h2>
         <div class="f">
-          <label>Citat <span class="val" id="qCnt"></span></label>
-          <textarea id="quote" placeholder="«Il citat …»"></textarea>
-          <div class="hint">Las lingias vegnan rumpidas automaticamain; in return fa ina nova lingia.</div>
+          <label style="display:flex;justify-content:space-between;align-items:center"><span>Citat <span class="val" id="qCnt" style="float:none;margin-left:6px"></span></span><span style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="guil"> «&nbsp;&nbsp;» mussar</span></label>
+          <textarea id="quote" placeholder="Il citat …"></textarea>
+          <div class="hint">Ils guillemets «…» vegnan messs automaticamain (na ils scriver). Las lingias vegnan rumpidas automaticamain; in return fa ina nova lingia.</div>
         </div>
         <div class="f"><label>Num</label><input type="text" id="name" placeholder="p.ex. Simon Zurfluh"></div>
         <div class="f"><label>Funcziun</label><input type="text" id="role" placeholder="p.ex. profi da karate"></div>
@@ -176,7 +176,7 @@ let S,imgA=null,imgB=null,bSame=true,pickT=null,view='both';
 const IM=k=>k==='A'?imgA:imgB;
 
 function defaults(){return{v:1,
-  quote:'«Quels davos 21 onns ch’jau fatsch karate n’hai jau mai laschà ora il trenament dapli che duas emnas.»',
+  quote:'Quels davos 21 onns ch’jau fatsch karate n’hai jau mai laschà ora il trenament dapli che duas emnas.',guil:true,
   name:'Simon Zurfluh',role:'profi da karate',
   text:'Cun 7 onns ha Simon Zurfluh, oriund da Castrisch, cumenzà a far karate en il dojo a Glion.\nE suenter l’emprima lecziun èsi stà cler, quai èsi. Oz tutga el tar ils megliers dal mund.',
   cta:'Taidla ussa il Profil\nrtr.ch/profil',
@@ -311,7 +311,8 @@ function render(c,preview){
   if(logoImg.complete&&logoImg.naturalWidth)c.drawImage(logoImg,70,70,108,70);
   /* Zitat: 75 px, Zeilenabstand 85, erste Grundlinie 228.7 */
   c.font=fi(75);
-  const ql=wrap(c,S.quote||'',610);
+  const qc=(S.quote||'').trim().replace(/^[«»"„“”]+|[«»"„“”]+$/g,'').trim(),qt=qc?(S.guil!==false?'«'+qc+'»':qc):'';
+  const ql=wrap(c,qt,610);
   c.save();c.fillStyle='#fff';c.shadowColor='rgba(0,0,0,.45)';c.shadowBlur=12;
   ql.forEach((l,i)=>itText(c,l,70,228.72+85*i));c.restore();
   info.q=ql.length;
@@ -380,7 +381,7 @@ function sliders(){
 function fill(){
   $('quote').value=S.quote;$('name').value=S.name;$('role').value=S.role;$('text').value=S.text;$('cta').value=S.cta;$('credit').value=S.credit;
   $('showCr').checked=S.showCr!==false;$('credit').disabled=S.showCr===false;$('credit').style.opacity=S.showCr===false?.45:1;
-  $('arrow').checked=!!S.frizza;
+  $('arrow').checked=!!S.frizza;$('guil').checked=S.guil!==false;
   const col=normHex(S.color,COL0);$('colPick').value=col;$('colHex').value=col;
   sliders();
 }
@@ -388,6 +389,7 @@ function upd(fn){fn();redraw();save()}
 for(const k of ['quote','name','role','text','cta','credit'])$(k).oninput=e=>upd(()=>S[k]=e.target.value);
 $('showCr').onchange=e=>{S.showCr=e.target.checked;fill();redraw();save()};
 $('arrow').onchange=e=>upd(()=>S.frizza=e.target.checked);
+$('guil').onchange=e=>upd(()=>S.guil=e.target.checked);
 $('colPick').oninput=e=>{upd(()=>S.color=e.target.value);$('colHex').value=S.color};
 $('colHex').oninput=e=>{const c=normHex(e.target.value,null);if(c){upd(()=>S.color=c);$('colPick').value=c}};
 $('colHex').onblur=()=>{$('colHex').value=normHex(S.color,COL0)};
