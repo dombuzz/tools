@@ -456,7 +456,7 @@ $('dlBtn').onclick = () => {
   const finish = () => {
     c.toBlob(b => {
       const d = new Date(), z = n => String(n).padStart(2, '0');
-      const name = `${NAMES[fmt]}_${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.png`;
+      const name = `${NAMES[fmt]}_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}.png`;
       const a = document.createElement('a');
       a.href = URL.createObjectURL(b); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
