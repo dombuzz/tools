@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark light">
 <title>Novitad</title>
@@ -14,6 +15,8 @@
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:40px 16px 64px}
 .wrap{max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
 h1{font-size:1.4rem;margin:0;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 h1 .acc{color:var(--accent)}
 .lead{font-size:.9rem;color:var(--muted);margin:4px 0 0}
@@ -66,6 +69,7 @@ input[type=file]{display:none}
 <body>
 <div class="wrap">
   <div>
+    <a class="homelink" href="/social/">← Social</a>
     <h1><span class="acc">Novitad</span></h1>
     <p class="lead">Visual 4:5 en duas paginas per ina novitad – maletg cun textbox e pagina da text. Exportaziun sco 2 PNG da 1080 × 1350.</p>
   </div>
@@ -540,5 +544,6 @@ if(typeof toolInit==='function')toolInit();
 fill();setView(PAGES>1&&!window.matchMedia('(max-width:700px)').matches?'all':0);loadFonts();
 })();
 </script>
+<script src="/like.js" defer></script>
 </body>
 </html>

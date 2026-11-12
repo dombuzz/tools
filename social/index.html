@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Visuals per las medias socialas: Profil, Novitads dal di, #mument e dapli templates.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Social">
+<meta property="og:description" content="Visuals per las medias socialas: Profil, Novitads dal di, #mument e dapli templates.">
+<meta property="og:url" content="https://tools.dombuzz.ch/social/">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<meta name="color-scheme" content="dark light">
+<title>Social</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='2.5' width='10' height='19' rx='2'/%3E%3Cpath d='M10 9h4'/%3E%3Cpath d='M10.5 12h3'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--accent:#ff4d64;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+h2{font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+a.tool{display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--text);text-decoration:none;min-height:112px}
+a.tool:hover,a.tool:focus-visible{border-color:var(--accent);outline:none}
+a.tool svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+a.tool b{font-size:1rem}
+a.tool span{font-size:.82rem;color:var(--muted);line-height:1.4}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <a class="homelink" href="/">← Tools</a>
+    <h1><span class="acc">Social</span></h1>
+    <p class="sub">Visuals per las medias socialas – tscherner il tool.</p>
+  </div>
+  <section><h2>Serias</h2><div class="grid" id="g1"></div></section>
+  <section><h2>Templates</h2><div class="grid" id="g2"></div></section>
+</div>
+
+<script>
+/* Neues Tool: ein Eintrag hier (id = Dateiname in /social, g = Gruppe 1 oder 2). */
+const TOOLS = [
+  { g: 1, id: 'profil',    t: 'Profil social',     d: 'Duas paginas per la seria «Profil» – citat, num, text e maletg.', i: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/>' },
+  { g: 1, id: 'novitads',  t: 'Novitads dal di',   d: 'Visuals 4:5 per las novitads dal di – texts, colurs e paginas.', i: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h5"/>' },
+  { g: 1, id: 'mument',    t: '#mument',           d: 'Foto, visual e retagl – export sco PNG 1080 × 1350.', i: '<path d="M9 4 7 20"/><path d="M17 4l-2 16"/><path d="M4 9h17"/><path d="M3 15h17"/>' },
+  { g: 2, id: 'quote',     t: 'Quote solo',        d: 'In citat cun num, funcziun e maletg.', i: '<path d="M5 8h5v5c0 2-1 3.5-3 4"/><path d="M14 8h5v5c0 2-1 3.5-3 4"/>' },
+  { g: 2, id: 'breaking',  t: 'Breaking News',     d: 'Trais paginas per novitads urgentas.', i: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>' },
+  { g: 2, id: 'dumonda',   t: 'Dumonda da l’emna', d: 'Maletg cun segn da dumonda e banda.', i: '<path d="M8.5 9a3.5 3.5 0 1 1 5 3.2c-1 .6-1.5 1.3-1.5 2.3"/><path d="M12 18.5v.01"/>' },
+  { g: 2, id: 'cifra',     t: 'Cifra da l’emna',   d: 'Duas paginas cun cifra e text.', i: '<path d="M9 4 7 20"/><path d="M17 4l-2 16"/><path d="M4 9h17"/><path d="M3 15h17"/>' },
+  { g: 2, id: 'focus',     t: 'Focus',             d: 'Trais paginas: maletg, titel, textbox e puncts.', i: '<circle cx="12" cy="12" r="3"/><path d="M4 9V5h4"/><path d="M20 9V5h-4"/><path d="M4 15v4h4"/><path d="M20 15v4h-4"/>' },
+  { g: 2, id: 'novitad',   t: 'Novitad',           d: 'Duas paginas: maletg cun textbox e pagina da text.', i: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h5"/>' },
+  { g: 2, id: 'pled',      t: 'Pled da l’emna',    d: 'Maletg senza funs, pled ed idioms.', i: '<path d="M5 19 10 5h4l5 14"/><path d="M7.5 14h9"/>' },
+  { g: 2, id: 'thumbnail', t: 'Thumbnail',         d: 'Thumbnail 9:16 per reels e stories.', i: '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 9h4"/><path d="M10.5 12h3"/>' }
+];
+/* Alte Adressen: /social#novitads, /social#quote … führen direkt zum Tool */
+{ const h = location.hash.slice(1), t = TOOLS.find(x => x.id === h); if (t) location.replace('/social/' + t.id); }
+for (const t of TOOLS) {
+  const a = document.createElement('a'); a.className = 'tool'; a.href = '/social/' + t.id;
+  a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + t.i + '</svg><b></b><span></span>';
+  a.querySelector('b').textContent = t.t; a.querySelector('span').textContent = t.d;
+  document.getElementById('g' + t.g).appendChild(a);
+}
+</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/social'+(window.dbzCid&&dbzCid()?'?c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
+</body>
+</html>

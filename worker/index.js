@@ -36,16 +36,18 @@ const NAMES = { 'info': 'Infus & datas',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
   'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-social2': 'Social2',
+  'social-profil': 'Profil social', 'social-novitads': 'Novitads dal di', 'social-mument': '#mument', 'social-quote': 'Quote solo', 'social-breaking': 'Breaking News',
+  'social-dumonda': 'Dumonda da l’emna', 'social-cifra': 'Cifra da l’emna', 'social-focus': 'Focus', 'social-novitad': 'Novitad', 'social-pled': 'Pled da l’emna', 'social-thumbnail': 'Thumbnail',
 };
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 // «Links d'artitgels»: die frühere Beta-Seite /artitgel-beta zählt zu /artitgel
-// «Social» (Tabs Profil, Novitads dal di, #mument): Nutzung kommt als social-<tab>; das frühere Einzeltool /mument und die früheren Lab-Seiten /lab/novitads und /lab/profil zählen dazu
+// «Social»: Übersicht unter /social/; jedes Tool unter /social/<tool> zählt als social-<tool> (eigene Zeile). Früher waren Profil, Novitads dal di und #mument Tabs unter «social»; das frühere Einzeltool /mument und die früheren Lab-Seiten /lab/novitads, /lab/social2 und /lab/profil sind unten zugeordnet
 // «Höhenprofil»: die Zahlen der früheren Adresse /lab/profil gehören zu /lab/hoehenprofil
 // «Elavurar maletgs»: die Einzeltools im Hintergrund (/colurs, /rotar, /ebenas) und die frühere Adresse /layers zählen zu /maletgs
 // «Subtitle Studio»: die früheren Einzeltools /spustar, /cumparegliar und /subs zählen zu /studio
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'social', 'social-profil': 'social', 'social-novitads': 'social', 'social-mument': 'social', 'lab-novitads': 'social', 'lab-profil': 'lab-hoehenprofil', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'social-mument', 'lab-novitads': 'social-novitads', 'lab-profil': 'lab-hoehenprofil', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
 // Geschätzte Zeitersparnis pro Nutzung in Minuten (Dominiks Schätzung vom 12.11.2026: «vorher» minus «mit Tool»).
 // Schlüssel = Roh-Kennung der Seite; ohne eigenen Eintrag gilt der Wert der Gruppe (z. B. mument → visual).

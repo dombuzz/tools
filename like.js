@@ -79,7 +79,7 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   const API = 'https://fragrant-grass-c193.zappa-pfadi.workers.dev';
   // Tool-Kennung aus der Adresse: /Resizer2000 → Resizer2000, /lab/csv → lab-csv
   const segs = location.pathname.replace(/\.html?$/i, '').split('/').filter(Boolean);
-  const tool0 = (segs[0] === 'lab' && segs.length > 1 ? 'lab-' : '') + (segs.at(-1) || 'index');
+  const tool0 = (segs[0] === 'lab' && segs.length > 1 ? 'lab-' : segs[0] === 'social' && segs.length > 1 ? 'social-' : '') + (segs.at(-1) || 'index');
   const tool = tool0 === 'UTstudio' ? 'studio' : tool0; // Seite heisst UTstudio, Zähler und Likes bleiben unter «studio»
   let wasUsed = false; try { wasUsed = !!localStorage.getItem('dbz-visit-' + tool); } catch (e) {}
   try { localStorage.setItem('dbz-visit-' + tool, Date.now()); } catch (e) {} // für «nov» auf der Startseite

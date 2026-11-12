@@ -185,7 +185,7 @@ const overlay = $('overlay'), box = $('box'), empty = $('empty'), msg = $('msg')
 let fmt = 'magazin';
 try { const s = localStorage.getItem('visual-fmt'); if (s && OVERLAYS[s]) fmt = s; } catch(e){}
 // ?fmt=ildi (z. B. aus einem Link) hat Vorrang; #mument ist nach /social umgezogen
-{ const q = new URLSearchParams(location.search).get('fmt'); if (q === 'mument') location.replace('/social#mument'); else if (q && OVERLAYS[q]) fmt = q; }
+{ const q = new URLSearchParams(location.search).get('fmt'); if (q === 'mument') location.replace('/social/mument'); else if (q && OVERLAYS[q]) fmt = q; }
 
 let img = null, iw = 0, ih = 0;      // Foto + Originalgrösse
 let s = 1, x = 0, y = 0;             // Massstab und Position in Export-Koordinaten
