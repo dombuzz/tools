@@ -67,12 +67,13 @@
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
-    '.themebtn.tonebtn{top:52px}.themebtn.tonebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    '.themebtn.gearbtn svg{transition:transform .5s cubic-bezier(.3,.7,.3,1)}.themebtn.gearbtn[aria-expanded="true"]{opacity:1}.themebtn.gearbtn[aria-expanded="true"] svg{transform:rotate(90deg)}' +
     /* Zellteilung nach unten: der Tropfen löst sich aus dem Modus-Knopf, dieser streckt sich dabei kurz; beim Schliessen läuft alles rückwärts */
-    '@keyframes dbz-split{0%{transform:translateY(-40px) scale(.9);opacity:0}25%{transform:translateY(-27px) scale(.82,1.32);opacity:.7}68%{transform:translateY(5px) scale(1.12,.9)}}' +
+    '@keyframes dbz-split{0%{transform:translateY(var(--dy,-40px)) scale(.9);opacity:0}25%{transform:translateY(calc(var(--dy,-40px)*.675)) scale(.82,1.32);opacity:.7}68%{transform:translateY(5px) scale(1.12,.9)}}' +
     '@keyframes dbz-parent{0%{transform:none}30%{transform:scale(.93,1.16)}62%{transform:scale(1.05,.95)}100%{transform:none}}' +
-    '.themebtn.tonebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}' +
-    '.themebtn.tonebtn.closing{animation:dbz-split .45s cubic-bezier(.3,.7,.3,1) reverse forwards}' +
+    '.themebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}.themebtn.tonebtn.opening{animation-delay:.07s}' +
+    '.themebtn.closing{animation:dbz-split .45s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.optbtn.closing{animation-delay:.05s}' +
     '.themebtn.dividing{transform-origin:50% 0;animation:dbz-parent .5s ease-in-out}.themebtn.dividing-rev{transform-origin:50% 0;animation:dbz-parent .45s ease-in-out reverse}' +
     /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
     ':where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent,#ff4d64)!important;outline-offset:2px}' +
@@ -170,22 +171,27 @@
     tbtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + DROP + '"/>' + (soft ? '<path d="' + HALF + '" fill="currentColor"/>' : '') + '</svg>';
     tbtn.title = label; tbtn.setAttribute('aria-label', label); tbtn.setAttribute('aria-pressed', soft ? 'true' : 'false');
   }
-  // Tropfen: erscheint nach einem Klick auf den Modus-Knopf, verschwindet nach 6 s (oder sofort nach dem Klick darauf)
-  var tTimer = 0, tOpen = false;
-  function showTone() {
-    if (!tbtn) return; clearTimeout(tTimer);
+  // Zahnrad: zeigt nach einem Klick Hell/Dunkel und den Tropfen (Zellteilung nach unten); schliesst nach 6 s ohne Bedienung oder per Klick aufs Zahnrad
+  var gbtn, tTimer = 0, tOpen = false, GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  function paintGear() { if (gbtn) { gbtn.setAttribute('aria-expanded', tOpen ? 'true' : 'false'); gbtn.title = 'Parameters'; gbtn.setAttribute('aria-label', 'Parameters'); } }
+  function openMenu() {
+    if (!gbtn) return; clearTimeout(tTimer);
     if (!tOpen) {
-      tOpen = true; tbtn.hidden = false; tbtn.classList.remove('closing'); tbtn.classList.add('opening');
-      btn.classList.remove('dividing-rev'); btn.classList.add('dividing');
-      setTimeout(function () { btn.classList.remove('dividing'); tbtn.classList.remove('opening'); }, 560);
+      tOpen = true; paintGear();
+      [btn, tbtn].forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
+      gbtn.classList.remove('dividing-rev'); gbtn.classList.add('dividing');
+      setTimeout(function () { gbtn.classList.remove('dividing'); [btn, tbtn].forEach(function (b) { b.classList.remove('opening'); }); }, 620);
     }
-    tTimer = setTimeout(hideTone, 6000);
+    tTimer = setTimeout(closeMenu, 6000);
   }
-  function hideTone() {
-    clearTimeout(tTimer); if (!tbtn || !tOpen) return; tOpen = false;
-    tbtn.classList.remove('opening'); tbtn.classList.add('closing'); btn.classList.remove('dividing'); btn.classList.add('dividing-rev');
-    setTimeout(function () { btn.classList.remove('dividing-rev'); if (!tOpen) { tbtn.hidden = true; tbtn.classList.remove('closing'); } }, 480);
+  function closeMenu() {
+    clearTimeout(tTimer); if (!gbtn || !tOpen) return; tOpen = false; paintGear();
+    [btn, tbtn].forEach(function (b) { b.classList.remove('opening'); b.classList.add('closing'); });
+    gbtn.classList.remove('dividing'); gbtn.classList.add('dividing-rev');
+    setTimeout(function () { gbtn.classList.remove('dividing-rev'); if (!tOpen) [btn, tbtn].forEach(function (b) { b.hidden = true; b.classList.remove('closing'); }); }, 520);
   }
+  // Bedienung eines der Knöpfe verlängert die Anzeige um weitere 6 s
+  function keepMenu() { if (tOpen) { clearTimeout(tTimer); tTimer = setTimeout(closeMenu, 6000); } }
   function setTone(on, store) {
     if (on) r.dataset.tone = 'soft'; else delete r.dataset.tone;
     if (store) { try { if (on) localStorage.setItem('dbz-tone', 'soft'); else localStorage.removeItem('dbz-tone'); } catch (e) {} }
@@ -197,13 +203,16 @@
     paint();
   }
   function mount() {
-    btn = d.createElement('button'); btn.type = 'button'; btn.className = 'themebtn';
-    btn.addEventListener('click', function () { set(r.dataset.theme === 'light' ? 'dark' : 'light', true); showTone(); });
+    gbtn = d.createElement('button'); gbtn.type = 'button'; gbtn.className = 'themebtn gearbtn'; gbtn.innerHTML = GEAR;
+    gbtn.addEventListener('click', function () { if (tOpen) closeMenu(); else openMenu(); });
+    d.body.appendChild(gbtn);
+    btn = d.createElement('button'); btn.type = 'button'; btn.className = 'themebtn optbtn'; btn.hidden = true;
+    btn.addEventListener('click', function () { set(r.dataset.theme === 'light' ? 'dark' : 'light', true); keepMenu(); });
     d.body.appendChild(btn); paint();
-    tbtn = d.createElement('button'); tbtn.type = 'button'; tbtn.className = 'themebtn tonebtn';
-    tbtn.hidden = true;
-    tbtn.addEventListener('click', function () { setTone(r.dataset.tone !== 'soft', true); hideTone(); });
-    d.body.appendChild(tbtn); paintTone(); applyTone();
+    tbtn = d.createElement('button'); tbtn.type = 'button'; tbtn.className = 'themebtn tonebtn'; tbtn.hidden = true;
+    tbtn.addEventListener('click', function () { setTone(r.dataset.tone !== 'soft', true); keepMenu(); });
+    d.body.appendChild(tbtn); paintTone(); paintGear(); applyTone();
+    d.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tOpen) { closeMenu(); gbtn.focus(); } });
     addEventListener('load', function () { if (r.dataset.tone === 'soft') applyTone(); });
   }
   if (d.body) mount(); else d.addEventListener('DOMContentLoaded', mount);
