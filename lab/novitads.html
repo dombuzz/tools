@@ -332,7 +332,7 @@ function render(c,idx,preview){
     y-=gap;
   }
   /* title */
-  const title=(s.title||'').toUpperCase(),suffix=isCover&&S.date?' | '+S.date:'';
+  const title=(s.title||'').toUpperCase(),suffix=isCover&&S.date?S.date:'';
   let lastRowY=null;
   if(title||suffix){
     c.font=fb(tN);
@@ -340,13 +340,14 @@ function render(c,idx,preview){
     if(s.frizza&&!isCover&&!lines.length&&tl.length&&c.measureText(tl[tl.length-1]).width>FLIM){const l=tl.pop();tl.push(...wrap(c,l,FLIM))}
     for(let i=tl.length-1;i>=0;i--){
       c.font=fb(tN);const wb=c.measureText(tl[i]).width;
-      let wl=0;if(isCover&&suffix){c.font=fb(tN);wl=c.measureText(suffix).width}
+      let wl=0,wsep=0,wdate=0,g1=Math.round(tN*.42),g2=Math.round(tN*.5);
+      if(isCover&&suffix){c.font=fl(tN);wsep=c.measureText('|').width;wdate=c.measureText(suffix).width;wl=g1+wsep+g2+wdate}
       y-=tH;lastRowY=y;
       c.fillStyle=slideColor(s);c.fillRect(X0,y,Math.ceil(wb+wl+2*padX),tH);
       c.fillStyle='#fff';c.font=fb(tN);
       c.textBaseline='alphabetic';const cap=c.measureText('H').actualBoundingBoxAscent||tN*.7,by=y+tH/2+cap/2;
       c.textBaseline='alphabetic';c.fillText(tl[i],X0+padX,by);
-      if(wl){c.font=fb(tN);c.fillText(suffix,X0+padX+wb,by)}
+      if(wl){c.font=fl(tN);c.fillText('|',X0+padX+wb+g1,by);c.fillText(suffix,X0+padX+wb+g1+wsep+g2,by)}
       c.textBaseline='middle';
       y-=gap;
     }
