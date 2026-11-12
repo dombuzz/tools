@@ -78,7 +78,7 @@ const SPLIT = s => { const out = []; let d = 0, c = ''; for (const ch of s) { if
 function scopeCss(text, t, ids) {
   const pre = t.id + '--';
   const fixSel = sel => SPLIT(sel).map(x => x.trim()).filter(x => x !== ':root').map(x =>
-    x.replace(/(^|[\s>+~(])(?:html|body)(?![\w-])/g, '$1:scope').replace(/(^|[\s>+~(])(:root)(?![\w-])/g, '$1:scope')
+    x.replace(/(^|[\s>+~(])body(?![\w-])/g, '$1.sc-body').replace(/(^|[\s>+~(])html(?![\w-])/g, '$1:scope').replace(/(^|[\s>+~(])(:root)(?![\w-])/g, '$1:scope')
      .replace(/#([A-Za-z_][\w-]*)/g, (m, n) => ids.has(n) ? '#' + pre + n : m)).join(',');
   const sh = new CSSStyleSheet(); sh.replaceSync(text);
   let inner = '', outer = '';
@@ -96,18 +96,19 @@ const EXTRA = {
   novitads: '.wrap>div:first-child{display:none}',
   mument: '.homelink,h1,.subtitle{display:none}'
 };
-const COMMON_CSS = ':scope{margin:0;padding:0!important;background:transparent!important;min-height:0!important}' +
+const COMMON_CSS = '.sc-body{margin:0;padding:0!important;background:transparent!important;min-height:0!important}' +
   '.themebtn,.dbz-help,.dbz-helpbox{display:none!important}' +
   /* einspaltig: Vorschau oben fixiert (wie /maletgs), Einstellungen scrollen darunter */
   '@media(max-width:860px){.stick{position:sticky!important;top:0!important;z-index:20;background:var(--bg);padding-bottom:4px}.stick .hint,.stick .warn{display:none}.stick .card{padding:10px 12px}.stick .row{gap:6px;margin-bottom:6px!important}}';
 
-function guardWin(real, active, isDoc, root, pre, ids) {
+function guardWin(real, active, isDoc, root, pre, ids, body) {
   const GUARD = new Set(['paste', 'keydown', 'keyup', 'drop', 'dragover', 'dragenter', 'dragleave']);
   const fixQ = s => String(s).replace(/#([A-Za-z_][\w-]*)/g, (m, n) => ids.has(n) ? '#' + pre + n : m);
   return new Proxy(real, {
     get(tg, p) {
       if (p === 'addEventListener') return (type, fn, o) => tg.addEventListener(type, GUARD.has(type) ? (e => { if (active()) fn.call(tg, e); }) : fn, o);
       if (isDoc) {
+        if (p === 'body') return body;
         if (p === 'getElementById') return id => tg.getElementById(pre + id);
         if (p === 'querySelector') return s => root.querySelector(fixQ(s));
         if (p === 'querySelectorAll') return s => root.querySelectorAll(fixQ(s));
@@ -137,9 +138,10 @@ async function mount(t) {
     frag.querySelectorAll('[for]').forEach(x => { if (ids.has(x.htmlFor)) x.htmlFor = pre + x.htmlFor; });
     const st = document.createElement('style');
     st.textContent = scopeCss(css, t, ids) + '@scope (.sc-' + t.id + '){' + COMMON_CSS + (EXTRA[t.id] || '') + '}';
-    el.textContent = ''; el.appendChild(st); el.appendChild(frag);
+    const body = document.createElement('div'); body.className = 'sc-body'; body.appendChild(frag);
+    el.textContent = ''; el.appendChild(st); el.appendChild(body);
     const active = () => cur.id === t.id && !document.hidden;
-    const D = guardWin(document, active, true, el, pre, ids), W = guardWin(window, active, false);
+    const D = guardWin(document, active, true, el, pre, ids, body), W = guardWin(window, active, false);
     try { new Function('document', 'window', js)(D, W); } catch (e) { console.error('social/' + t.id, e); }
     /* Schriften: Karte des Tools ausblenden, Status und Knopf oben anzeigen */
     const ff = el.querySelector('input[type=file][id$="fFile"]'), fs = el.querySelector('[id$="fState"]'), fb = el.querySelector('[id$="fBtn"]');
