@@ -12,7 +12,10 @@
   root.classList.add('embed');
   /* Kein eigener Container: Seite wird in voller Höhe gezeigt (Höhe geht an /social), Hintergrund durchsichtig. */
   var st = document.createElement('style');
-  st.textContent = 'html.embed,html.embed body{background:transparent!important;background-image:none!important;min-height:0!important;height:auto!important;overflow:hidden!important}' +
+  st.textContent = 'html.embed,html.embed body{background:transparent!important;background-image:none!important;min-height:0!important;height:auto!important}' +
+    '@media(min-width:861px){html.embed{overflow:hidden!important}}' +
+    /* Handy: Rahmen = Bildschirmhöhe, Vorschau oben fixiert (wie /maletgs), Einstellungen scrollen darunter */
+    '@media(max-width:860px){html.embed .stick{position:sticky!important;top:0!important;z-index:20;background:var(--bg);padding-bottom:8px}html.embed .stick .hint,html.embed .stick .warn{display:none}}' +
     'html.embed body::before,html.embed body::after{display:none!important}html.embed .wrap,html.embed .container{max-width:none!important}';
   (document.head || root).appendChild(st);
   /* Höhe an /social melden */
@@ -25,7 +28,8 @@
   /* Sichtfenster von /social (für «100vh»-Masse und mitlaufende Vorschau) */
   var view = { vh: window.innerHeight, off: 0 };
   function applyView() {
-    root.style.setProperty('--vh', view.vh + 'px');
+    var mob = window.innerWidth <= 860;
+    root.style.setProperty('--vh', (mob ? Math.round(view.vh * 0.3 + 210) : view.vh) + 'px');
     document.querySelectorAll('.stick').forEach(function (el) {
       var par = el.parentElement; if (!par) return;
       /* Einspaltig (Handy): normal mitscrollen, keine mitlaufende Vorschau */
@@ -38,7 +42,7 @@
   }
   window.addEventListener('message', function (e) {
     if (e.origin !== location.origin || !e.data || !e.data.dbzView) return;
-    view = e.data.dbzView; applyView(); sendH();
+    view = e.data.dbzView; lastH = 0; applyView(); sendH();
   });
   /* Scrittira: die Karte in der Seite ausblenden, Status/Knopf stattdessen oben rechts in /social zeigen */
   function fontSetup() {

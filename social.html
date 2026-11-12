@@ -71,6 +71,7 @@ const TABS = [
 ];
 const $ = id => document.getElementById(id);
 let cur = TABS[0];
+let firstShow = true;
 const frames = {};
 const fontInfo = {};
 function showFont() {
@@ -90,7 +91,16 @@ function sendView() {
   const r = f.getBoundingClientRect();
   f.contentWindow.postMessage({ dbzView: { vh: window.innerHeight, off: -r.top } }, location.origin);
 }
-function fit() { sendView(); }
+const mobile = () => innerWidth <= 860;
+function fit() {
+  if (mobile()) {
+    /* Handy: Rahmen füllt den Bildschirm unter den Tabs, innen scrollt es (Vorschau bleibt oben fixiert) */
+    const top = $('tabs').getBoundingClientRect().bottom + scrollY;
+    const h = Math.max(360, innerHeight - $('tabs').getBoundingClientRect().height - 12);
+    for (const k in frames) frames[k].style.height = h + 'px';
+  }
+  sendView();
+}
 function show(t, keepHash) {
   cur = t;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === t.id));
@@ -104,6 +114,8 @@ function show(t, keepHash) {
   showFont();
   fit();
   try { localStorage.setItem('social-tab', t.id); } catch (e) {}
+  if (!keepHash && mobile() && !firstShow) { try { $('tabs').scrollIntoView({ block: 'start' }); } catch (e) {} }
+  firstShow = false;
   if (!keepHash) { try { history.replaceState(null, '', '#' + t.id); } catch (e) {} }
 }
 TABS.forEach(t => {
@@ -128,7 +140,7 @@ addEventListener('message', e => {
   }
   if (e.data.dbzH || e.data.dbzReady) {
     const k = Object.keys(frames).find(k => frames[k].contentWindow === e.source);
-    if (k && e.data.dbzH) frames[k].style.height = e.data.dbzH + 'px';
+    if (k && e.data.dbzH && !mobile()) frames[k].style.height = e.data.dbzH + 'px';
     sendView(); return;
   }
   if (!e.data.dbzUse) return;
