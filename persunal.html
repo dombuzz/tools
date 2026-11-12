@@ -91,7 +91,7 @@ select{font:inherit;font-size:1rem;font-weight:400;text-transform:none;letter-sp
 section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
-.svc{display:inline-block;background:var(--hi);color:var(--hi-fg);border-radius:6px;padding:2px 9px;font-weight:700;font-size:.88rem;line-height:1.5;white-space:nowrap}
+.svc{display:inline-block;background:var(--hi);color:var(--hi-fg);border-radius:6px;padding:2px 9px;font-weight:700;font-size:.88rem;line-height:1.4;overflow-wrap:anywhere}
 .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .svc.raw{background:transparent;color:var(--text);border:1px dashed var(--muted);padding:1px 8px}
 .na{color:var(--err);font-weight:300;font-size:.88rem;line-height:1.4}
@@ -270,8 +270,10 @@ function setPlan(entries,other,label){
   render();
 }
 
-function dayHtml(c){
-  const parts=c.svc.map(l=>`<span class="svc">${esc(l)}</span>`)
+// Kurzformen nur fuer die schmalen Tagesspalten der Wochenansicht («Oz» zeigt den vollen Namen)
+const KURZ={"On demand societad e cultura":"OD societad","On demand divertiment":"OD divertiment"};
+function dayHtml(c,short){
+  const parts=c.svc.map(l=>`<span class="svc"${short&&KURZ[l]?` title="${esc(l)}"`:""}>${esc(short&&KURZ[l]||l)}</span>`)
     .concat(c.raw.map(t=>`<span class="svc raw" title="Text dal plan (betg translat\u00e0)">${esc(t)}</span>`));
   if(c.na) parts.push('<span class="na">Betg disponibel</span>');
   return `<span class="chips">${parts.join("")}</span>`;
@@ -284,7 +286,7 @@ function weekHtml(start,mine,todayIso,fromIso){
     const d=addDays(start,i), k=iso(d), l=mine[k], inPlan=plan.dates.has(k);
     n+=cellN(l);
     const cls=["d",d.getDay()%6===0?"we":"",k===todayIso?"today":"",inPlan?"":"out-plan",fromIso&&k<fromIso?"past":""].filter(Boolean).join(" ");
-    cells+=`<div class="${cls}"><div class="dh">${DAYS[dayIdx(d)]}<small>${fmt(d)}</small></div><div>${l?dayHtml(l):`<span class="${inPlan?"none":"out"}">\u2013</span>`}</div></div>`;
+    cells+=`<div class="${cls}"><div class="dh">${DAYS[dayIdx(d)]}<small>${fmt(d)}</small></div><div>${l?dayHtml(l,true):`<span class="${inPlan?"none":"out"}">\u2013</span>`}</div></div>`;
   }
   return {html:`<div class="wkg">${cells}</div>`,n};
 }
