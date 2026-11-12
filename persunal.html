@@ -190,10 +190,10 @@ const $=id=>document.getElementById(id);
 $("bmlink").href=bookmarkletHref("/persunal");
 
 // Dienst-Code -> Zeilenname (wie in Plans da teams; «Producers» ist nur eine Doppelansicht und wird uebersprungen)
-const NA=new Set(["0130","0135","0120","?"]); // Zelltexte, die «Betg disponibel» bedeuten
+const NA=new Set(["0130","0135","0120","?","vaca"]); // Zelltexte (Kleinschreibung), die «Betg disponibel» bedeuten; «vaca» = vacanzas
 // Glossar: Zelltexte im Plan, die kein Dienst-Code aus Plans da teams sind, aber eine feste Bedeutung haben (Kleinschreibung -> Anzeige).
 // Gilt fuer alle Personen. Neue Eintraege einfach hier ergaenzen.
-const GLOSSAR={"hock":"Hockey Livestream","futu":"Di da futur"};
+const GLOSSAR={"hock":"Hockey Livestream","futu":"Di da futur","plan":"Plan da lavur","disp":"Dispo"};
 
 const LABEL={}, ORDER={}; let ord=0;
 for(const k of ["newsdesk","radio","televisiun","ondemand"]) for(const [lab,cs] of SPARTEN[k].blocks.flat()){
@@ -249,7 +249,7 @@ function setPlan(entries,other,label){
   for(const o of other||[]){ // Text im Plan, der keinem Dienst zugeordnet ist: unveraendert anzeigen
     const c=cell(o.name,o.date), rest=[];
     for(const t of o.text.split(/\s+/)){
-      if(NA.has(t)) c.na=true;
+      if(NA.has(t.toLowerCase())) c.na=true;
       else if(GLOSSAR[t.toLowerCase()]){ const g=GLOSSAR[t.toLowerCase()]; if(!(g in ORDER)) ORDER[g]=ord++; if(!c.svc.includes(g)) c.svc.push(g) }
       else rest.push(t);
     }
