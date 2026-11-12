@@ -155,14 +155,14 @@ function render(c,pv){
     c.font=fi(75);
     const ql=wrap(c,quoted(S.quote,S.guil),600),n=ql.length,Y=895.7,LH=88,ROT=[2,-1,1];
     info.cnt.qCnt=n;
-    ql.forEach((l,i)=>{if(l){c.font=fi(75);tagR(c,67,Y-LH*(n-1-i)-71,c.measureText(l).width+38,85,ROT[i%3],col)}});
+    ql.forEach((l,i)=>{if(l){c.font=fi(75);tagR(c,67,Y-LH*(n-1-i)-71,c.measureText(l).width+36,85,ROT[i%3],col)}});
     ql.forEach((l,i)=>{if(l)txtR(c,l,86,Y-LH*(n-1-i),1,'#fff',fi(75),true)});
     if(n&&Y-LH*(n-1)-71<160)info.warn.push('Il citat è memia lung – el tutga il logo.');
     /* Num e funcziun: Bold Italic 40 en la colur sin alv */
     c.font=fi(40);
     const yN=1035,yR=S.name?1092:1035;
     if(S.name)tagR(c,71,yN,c.measureText(S.name).width+22,54,1,'#fff');
-    if(S.role)tagR(c,71.3,yR,c.measureText(S.role).width+22,54,-0.5,'#fff');
+    if(S.role)tagR(c,71.3,yR,c.measureText(S.role).width+26,54,-0.5,'#fff');
     if(S.name)txtR(c,S.name,82,yN+37,1,col,fi(40),true);
     if(S.role)txtR(c,S.role,81,yR+30,1,col,fi(40),true);
     credit(c,70,1309);

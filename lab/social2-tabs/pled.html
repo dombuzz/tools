@@ -177,8 +177,8 @@ function render(c,pv){
     const word=(S.word||'').trim();
     if(word){
       c.font=fi(120);const w0=c.measureText(word).width,f=Math.min(1,800/w0),sz=120*f,w=w0*f;
-      tagR(c,187.9,168.1,w+58,116,-1.25,DARK);
-      tagR(c,178,158.7,w+58,116,-1.25,LILA);
+      tagR(c,187.9,168.1,w+32,116,-1.25,DARK);
+      tagR(c,178,158.7,w+32,116,-1.25,LILA);
       txtR(c,word,207.4,254.2-(1-f)*42,-2.5,'#fff',fi(sz),true);
     }
     c.font=fb(60);const sp=c.measureText(' ').width;

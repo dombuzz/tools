@@ -180,7 +180,7 @@ function render(c,pv){
     c.font=fi(120);
     const tl=wrap(c,S.title,880),n=tl.length,ws=tl.map(l=>c.measureText(l).width);
     const ty=i=>506.8+111*i,gx=i=>i%2?63:78.9,gy=i=>i%2?531.1+111*(i-1):403+111*i;
-    for(let i=n-1;i>=0;i--)if(tl[i])tagR(c,gx(i),gy(i),ws[i]+36,116,i%2?-0.92:2.3,'#fff');
+    for(let i=n-1;i>=0;i--)if(tl[i])tagR(c,gx(i),gy(i),ws[i]+(i%2?35:31),116,i%2?-0.92:2.3,'#fff');
     tl.forEach((l,i)=>{if(l)txtR(c,l,i%2?81.7:92.5,ty(i),1,col,fi(120),true)});
     info.cnt.tCnt=n;if(n>4)info.warn.push('Il titel è memia lung.');
     if(S.kicker){c.font=fi(50);tagR(c,69.6,364,c.measureText(S.kicker).width+23,54,-1.9,col);txtR(c,S.kicker,80,404.1,-1.9,'#fff',fi(50),true)}
@@ -196,7 +196,7 @@ function render(c,pv){
   /* ===== Seite 3: Punkte mit Frizza (Light 60, Zeilenabstand 70, Abstand zwischen Punkten 100), Block senkrecht eingemittet ===== */
   pg(c,2,()=>{
     c.fillStyle=col;c.fillRect(0,0,W,H);
-    const items=String(S.bullets||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>richLines(c,x,746,60));
+    const items=String(S.bullets||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>richLines(c,x,750,60));
     const total=items.reduce((a,L,i)=>a+richSpan(L,70,0)+(i?100:0),0);
     let y=696.75-total/2;
     if(items.length&&y<110)info.warn.push('Ils puncts èn memia lungs per la pagina 3.');

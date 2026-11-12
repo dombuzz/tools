@@ -151,11 +151,11 @@ function render(c,pv){
     if(S.logoOn)logo(c,70,355);
     /* Titel: Bold Italic 162, Zeilenabstand 184.6, um x = 540 zentriert; Flächen 168 hoch (+2.35°/−0.2°), Text +1.5°/−2.5° */
     c.font=fi(162);
-    const tl=wrap(c,S.title,860),n=tl.length,LH=184.6,Y0=998.2-(n-1)*LH/2,TR=[2.35,-0.2],XR=[1.5,-2.5];
+    const tl=wrap(c,S.title,860),n=tl.length,LH=184.6,Y0=998.2-(n-1)*LH/2,TR=[2.35,-0.2],XR=[1.5,-2.5],PW=[82,61],PL=[36,24];
     info.cnt.tCnt=n;
     const ws=tl.map(l=>c.measureText(l).width);
-    for(let i=n-1;i>=0;i--)if(tl[i])tagR(c,540-(ws[i]+60)/2,Y0+LH*i-143,ws[i]+60,168,TR[i%2],col);
-    tl.forEach((l,i)=>{if(l)txtR(c,l,540-ws[i]/2,Y0+LH*i,XR[i%2],'#fff',fi(162),true)});
+    for(let i=n-1;i>=0;i--)if(tl[i])tagR(c,540-(ws[i]+PW[i%2])/2,Y0+LH*i-143,ws[i]+PW[i%2],168,TR[i%2],col);
+    tl.forEach((l,i)=>{if(l)txtR(c,l,540-(ws[i]+PW[i%2])/2+PL[i%2],Y0+LH*i,XR[i%2],'#fff',fi(162),true)});
     if(n>5)info.warn.push('Il titel è fitg lung – pli paucas lingias èn meglier legiblas.');
     credit(c,70,1596);
   });

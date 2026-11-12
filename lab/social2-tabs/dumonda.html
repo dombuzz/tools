@@ -149,14 +149,14 @@ function render(c,pv){
       QM.forEach(q=>{const g=c.createLinearGradient(q[1],q[2],q[3],q[4]);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fill(new Path2D(q[0]))});
       c.restore();
     }
-    /* Band unten rechts: weiss, −32.4°, links bei x = 654 senkrecht abgeschnitten; Text Bold 64 in Grossbuchstaben */
+    /* Band unten rechts: weiss, −32.4°, links bei x = 654 senkrecht abgeschnitten; Text Bold 62 in Grossbuchstaben */
     const t=(S.band||'').trim().toUpperCase();
     if(S.bandOn&&t){
       c.save();c.beginPath();c.rect(654,0,W-654,H);c.clip();
       c.translate(654,868);c.rotate(-32.37*Math.PI/180);
       c.fillStyle='#fff';c.fillRect(-80,-49.5,720,99);
-      c.font=fb(64);const w=c.measureText(t).width,f=Math.min(1,455/w);
-      c.font=fb(64*f);c.fillStyle='#262626';c.fillText(t,20,23*f);
+      c.font=fb(62);const w=c.measureText(t).width,f=Math.min(1,455/w);
+      c.font=fb(62*f);c.fillStyle='#262626';c.fillText(t,18,25*f);
       c.restore();
     }
     credit(c,70,1309);
