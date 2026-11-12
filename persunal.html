@@ -46,6 +46,27 @@ h1 .acc{color:var(--accent)}
 .status.ok b{color:var(--ok);font-weight:600}
 .status.err{color:var(--err)}
 .field.dur{max-width:none}
+.link{font:inherit;font-size:.88rem;font-weight:600;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer}
+.link:hover{color:var(--text)}
+.wkpick{position:relative}
+.wkbtn{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;font-weight:500;text-transform:none;letter-spacing:0;white-space:nowrap}
+.wkbtn.set{border-color:var(--accent);color:var(--text)}
+.wkpop{position:absolute;top:100%;left:0;margin-top:6px;z-index:20;width:320px;max-width:calc(100vw - 32px);box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.28);text-transform:none;letter-spacing:0;font-weight:400;color:var(--text)}
+.wkpop[hidden]{display:none}
+.wkl{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.wkd{display:flex;flex-wrap:wrap;gap:4px}
+.wkd button,.wko button{font:inherit;font-size:.85rem;cursor:pointer;color:var(--text);background:transparent;border:1px solid var(--border);border-radius:8px}
+.wkd button{padding:6px 10px;color:var(--muted);font-weight:600}
+.wkd button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.wko{display:flex;flex-direction:column;gap:4px}
+.wko button{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;text-align:left}
+.wko button:hover{background:var(--mono)}
+.wko button[aria-pressed="true"]{border-color:var(--accent)}
+.wko small{color:var(--muted);font-size:.78rem}
+.wkpop input[type=date]{width:100%;box-sizing:border-box}
+.step.ctl{position:relative;z-index:30}
+input[type=date]{font:inherit;font-size:.95rem;font-weight:400;text-transform:none;letter-spacing:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .controls{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:end}
 .seg{display:inline-flex;flex-wrap:wrap;background:var(--mono);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
 .seg button{font:inherit;font-size:.88rem;font-weight:600;text-transform:none;letter-spacing:0;background:transparent;color:var(--muted);border:none;padding:8px 14px;border-radius:7px;cursor:pointer}
@@ -53,7 +74,6 @@ h1 .acc{color:var(--accent)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .field{display:flex;flex-direction:column;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;max-width:360px}
 select{font:inherit;font-size:1rem;font-weight:400;text-transform:none;letter-spacing:0;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
-.link{font:inherit;font-size:.88rem;font-weight:600;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer}
 .link:hover{color:var(--text)}
 .bm{border-top:1px solid var(--border);padding-top:14px}
 .bm[open] summary{margin-bottom:14px}
@@ -127,12 +147,25 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
     </details>
   </div>
 
-  <div class="step">
-    <h2><span class="num">2</span>Tscherner ina persuna</h2>
+  <div class="step ctl">
+    <h2><span class="num">2</span>Tscherner ina persuna e periada</h2>
     <div class="controls">
       <label class="field" for="who">Persuna
         <select id="who" disabled><option value="">Emprim chargiar il plan</option></select>
       </label>
+      <label class="field" for="from">A partir da
+        <input type="date" id="from">
+      </label>
+      <div class="field wkpick" id="wkpick">Entschatta da l'emna
+        <button type="button" class="link wkbtn" id="wkbtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="wkpop"><span id="wklbl">Glindesdi</span><span aria-hidden="true">▾</span></button>
+        <div class="wkpop" id="wkpop" role="dialog" aria-label="Entschatta da l'emna" hidden>
+          <div class="wkl">Di da start</div>
+          <div class="wkd" id="wkd" role="group" aria-label="Di da start"></div>
+          <div class="wko" id="wko"></div>
+          <label class="wkl" for="wkdate">Auter data</label>
+          <input type="date" id="wkdate">
+        </div>
+      </div>
       <div class="field dur">Durada
         <div class="seg" id="len" role="group" aria-label="Durada">
           <button type="button" data-w="1">Quest'emna</button>
@@ -173,6 +206,28 @@ const dayIdx=d=>(d.getDay()+6)%7; // Mo=0 … So=6
 
 let plan=null; const sources={}, others={};
 let weeks=parseInt(store.get("persunal-weeks"),10); if(![0,1,2,3,4].includes(weeks)) weeks=1; // Durada: Wochen ab dieser Woche, 0 = ganzer Plan
+let customStart=false, pickDay=1;
+const wkpop=$("wkpop"), wkbtn=$("wkbtn");
+function syncWk(){const f=$("from").value; wkbtn.classList.toggle("set",customStart); $("wklbl").textContent=customStart&&f?fmtFull(parseIso(f)):WD[1]}
+function buildWk(){
+  $("wkd").innerHTML=[1,2,3,4,5,6,0].map(k=>`<button type="button" data-k="${k}" aria-pressed="${k===pickDay}" title="${WD[k]}">${DAYS[(k+6)%7]}</button>`).join("");
+  const t=parseIso(iso(new Date())); let d=t; while(d.getDay()!==pickDay) d=addDays(d,1);
+  const cur=customStart?$("from").value:"";
+  $("wko").innerHTML=[...Array(6)].map((_,j)=>{const x=addDays(d,7*j), n=Math.round((x-t)/864e5/7);
+    return `<button type="button" data-d="${iso(x)}" aria-pressed="${iso(x)===cur}">${fmtFull(x)}<small>${n===0?(iso(x)===iso(t)?"oz":"questa emna"):"+ "+n+" emna"+(n>1?"s":"")}</small></button>`}).join("");
+  $("wkdate").value=cur;
+}
+function openWk(){ if(customStart&&$("from").value) pickDay=parseIso($("from").value).getDay(); buildWk(); wkpop.hidden=false; wkbtn.setAttribute("aria-expanded","true") }
+function closeWk(){ wkpop.hidden=true; wkbtn.setAttribute("aria-expanded","false") }
+function pickStart(s){ if(!s) return; $("from").value=s; customStart=true; pickDay=parseIso(s).getDay(); closeWk(); render() }
+wkbtn.addEventListener("click",()=>wkpop.hidden?openWk():closeWk());
+$("wkd").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; pickDay=+b.dataset.k; buildWk()});
+$("wko").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) pickStart(b.dataset.d)});
+$("wkdate").addEventListener("change",e=>pickStart(e.target.value));
+$("from").addEventListener("change",()=>{customStart=false;render()});
+$("from").value=iso(new Date());
+document.addEventListener("click",e=>{if(!wkpop.hidden&&!e.composedPath().includes($("wkpick"))) closeWk()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!wkpop.hidden){closeWk();wkbtn.focus()}});
 function setWeeks(w){weeks=w;document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===w)));store.set("persunal-weeks",String(w));render()}
 
 async function refreshAliases(){
@@ -223,19 +278,20 @@ function dayHtml(c){
 }
 const cellN=c=>c?c.svc.length+c.raw.length:0;
 
-function weekHtml(mon,mine,todayIso){
+function weekHtml(start,mine,todayIso,fromIso){
   let cells="", n=0;
   for(let i=0;i<7;i++){
-    const d=addDays(mon,i), k=iso(d), l=mine[k], inPlan=plan.dates.has(k);
+    const d=addDays(start,i), k=iso(d), l=mine[k], inPlan=plan.dates.has(k);
     n+=cellN(l);
-    const cls=["d",i>4?"we":"",k===todayIso?"today":"",inPlan?"":"out-plan"].filter(Boolean).join(" ");
-    cells+=`<div class="${cls}"><div class="dh">${DAYS[i]}<small>${fmt(d)}</small></div><div>${l?dayHtml(l):`<span class="${inPlan?"none":"out"}">\u2013</span>`}</div></div>`;
+    const cls=["d",d.getDay()%6===0?"we":"",k===todayIso?"today":"",inPlan?"":"out-plan",fromIso&&k<fromIso?"past":""].filter(Boolean).join(" ");
+    cells+=`<div class="${cls}"><div class="dh">${DAYS[dayIdx(d)]}<small>${fmt(d)}</small></div><div>${l?dayHtml(l):`<span class="${inPlan?"none":"out"}">\u2013</span>`}</div></div>`;
   }
   return {html:`<div class="wkg">${cells}</div>`,n};
 }
-const wkHead=(mon,n,title)=>{const so=addDays(mon,6);return `<h3><span class="kw">${title||"Emna "+isoWeek(mon)}</span><span class="rng">${title?"Emna "+isoWeek(mon)+" \u00b7 ":""}${fmt(mon)} \u2013 ${fmt(so)}${so.getFullYear()} \u00b7 ${n} servetsch${n===1?"":"s"}</span></h3>`};
+const wkHead=(start,n,title)=>{const so=addDays(start,6), a=isoWeek(start), b=isoWeek(so), wk="Emna "+(a===b?a:a+"/"+b);return `<h3><span class="kw">${title||wk}</span><span class="rng">${title?wk+" \u00b7 ":""}${fmt(start)} \u2013 ${fmt(so)}${so.getFullYear()} \u00b7 ${n} servetsch${n===1?"":"s"}</span></h3>`};
 
 function render(){
+  syncWk();
   const out=$("out"), who=$("who").value;
   if(!plan){out.innerHTML="";return}
   store.set("servetsch-who",who);
@@ -247,13 +303,14 @@ function render(){
   const tl=mine[todayIso];
   h+=`<section><h3><span class="kw">Oz</span><span class="rng">${esc(plan.short[who]||who)}</span></h3><div class="nowc"><div class="dt">${fmtFull(today)}</div>`+
      (!plan.dates.has(todayIso)?`<span class="none">Oz n'\u00e8 betg en il plan chargi\u00e0.</span>`:tl?dayHtml(tl):`<span class="none">Oz nagin servetsch.</span>`)+`</div></section>`;
-  // emnas tenor «Durada»: ab questa emna (weeks = 1…4) u il plan entir (weeks = 0)
-  const planFirst=monday(parseIso(plan.first)), planLast=monday(parseIso(plan.last));
-  const from=weeks===0?planFirst:todayMon;
-  const to=weeks===0?planLast:(t=>t>planLast&&planLast>=todayMon?planLast:t)(addDays(todayMon,7*(weeks-1)));
-  for(let m=from; m<=to; m=addDays(m,7)){
-    const w=weekHtml(m,mine,todayIso), cur=iso(m)===iso(todayMon), past=addDays(m,6)<parseIso(todayIso);
-    h+=`<section class="${past?"past":""}">${wkHead(m,w.n,cur?"Questa emna":"")}${w.html}</section>`;
+  // Wochen ab «A partir da»: Standard ab Montag, mit «Entschatta da l'emna» exakt ab dem gewaehlten Tag; Durada = Anzahl Wochen (0 = ganzer Plan)
+  const fromIso=$("from").value||todayIso, f=parseIso(fromIso), planFirst=parseIso(plan.first), planLast=parseIso(plan.last);
+  const s0=(weeks===0?planFirst:f), start=customStart?s0:monday(s0);
+  const need=Math.floor(Math.round((planLast-start)/864e5)/7)+1; // Wochen bis zum Planende
+  const nW=weeks===0?Math.max(1,need):Math.max(1,Math.min(weeks,need));
+  for(let k=0;k<nW;k++){
+    const m=addDays(start,7*k), w=weekHtml(m,mine,todayIso,weeks===0?"":fromIso), cur=todayIso>=iso(m)&&todayIso<=iso(addDays(m,6));
+    h+=`<section>${wkHead(m,w.n,cur?"Questa emna":"")}${w.html}</section>`;
   }
   out.innerHTML=h;
 }
