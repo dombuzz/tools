@@ -15,7 +15,7 @@
   st.textContent = 'html.embed,html.embed body{background:transparent!important;background-image:none!important;min-height:0!important;height:auto!important}' +
     '@media(min-width:861px){html.embed{overflow:hidden!important}}' +
     /* Handy: Rahmen = Bildschirmhöhe, Vorschau oben fixiert (wie /maletgs), Einstellungen scrollen darunter */
-    '@media(max-width:860px){html.embed .stick{position:sticky!important;top:0!important;z-index:20;background:var(--bg);padding-bottom:8px}html.embed .stick .hint,html.embed .stick .warn{display:none}}' +
+    '@media(max-width:860px){html.embed .stick{position:sticky!important;top:0!important;z-index:20;background:var(--bg);padding-bottom:4px}html.embed .stick .card{padding:10px 12px}html.embed .stick .row{gap:6px;margin-bottom:6px!important}html.embed .stick .row[style*="margin-top"]{margin-top:8px!important}html.embed .stick .hint,html.embed .stick .warn{display:none}}' +
     'html.embed body::before,html.embed body::after{display:none!important}html.embed .wrap,html.embed .container{max-width:none!important}';
   (document.head || root).appendChild(st);
   /* Höhe an /social melden */
@@ -29,9 +29,9 @@
   var view = { vh: window.innerHeight, off: 0 };
   function applyView() {
     var mob = window.innerWidth <= 860;
-    /* Handy: Vorschau nur ca. 28 % der Bildschirmhöhe, damit die Einstellungen darunter sichtbar bleiben */
+    /* Handy: Vorschau nur ca. 20 % der Bildschirmhöhe, damit die Einstellungen darunter sichtbar bleiben */
     var off = /novitads/.test(location.pathname) ? 150 : 210;
-    root.style.setProperty('--vh', (mob ? Math.round(view.vh * 0.28 + off) : view.vh) + 'px');
+    root.style.setProperty('--vh', (mob ? Math.round(view.vh * 0.2 + off) : view.vh) + 'px');
     document.querySelectorAll('.stick').forEach(function (el) {
       var par = el.parentElement; if (!par) return;
       /* Einspaltig (Handy): normal mitscrollen, keine mitlaufende Vorschau */
