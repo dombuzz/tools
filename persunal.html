@@ -45,6 +45,12 @@ h1 .acc{color:var(--accent)}
 .status{font-size:.85rem;color:var(--muted);min-height:1.2em}
 .status.ok b{color:var(--ok);font-weight:600}
 .status.err{color:var(--err)}
+.field.dur{max-width:none}
+.controls{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:end}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--mono);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:.88rem;font-weight:600;text-transform:none;letter-spacing:0;background:transparent;color:var(--muted);border:none;padding:8px 14px;border-radius:7px;cursor:pointer}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 .field{display:flex;flex-direction:column;gap:6px;font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;max-width:360px}
 select{font:inherit;font-size:1rem;font-weight:400;text-transform:none;letter-spacing:0;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
 .link{font:inherit;font-size:.88rem;font-weight:600;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer}
@@ -62,7 +68,6 @@ select{font:inherit;font-size:1rem;font-weight:400;text-transform:none;letter-sp
 .note{font-size:.85rem;color:var(--muted);line-height:1.5;max-width:65ch;margin:14px 0 0}
 #out{display:flex;flex-direction:column;gap:28px}
 .empty{color:var(--muted);font-size:.9rem;padding:8px 0;margin:0}
-.oth{font-size:1rem;margin:0;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
@@ -124,9 +129,20 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
 
   <div class="step">
     <h2><span class="num">2</span>Tscherner ina persuna</h2>
-    <label class="field" for="who">Persuna
-      <select id="who" disabled><option value="">Emprim chargiar il plan</option></select>
-    </label>
+    <div class="controls">
+      <label class="field" for="who">Persuna
+        <select id="who" disabled><option value="">Emprim chargiar il plan</option></select>
+      </label>
+      <div class="field dur">Durada
+        <div class="seg" id="len" role="group" aria-label="Durada">
+          <button type="button" data-w="1">Quest'emna</button>
+          <button type="button" data-w="2">+ 1 emna</button>
+          <button type="button" data-w="3">+ 2 emnas</button>
+          <button type="button" data-w="4">+ 3 emnas</button>
+          <button type="button" data-w="0">Plan entir</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="out"></div>
@@ -156,6 +172,8 @@ const fmtFull=d=>`${WD[d.getDay()]}, ${pad(d.getDate())}.${pad(d.getMonth()+1)}.
 const dayIdx=d=>(d.getDay()+6)%7; // Mo=0 … So=6
 
 let plan=null; const sources={}, others={};
+let weeks=parseInt(store.get("persunal-weeks"),10); if(![0,1,2,3,4].includes(weeks)) weeks=1; // Durada: Wochen ab dieser Woche, 0 = ganzer Plan
+function setWeeks(w){weeks=w;document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===w)));store.set("persunal-weeks",String(w));render()}
 
 async function refreshAliases(){
   try{await loadAliases(store.get("plan-alias-code")||""); if(plan) setPlan(plan.raw,plan.rawOther); $("aliasbtn").hidden=true}
@@ -229,17 +247,14 @@ function render(){
   const tl=mine[todayIso];
   h+=`<section><h3><span class="kw">Oz</span><span class="rng">${esc(plan.short[who]||who)}</span></h3><div class="nowc"><div class="dt">${fmtFull(today)}</div>`+
      (!plan.dates.has(todayIso)?`<span class="none">Oz n'\u00e8 betg en il plan chargi\u00e0.</span>`:tl?dayHtml(tl):`<span class="none">Oz nagin servetsch.</span>`)+`</div></section>`;
-  // questa emna
-  const tw=weekHtml(todayMon,mine,todayIso);
-  h+=`<section>${wkHead(todayMon,tw.n,"Questa emna")}${tw.html}</section>`;
-  // autras emnas
-  const first=monday(parseIso(plan.first)), last=monday(parseIso(plan.last)); let others="", cnt=0;
-  for(let m=first; m<=last; m=addDays(m,7)){
-    if(iso(m)===iso(todayMon)) continue; cnt++;
-    const w=weekHtml(m,mine,todayIso), past=addDays(m,6)<parseIso(todayIso);
-    others+=`<section class="${past?"past":""}">${wkHead(m,w.n)}${w.html}</section>`;
+  // emnas tenor «Durada»: ab questa emna (weeks = 1…4) u il plan entir (weeks = 0)
+  const planFirst=monday(parseIso(plan.first)), planLast=monday(parseIso(plan.last));
+  const from=weeks===0?planFirst:todayMon;
+  const to=weeks===0?planLast:(t=>t>planLast&&planLast>=todayMon?planLast:t)(addDays(todayMon,7*(weeks-1)));
+  for(let m=from; m<=to; m=addDays(m,7)){
+    const w=weekHtml(m,mine,todayIso), cur=iso(m)===iso(todayMon), past=addDays(m,6)<parseIso(todayIso);
+    h+=`<section class="${past?"past":""}">${wkHead(m,w.n,cur?"Questa emna":"")}${w.html}</section>`;
   }
-  h+=cnt?`<div style="display:flex;flex-direction:column;gap:22px"><h3 class="oth"><span class="kw">Autras emnas</span><span class="rng">${cnt} en il plan</span></h3>${others}</div>`:"";
   out.innerHTML=h;
 }
 
@@ -274,6 +289,8 @@ file.addEventListener("change",()=>{readPdfs(file.files);file.value=""});
 ["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
 drop.addEventListener("drop",e=>{readPdfs(e.dataTransfer.files)});
 $("who").addEventListener("change",render);
+document.querySelectorAll("#len button").forEach(b=>b.addEventListener("click",()=>setWeeks(+b.dataset.w)));
+document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===weeks)));
 $("aliasbtn").addEventListener("click",askAliases); refreshAliases();
 $("status").textContent="Anc nagin plan chargi\u00e0.";
 
