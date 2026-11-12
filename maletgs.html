@@ -1486,6 +1486,8 @@ const edits = [...document.querySelectorAll('[data-edit]')];
 const tabBtns = [...document.querySelectorAll('.tabs [data-tab]')], panes = [...document.querySelectorAll('.pane')];
 let curTab = 0;
 const colOn = () => curTab === 3;
+// Statistik: ein Export aus dem Tab Collascha zählt als «collage» (gehört zur Gruppe maletgs; dient der Zeitersparnis im Dashboard)
+window.dbzUseTool = () => colOn() ? 'collage' : null;
 // Bearbeitung («Clerezza + colurs», «Rotar + drizzar») gilt für den Layer oder – nach «Collascha» – für die gewählte Part
 let ectx = 'layers';
 const editTarget = () => ectx === 'collage' ? (typeof colSel === 'function' ? colSel() : null) : active;

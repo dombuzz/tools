@@ -45,6 +45,11 @@ const NAMES = { 'info': 'Infus & datas',
 // «Subtitle Studio»: die früheren Einzeltools /spustar, /cumparegliar und /subs zählen zu /studio
 const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
+// Geschätzte Zeitersparnis pro Nutzung in Minuten (Dominiks Schätzung vom 12.11.2026: «vorher» minus «mit Tool»).
+// Schlüssel = Roh-Kennung der Seite; ohne eigenen Eintrag gilt der Wert der Gruppe (z. B. mument → visual).
+// «collage» = Exporte aus dem Tab Collascha in /maletgs (übrige Tabs von maletgs haben keinen Wert).
+const SAVED_MIN = { 'rtr-picture': 0.3, visual: 1, Resizer2000: 0.3, collage: 2, data: 2, votaziuns: 3 };
+const savedMin = t => SAVED_MIN[t] ?? SAVED_MIN[grp(t)] ?? 0;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
 const NO_STATS = new Set(['stats', 'votgr', 'lab-vischnanca', 'lab-svizra', 'lab-chartas']);
 const NO_STATS_SQL = `tool NOT IN (${[...NO_STATS].map(t => `'${t}'`).join(', ')})`;
@@ -476,6 +481,7 @@ async function monthlyReport(env, ctx) {
     const main = (d.uses || []).filter(x => !x.tool.startsWith('lab-') && (x.count || x.likes)), lab = (d.uses || []).filter(x => x.tool.startsWith('lab-') && (x.count || x.likes));
     const line = x => `${x.name || x.tool}: ${x.count} duvrà · ♥ ${x.likes || 0} · ${d.views?.[x.tool] || 0} visitas`;
     const facts = [['Duvrà', d.usesTotal || 0], ['♥', d.total || 0], ['Visitas', d.viewsTotal || 0], ['Visitaders', d.clients || 0], ['Turnads (≥ 2 dis)', d.returning || 0]];
+    if (d.savedTotal) { const m = Math.round(d.savedTotal); facts.push(['Temp spargnà (stimaziun)', m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`]); }
     // /game-Profile und Artikel auf rtr.ch (ganzer Monat)
     try { const g = await gameMonthStats(env, GROUP, key); facts.push(['Profils (game)', g.profiles], ['Profils novs', g.created], ['Profils activs', g.active], ['Acziuns (profils)', g.acts], ['Artitgels averts (profils)', g.art], ['Badges (profils)', g.badges]);
       if (g.topSeria) facts.push(['Pli lunga seria', `${g.topSeria} ${g.topSeria === 1 ? 'di' : 'dis'} · ${g.topSeriaNames.join(', ')}`]); if (g.topName) facts.push(['Profil il pli activ', g.topName]); } catch (e) { await reportError(env, 'monthly game', e); }
@@ -671,6 +677,10 @@ async function handle(request, env, ctx) {
           .filter(r => r.count || r.likes)
           .sort((a, b) => b.count - a.count || b.likes - a.likes || a.name.localeCompare(b.name, 'de'));
         const usesTotal = uses.reduce((t, r) => t + r.count, 0);
+        // Zeitersparnis (Minuten) pro Tool: Nutzungen × Schätzwert, aus den Rohdaten pro Seite, dann unter der Gruppe zusammengezählt
+        const saved = {};
+        for (const r of usesRaw) { const m = savedMin(r.tool) * r.count, t = grp(r.tool); if (m && inScope(t)) saved[t] = Math.round(((saved[t] || 0) + m) * 10) / 10; }
+        const savedTotal = Math.round(Object.values(saved).reduce((t, n) => t + n, 0) * 10) / 10;
         await ensureViews(env);
         const { results: viewRows } = await env.DB
           .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
@@ -714,7 +724,7 @@ async function handle(request, env, ctx) {
         const { results: [fp] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(p?.from ?? '0', p?.to ?? '9999').all();
         const favsNow = Object.fromEntries(favNowRows.map(r => [r.tool, Math.max(0, r.n)]));
         const favsTotal = Object.values(favs).reduce((t, n) => t + n, 0);
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, saved, savedTotal, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';

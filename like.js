@@ -172,7 +172,9 @@ const HTML = `<div class="dbz-like" id="dbz-like">
     if (!counted) { counted = true;
       try { const m = new Date().toLocaleDateString('sv').slice(0, 7), a = JSON.parse(localStorage.getItem('dbz-acts') || '{}') || {}; // für /game
         localStorage.setItem('dbz-acts', JSON.stringify({ total: (+a.total || 0) + 1, month: m, m: (a.month === m ? +a.m || 0 : 0) + 1 })); } catch (e) {}
-      fetch(API + '/use/' + encodeURIComponent(tool) + (cid ? '?c=' + cid : ''), { method: 'POST', keepalive: true }).catch(() => {}); }
+      // Ein Tool mit mehreren Teilen kann die Nutzung unter einer Teil-Kennung melden (window.dbzUseTool), z. B. Collascha in /maletgs → «collage»; der Worker zählt sie zur Gruppe
+      let ut = tool; try { const x = typeof window.dbzUseTool === 'function' && window.dbzUseTool(); if (x && /^[A-Za-z0-9_-]{1,40}$/.test(x)) ut = x; } catch (e) {}
+      fetch(API + '/use/' + encodeURIComponent(ut) + (cid ? '?c=' + cid : ''), { method: 'POST', keepalive: true }).catch(() => {}); }
     ask();
   }
   // Downloads erkennen: Klick auf einen Download-Link oder a.click() im Skript
