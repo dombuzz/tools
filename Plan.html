@@ -470,7 +470,7 @@ const hostWin=window.opener||(window.top!==window?window.parent:null);
 if(location.hash==="#sharepoint"){
   if(hostWin){
     $("status").textContent="Spetg sin il plan da SharePoint …";
-    let n=0; const iv=setInterval(()=>{try{const li=document.querySelector("link[rel~=icon]");hostWin.postMessage({type:"planonline-meta",title:document.title,icon:li&&li.href},SP_ORIGIN);hostWin.postMessage("planonline-ready",SP_ORIGIN)}catch(_){} if(++n>40||plan) clearInterval(iv)},500);
+    let n=0; const iv=setInterval(()=>{try{hostWin.postMessage({type:"planonline-meta",title:document.title},SP_ORIGIN);hostWin.postMessage("planonline-ready",SP_ORIGIN)}catch(_){} if(++n>40||plan) clearInterval(iv)},500);
   } else {
     $("status").className="status err"; $("status").textContent="La colliaziun cun SharePoint è vegnida interrutta. Chargia il PDF a maun.";
   }
