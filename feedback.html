@@ -44,10 +44,13 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .meta .pg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);text-decoration:none;border-bottom:1px dashed var(--muted)}
 .meta .pg:hover{color:var(--accent)}
 .text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:.95rem}
-.note,.nedit{align-self:flex-end;width:min(100%,420px);border:1.5px solid var(--lab);border-radius:10px;box-sizing:border-box}
-.note{background:var(--mono);padding:8px 12px;font-size:.88rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
-.note small{display:block;color:var(--lab);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
-.nedit{display:flex;flex-direction:column;gap:8px;padding:8px}
+.note{border-left:3px solid var(--accent);background:var(--mono);border-radius:0 8px 8px 0;padding:8px 12px;font-size:.88rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.note small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.nedit{display:flex;flex-direction:column;gap:8px}
+.item{position:relative}
+.nbtn{position:absolute;top:12px;right:14px;border:1.5px solid var(--lab)!important;color:var(--lab)!important;background:transparent!important}
+.nbtn:hover{background:var(--lab)!important;color:var(--on-accent,#121214)!important}
+.item:has(.nbtn) .meta{padding-right:128px}
 .nedit textarea{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:.92rem;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
 .nedit textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .nedit .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -116,9 +119,9 @@ const LBL = { nov: 'Nov', lavur: 'En lavur', liquida: 'Liquidà' };
 let items = [], tab = 'nov';
 try { const s = localStorage.getItem('dbz-fb-tab'); if (LBL[s]) tab = s; } catch (e) {}
 
-const card = (i, acts, canNote = true) => `<article class="item" data-id="${i.id}">${noteBlock(i, canNote)}
-  <div class="meta"><b>${esc(i.toolName)}</b>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${canNote ? btn('note', i.note ? 'Mida notizia' : 'Notizia') : ''}${acts}</div></div>
-  <div class="text">${esc(i.text)}</div></article>`;
+const card = (i, acts, canNote = true) => `<article class="item" data-id="${i.id}">${canNote ? `<button type="button" class="ghost nbtn" data-act="note">${i.note ? 'Mida notizia' : 'Notizia'}</button>` : ''}
+  <div class="meta"><b>${esc(i.toolName)}</b>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${acts}</div></div>
+  <div class="text">${esc(i.text)}</div>${noteBlock(i, canNote)}</article>`;
 // Notiz: Anzeige bzw. Eingabefeld (offen bleibt jeweils nur eine)
 let editing = null, draft = '';
 const noteBlock = (i, canNote) => canNote && editing === i.id
