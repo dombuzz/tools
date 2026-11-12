@@ -40,7 +40,8 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:.8rem;color:var(--muted)}
 .meta b{color:var(--accent);font-weight:600}
-.meta .who{flex-basis:100%;margin-top:-2px}
+.meta .who{flex-basis:100%;margin-top:-2px;white-space:pre-wrap}
+.meta .sep{font-style:normal;margin:0 .8em;opacity:.6}
 .meta .sp{flex:1}
 .meta .pg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);text-decoration:none;border-bottom:1px dashed var(--muted)}
 .meta .pg:hover{color:var(--accent)}
@@ -121,7 +122,7 @@ let items = [], tab = 'nov';
 try { const s = localStorage.getItem('dbz-fb-tab'); if (LBL[s]) tab = s; } catch (e) {}
 
 const card = (i, acts, canNote = true) => `<article class="item" data-id="${i.id}">${canNote ? `<button type="button" class="ghost nbtn" data-act="note">${i.note ? 'Midar notizia' : 'Notizia'}</button>` : ''}
-  <div class="meta"><b>${esc(i.toolName)}</b><span class="who">${i.name ? esc(i.name) : 'anonim'}</span>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span>${esc(fmt(i.ts))}</span><span class="sp"></span><div class="acts">${acts}</div></div>
+  <div class="meta"><b>${esc(i.toolName)}</b><span class="who">${i.name ? esc(i.name) : 'anonim'}<span class="sep">|</span>${esc(fmt(i.ts))}</span>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span class="sp"></span><div class="acts">${acts}</div></div>
   <div class="text">${esc(i.text)}</div>${noteBlock(i, canNote)}</article>`;
 // Notiz: Anzeige bzw. Eingabefeld (offen bleibt jeweils nur eine)
 let editing = null, draft = '';
