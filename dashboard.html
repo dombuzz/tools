@@ -404,7 +404,7 @@
   const AUTH = () => ({ headers: { Authorization: 'Bearer ' + (typeof fbPw === 'string' ? fbPw : '') } });
   // Anzeigenamen; Tools ohne Klick erscheinen mit 0
   const NAMES = {
-    'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social': 'Social', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
+    'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social': 'Social (survista)', 'social-profil': 'Social · Profil', 'social-novitads': 'Social · Novitads dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News', 'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
     'Plan': 'Plans da teams', 'persunal': 'Persunal', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
     'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'avis-votelec': 'Avis sin votaziuns ed elecziuns'
   };
@@ -412,7 +412,7 @@
   const LAB = {
     'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
     'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
-    'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels'
+    'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-social2': 'Social2 (früher)'
   };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const MONTHS = ['schaner', 'favrer', 'mars', 'avrigl', 'matg', 'zercladur', 'fanadur', 'avust', 'settember', 'october', 'november', 'december'];
@@ -838,7 +838,7 @@
       const views = d.views || {};
       const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
       const isLab = t => t.startsWith('lab-');
-      const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => '/' + t, views, d.saved || {});
+      const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t), t => t.startsWith('social-') ? '/social/' + t.slice(7) : t === 'social' ? '/social/' : '/' + t, views, d.saved || {});
       const lab = draw(document.getElementById(ids[2]), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
       const hrefs = { index: '/', game: '/game', 'top-popup': '/', top: '/cifras', 'lab-index': '/lab/', '404': '/404' };
       if (ids[0] === 'list') { // Favurits: ★ gesetzt im Zeitraum, darunter wie viele es aktuell markiert haben
@@ -846,7 +846,7 @@
         const ft = [...new Set([...Object.keys(fv), ...Object.keys(now)])].filter(t => fv[t] || now[t])
           .sort((a, b) => (fv[b] || 0) - (fv[a] || 0) || (now[b] || 0) - (now[a] || 0) || (NAMES[a] || a).localeCompare(NAMES[b] || b, 'de'));
         document.getElementById('favlist').innerHTML = ft.length ? ft.map((t, i) => `<div class="row" data-t="${esc(t)}"><span class="rank">${i + 1}</span>
-          <div class="name"><a href="/${esc(t)}">${esc(NAMES[t] || t)}</a></div>
+          <div class="name"><a href="/${esc(t === 'social' ? 'social/' : t.startsWith('social-') ? 'social/' + t.slice(7) : t)}">${esc(NAMES[t] || t)}</a></div>
           <span class="cnt" title="${fmt(fv[t] || 0)} giadas marcà en quest temp · actualmain tar ${fmt(now[t] || 0)}">★ ${fmt(fv[t] || 0)}<small>actualmain ${fmt(now[t] || 0)}</small></span></div>`).join('')
           : '<div class="msg">Anc nagins favurits en quest temp.</div>';
         const fc = d.favClients || 0, fp = d.favClientsPeriod || 0;

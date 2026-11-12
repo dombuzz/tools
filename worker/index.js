@@ -30,14 +30,14 @@ const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = { 'info': 'Infus & datas',
-  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social': 'Social', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
+  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social': 'Social (survista)', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'persunal': 'Persunal', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
   'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'avis-votelec': 'Avis sin votaziuns ed elecziuns', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
-  'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-social2': 'Social2',
-  'social-profil': 'Profil social', 'social-novitads': 'Novitads dal di', 'social-mument': '#mument', 'social-quote': 'Quote solo', 'social-breaking': 'Breaking News',
-  'social-dumonda': 'Dumonda da l’emna', 'social-cifra': 'Cifra da l’emna', 'social-focus': 'Focus', 'social-novitad': 'Novitad', 'social-pled': 'Pled da l’emna', 'social-thumbnail': 'Thumbnail',
+  'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-social2': 'Social2 (früher)',
+  'social-profil': 'Social · Profil', 'social-novitads': 'Social · Novitads dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News',
+  'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail',
 };
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
