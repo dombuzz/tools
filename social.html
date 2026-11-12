@@ -91,7 +91,7 @@ function sendView() {
   const r = f.getBoundingClientRect();
   f.contentWindow.postMessage({ dbzView: { vh: window.innerHeight, off: -r.top } }, location.origin);
 }
-const mobile = () => innerWidth <= 860;
+const mobile = () => innerWidth <= 892; /* Rahmen ≤ 860 px = einspaltiges Layout der Tools */
 function fit() {
   if (mobile()) {
     /* Handy: Rahmen füllt den Bildschirm unter den Tabs, innen scrollt es (Vorschau bleibt oben fixiert) */

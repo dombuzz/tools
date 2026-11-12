@@ -29,7 +29,9 @@
   var view = { vh: window.innerHeight, off: 0 };
   function applyView() {
     var mob = window.innerWidth <= 860;
-    root.style.setProperty('--vh', (mob ? Math.round(view.vh * 0.3 + 210) : view.vh) + 'px');
+    /* Handy: Vorschau nur ca. 28 % der Bildschirmhöhe, damit die Einstellungen darunter sichtbar bleiben */
+    var off = /novitads/.test(location.pathname) ? 150 : 210;
+    root.style.setProperty('--vh', (mob ? Math.round(view.vh * 0.28 + off) : view.vh) + 'px');
     document.querySelectorAll('.stick').forEach(function (el) {
       var par = el.parentElement; if (!par) return;
       /* Einspaltig (Handy): normal mitscrollen, keine mitlaufende Vorschau */
