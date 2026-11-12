@@ -3,18 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="/theme.js"></script>
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark light">
 <title>Novitads dal di</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='3' width='12' height='18' rx='2'/%3E%3Cpath d='M9 15h6M9 18h4'/%3E%3C/svg%3E">
 <style>
-:root{--bg:#111113;--card:#1c1c1f;--line:#2e2e33;--tx:#ececf0;--mu:#9a9aa5;--ac:#ff4d64;--fld:#141416;--warn:#ffb86b}
-@media(prefers-color-scheme:light){:root{--bg:#f2f2f4;--card:#fff;--line:#d8d8de;--tx:#1b1b1f;--mu:#6b6b76;--ac:#d9304a;--fld:#f7f7f9;--warn:#b86a00}}
+:root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;--ok:#4caf6f;--warn:#ffb86b;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:40px 16px 64px}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:40px 16px 64px}
 .wrap{max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 h1{font-size:1.4rem;margin:0;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-h1 .acc{color:var(--ac)}
+h1 .acc{color:var(--accent)}
 .badge{font-size:.7rem;font-weight:600;color:#ff9a3c;border:1px solid #ff9a3c;border-radius:99px;padding:1px 9px}
-.lead{font-size:.9rem;color:var(--mu);margin:4px 0 0}
+.lead{font-size:.9rem;color:var(--muted);margin:4px 0 0}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
 .stick{position:sticky;top:16px}
@@ -22,33 +24,33 @@ h1 .acc{color:var(--ac)}
 .col{display:flex;flex-direction:column;gap:18px}
 .card{background:var(--card);border-radius:14px;padding:20px;border:1px solid var(--line)}
 .card h2{font-size:.95rem;margin:0 0 14px;font-weight:600}
-.card h2 .n{color:var(--ac);margin-right:6px}
-label{display:block;font-size:.82rem;color:var(--mu);margin:0 0 4px}
+.card h2 .n{color:var(--accent);margin-right:6px}
+label{display:block;font-size:.82rem;color:var(--muted);margin:0 0 4px}
 .f{margin-bottom:12px}.f:last-child{margin-bottom:0}
-input[type=text],textarea,select{width:100%;background:var(--fld);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:.92rem}
+input[type=text],textarea,select{width:100%;background:var(--field);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:.92rem}
 textarea{min-height:130px;resize:vertical;line-height:1.4}
-input[type=range]{width:100%;accent-color:var(--ac)}
-input[type=color]{width:38px;height:36px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--fld);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=color]{width:38px;height:36px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--field);cursor:pointer}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .row>.grow{flex:1;min-width:120px}
-button,.btn{font:inherit;font-size:.88rem;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--tx);padding:7px 13px;cursor:pointer}
-button:hover,.btn:hover{border-color:var(--ac)}
-.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+button,.btn{font:inherit;font-size:.88rem;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text);padding:7px 13px;cursor:pointer}
+button:hover,.btn:hover{border-color:var(--accent)}
+.pri{background:var(--accent);border-color:var(--accent);color:#fff}
 .pri:hover{filter:brightness(1.08)}
 .pill{border-radius:99px;padding:5px 13px;font-size:.84rem}
-.pill.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .pill.on:hover{color:#fff}
-.pill:hover{color:var(--tx)}
+.pill:hover{color:var(--text)}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
 .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(255,255,255,.35)}
 canvas{display:block;width:min(100%,calc((100vh - 150px)*.8));height:auto;aspect-ratio:4/5;margin:0 auto;border-radius:10px;background:#222;cursor:grab;touch-action:pan-y}
 canvas:active{cursor:grabbing}
-.hint{font-size:.78rem;color:var(--mu);margin-top:8px}
+.hint{font-size:.78rem;color:var(--muted);margin-top:8px}
 .sep{height:1px;background:var(--line);margin:14px 0}
 .only-cover{display:none}
 .is-cover .only-cover{display:block}
 input[type=file]{display:none}
-.val{color:var(--mu);font-size:.8rem;float:right}
+.val{color:var(--muted);font-size:.8rem;float:right}
 </style>
 </head>
 <body>
@@ -108,14 +110,14 @@ input[type=file]{display:none}
         <div class="f">
           <label style="display:flex;justify-content:space-between;align-items:center">
             <span>Funtauna dal maletg (suenter «maletg:»)</span>
-            <span style="display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="showCr"> mussar</span>
+            <span style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="showCr"> mussar</span>
           </label>
           <input type="text" id="credit" placeholder="p.ex. Reuters">
           <div class="hint">Maletgs da RTR: desactivar, la funtauna na dastga betg vegnir inditgada.</div>
         </div>
         <div class="f">
           <div class="row">
-            <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="arrow"> Frizza</label>
+            <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="arrow"> Frizza</label>
           </div>
         </div>
       </div>
@@ -133,14 +135,14 @@ input[type=file]{display:none}
       <div class="card">
         <h2><span class="n">3</span>Fund (maletg)</h2>
         <div class="row" style="margin-bottom:12px">
-          <label class="btn" for="imgIn" style="margin:0;color:var(--tx)" id="imgBtn">Tscherner maletg …</label>
+          <label class="btn" for="imgIn" style="margin:0;color:var(--text)" id="imgBtn">Tscherner maletg …</label>
           <input type="file" id="imgIn" accept="image/*">
           <button id="imgClr">Allontanar</button>
           <button id="posRst">Posiziun resetar</button>
           <button id="imgAll" title="Il medem maletg, zoom e posiziun per tut las paginas">Per tut las paginas</button>
         </div>
         <div class="f">
-          <label style="display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="span"> Maletg sur dus frames (cun la proxima pagina)</label>
+          <label style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="span"> Maletg sur dus frames (cun la proxima pagina)</label>
           <div class="hint" id="spanInfo"></div>
         </div>
         <div class="f"><label>Zoom <span class="val" id="zv"></span></label><input type="range" id="zoom" min="100" max="300" step="1"></div>
@@ -167,13 +169,13 @@ input[type=file]{display:none}
           <label>Scrittira SRG SSR Type (memorisada en quest browser, la medema sco en ils auters tools)</label>
           <div class="row" style="flex-direction:column;align-items:flex-start;gap:8px">
             <span class="hint" id="fState" style="margin:0"></span>
-            <label class="btn" id="fBtn" style="margin:0;color:var(--tx)">Chargiar scrittiras<input type="file" id="fFile" accept=".ttf,.otf,.woff,.woff2" multiple></label>
+            <label class="btn" id="fBtn" style="margin:0;color:var(--text)">Chargiar scrittiras<input type="file" id="fFile" accept=".ttf,.otf,.woff,.woff2" multiple></label>
           </div>
         </div>
         <div class="f">
           <label>Logo RTR (opziunal, PNG/SVG cun fund transparent)</label>
           <div class="row">
-            <label class="btn" for="logoIn" style="margin:0;color:var(--tx)">Logo …</label><input type="file" id="logoIn" accept="image/*">
+            <label class="btn" for="logoIn" style="margin:0;color:var(--text)">Logo …</label><input type="file" id="logoIn" accept="image/*">
             <button id="logoClr">Logo standard</button>
           </div>
         </div>
@@ -508,5 +510,6 @@ $('expAll').onclick=async()=>{for(let i=0;i<S.slides.length;i++){dl(await blobOf
 fill();buildTabs();redraw();loadFonts();
 })();
 </script>
+<script src="/like.js" defer></script>
 </body>
 </html>
