@@ -190,7 +190,7 @@ const HTML = `<div class="dbz-like" id="dbz-like">
     const text = fb.elements.text.value.trim(); if (!text) return;
     fbBtn.disabled = true; fbMsg.className = 'msg'; fbMsg.textContent = 'Vegn tramess …';
     try {
-      const r = await fetch(API + '/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool, text, name: fb.elements.name.value.trim() }) });
+      const r = await fetch(API + '/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool, text, name: fb.elements.name.value.trim(), page: (location.pathname.replace(/\.html$/, '') + location.hash).slice(0, 120), tab: location.hash ? '' : ((document.querySelector('[role="tab"][aria-selected="true"]') || {}).textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40) }) });
       if (r.status === 429) throw new Error('Ti has gia tramess plirs messadis oz – emprova damaun.');
       if (!r.ok) throw new Error('Betg reussì – emprova pli tard.');
       fb.reset(); fbMsg.textContent = 'Grazia fitg! Tes messadi è arrivà.';

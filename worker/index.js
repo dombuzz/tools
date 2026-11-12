@@ -268,6 +268,7 @@ const ensureFeedback = env => fbReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tool TEXT NOT NULL, name TEXT, text TEXT NOT NULL, iph TEXT)'),
   env.DB.prepare('CREATE INDEX IF NOT EXISTS feedback_ts ON feedback (ts)'),
 ]).then(() => env.DB.prepare("ALTER TABLE feedback ADD COLUMN status TEXT NOT NULL DEFAULT 'nov'").run().catch(() => {})) // Status: nov | lavur | liquida | stizza
+  .then(() => env.DB.prepare('ALTER TABLE feedback ADD COLUMN page TEXT').run().catch(() => {})) // Seite + offener Tab beim Absenden, z. B. /social#novitad
   .catch(e => { fbReady = null; throw e; });
 const FB_STATUS = ['nov', 'lavur', 'liquida', 'stizza'];
 async function sha256(s) {
@@ -279,7 +280,7 @@ async function fbAuth(request, env) {
   const given = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
   return given && await sha256(given) === await sha256(env.FEEDBACK_PASSWORD) ? 'ok' : 'no';
 }
-async function fbMail(env, tool, name, text) {
+async function fbMail(env, tool, name, text, page) {
   const toolName = NAMES[tool] || tool, link = 'https://tools.dombuzz.ch/feedback';
   const jobs = [];
   // Microsoft Teams: Workflow «Bei Empfang einer Teams-Webhookanforderung» → Adaptive Card in Chat/Kanal; URL als Secret TEAMS_WEBHOOK_URL
@@ -289,7 +290,7 @@ async function fbMail(env, tool, name, text) {
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json', type: 'AdaptiveCard', version: '1.4',
       body: [
         { type: 'TextBlock', text: 'Nov feedback: ' + toolName, weight: 'Bolder', size: 'Medium', wrap: true },
-        { type: 'FactSet', facts: [{ title: 'Tool', value: toolName }, { title: 'Num', value: name || 'anonim' }] },
+        { type: 'FactSet', facts: [{ title: 'Tool', value: toolName }, ...(page ? [{ title: 'Pagina', value: page }] : []), { title: 'Num', value: name || 'anonim' }] },
         { type: 'TextBlock', text: text, wrap: true },
       ],
       actions: [{ type: 'Action.OpenUrl', title: 'Avrir feedback', url: link }],
@@ -304,7 +305,7 @@ async function fbMail(env, tool, name, text) {
     body: JSON.stringify({
       from: env.FEEDBACK_FROM || 'dombuzz Tools <onboarding@resend.dev>', to: [to],
       subject: 'Feedback: ' + toolName,
-      text: `Nov feedback sin tools.dombuzz.ch\n\nTool: ${toolName}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: ${link}\n`,
+      text: `Nov feedback sin tools.dombuzz.ch\n\nTool: ${toolName}${page ? '\nPagina: ' + page : ''}\nNum: ${name || '(anonim)'}\n\n${text}\n\nLegger tut ils feedbacks: ${link}\n`,
     }),
   }).then(r => { if (!r.ok) throw new Error('resend ' + to + ' ' + r.status); }));
   await Promise.allSettled(jobs);
@@ -834,14 +835,17 @@ async function handle(request, env, ctx) {
         if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: 'origin' }, request, 403);
         let d; try { d = await request.json(); } catch (e) { return json({ error: 'json' }, request, 400); }
         const tool = String(d.tool || ''), text = String(d.text || '').trim(), name = String(d.name || '').trim().slice(0, 60);
+        // Seite + offener Tab: Pfad mit #Tab (z. B. /social#novitad), sonst Name des gewählten Tabs (z. B. /maletgs · Rotar + drizzar)
+        const pg = String(d.page || '').slice(0, 120), tb = String(d.tab || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 40);
+        const page = /^\/[A-Za-z0-9\/_.~%#-]*$/.test(pg) ? pg + (tb ? ' · ' + tb : '') : null;
         if (!TOOL_NAME.test(tool) || !text || text.length > 1000) return json({ error: 'input' }, request, 400);
         await ensureFeedback(env);
         // höchstens 5 Meldungen pro Tag und Anschluss (gespeichert wird nur ein Tages-Hash, keine IP)
         const iph = (await sha256((request.headers.get('CF-Connecting-IP') || '') + '|' + new Date().toISOString().slice(0, 10))).slice(0, 16);
         const { results: rc } = await env.DB.prepare("SELECT COUNT(*) AS n FROM feedback WHERE iph = ?1 AND ts >= datetime('now', '-1 day')").bind(iph).all();
         if ((rc[0]?.n || 0) >= 5) return json({ error: 'limit' }, request, 429);
-        await env.DB.prepare("INSERT INTO feedback (ts, tool, name, text, iph) VALUES (datetime('now'), ?1, ?2, ?3, ?4)").bind(tool, name || null, text, iph).run();
-        if (ctx && ctx.waitUntil) ctx.waitUntil(fbMail(env, tool, name, text).catch(() => {}));
+        await env.DB.prepare("INSERT INTO feedback (ts, tool, name, text, iph, page) VALUES (datetime('now'), ?1, ?2, ?3, ?4, ?5)").bind(tool, name || null, text, iph, page).run();
+        if (ctx && ctx.waitUntil) ctx.waitUntil(fbMail(env, tool, name, text, page).catch(() => {}));
         return json({ ok: true }, request);
       }
       // Feedback lesen (Passwort)
@@ -849,7 +853,7 @@ async function handle(request, env, ctx) {
         const a = await fbAuth(request, env);
         if (a !== 'ok') return json({ error: a === 'unset' ? 'unset' : 'auth' }, request, a === 'unset' ? 503 : 401);
         await ensureFeedback(env);
-        const { results } = await env.DB.prepare('SELECT id, ts, tool, name, text, status FROM feedback ORDER BY id DESC LIMIT 1000').all();
+        const { results } = await env.DB.prepare('SELECT id, ts, tool, name, text, status, page FROM feedback ORDER BY id DESC LIMIT 1000').all();
         return json({ items: results.map(r => ({ ...r, toolName: NAMES[r.tool] || r.tool })) }, request);
       }
       // Status ändern (Passwort): nov, lavur (En lavur), liquida (Liquidà), stizza (Stizzà, im Papierkorb)

@@ -41,6 +41,8 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:.8rem;color:var(--muted)}
 .meta b{color:var(--accent);font-weight:600}
 .meta .sp{flex:1}
+.meta .pg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);text-decoration:none;border-bottom:1px dashed var(--muted)}
+.meta .pg:hover{color:var(--accent)}
 .text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:.95rem}
 .empty{color:var(--muted);text-align:center;padding:24px 0}
 .tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--border)}
@@ -107,7 +109,7 @@ let items = [], tab = 'nov';
 try { const s = localStorage.getItem('dbz-fb-tab'); if (LBL[s]) tab = s; } catch (e) {}
 
 const card = (i, acts) => `<article class="item" data-id="${i.id}">
-  <div class="meta"><b>${esc(i.toolName)}</b><span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${acts}</div></div>
+  <div class="meta"><b>${esc(i.toolName)}</b>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${acts}</div></div>
   <div class="text">${esc(i.text)}</div></article>`;
 const btn = (act, label) => `<button type="button" class="ghost${act === 'to:stizza' || act === 'purge' ? ' danger' : ''}" data-act="${act}">${label}</button>`;
 
