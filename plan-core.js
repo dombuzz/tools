@@ -1,11 +1,11 @@
-// Gemeinsame Logik fuer Plan.html und servetsch.html: PDF-Parser (VimBiz «Team Published Shifts by Month»),
+// Gemeinsame Logik fuer Plan.html und persunal.html: PDF-Parser (VimBiz «Team Published Shifts by Month»),
 // Dienst-Codes (SPARTEN), Namenskuerzel/Aliase, Datumshilfen und das SharePoint-Bookmarklet.
 // Klassisches Script (globale Deklarationen); muss nach /vendor/pdfjs/pdf.min.js und vor dem Seiten-Script geladen werden.
 
 // pages: [{width, items:[{str,x,y,w}]}]  (y grows upward, PDF coords)
 function parsePlan(pages, SVC){
   const MONTHS={januar:1,februar:2,"märz":3,maerz:3,april:4,mai:5,juni:6,juli:7,august:8,september:9,oktober:10,november:11,dezember:12};
-  const entries=[]; const people=new Set();
+  const entries=[], other=[]; const people=new Set();
   for(const pg of pages){
     // split multi-token items into tokens with estimated positions
     const toks=[];
@@ -35,7 +35,7 @@ function parsePlan(pages, SVC){
     for(const h of heads){
       const inB=toks.filter(o=>blockOf(o.y)===h);
       // name lines: raw items left of the grid
-      const lines=[]; const seen=new Set();
+      const lines=[]; const seen=new Set(); const nameItems=new Set(); const oth={};
       for(const o of inB){
         const it=o.raw; if(seen.has(it)) continue; seen.add(it);
         if(it.x<pg.width*0.02||it.x+it.w>h.firstX-h.step*0.35) continue;
@@ -43,7 +43,7 @@ function parsePlan(pages, SVC){
         if(!/[A-Za-zÄÖÜäöüé]/.test(s)||/^\+|\d{3}/.test(s)) continue;
         if(/RTR plan|^20\d\d|^(Pages|Printed|By|Team|Shift)\b/i.test(s)) continue;
         if(/^[a-zäöüè]{2,3}$/.test(s)&&it.x<pg.width*0.03) continue; // Kürzel
-        lines.push(it);
+        lines.push(it); nameItems.add(it);
       }
       lines.sort((a,b)=>b.y-a.y);
       const rows=[];
@@ -56,17 +56,24 @@ function parsePlan(pages, SVC){
       for(const r of rows) r.name=r.parts.join(" ").replace(/\s*,\s*/g,", ").replace(/-\s+/g,"-").replace(/\s+/g," ").replace(/,\s*$/,"");
       const rowOf=y=>{let best=null,bd=1e9;for(const r of rows){const d=Math.abs(r.y-y);if(d<bd){bd=d;best=r}}return bd<h.step*1.2?best:null;};
       for(const o of inB){
-        if(!SVCL.has(o.t.toLowerCase())) continue;
+        const known=SVCL.has(o.t.toLowerCase());
+        if(!known&&(nameItems.has(o.raw)||/^[\W_]+$/.test(o.t))) continue;
         if(o.x<h.firstX-h.step*0.6) continue;
         let day=null,bd=1e9; for(const [d,x] of Object.entries(h.cols)){const dd=Math.abs(x-o.cx);if(dd<bd){bd=dd;day=+d}}
         if(bd>h.step*0.6) continue;
         const r=rowOf(o.y); if(!r) continue; const name=r.name;
+        const date=`${h.year}-${String(h.month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+        if(!known){ // Text in der Zelle, der kein bekannter Dienst-Code ist (z. B. 0130 = nicht verfuegbar): nur Zellen genau auf der Namenszeile
+          if(o.y<r.lastY-4||o.y>r.y+4) continue;
+          (oth[name+"|"+date]??={name,date,toks:[]}).toks.push(o); continue;
+        }
         people.add(name);
-        entries.push({date:`${h.year}-${String(h.month).padStart(2,"0")}-${String(day).padStart(2,"0")}`,svc:o.t,name});
+        entries.push({date,svc:o.t,name});
       }
+      for(const g of Object.values(oth)){ g.toks.sort((a,b)=>a.x-b.x); other.push({date:g.date,name:g.name,text:g.toks.map(t=>t.t).join(" ")}); }
     }
   }
-  return {entries,people:[...people]};
+  return {entries,people:[...people],other};
 }
 
 const SPARTEN={
@@ -144,7 +151,7 @@ async function pdfEntries(file){
     const pg=await doc.getPage(i); const vp=pg.getViewport({scale:1}); const tc=await pg.getTextContent();
     pages.push({width:vp.width,items:tc.items.map(it=>({str:it.str,x:it.transform[4],y:it.transform[5],w:it.width}))});
   }
-  return parsePlan(pages,SVC).entries;
+  const res=parsePlan(pages,SVC); const en=res.entries; en.other=res.other; return en; // other: unbekannte Zelltexte (nur von persunal.html genutzt)
 }
 
 // SharePoint-Bookmarklet: oeffnet die Zielseite (path) und schickt ihr die PDFs per postMessage.

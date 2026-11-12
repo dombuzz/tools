@@ -10,7 +10,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#121214">
 <meta name="color-scheme" content="dark light">
-<title>Mes servetschs</title>
+<title>Persunal</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-2.9 -4.9 105.9 105.9'%3E%3Cg fill='none' stroke='%23ff4d64' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='18' y='24' width='64' height='56' rx='7'/%3E%3Cpath d='M18 40h64M36 16v14M64 16v14'/%3E%3C/g%3E%3Cg fill='%23ff4d64'%3E%3Crect x='28' y='50' width='10' height='9' rx='2'/%3E%3Crect x='45' y='50' width='10' height='9' rx='2'/%3E%3Crect x='62' y='50' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='28' y='64' width='10' height='9' rx='2' opacity='.45'/%3E%3Crect x='45' y='64' width='10' height='9' rx='2'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
@@ -66,12 +66,15 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
 .svc{display:inline-block;background:var(--hi);color:var(--hi-fg);border-radius:6px;padding:2px 9px;font-weight:700;font-size:.88rem;line-height:1.5;white-space:nowrap}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.svc.raw{background:transparent;color:var(--text);border:1px dashed var(--muted);padding:1px 8px}
+.na{color:var(--err);font-weight:300;font-size:.88rem;line-height:1.4}
 .none,.out{color:var(--muted);opacity:.6}
 .nowc{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:14px;padding:20px 24px;display:flex;flex-direction:column;gap:12px}
 .nowc .dt{font-size:.9rem;color:var(--muted)}
 .nowc .svc{font-size:1.2rem;padding:4px 14px;border-radius:8px}
 .nowc .none{font-size:1.05rem;opacity:1}
+.nowc .na{font-size:1.1rem}
 .wkg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card)}
 .d{padding:10px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:8px;min-height:84px}
 .d:last-child{border-right:0}
@@ -96,7 +99,7 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
   <header class="top">
     <div class="hd">
       <a class="homelink" href="/Plan">← Plans da teams</a>
-      <h1>Mes <span class="acc">servetschs</span></h1>
+      <h1><span class="acc">Persunal</span></h1>
       <p class="lead">Tscherna ina persuna e vesa tge servetsch ch'ella ha oz, questa emna e las proximas emnas.</p>
     </div>
     <button class="btn-sm" id="aliasbtn" type="button" hidden title="Aliase laden">Aliase</button>
@@ -110,7 +113,7 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
     <details class="bm" id="bmcard">
       <summary><span class="arr" aria-hidden="true">→</span>Chargiar directamain da SharePoint</summary>
       <ol class="bmsteps">
-        <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="#" onclick="return false">⇣ Mes servetschs</a></li>
+        <li>Trair quest buttun en la trav da segnapaginas dal browser:<br><a class="bmbtn" id="bmlink" href="#" onclick="return false">⇣ Persunal</a></li>
         <li>Cliccar sin il segnapagina. Sche ti n'es betg sin SharePoint, s'avra l'emprim il plan da lavur sin SharePoint (s'annunziar sche necessari).</li>
         <li>Cliccar anc ina giada sin il segnapagina. Questa pagina s'avra e chargia omadus plans actuals.</li>
       </ol>
@@ -134,9 +137,10 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
 <script>
 document.documentElement.lang="rm";
 const $=id=>document.getElementById(id);
-$("bmlink").href=bookmarkletHref("/servetsch");
+$("bmlink").href=bookmarkletHref("/persunal");
 
 // Dienst-Code -> Zeilenname (wie in Plans da teams; «Producers» ist nur eine Doppelansicht und wird uebersprungen)
+const NA=new Set(["0130","0135","0120"]); // Zelltexte, die «Betg disponibel» bedeuten
 const LABEL={}, ORDER={}; let ord=0;
 for(const k of ["newsdesk","radio","televisiun","ondemand"]) for(const [lab,cs] of SPARTEN[k].blocks.flat()){
   if(!(lab in ORDER)) ORDER[lab]=ord++;
@@ -146,47 +150,58 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const fmtFull=d=>`${WD[d.getDay()]}, ${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
 const dayIdx=d=>(d.getDay()+6)%7; // Mo=0 … So=6
 
-let plan=null; const sources={};
+let plan=null; const sources={}, others={};
 
 async function refreshAliases(){
-  try{await loadAliases(store.get("plan-alias-code")||""); if(plan) setPlan(plan.raw); $("aliasbtn").hidden=true}
+  try{await loadAliases(store.get("plan-alias-code")||""); if(plan) setPlan(plan.raw,plan.rawOther); $("aliasbtn").hidden=true}
   catch(e){if(e.message==="Code falsch") $("aliasbtn").hidden=false}
 }
 async function askAliases(){
   const c=prompt("Zugangscode für Aliase (bei Dominik erfragen):"); if(!c) return;
-  try{await loadAliases(c.trim()); if(plan) setPlan(plan.raw); $("status").textContent="Aliase geladen."}catch(e){$("status").textContent=e.message}
+  try{await loadAliases(c.trim()); if(plan) setPlan(plan.raw,plan.rawOther); $("status").textContent="Aliase geladen."}catch(e){$("status").textContent=e.message}
 }
 
-function setPlan(entries,label){
+function setPlan(entries,other,label){
   const byName={}, dates=new Set(), names=new Set();
+  const cell=(n,d)=>{names.add(n);dates.add(d);return ((byName[n]??={})[d]??={svc:[],raw:[],na:false})};
   for(const [date,svc,name] of entries){
     const lab=LABEL[svc.toLowerCase()]; if(!lab) continue;
-    names.add(name); dates.add(date);
-    const l=((byName[name]??={})[date]??=[]); if(!l.includes(lab)) l.push(lab);
+    const c=cell(name,date); if(!c.svc.includes(lab)) c.svc.push(lab);
   }
-  for(const n in byName) for(const d in byName[n]) byName[n][d].sort((a,b)=>ORDER[a]-ORDER[b]);
+  for(const o of other||[]){ // Text im Plan, der keinem Dienst zugeordnet ist: unveraendert anzeigen
+    const c=cell(o.name,o.date), rest=[];
+    for(const t of o.text.split(/\s+/)){ if(NA.has(t)) c.na=true; else rest.push(t) }
+    if(rest.length) c.raw.push(rest.join(" "));
+  }
+  for(const n in byName) for(const d in byName[n]) byName[n][d].svc.sort((a,b)=>ORDER[a]-ORDER[b]);
   const short=shortNames([...names]);
   const sorted=[...names].sort((a,b)=>DISP[a].localeCompare(DISP[b],"de"));
   const ds=[...dates].sort();
-  plan={raw:entries,label:label||(plan&&plan.label)||"",byName,dates,short,names:sorted,first:ds[0],last:ds[ds.length-1]};
+  plan={raw:entries,rawOther:other,label:label||(plan&&plan.label)||"",byName,dates,short,names:sorted,first:ds[0],last:ds[ds.length-1]};
   const mlist=[...new Set(ds.map(d=>d.slice(0,7)))].map(m=>{const [y,mo]=m.split("-");return MONTHS[mo-1]+" "+y});
   $("status").className="status ok";
-  $("status").innerHTML=`<b>${sorted.length} persunas, ${entries.length} servetschs</b> \u00b7 ${mlist.join(", ")} \u00b7 ${esc(plan.label)}`;
+  $("status").innerHTML=`<b>${sorted.length} persunas, ${entries.length+(other||[]).length} servetschs</b> \u00b7 ${mlist.join(", ")} \u00b7 ${esc(plan.label)}`;
   const sel=$("who"), prev=sel.value||store.get("servetsch-who")||"";
   sel.innerHTML='<option value="">\u2013 tscherner \u2013</option>'+sorted.map(n=>`<option value="${esc(n)}">${esc(DISP[n])}</option>`).join("");
   sel.disabled=false; sel.value=sorted.includes(prev)?prev:"";
   render();
 }
 
-function chips(list){return `<span class="chips">${list.map(l=>`<span class="svc">${esc(l)}</span>`).join("")}</span>`}
+function dayHtml(c){
+  const parts=c.svc.map(l=>`<span class="svc">${esc(l)}</span>`)
+    .concat(c.raw.map(t=>`<span class="svc raw" title="Text dal plan (betg translat\u00e0)">${esc(t)}</span>`));
+  if(c.na) parts.push('<span class="na">Betg disponibel</span>');
+  return `<span class="chips">${parts.join("")}</span>`;
+}
+const cellN=c=>c?c.svc.length+c.raw.length:0;
 
 function weekHtml(mon,mine,todayIso){
   let cells="", n=0;
   for(let i=0;i<7;i++){
     const d=addDays(mon,i), k=iso(d), l=mine[k], inPlan=plan.dates.has(k);
-    if(l) n+=l.length;
+    n+=cellN(l);
     const cls=["d",i>4?"we":"",k===todayIso?"today":"",inPlan?"":"out-plan"].filter(Boolean).join(" ");
-    cells+=`<div class="${cls}"><div class="dh">${DAYS[i]}<small>${fmt(d)}</small></div><div>${l?chips(l):`<span class="${inPlan?"none":"out"}">\u2013</span>`}</div></div>`;
+    cells+=`<div class="${cls}"><div class="dh">${DAYS[i]}<small>${fmt(d)}</small></div><div>${l?dayHtml(l):`<span class="${inPlan?"none":"out"}">\u2013</span>`}</div></div>`;
   }
   return {html:`<div class="wkg">${cells}</div>`,n};
 }
@@ -202,7 +217,7 @@ function render(){
   // oz
   const tl=mine[todayIso];
   h+=`<section><h3><span class="kw">Oz</span><span class="rng">${esc(plan.short[who]||who)}</span></h3><div class="nowc"><div class="dt">${fmtFull(today)}</div>`+
-     (!plan.dates.has(todayIso)?`<span class="none">Oz n'\u00e8 betg en il plan chargi\u00e0.</span>`:tl?chips(tl):`<span class="none">Oz nagin servetsch.</span>`)+`</div></section>`;
+     (!plan.dates.has(todayIso)?`<span class="none">Oz n'\u00e8 betg en il plan chargi\u00e0.</span>`:tl?dayHtml(tl):`<span class="none">Oz nagin servetsch.</span>`)+`</div></section>`;
   // questa emna
   const tw=weekHtml(todayMon,mine,todayIso);
   h+=`<section>${wkHead(todayMon,tw.n,"Questa emna")}${tw.html}</section>`;
@@ -225,13 +240,13 @@ async function readPdfs(files,extraErrs){
     try{
       const en=await pdfEntries(f);
       if(!en.length) errs.push(`En \u00ab${f.name}\u00bb na sa chattan nagins servetschs. \u00c8 quai l'export da VimBiz \u00abTeam Published Shifts by Month\u00bb?`);
-      else sources[f.name]=en.map(e=>[e.date,e.svc,e.name]);
+      else {sources[f.name]=en.map(e=>[e.date,e.svc,e.name]); others[f.name]=en.other||[]}
     }catch(e){errs.push(`\u00ab${f.name}\u00bb: `+(e.message||"Il PDF n'ha betg pud\u00ec vegnir leg\u00ec."))}
   }
   const names=Object.keys(sources);
   if(names.length){
     const entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
-    setPlan(entries,`${names.join(", ")} \u00b7 chargi\u00e0 ils ${iso(new Date()).split("-").reverse().join("-")}`);
+    setPlan(entries,names.flatMap(n=>others[n]||[]),`${names.join(", ")} \u00b7 chargi\u00e0 ils ${iso(new Date()).split("-").reverse().join("-")}`);
   }
   if(errs.length){
     const p=document.createElement("div"); p.className="status err"; p.textContent=errs.join(" \u00b7 ");
