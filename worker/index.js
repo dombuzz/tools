@@ -35,7 +35,7 @@ const NAMES = { 'info': 'Infus & datas',
   'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'avis-votelec': 'Avis sin votaziuns ed elecziuns', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
-  'lab-chat-generator': 'Chat-Generator', 'lab-novitads': 'Novitads dal di',
+  'lab-chat-generator': 'Chat-Generator', 'lab-novitads': 'Novitads dal di', 'lab-profil-social': 'Profil social',
 };
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
