@@ -117,6 +117,8 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
 @media (max-width:640px){.btns{align-items:flex-start}}
 .btn-sm{flex:none;font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:7px 12px;background:var(--card);white-space:nowrap}
 .btn-sm:hover{color:var(--text);border-color:var(--accent)}
+.quiet{font-size:.8rem;color:var(--muted);opacity:.7;text-decoration:none;padding:2px 4px}
+.quiet:hover,.quiet:focus-visible{color:var(--accent);opacity:1;text-decoration:underline}
 .btn-sm:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
 .homelink:hover,.homelink:focus-visible{color:var(--accent)}
@@ -151,7 +153,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
     <div class="btns">
       <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/1_radio_online.pdf?d=w5571474005224f84be64292d66631c8c&amp;csf=1&amp;web=1&amp;e=9z2lKX" target="_blank" rel="noopener">Plan da lavur actual - radio/online</a>
       <a class="btn-sm" href="https://srgssr.sharepoint.com/:b:/r/sites/intranet-rtr-content-docs/DL003/2_televisiun_ondemand.pdf?d=wad4cfb28bf9343db86fe8ab039ef7b17&amp;csf=1&amp;web=1&amp;e=aQtI74" target="_blank" rel="noopener">Plan da lavur actual - televisiun/ondemand</a>
-      <a class="btn-sm" href="/persunal">Plan persunal</a>
+      <a class="quiet" href="/persunal">Plan persunal →</a>
       <button class="btn-sm" id="aliasbtn" type="button" hidden title="Aliase laden">Aliase</button>
     </div>
   </header>
