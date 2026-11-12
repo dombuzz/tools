@@ -28,6 +28,8 @@
     root.style.setProperty('--vh', view.vh + 'px');
     document.querySelectorAll('.stick').forEach(function (el) {
       var par = el.parentElement; if (!par) return;
+      /* Einspaltig (Handy): normal mitscrollen, keine mitlaufende Vorschau */
+      if (window.innerWidth <= 860) { el.style.position = ''; el.style.top = ''; el.style.transform = ''; return; }
       el.style.position = 'relative'; el.style.top = '0'; el.style.transform = 'none';
       var pt = par.getBoundingClientRect().top + (window.pageYOffset || 0);
       var ty = Math.max(0, Math.min(view.off - pt + 16, par.offsetHeight - el.offsetHeight));
