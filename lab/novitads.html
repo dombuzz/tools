@@ -493,6 +493,9 @@ function cpt(cx,cy){const r=cv.getBoundingClientRect();return{x:(cx-r.left)*W/r.
 cv.addEventListener('wheel',e=>{const P=own(),s=P.o,im=imgs[s.id];if(!im)return;e.preventDefault();
   const p=cpt(e.clientX,e.clientY);applyView(s,im,P.vw,s.zoom*(e.deltaY<0?1.08:1/1.08),p.x+P.off,p.y,0,0);save()},{passive:false});
 let drag=null;
+/* Klick/Tipp ins leere Bild öffnet die Bildauswahl */
+cv.addEventListener('click',e=>{if(!imgs[own().o.id])$('imgIn').click()});
+cv.addEventListener('pointermove',e=>{cv.style.cursor=imgs[own().o.id]?'grab':'pointer'});
 cv.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;const s=own().o;if(!imgs[s.id])return;drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId)});
 cv.addEventListener('pointermove',e=>{
   if(!drag||e.pointerType!=='mouse')return;const P=own(),s=P.o,im=imgs[s.id];if(!im)return;
