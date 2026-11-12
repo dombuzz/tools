@@ -86,7 +86,9 @@ const SPARTEN={
     [["Grafica",["graf"]]],
     [["Social",["soc1"]]]],
     // all = jeden Tag besetzt, wd = nur Montag–Freitag (am Wochenende nicht geplant)
-    need:{"Online 1":"all","Online 2":"wd","Online 3":"wd","Online 4":"all","Prod Online":"wd"}},
+    need:{"Online 1":"all","Online 2":"wd","Online 3":"wd","Online 4":"all","Prod Online":"wd"},
+    // frei = Wochentage (getDay: 0 So, 6 Sa), an denen der Dienst normalerweise nicht geplant ist; leer statt «–», ausser der Plan nennt dennoch jemanden
+    frei:{"Grafica":[0,6],"Social":[0]}},
   radio:{name:"Radio",blocks:[[
     ["Mod 1",["m1","m1_s"]],["Mod 2",["m2","m2_s","m2_d","mAcc"]],["Mod magazins",["m_ma"]],
     ["Prod radio 1",["p1","p1_s"]],["Prod radio 2",["p2","pV2"]],
@@ -98,7 +100,8 @@ const SPARTEN={
     ["Videonews",["vNew"]],["Tagl Telesguard",["t1_T","t2_T"]]]]},
   ondemand:{name:"On demand",blocks:[[
     ["Clic",["Clic"]],["Ils Dus Da Nus",["DusN","I2DN"]],["On demand divertiment",["oDdi"]],["On demand societad e cultura",["oDs&"]],
-    ["Social",["soc1"]]]]}
+    ["Social",["soc1"]]]],
+    frei:{"Social":[0]}}
 ,
   producers:{name:"Producers",blocks:[[
     ["Prod radio 1",["p1","p1_s"]],["Prod radio 2",["p2","pV2"]],

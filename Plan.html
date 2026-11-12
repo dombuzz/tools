@@ -341,7 +341,8 @@ function render(){
         if(!plan.months.has(k.slice(0,7))){r+=`<td class="${c} out">·</td>`;return}
         const ps=(map[k]||{})[sv]||[];
         if(!ps.length){
-          if(rule==="wd"&&we) r+=`<td class="${c} off"></td>`;
+          if(sp.frei&&sp.frei[sv]&&sp.frei[sv].includes(d.getDay())) r+=`<td class="${c} off"></td>`;
+          else if(rule==="wd"&&we) r+=`<td class="${c} off"></td>`;
           else if(rule==="all"||rule==="wd") r+=`<td class="gapc ${c}">manca</td>`;
           else r+=`<td class="${c} none">–</td>`;
           return;
