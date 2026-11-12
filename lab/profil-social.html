@@ -405,7 +405,7 @@ function loadImg(f,cb){
   if(!f||!f.type.startsWith('image/'))return;
   const i=new Image();i.onload=()=>{cb(i);info();sliders();redraw();save()};i.src=URL.createObjectURL(f);
 }
-function info(){$('imgInfo').textContent=!imgA?'':bSame?'Pagina 2 duvra il medem maletg sco pagina 1.':'Pagina 2 ha in atgnas maletg.'}
+function info(){$('imgInfo').textContent=!imgA?'':bSame?'Pagina 2 duvra il medem maletg sco pagina 1.':'Pagina 2 ha in atgn maletg.'}
 /* Standard: il emprim maletg vala per omaduas paginas; «Auter maletg per pagina 2» u in maletg direct sin il rectangel pitschen fa pagina 2 independenta */
 function setImage(f,target){
   const t=target||'auto';
