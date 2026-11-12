@@ -35,6 +35,9 @@ h1 .acc{color:var(--accent)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 a.tool{display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--text);text-decoration:none;min-height:112px}
 a.tool:hover,a.tool:focus-visible{border-color:var(--accent);outline:none}
+a.tool:hover svg,a.tool:focus-visible svg{stroke:#fff}
+a.tool:hover span,a.tool:focus-visible span{color:#fff}
+a.tool:hover em.beta,a.tool:focus-visible em.beta{color:#fff;border-color:#fff}
 a.tool svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 a.tool b{font-size:1rem}
 a.tool em.beta{font-style:normal;font-size:.62rem;font-weight:700;letter-spacing:.08em;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 7px;vertical-align:2px}
