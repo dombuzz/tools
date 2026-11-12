@@ -215,7 +215,7 @@ const cv=$('cv'),ctx=cv.getContext('2d');
 const IMG={},SL={};SLOTS.forEach(s=>SL[s.id]=s);
 let S,view=PAGES>1?'all':0,pickT=null;
 const logoImg=new Image();logoImg.onload=()=>redraw();logoImg.src=LOGO_SRC;
-/* Titelfarben wie in «Novitads dal di» */
+/* Titelfarben wie in «News dal di» */
 const ACCS={N:['Novitads','#d92a5d'],O:['Sport','#ffa529'],V:['Cultura','#8f44c9'],U:['Uffants','#70bf88']};
 function acc(){return(ACCS[S.col]||ACCS.N)[1]}
 function mkIm(){const o={};SLOTS.forEach(s=>o[s.id]={zoom:1,ox:0,oy:0});return o}

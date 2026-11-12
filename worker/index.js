@@ -36,7 +36,7 @@ const NAMES = { 'info': 'Infus & datas',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
   'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-social2': 'Social2 (früher)',
-  'social-profil': 'Social · Profil', 'social-novitads': 'Social · Novitads dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News',
+  'social-profil': 'Social · Profil', 'social-newsdaldi': 'Social · News dal di', 'social-novitads': 'Social · News dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News',
   'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail',
 };
 
@@ -47,7 +47,7 @@ const NAMES = { 'info': 'Infus & datas',
 // «Höhenprofil»: die Zahlen der früheren Adresse /lab/profil gehören zu /lab/hoehenprofil
 // «Elavurar maletgs»: die Einzeltools im Hintergrund (/colurs, /rotar, /ebenas) und die frühere Adresse /layers zählen zu /maletgs
 // «Subtitle Studio»: die früheren Einzeltools /spustar, /cumparegliar und /subs zählen zu /studio
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'social-mument', 'lab-novitads': 'social-novitads', 'lab-profil': 'lab-hoehenprofil', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'social-mument', 'lab-novitads': 'social-newsdaldi', 'social-novitads': 'social-newsdaldi', 'lab-profil': 'lab-hoehenprofil', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
 // Geschätzte Zeitersparnis pro Nutzung in Minuten (Dominiks Schätzung vom 12.11.2026: «vorher» minus «mit Tool»).
 // Schlüssel = Roh-Kennung der Seite; ohne eigenen Eintrag gilt der Wert der Gruppe (z. B. mument → visual).
