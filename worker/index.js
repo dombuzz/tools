@@ -34,7 +34,7 @@ const NAMES = { 'info': 'Infus & datas',
   'Plan': 'Plans da teams', 'persunal': 'Persunal', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
   'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'avis-votelec': 'Avis sin votaziuns ed elecziuns', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
-  'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal',
+  'lab-profil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
 };
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)

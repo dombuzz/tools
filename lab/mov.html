@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Far or d'ina sequenza da PNGs cun transparenza in film MOV (ProRes 4444 cun alpha) – per overlays en il program da tagl.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="PNG → MOV">
+<meta property="og:description" content="Far or d'ina sequenza da PNGs cun transparenza in film MOV (ProRes 4444 cun alpha) – per overlays en il program da tagl.">
+<meta property="og:url" content="https://tools.dombuzz.ch/lab/mov">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<meta name="color-scheme" content="dark light">
+<title>PNG → MOV</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='14' y='22' width='72' height='56' rx='10' fill='none' stroke='%23ff4d64' stroke-width='10'/%3E%3Cpath d='M43 38v24l20-12z' fill='%23ff4d64'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;
+  --line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;--ok:#4caf6f;--warn:#ffb86b;color-scheme:dark
+}
+*{box-sizing:border-box}
+body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+.labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:1px}
+.lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card h2{margin:0 0 14px;font-size:.95rem;display:flex;gap:10px;align-items:center}
+.num{font-size:.8rem;font-weight:700;background:var(--accent);color:var(--on-accent,#121214);border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;background:var(--field);cursor:pointer;color:var(--muted);font-size:.85rem;transition:border-color .15s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop b{display:block;font-size:1rem;margin-bottom:4px;color:var(--text)}
+.row{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-end;margin-top:12px}
+.row:first-child{margin-top:0}
+button,.btn{display:inline-block;background:var(--accent);color:var(--on-accent,#121214);border:0;border-radius:8px;padding:9px 14px;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer;text-decoration:none}
+button:hover,.btn:hover{background:var(--accent-dark)}
+button:disabled{opacity:.5;cursor:default}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.ghost:hover{color:var(--text)}
+select,input[type=text]{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text);font:inherit;font-size:.9rem}
+input[type=text]{width:min(100%,340px)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted)}
+.info{font-size:.85rem;color:var(--muted);margin:12px 0 0}
+.info b{color:var(--text)}
+.warn{color:var(--warn)}
+.err{color:var(--accent)}
+.hidden{display:none!important}
+.thumb{display:flex;gap:14px;align-items:center;margin-top:14px}
+.thumb canvas{width:160px;max-width:40%;height:auto;border:1px solid var(--line);border-radius:8px;
+  background:repeating-conic-gradient(#3a3a40 0 25%,#2a2a2e 0 50%) 0 0/16px 16px}
+.barw{height:8px;border-radius:4px;background:var(--field);overflow:hidden;margin-top:14px}
+.bar{height:100%;width:0;background:var(--accent);transition:width .2s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="homelink" href="/lab/">← Lab</a>
+    <h1>PNG <span class="acc">→</span> MOV<span class="labbadge">Labor</span></h1>
+    <p class="lead">Far or d'ina sequenza da PNGs cun transparenza in film MOV (ProRes 4444 cun alpha) – per exempel per overlays en Sony Hive. Tut vegn elavurà en il browser, nagins files bandunan tes computer.</p>
+  </header>
+
+  <section class="card">
+    <h2><span class="num">1</span>Chargiar maletgs</h2>
+    <div class="drop" id="drop" tabindex="0" role="button">
+      <b>Trair qua ils maletgs</b>PNGs u in file ZIP (p. ex. dal Chat-Generator) – u cliccar per tscherner
+    </div>
+    <input type="file" id="file" accept=".png,.zip,image/png,application/zip" multiple hidden>
+    <div class="thumb hidden" id="thumb"><canvas id="cv" width="320" height="180"></canvas><p class="info" id="finfo" style="margin:0"></p></div>
+    <p class="info err hidden" id="ferr"></p>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">2</span>Parameters</h2>
+    <div class="row">
+      <label class="f">Rata da maletgs
+        <select id="fps"><option>24</option><option selected>25</option><option>30</option><option>50</option><option>60</option></select>
+      </label>
+      <label class="f">Num dal file
+        <input type="text" id="name" value="overlay_alpha" spellcheck="false">
+      </label>
+    </div>
+    <p class="info" id="est"></p>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">3</span>Convertir</h2>
+    <div class="row">
+      <button id="go" disabled>Convertir en MOV</button>
+      <a class="btn hidden" id="dl" download>Telechargiar MOV</a>
+      <button class="ghost hidden" id="stop">Interrumper</button>
+    </div>
+    <div class="barw hidden" id="barw"><div class="bar" id="bar"></div></div>
+    <p class="info" id="status">L'emprima giada vegn chargià il program da conversiun (ca. 32 MB).</p>
+  </section>
+</div>
+
+<script src="/vendor/ffmpeg/ffmpeg.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('de-CH');
+let frames = [];          // [{name, blob}] sortiert
+let dim = null;           // {w, h}
+let ff = null, busy = false, outUrl = null;
+
+/* ---------- Dateien einlesen: PNGs oder ZIP ---------- */
+const natural = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+async function unzip(file) {
+  const buf = await file.arrayBuffer(), dv = new DataView(buf), out = [];
+  let e = buf.byteLength - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('zip');
+  let p = dv.getUint32(e + 16, true); const n = dv.getUint16(e + 10, true), dec = new TextDecoder();
+  for (let i = 0; i < n && dv.getUint32(p, true) === 0x02014b50; i++) {
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    const name = dec.decode(new Uint8Array(buf, p + 46, nl)); p += 46 + nl + xl + cl;
+    if (!/\.png$/i.test(name) || /(^|\/)(__MACOSX\/|\._)/.test(name)) continue;
+    const start = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true), raw = new Blob([new Uint8Array(buf, start, csize)]);
+    let blob;
+    if (method === 0) blob = raw;
+    else if (method === 8) blob = await new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
+    else continue;
+    out.push({ name: name.split('/').pop(), blob });
+  }
+  return out;
+}
+async function pngSize(blob) {
+  const b = new DataView(await blob.slice(0, 24).arrayBuffer());
+  if (b.byteLength < 24 || b.getUint32(0) !== 0x89504e47) return null;
+  return { w: b.getUint32(16), h: b.getUint32(20) };
+}
+async function take(list) {
+  const err = $('ferr'); err.classList.add('hidden'); reset();
+  try {
+    let all = [], base = '';
+    for (const f of list) {
+      if (/\.zip$/i.test(f.name)) { all = all.concat(await unzip(f)); base = base || f.name.replace(/\.zip$/i, ''); }
+      else if (/\.png$/i.test(f.name)) all.push({ name: f.name, blob: f });
+    }
+    all.sort(natural);
+    if (!all.length) throw new Error('none');
+    const first = await pngSize(all[0].blob); if (!first) throw new Error('none');
+    for (const x of all) { const s = await pngSize(x.blob); if (!s || s.w !== first.w || s.h !== first.h) throw new Error('size:' + x.name); }
+    frames = all; dim = first;
+    // Bildrate aus dem ZIP-Namen des Chat-Generators (…_25fps.zip)
+    const m = /_(\d+)fps/i.exec(base); if (m && [...$('fps').options].some(o => o.value === m[1])) $('fps').value = m[1];
+    $('name').value = (base || all[0].name.replace(/[_-]?\d+\.png$/i, '').replace(/\.png$/i, '') || 'overlay') + '_alpha';
+    const bm = await createImageBitmap(all[0].blob), cv = $('cv'); cv.width = 320; cv.height = Math.round(320 * first.h / first.w);
+    const mid = await createImageBitmap(all[Math.floor(all.length / 2)].blob); cv.getContext('2d').drawImage(mid, 0, 0, cv.width, cv.height); bm.close(); mid.close();
+    $('thumb').classList.remove('hidden');
+    $('go').disabled = false; info();
+  } catch (x) {
+    frames = []; dim = null; $('thumb').classList.add('hidden'); $('go').disabled = true; $('est').textContent = '';
+    const m = String(x.message || x);
+    err.textContent = m.startsWith('size:') ? `Betg tut ils maletgs han la medema grondezza (${m.slice(5)}).` : m === 'zip' ? 'Il file ZIP na po betg vegnir legì.' : 'Chattà nagins maletgs PNG.';
+    err.classList.remove('hidden');
+  }
+}
+function info() {
+  if (!frames.length) return;
+  const n = frames.length, fps = +$('fps').value, sec = n / fps;
+  $('finfo').innerHTML = `<b>Chattà ${fmt(n)} ${n === 1 ? 'maletg' : 'maletgs'}</b><br>${dim.w} × ${dim.h} px<br>${frames[0].name} … ${frames[n - 1].name}`;
+  // Erfahrungswert: ca. 3,5 Bilder pro Sekunde bei Full HD
+  const work = Math.max(5, Math.round(n * (dim.w * dim.h) / (1920 * 1080) / 3.5));
+  const long = n * dim.w * dim.h > 1500 * 1920 * 1080;
+  $('est').innerHTML = `Durada dal film: <b>${sec.toFixed(1).replace('.', ',')} s</b> · La conversiun dovra ca. ${work < 90 ? work + ' secundas' : Math.round(work / 60) + ' minutas'}.`
+    + (long ? '<br><span class="warn">Fitg blers maletgs: il browser po avair memia pauca memoria. Meglier parter la sequenza.</span>' : '');
+}
+function reset() { if (outUrl) { URL.revokeObjectURL(outUrl); outUrl = null; } $('dl').classList.add('hidden'); $('barw').classList.add('hidden'); $('bar').style.width = '0'; }
+
+const drop = $('drop'), fileIn = $('file');
+drop.onclick = () => { if (!busy) fileIn.click(); };
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); drop.click(); } };
+fileIn.onchange = () => { if (fileIn.files.length) take([...fileIn.files]); fileIn.value = ''; };
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { if (!busy && e.dataTransfer.files.length) take([...e.dataTransfer.files]); });
+$('fps').onchange = () => { info(); reset(); $('name').value = $('name').value.replace(/_\d+fps/i, '_' + $('fps').value + 'fps'); try { localStorage.setItem('dbz-mov-fps', $('fps').value); } catch (e) {} };
+try { const v = localStorage.getItem('dbz-mov-fps'); if (v && [...$('fps').options].some(o => o.value === v)) $('fps').value = v; } catch (e) {}
+
+/* ---------- Umwandeln: ffmpeg (WebAssembly), ProRes 4444 mit Alpha ---------- */
+const status = (t, cls) => { const s = $('status'); s.textContent = t; s.className = 'info' + (cls ? ' ' + cls : ''); };
+async function convert() {
+  if (busy || !frames.length) return;
+  busy = true; reset(); $('go').disabled = true; $('stop').classList.remove('hidden'); $('barw').classList.remove('hidden');
+  const n = frames.length, bar = $('bar');
+  try {
+    status('Chargel il program da conversiun …');
+    ff = new FFmpegWASM.FFmpeg();
+    ff.on('log', ({ message }) => { const m = /frame=\s*(\d+)/.exec(message); if (m) { bar.style.width = (20 + 80 * Math.min(1, +m[1] / n)) + '%'; status(`Convertescha … maletg ${fmt(Math.min(n, +m[1]))} da ${fmt(n)}`); } });
+    await ff.load({ coreURL: location.origin + '/vendor/ffmpeg/ffmpeg-core.js', wasmURL: location.origin + '/vendor/ffmpeg/ffmpeg-core.wasm' });
+    for (let i = 0; i < n; i++) {
+      await ff.writeFile('f_' + String(i).padStart(6, '0') + '.png', new Uint8Array(await frames[i].blob.arrayBuffer()));
+      if (i % 10 === 0) { bar.style.width = (20 * i / n) + '%'; status(`Prepara … maletg ${fmt(i + 1)} da ${fmt(n)}`); }
+    }
+    // gleiche Einstellungen wie die in Sony Hive geprüfte Testdatei
+    const rc = await ff.exec(['-framerate', $('fps').value, '-i', 'f_%06d.png', '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le', '-vendor', 'apl0', '-alpha_bits', '16', 'out.mov']);
+    if (rc !== 0) throw new Error('ffmpeg ' + rc);
+    const data = await ff.readFile('out.mov');
+    outUrl = URL.createObjectURL(new Blob([data], { type: 'video/quicktime' }));
+    const a = $('dl'), nm = ($('name').value.trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\.mov$/i, '') || 'overlay_alpha') + '.mov';
+    a.href = outUrl; a.download = nm; a.classList.remove('hidden'); bar.style.width = '100%';
+    status(`Finì: ${nm} · ${(data.length / 1048576).toFixed(1).replace('.', ',')} MB · ${dim.w} × ${dim.h} px · ${$('fps').value} maletgs per secunda`);
+  } catch (x) {
+    if (busy) status(stopped ? 'Interrut.' : 'La conversiun n\'è betg reussida. Forsa ha il browser memia pauca memoria – emprova cun damain maletgs.', stopped ? '' : 'err');
+    $('barw').classList.add('hidden');
+  } finally {
+    try { ff && ff.terminate(); } catch (e) {} ff = null; busy = false; stopped = false;
+    $('go').disabled = !frames.length; $('stop').classList.add('hidden');
+  }
+}
+let stopped = false;
+$('go').onclick = convert;
+$('stop').onclick = () => { stopped = true; try { ff && ff.terminate(); } catch (e) {} };
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>
