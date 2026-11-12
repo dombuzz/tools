@@ -48,7 +48,7 @@ label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--m
 .note small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
 .nedit{display:flex;flex-direction:column;gap:8px}
 .item{position:relative}
-.nbtn{position:absolute;top:12px;right:14px;border:1.5px solid var(--lab)!important;color:var(--lab)!important;background:transparent!important}
+.nbtn{position:absolute;top:12px;right:14px;border:1px solid var(--lab)!important;font-weight:300!important;color:var(--lab)!important;background:transparent!important}
 .nbtn:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(255,77,100,.1)!important}
 .item:has(.nbtn) .meta{padding-right:128px}
 .nedit textarea{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:.92rem;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
@@ -119,7 +119,7 @@ const LBL = { nov: 'Nov', lavur: 'En lavur', liquida: 'Liquidà' };
 let items = [], tab = 'nov';
 try { const s = localStorage.getItem('dbz-fb-tab'); if (LBL[s]) tab = s; } catch (e) {}
 
-const card = (i, acts, canNote = true) => `<article class="item" data-id="${i.id}">${canNote ? `<button type="button" class="ghost nbtn" data-act="note">${i.note ? 'Mida notizia' : 'Notizia'}</button>` : ''}
+const card = (i, acts, canNote = true) => `<article class="item" data-id="${i.id}">${canNote ? `<button type="button" class="ghost nbtn" data-act="note">${i.note ? 'Midar notizia' : 'Notizia'}</button>` : ''}
   <div class="meta"><b>${esc(i.toolName)}</b>${i.page ? `<a class="pg" href="${esc(i.page.split(' · ')[0])}" target="_blank" rel="noopener">${esc(i.page)}</a>` : ''}<span>${esc(fmt(i.ts))}</span><span>${i.name ? esc(i.name) : 'anonim'}</span><span class="sp"></span><div class="acts">${acts}</div></div>
   <div class="text">${esc(i.text)}</div>${noteBlock(i, canNote)}</article>`;
 // Notiz: Anzeige bzw. Eingabefeld (offen bleibt jeweils nur eine)
