@@ -13,7 +13,7 @@
   /* Kein eigener Container: Seite wird in voller Höhe gezeigt (Höhe geht an /social), Hintergrund durchsichtig. */
   var st = document.createElement('style');
   st.textContent = 'html.embed,html.embed body{background:transparent!important;background-image:none!important;min-height:0!important;height:auto!important;overflow:hidden!important}' +
-    'html.embed body::before,html.embed body::after{display:none!important}';
+    'html.embed body::before,html.embed body::after{display:none!important}html.embed .wrap,html.embed .container{max-width:none!important}';
   (document.head || root).appendChild(st);
   /* Höhe an /social melden */
   var lastH = 0;
