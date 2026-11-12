@@ -146,6 +146,12 @@ input[type=file]{display:none}
         <div class="f"><label>Posiziun orizontala</label><input type="range" id="ox" min="-100" max="100" step="1"></div>
         <div class="f"><label>Posiziun verticala</label><input type="range" id="oy" min="-100" max="100" step="1"></div>
         <div class="f"><label>Stgirentar <span class="val" id="dv"></span></label><input type="range" id="dark" min="0" max="80" step="1"></div>
+        <div class="f"><label style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="gOn"> Gradient stgir (per fotografias cleras)</label></div>
+        <div id="gBox" hidden>
+          <div class="f"><label>Direcziun dal gradient <span class="val" id="gAv"></span></label><input type="range" id="gA" min="0" max="360" step="1"></div>
+          <div class="f"><label>Stgirezza <span class="val" id="gIv"></span></label><input type="range" id="gI" min="10" max="90" step="1"></div>
+          <div class="hint">0° = stgir sutvart, 90° = stgir a dretga, 180° = stgir sissum, 270° = stgir a sanestra.</div>
+        </div>
       </div>
 
       <div class="card">
@@ -178,7 +184,7 @@ let S,cur=0,dateEdited=false;
 const imgs={};
 
 function uid(){return Math.random().toString(36).slice(2,9)}
-function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'N',zoom:1,ox:0,oy:0,dark:0,span:false,frizza:false,frizzaStyle:'w',logo:true},o)}
+function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'N',zoom:1,ox:0,oy:0,dark:0,gOn:false,gA:0,gI:60,span:false,frizza:false,frizzaStyle:'w',logo:true},o)}
 function today(){const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear()}
 function ymd(){const m=(S.date||'').match(/^(\d{1,2})[-.](\d{1,2})[-.](\d{4})$/);if(m)return m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0');const t=today().split('-');return t[2]+t[1]+t[0]}
 function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#FFA529',V:'#8F44C9',U:'#70bf88'},size:52,date:today(),slides:[
@@ -304,6 +310,12 @@ function pairOf(i){
   }
   return{o:S.slides[i],off:0,vw:W,left:i,right:i};
 }
+function gradOverlay(c,R,v){
+  const a=(v.gA||0)*Math.PI/180,dx=Math.sin(a),dy=Math.cos(a),L=(Math.abs(R.w*dx)+Math.abs(R.h*dy))/2,cx=R.x+R.w/2,cy=R.y+R.h/2,al=Math.min(1,Math.max(0,(v.gI==null?60:v.gI)/100));
+  const g=c.createLinearGradient(cx+dx*L,cy+dy*L,cx-dx*L,cy-dy*L);
+  g.addColorStop(0,'rgba(0,0,0,'+al+')');g.addColorStop(.55,'rgba(0,0,0,'+(al*.35)+')');g.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=g;c.fillRect(R.x,R.y,R.w,R.h);
+}
 function render(c,idx,preview){
   const s=S.slides[idx],P=pairOf(idx),o=P.o;
   c.clearRect(0,0,W,H);
@@ -311,6 +323,7 @@ function render(c,idx,preview){
   if(im){
     const sc=Math.max(P.vw/im.naturalWidth,H/im.naturalHeight)*o.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;
     c.drawImage(im,(P.vw-dw)/2+o.ox*(dw-P.vw)/2-P.off,(H-dh)/2+o.oy*(dh-H)/2,dw,dh);
+    if(o.gOn)gradOverlay(c,{x:-P.off,y:0,w:P.vw,h:H},o);
   }else{
     const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#2b2b33');g.addColorStop(1,'#16161a');c.fillStyle=g;c.fillRect(0,0,W,H);
     if(preview){c.fillStyle='rgba(255,255,255,.22)';c.font='500 34px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('Maletg tscherner, spustar u encollar',W/2,H/2-120);c.textAlign='left'}
@@ -427,6 +440,7 @@ function fill(){
   $('zoom').value=Math.round(o.zoom*100);$('zv').textContent=Math.round(o.zoom*100)+'%';
   $('ox').value=Math.round(o.ox*100);$('oy').value=Math.round(o.oy*100);
   $('dark').value=o.dark;$('dv').textContent=o.dark+'%';
+  $('gOn').checked=!!o.gOn;$('gBox').hidden=!o.gOn;$('gA').value=o.gA||0;$('gAv').textContent=(o.gA||0)+'°';const gi=o.gI==null?60:o.gI;$('gI').value=gi;$('gIv').textContent=gi+'%';
 }
 function upd(fn){fn();redraw();save()}
 $('title').oninput=e=>upd(()=>cs().title=e.target.value);
@@ -452,6 +466,9 @@ $('zoom').oninput=e=>{own().o.zoom=e.target.value/100;$('zv').textContent=e.targ
 $('ox').oninput=e=>{own().o.ox=e.target.value/100;redraw();save()};
 $('oy').oninput=e=>{own().o.oy=e.target.value/100;redraw();save()};
 $('dark').oninput=e=>{own().o.dark=+e.target.value;$('dv').textContent=e.target.value+'%';redraw();save()};
+$('gOn').onchange=e=>{own().o.gOn=e.target.checked;$('gBox').hidden=!e.target.checked;redraw();save()};
+$('gA').oninput=e=>{own().o.gA=+e.target.value;$('gAv').textContent=e.target.value+'°';redraw();save()};
+$('gI').oninput=e=>{own().o.gI=+e.target.value;$('gIv').textContent=e.target.value+'%';redraw();save()};
 $('posRst').onclick=()=>{const s=own().o;s.zoom=1;s.ox=0;s.oy=0;fill();redraw();save()};
 
 /* image in / out */
@@ -468,7 +485,7 @@ cv.addEventListener('dragover',e=>e.preventDefault());
 cv.addEventListener('drop',e=>{e.preventDefault();setImage(e.dataTransfer.files[0])});
 
 $('imgAll').onclick=()=>{const s=own().o,im=imgs[s.id];if(!im){alert('Pli baud in maletg tscherner.');return}
-  S.slides.forEach(t=>{imgs[t.id]=im;t.zoom=s.zoom;t.ox=s.ox;t.oy=s.oy;t.dark=s.dark;t.span=false});fill();buildTabs();save();redraw()};
+  S.slides.forEach(t=>{imgs[t.id]=im;t.zoom=s.zoom;t.ox=s.ox;t.oy=s.oy;t.dark=s.dark;t.gOn=s.gOn;t.gA=s.gA;t.gI=s.gI;t.span=false});fill();buildTabs();save();redraw()};
 /* ---- Bild direkt auf der Fläche: Maus (ziehen, Rad) · Touch (zwei Finger: schieben + zoomen) ---- */
 function geom(s,im,vw){const sc=Math.max(vw/im.naturalWidth,H/im.naturalHeight)*s.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;return{dw,dh,x:(vw-dw)/2+s.ox*(dw-vw)/2,y:(H-dh)/2+s.oy*(dh-H)/2}}
 /* zoomNew; (px,py) = Fixpunkt in Canvas-Koordinaten; (dx,dy) = Verschiebung in Canvas-Pixeln */

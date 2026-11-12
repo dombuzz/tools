@@ -135,10 +135,20 @@ input[type=file]{display:none}
         <div class="f"><label>Zoom <span class="val" id="zvA"></span></label><input type="range" id="zoomA" min="100" max="300" step="1"></div>
         <div class="f"><label>Posiziun orizontala</label><input type="range" id="oxA" min="-100" max="100" step="1"></div>
         <div class="f"><label>Posiziun verticala</label><input type="range" id="oyA" min="-100" max="100" step="1"></div>
+        <div class="f"><label style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="gOnA"> Gradient stgir (per fotografias cleras)</label></div>
+        <div id="gBoxA" hidden>
+          <div class="f"><label>Direcziun dal gradient <span class="val" id="gAvA"></span></label><input type="range" id="gAA" min="0" max="360" step="1"></div>
+          <div class="f"><label>Stgirezza <span class="val" id="gIvA"></span></label><input type="range" id="gIA" min="10" max="90" step="1"></div>
+        </div>
         <div class="sub">Pagina 2 (pitschen)</div>
         <div class="f"><label>Zoom <span class="val" id="zvB"></span></label><input type="range" id="zoomB" min="100" max="300" step="1"></div>
         <div class="f"><label>Posiziun orizontala</label><input type="range" id="oxB" min="-100" max="100" step="1"></div>
         <div class="f"><label>Posiziun verticala</label><input type="range" id="oyB" min="-100" max="100" step="1"></div>
+        <div class="f"><label style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="gOnB"> Gradient stgir (per fotografias cleras)</label></div>
+        <div id="gBoxB" hidden>
+          <div class="f"><label>Direcziun dal gradient <span class="val" id="gAvB"></span></label><input type="range" id="gAB" min="0" max="360" step="1"></div>
+          <div class="f"><label>Stgirezza <span class="val" id="gIvB"></span></label><input type="range" id="gIB" min="10" max="90" step="1"></div>
+        </div>
         <div class="row"><button id="posRst">Reset posiziun</button></div>
       </div>
 
@@ -286,7 +296,14 @@ function itText(c,t,x,y){
   c.save();c.translate(x,y);c.transform(1,0,k,1,0,0);c.fillText(t,0,0);c.restore();
 }
 function geom(v,R,im){const sc=Math.max(R.w/im.naturalWidth,R.h/im.naturalHeight)*v.zoom,dw=im.naturalWidth*sc,dh=im.naturalHeight*sc;return{dw,dh,x:R.x+(R.w-dw)/2+v.ox*(dw-R.w)/2,y:R.y+(R.h-dh)/2+v.oy*(dh-R.h)/2}}
-function drawImg(c,v,R,im){c.save();c.beginPath();c.rect(R.x,R.y,R.w,R.h);c.clip();const g=geom(v,R,im);c.drawImage(im,g.x,g.y,g.dw,g.dh);c.restore()}
+const rz=v=>Object.assign({},v,{zoom:1,ox:0,oy:0});
+function gradOverlay(c,R,v){
+  const a=(v.gA||0)*Math.PI/180,dx=Math.sin(a),dy=Math.cos(a),L=(Math.abs(R.w*dx)+Math.abs(R.h*dy))/2,cx=R.x+R.w/2,cy=R.y+R.h/2,al=Math.min(1,Math.max(0,(v.gI==null?60:v.gI)/100));
+  const g=c.createLinearGradient(cx+dx*L,cy+dy*L,cx-dx*L,cy-dy*L);
+  g.addColorStop(0,'rgba(0,0,0,'+al+')');g.addColorStop(.55,'rgba(0,0,0,'+(al*.35)+')');g.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=g;c.fillRect(R.x,R.y,R.w,R.h);
+}
+function drawImg(c,v,R,im){c.save();c.beginPath();c.rect(R.x,R.y,R.w,R.h);c.clip();const g=geom(v,R,im);c.drawImage(im,g.x,g.y,g.dw,g.dh);if(v.gOn)gradOverlay(c,R,v);c.restore()}
 function tag(c,x,y,w,deg,col){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle=col;c.fillRect(0,0,w,60);c.restore()}
 function tagText(c,t,x,y,deg){c.save();c.translate(x,y);c.rotate(deg*Math.PI/180);c.fillStyle='#fff';itText(c,t,0,0);c.restore()}
 
@@ -371,7 +388,7 @@ function setView(v){
   redraw();
 }
 function sliders(){
-  for(const k of ['A','B']){const v=S[k];$('zoom'+k).value=Math.round(v.zoom*100);$('zv'+k).textContent=Math.round(v.zoom*100)+'%';$('ox'+k).value=Math.round(v.ox*100);$('oy'+k).value=Math.round(v.oy*100)}
+  for(const k of ['A','B']){const v=S[k];$('zoom'+k).value=Math.round(v.zoom*100);$('zv'+k).textContent=Math.round(v.zoom*100)+'%';$('ox'+k).value=Math.round(v.ox*100);$('oy'+k).value=Math.round(v.oy*100);$('gOn'+k).checked=!!v.gOn;$('gBox'+k).hidden=!v.gOn;const ga=v.gA||0,gi=v.gI==null?60:v.gI;$('gA'+k).value=ga;$('gAv'+k).textContent=ga+'°';$('gI'+k).value=gi;$('gIv'+k).textContent=gi+'%'}
 }
 function fill(){
   $('quote').value=S.quote;$('name').value=S.name;$('role').value=S.role;$('text').value=S.text;$('cta').value=S.cta;$('credit').value=S.credit;
@@ -388,8 +405,11 @@ for(const k of ['A','B']){
   $('zoom'+k).oninput=e=>{S[k].zoom=e.target.value/100;$('zv'+k).textContent=e.target.value+'%';redraw();save()};
   $('ox'+k).oninput=e=>{S[k].ox=e.target.value/100;redraw();save()};
   $('oy'+k).oninput=e=>{S[k].oy=e.target.value/100;redraw();save()};
+  $('gOn'+k).onchange=e=>{S[k].gOn=e.target.checked;$('gBox'+k).hidden=!e.target.checked;redraw();save()};
+  $('gA'+k).oninput=e=>{S[k].gA=+e.target.value;$('gAv'+k).textContent=e.target.value+'°';redraw();save()};
+  $('gI'+k).oninput=e=>{S[k].gI=+e.target.value;$('gIv'+k).textContent=e.target.value+'%';redraw();save()};
 }
-$('posRst').onclick=()=>{S.A={zoom:1,ox:0,oy:0};S.B={zoom:1,ox:0,oy:0};sliders();redraw();save()};
+$('posRst').onclick=()=>{S.A=rz(S.A);S.B=rz(S.B);sliders();redraw();save()};
 $('reset').onclick=()=>{if(!confirm('Tut ils texts ed il maletg stizzar e cumenzar da nov?'))return;const c=S.color;S=blank();S.color=c;imgA=imgB=null;bSame=true;info();fill();redraw();save()};
 
 /* Bild */
@@ -401,12 +421,12 @@ function info(){$('imgInfo').textContent=!imgA?'':bSame?'Pagina 2 duvra il medem
 /* Standard: il emprim maletg vala per omaduas paginas; «Auter maletg per pagina 2» u in maletg direct sin il rectangel pitschen fa pagina 2 independenta */
 function setImage(f,target){
   const t=target||'auto';
-  if(t==='B')loadImg(f,i=>{imgB=i;bSame=false;S.B={zoom:1,ox:0,oy:0}});
-  else loadImg(f,i=>{imgA=i;S.A={zoom:1,ox:0,oy:0};if(bSame||!imgB){imgB=i;bSame=true;S.B={zoom:1,ox:0,oy:0}}});
+  if(t==='B')loadImg(f,i=>{imgB=i;bSame=false;S.B=rz(S.B)});
+  else loadImg(f,i=>{imgA=i;S.A=rz(S.A);if(bSame||!imgB){imgB=i;bSame=true;S.B=rz(S.B)}});
 }
 $('imgIn').onchange=e=>{setImage(e.target.files[0],pickT==='B'?'B':null);pickT=null;e.target.value=''};
 $('imgInB').onchange=e=>{setImage(e.target.files[0],'B');e.target.value=''};
-$('imgSame').onclick=()=>{if(!imgA)return;imgB=imgA;bSame=true;S.B={zoom:1,ox:0,oy:0};info();sliders();redraw();save()};
+$('imgSame').onclick=()=>{if(!imgA)return;imgB=imgA;bSame=true;S.B=rz(S.B);info();sliders();redraw();save()};
 $('imgClr').onclick=()=>{imgA=imgB=null;bSame=true;info();redraw()};
 window.addEventListener('paste',e=>{const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith('image/'));if(it){setImage(it.getAsFile());e.preventDefault()}});
 cv.addEventListener('dragover',e=>e.preventDefault());

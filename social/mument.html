@@ -71,6 +71,10 @@
   .ghost-img, .clip img{ position:absolute; max-width:none; pointer-events:none; }
   .ghost-img{ opacity:.3; }
   .clip{ position:absolute; inset:0; overflow:hidden; }
+  .gradov{ position:absolute; inset:0; pointer-events:none; display:none; }
+  .gctl{ display:flex; gap:12px 20px; flex-wrap:wrap; align-items:center; margin:-4px 0 16px; font-size:0.85rem; color:var(--muted); }
+  .gctl label.r{ display:flex; align-items:center; gap:8px; }
+  .gctl input[type=range]{ width:150px; accent-color:var(--accent); }
   .overlay{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   /* Maske 1:1: dunkle, halbtransparente Flächen links und rechts vom mittleren Quadrat (1080 von 1920 px) */
   .mask{ position:absolute; inset:0; pointer-events:none; }
@@ -131,6 +135,15 @@ h1 .acc{color:var(--accent)}
       <button type="button" class="ghost" id="pickBtn">Tscherner ina foto</button>
     </div>
 
+    <div class="toolbar" style="margin-bottom:8px">
+      <label class="check"><input type="checkbox" id="gOn"> Gradient stgir (per fotografias cleras)</label>
+    </div>
+    <div class="gctl" id="gBox" hidden>
+      <label class="r">Direcziun <input type="range" id="gA" min="0" max="360" step="1" value="0"> <span id="gAv">0°</span></label>
+      <label class="r">Stgirezza <input type="range" id="gI" min="10" max="90" step="1" value="60"> <span id="gIv">60%</span></label>
+      <span>0° = stgir sutvart, 90° = a dretga, 180° = sissum, 270° = a sanestra.</span>
+    </div>
+
     <div class="urlrow">
       <input type="url" id="urlInput" placeholder="Integrar il link d'in maletg RTR u l'URL d'in artitgel" spellcheck="false" autocomplete="off">
       <button type="button" class="ghost" id="urlBtn">Chargiar</button>
@@ -141,6 +154,7 @@ h1 .acc{color:var(--accent)}
         <div class="frame-bg"></div>
         <img class="ghost-img" id="ghost" alt="">
         <div class="clip"><img id="photo" alt=""></div>
+        <div class="gradov" id="gradov"></div>
         <img class="overlay" id="overlay" alt="">
         <div class="mask" id="mask" hidden><i></i><i></i></div>
         <div class="frame-line"></div>
@@ -198,6 +212,19 @@ $('showMask').checked = false;   // Standard: aus (auch nach dem Neuladen)
 $('showMask').onchange = e => $('mask').hidden = !e.target.checked;
 $('showOverlay').onchange = e => overlay.style.visibility = e.target.checked ? 'visible' : 'hidden';
 setFmt(fmt);
+
+/* ---------- Gradient (zuschaltbar) ---------- */
+const G = { on:false, a:0, i:60 };
+function gradUpdate(){
+  const al = G.i / 100, el = $('gradov');
+  el.style.display = G.on ? 'block' : 'none';
+  el.style.background = `linear-gradient(${180 - G.a}deg, rgba(0,0,0,0) 0%, rgba(0,0,0,${al * .35}) 45%, rgba(0,0,0,${al}) 100%)`;
+  $('gBox').hidden = !G.on;
+}
+$('gOn').onchange = e => { G.on = e.target.checked; gradUpdate(); };
+$('gA').oninput = e => { G.a = +e.target.value; $('gAv').textContent = G.a + '°'; gradUpdate(); };
+$('gI').oninput = e => { G.i = +e.target.value; $('gIv').textContent = G.i + '%'; gradUpdate(); };
+gradUpdate();
 
 /* ---------- Geometrie ---------- */
 const minS = () => Math.max(W / iw, H / ih);
@@ -450,6 +477,12 @@ $('dlBtn').onclick = () => {
   cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
   cx.fillStyle = '#fff'; cx.fillRect(0, 0, W, H);
   cx.drawImage(scaled(img, iw * s, ih * s), x, y, iw * s, ih * s);
+  if (G.on){
+    const a = G.a * Math.PI / 180, dx = Math.sin(a), dy = Math.cos(a), L = (Math.abs(W * dx) + Math.abs(H * dy)) / 2, al = G.i / 100;
+    const g = cx.createLinearGradient(W/2 + dx*L, H/2 + dy*L, W/2 - dx*L, H/2 - dy*L);
+    g.addColorStop(0, `rgba(0,0,0,${al})`); g.addColorStop(.55, `rgba(0,0,0,${al * .35})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+    cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+  }
   const finish = () => {
     c.toBlob(b => {
       const d = new Date(), z = n => String(n).padStart(2, '0');
