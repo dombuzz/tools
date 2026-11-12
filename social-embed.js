@@ -65,6 +65,17 @@
     sendH(); try { parent.postMessage({ dbzReady: true }, location.origin); } catch (e) {}
   });
   window.addEventListener('load', sendH);
+  /* Handy: /social zeigt Herz/Feedback erst, wenn die Bearbeitungsoptionen bis ans Ende durchgescrollt sind */
+  var endSent = false;
+  function checkEnd() {
+    if (window.innerWidth > 860 || endSent) return;
+    var de = document.documentElement;
+    if ((window.pageYOffset || de.scrollTop) + window.innerHeight >= de.scrollHeight - 60) {
+      endSent = true; try { parent.postMessage({ dbzEnd: true }, location.origin); } catch (e) {}
+    }
+  }
+  window.addEventListener('scroll', checkEnd, { passive: true });
+  window.addEventListener('message', function (e) { if (e.origin === location.origin && e.data && e.data.dbzReset) endSent = false; });
   var id = (location.pathname.replace(/\.html?$/i, '').split('/').pop() || '').replace(/^social-/, '');
   function use() { try { parent.postMessage({ dbzUse: id }, location.origin); } catch (e) {} }
   var orig = HTMLAnchorElement.prototype.click;
