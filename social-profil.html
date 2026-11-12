@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
+<script src="/social-embed.js"></script>
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark light">
-<title>Profil social</title>
+<title>Profil</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/%3E%3C/svg%3E">
 <style>
 :root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;--ok:#4caf6f;--warn:#ffb86b;color-scheme:dark}
@@ -54,12 +55,15 @@ canvas.v-one{width:min(100%,calc((100vh - 210px)*.8));aspect-ratio:4/5}
 input[type=file]{display:none}
 .val{color:var(--muted);font-size:.8rem;float:right}
 .sub{font-size:.82rem;font-weight:600;margin:14px 0 8px}
+.embed .wrap>div:first-child{display:none}
+.embed body{padding:0 0 12px}
+.embed .themebtn,.embed .dbz-help,.embed .dbz-helpbox{display:none!important}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div>
-    <h1>Profil <span class="acc">social</span><span class="badge">Lab</span></h1>
+    <h1>Profil <span class="acc">social</span></h1>
     <p class="lead">Visual 4:5 en duas paginas per la seria «Profil» – citat, num, text, colur e maletg pon vegnir midads. Exportaziun sco 2 PNG da 1080 × 1350.</p>
   </div>
 
@@ -470,6 +474,5 @@ $('expAll').onclick=async()=>{dl(await blobOf(1),fname(1));await new Promise(r=>
 fill();setView(window.matchMedia('(max-width:700px)').matches?'1':'both');loadFonts();
 })();
 </script>
-<script src="/like.js" defer></script>
 </body>
 </html>

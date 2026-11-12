@@ -4,13 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Magazin / Il di / #mument</title>
-<!-- #mument ist in /visual integriert; /mument öffnet das Tool mit vorgewähltem #mument (übrige Parameter wie ?img= bleiben) -->
-<script>
-  const q = new URLSearchParams(location.search); q.set('fmt', 'mument');
-  location.replace('/visual?' + q.toString() + location.hash);
-</script>
-<noscript><meta http-equiv="refresh" content="0; url=/visual?fmt=mument"></noscript>
+<title>#mument</title>
+<!-- #mument ist ein Tab in /social; /mument leitet dorthin weiter -->
+<script>location.replace('/social#mument');</script>
+<noscript><meta http-equiv="refresh" content="0; url=/social#mument"></noscript>
 </head>
-<body><a href="/visual?fmt=mument">Magazin / Il di / #mument</a></body>
+<body><a href="/social#mument">#mument</a></body>
 </html>

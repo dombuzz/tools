@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
+<script src="/social-embed.js"></script>
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="dark light">
 <title>Novitads dal di</title>
@@ -54,12 +55,15 @@ input[type=file]{display:none}
 #strip{display:flex;gap:2px;overflow-x:auto;background:var(--line);border:2px solid var(--line);border-radius:8px}
 #strip canvas{flex:1 0 0;min-width:150px;width:auto;border-radius:0;aspect-ratio:4/5;margin:0;cursor:pointer;touch-action:auto;outline-offset:-3px}
 #strip canvas.cur{outline:3px solid var(--accent)}
+.embed .wrap>div:first-child{display:none}
+.embed body{padding:0 0 12px}
+.embed .themebtn,.embed .dbz-help,.embed .dbz-helpbox{display:none!important}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div>
-    <h1>Novitads <span class="acc">dal di</span><span class="badge">Lab</span></h1>
+    <h1>Novitads <span class="acc">dal di</span></h1>
     <p class="lead">Visuals 4:5 per las novitads dal di – tut ils texts, las colurs e las paginas pon vegnir midadas. Exportaziun sco PNG 1080 × 1350.</p>
   </div>
 
@@ -521,6 +525,5 @@ $('expAll').onclick=async()=>{for(let i=0;i<S.slides.length;i++){dl(await blobOf
 fill();buildTabs();redraw();loadFonts();
 })();
 </script>
-<script src="/like.js" defer></script>
 </body>
 </html>

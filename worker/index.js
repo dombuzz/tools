@@ -30,26 +30,27 @@ const ALLOWED_ORIGINS = ['https://tools.dombuzz.ch'];
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,40}$/;
 // Anzeigenamen (für Widgets); unbekannte Tools erscheinen mit ihrer Kennung
 const NAMES = { 'info': 'Infus & datas',
-  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di / #mument', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
+  'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social': 'Social', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
   'Plan': 'Plans da teams', 'persunal': 'Persunal', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
   'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'avis-votelec': 'Avis sin votaziuns ed elecziuns', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
-  'lab-profil': 'Profil social', 'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
-  'lab-chat-generator': 'Chat-Generator', 'lab-novitads': 'Novitads dal di',
+  'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
+  'lab-chat-generator': 'Chat-Generator',
 };
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
 // «Plans da teams»: neue Seite /Plan und die früheren Einzelseiten (Newsdesk, Radio, Televisiun, On demand, Squadra online)
 // «Links d'artitgels»: die frühere Beta-Seite /artitgel-beta zählt zu /artitgel
-// «Magazin / Il di / #mument»: das frühere Einzeltool /mument zählt zu /visual
+// «Social» (Tabs Profil, Novitads dal di, #mument): Nutzung kommt als social-<tab>; das frühere Einzeltool /mument und die früheren Lab-Seiten /lab/novitads und /lab/profil zählen dazu
+// «Höhenprofil»: die Zahlen der früheren Adresse /lab/profil gehören zu /lab/hoehenprofil
 // «Elavurar maletgs»: die Einzeltools im Hintergrund (/colurs, /rotar, /ebenas) und die frühere Adresse /layers zählen zu /maletgs
 // «Subtitle Studio»: die früheren Einzeltools /spustar, /cumparegliar und /subs zählen zu /studio
-const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'visual', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
+const GROUP = { PlanOnline: 'Plan', PlanNewsdesk: 'Plan', PlanRadio: 'Plan', PlanTelevisiun: 'Plan', PlanOnDemand: 'Plan', 'artitgel-beta': 'artitgel', mument: 'social', 'social-profil': 'social', 'social-novitads': 'social', 'social-mument': 'social', 'lab-novitads': 'social', 'lab-profil': 'lab-hoehenprofil', layers: 'maletgs', collage: 'maletgs', colurs: 'maletgs', rotar: 'maletgs', ebenas: 'maletgs', spustar: 'studio', cumparegliar: 'studio', subs: 'studio' };
 const grp = t => GROUP[t] || t;
 // Geschätzte Zeitersparnis pro Nutzung in Minuten (Dominiks Schätzung vom 12.11.2026: «vorher» minus «mit Tool»).
 // Schlüssel = Roh-Kennung der Seite; ohne eigenen Eintrag gilt der Wert der Gruppe (z. B. mument → visual).
 // «collage» = Exporte aus dem Tab Collascha in /maletgs (übrige Tabs von maletgs haben keinen Wert).
-const SAVED_MIN = { 'rtr-picture': 0.3, visual: 1, Resizer2000: 0.3, collage: 2, data: 2, votaziuns: 3 };
+const SAVED_MIN = { 'rtr-picture': 0.3, visual: 1, mument: 1, 'social-mument': 1, Resizer2000: 0.3, collage: 2, data: 2, votaziuns: 3 };
 const savedMin = t => SAVED_MIN[t] ?? SAVED_MIN[grp(t)] ?? 0;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
 const NO_STATS = new Set(['stats', 'votgr', 'lab-vischnanca', 'lab-svizra', 'lab-chartas']);

@@ -150,7 +150,8 @@
 (function () {
   var HELP = {
     '/rtr-picture': ['Sin rtr.ch: clic dretg sin il maletg → «Copiar l’adressa dal maletg», u simplamain copiar il link da l’artitgel.', 'Integrar il link qua – il tool tschertga sez la versiun la pli gronda e la mussa en la prevista.', 'Tip: En il tab «Plirs maletgs» pos ti integrar in link d’artitgel u plirs links ina giada e chargiar giu tut ils maletgs.'],
-    '/visual': ['Tscherner il visual: Magazin, Il di u #mument (format aut 1080 × 1350).', 'Trair la foto en la surfatscha, integrar cun Ctrl/Cmd+V u inditgar in link da maletg RTR.', 'Spustar e zoomar la foto, lura «Telechargiar il maletg». Tip: La foto emplenescha adina l’entira surfatscha.'],
+    '/visual': ['Tscherner il visual: Magazin u Il di.', 'Trair la foto en la surfatscha, integrar cun Ctrl/Cmd+V u inditgar in link da maletg RTR.', 'Spustar e zoomar la foto, lura «Telechargiar il maletg». Tip: La foto emplenescha adina l’entira surfatscha.'],
+    '/social': ['Tscherner il tab: «Profil» (2 paginas), «Novitads dal di» (visuals per las novitads) u «#mument» (format aut 1080 × 1350).', 'Metter il maletg directamain en la surfatscha (trair, zoomar), endatar ils texts ed exportar sco PNG.', 'Tip: Ina adressa directa per in tab è p.ex. tools.dombuzz.ch/social#mument – era #profil e #novitads funcziunan.'],
     '/maletgs': ['«Clerezza + colurs» curregia clerezza e colurs, «Rotar + drizzar» drizza l’orizont e la perspectiva.', '«Collascha» unescha 2 u 3 maletgs en 16:9 u 1:1, «Layers» metta overlays e logos sur il maletg.', 'Tip: Ils maletgs chargiads restan en il «Parcadi» e stattan a disposiziun en tut ils tabs.'],
     '/Resizer2000': ['Trair in u plirs maletgs en la surfatscha u tutgar per tscherner.', 'Tscherner format e qualitad – ils maletgs vegnan reducids sin 2000 px a la vart lunga e telechargiads.', 'Tip: Maletgs che èn gia pli pitschens na vegnan betg engrondids.'],
     '/Plan': ['Chargiar il plan da lavur actual (PDF) – dal computer u cun il bookmarklet directamain da SharePoint.', 'Tscherner la redacziun e la perioda; opziunalmain marcar ina persuna per vesair ses servetschs.', 'Il plan na vegn betg memorisà – chargiar mintga giada la versiun actuala.'],
@@ -161,7 +162,7 @@
     '/data': ['Integrar il link d’ina grafica Datawrapper u d’in artitgel RTR cun grafica.', 'Tscherner format, resoluziun e tge che duai esser visibel (titel, descripziun, byline, funtauna).', 'Lura telechargiar sco PNG – per Magazin e Il di è 16:9 il format adattà.'],
     '/votgr': ['Tscherner la votaziun – las chartas da las vischnancas vegnan chargiadas directamain dad abstimmungen.gr.ch.', 'Telechargiar sco PNG en 4K (16:9). Era per votaziuns futuras, senza tschertgar links.']
   };
-  var ALIAS = { '/mument': '/visual', '/layers': '/maletgs', '/collascha': '/maletgs', '/colurs': '/maletgs', '/rotar': '/maletgs', '/spustar': '/UTstudio', '/cumparegliar': '/UTstudio', '/subs': '/UTstudio', '/studio': '/UTstudio' };
+  var ALIAS = { '/mument': '/social', '/layers': '/maletgs', '/collascha': '/maletgs', '/colurs': '/maletgs', '/rotar': '/maletgs', '/spustar': '/UTstudio', '/cumparegliar': '/UTstudio', '/subs': '/UTstudio', '/studio': '/UTstudio' };
   function mount() {
     var d = document, k = location.pathname.replace(/\.html$/, '').replace(/\/+$/, '') || '/';
     k = ALIAS[k] || k; var t = HELP[k], h1 = d.querySelector('h1');

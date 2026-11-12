@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Visuals per las medias socialas: Profil, Novitads dal di e #mument en in tool.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Social">
+<meta property="og:description" content="Visuals per las medias socialas: Profil, Novitads dal di e #mument en in tool.">
+<meta property="og:url" content="https://tools.dombuzz.ch/social">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<meta name="color-scheme" content="dark light">
+<title>Social</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='6' y='2.5' width='12' height='19' rx='2.5'/%3E%3Cpath d='M10 18.5h4'/%3E%3Ccircle cx='12' cy='9' r='2.5'/%3E%3Cpath d='M8.5 14.5c.6-1.6 1.9-2.4 3.5-2.4s2.9.8 3.5 2.4'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;padding:32px 16px 48px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:.88rem;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--text);padding:6px 16px;cursor:pointer}
+.tabs button:hover{border-color:var(--accent)}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.frames{position:relative}
+.frames iframe{display:block;width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <a class="homelink" href="/">← Tools</a>
+    <h1><span class="acc">Social</span></h1>
+    <p class="sub">Visuals per las medias socialas – tscherner il tab sut.</p>
+  </div>
+  <div class="tabs" id="tabs" role="group" aria-label="Tools"></div>
+  <div class="frames" id="frames"></div>
+</div>
+
+<script>
+/* Tabs: neues Tool = ein Eintrag hier (id = Adresse #id, label = Beschriftung, src = Seite, die im Rahmen geladen wird).
+   Die Seite selbst muss das Skript /social-embed.js laden (Embed-Modus + Nutzungsmeldung). */
+const TABS = [
+  { id: 'profil',   label: 'Profil',         src: '/social-profil' },
+  { id: 'novitads', label: 'Novitads dal di', src: '/social-novitads' },
+  { id: 'mument',   label: '#mument',        src: '/social-mument' }
+];
+const $ = id => document.getElementById(id);
+let cur = TABS[0];
+const frames = {};
+
+function pick(h) { const q = String(h || '').replace(/^#/, '').toLowerCase(); return TABS.find(t => t.id === q); }
+function fit() {
+  const f = $('frames'), top = f.getBoundingClientRect().top + window.scrollY;
+  const h = Math.max(560, window.innerHeight - 24 - (top - window.scrollY));
+  for (const k in frames) frames[k].style.height = h + 'px';
+}
+function show(t, keepHash) {
+  cur = t;
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === t.id));
+  if (!frames[t.id]) {
+    const f = document.createElement('iframe');
+    f.title = t.label; f.loading = 'eager'; f.src = t.src;
+    f.allow = 'clipboard-read; clipboard-write';
+    $('frames').appendChild(f); frames[t.id] = f;
+  }
+  for (const k in frames) frames[k].hidden = k !== t.id;
+  fit();
+  try { localStorage.setItem('social-tab', t.id); } catch (e) {}
+  if (!keepHash) { try { history.replaceState(null, '', '#' + t.id); } catch (e) {} }
+}
+TABS.forEach(t => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.dataset.id = t.id; b.textContent = t.label; b.setAttribute('aria-pressed', 'false');
+  b.onclick = () => show(t);
+  $('tabs').appendChild(b);
+});
+addEventListener('hashchange', () => { const t = pick(location.hash); if (t && t !== cur) show(t, true); });
+addEventListener('resize', fit);
+
+/* Nutzung: ein Download in einem Tab zählt als Nutzung von /social (Kennung social-<tab>, vom Worker zu «social» zusammengefasst) */
+window.dbzUseTool = () => 'social-' + cur.id;
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || !e.data.dbzUse) return;
+  if (!TABS.some(t => t.id === e.data.dbzUse)) return;
+  window.dispatchEvent(new Event('dbz-success'));
+});
+
+let start = pick(location.hash);
+if (!start) { try { start = pick(localStorage.getItem('social-tab')); } catch (e) {} }
+show(start || TABS[0], !!pick(location.hash));
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>

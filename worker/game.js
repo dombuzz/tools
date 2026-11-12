@@ -5,7 +5,7 @@
 //   gday = Tagesverdichtung (Gerät × Zürcher Tag × Tool) aus den Tabellen views/uses; abgeschlossene UTC-Tage werden einmal verdichtet
 //   (Cron alle 10 Min.), der laufende Tag wird bei Bedarf direkt gelesen. So bleiben die gelesenen Zeilen klein (Gratis-Kontingent).
 
-export const GAME_TOOLS = ['rtr-picture', 'visual', 'maletgs', 'Resizer2000', 'Plan', 'artitgel', 'artitgel-challenge', 'audio-recorder', 'srt2ttml', 'studio', 'data', 'votgr']; // = Tools im Dropdown der Startseite; bei neuen Tools ergänzen
+export const GAME_TOOLS = ['rtr-picture', 'visual', 'social', 'maletgs', 'Resizer2000', 'Plan', 'artitgel', 'artitgel-challenge', 'audio-recorder', 'srt2ttml', 'studio', 'data', 'votgr']; // = Tools im Dropdown der Startseite; bei neuen Tools ergänzen
 export const POINTS = { day: 5, act: 1, actCap: 20, tool: 10, art: 3, artCap: 3, badge: 20, streak: [[3, 15], [7, 40], [30, 150]] };
 
 const CID = /^[A-Za-z0-9-]{8,40}$/;
