@@ -123,11 +123,6 @@ input[type=file]{display:none}
       <div class="card">
         <h2><span class="n">2</span>Colur dal titel</h2>
         <div class="pills" id="colPills" style="margin-bottom:12px"></div>
-        <div class="row">
-          <input type="color" id="colPick">
-          <input type="text" id="colHex" class="grow" placeholder="#d92a5d" style="flex:1">
-        </div>
-        <div class="hint" id="colHint"></div>
       </div>
 
       <div class="card">
@@ -182,7 +177,7 @@ function uid(){return Math.random().toString(36).slice(2,9)}
 function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'N',zoom:1,ox:0,oy:0,dark:0,span:false,frizza:false,frizzaStyle:'w',logo:true},o)}
 function today(){const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear()}
 function ymd(){const m=(S.date||'').match(/^(\d{1,2})[-.](\d{1,2})[-.](\d{4})$/);if(m)return m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0');const t=today().split('-');return t[2]+t[1]+t[0]}
-function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#ff8a1f',V:'#8b5cf6'},size:52,date:today(),slides:[
+function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#FFA529',V:'#8F44C9'},size:52,date:today(),slides:[
   mk({type:'cover',frizza:true,title:'News dal di',credit:'Polizia chantunala grischuna',colSrc:'N'}),
   mk({title:'Incendi a Poschiavo',text:"En la Val da Camp dasper Poschiavo hai brischà gievgia en in cumplex da chasas. Persunas na sajan betg vegnidas blessadas. Daco ch'i ha brischà n'è anc betg cler.",colSrc:'N'}),
   mk({title:'Gieus olimpics da juniors',text:"Als Youth Olympic Games a Dakar en il Senegal hai dà l'emprima medaglia dad aur per la Svizra. La Turitgaisa Kimey Casanova ha gudagnà aur en il triatlon.",credit:'imago images/teamsprint media',colSrc:'N'}),
@@ -191,9 +186,8 @@ function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#ff8a1f',V:'#8b5cf6'},size:52
 function load(){try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.slides&&j.slides.length){
   j.slides=j.slides.map(s=>{if(s.frizza===undefined)s.frizza=(s.type==='cover'&&s.arrow!==false);delete s.arrow;delete s.colC;s.colSrc='N';return mk(s)});
   const d=defaults(),pre=Object.assign({},d.pre);
-  if(j.pre){if(j.pre.O)pre.O=j.pre.O;if(j.pre.V)pre.V=j.pre.V}else{if(j.colA)pre.O=j.colA;if(j.colB)pre.V=j.colB}
   d.pre=pre;d.slides=j.slides;return d}}catch(e){}return defaults()}
-function save(){try{const c=JSON.parse(JSON.stringify(S));delete c.date;c.pre={O:S.pre.O,V:S.pre.V};localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}}
+function save(){try{const c=JSON.parse(JSON.stringify(S));delete c.date;delete c.pre;localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}}
 S=load();
 
 function normHex(v,f){v=(v||'').trim().replace(/^#?/,'#');if(/^#[0-9a-f]{3}$/i.test(v))v='#'+[...v.slice(1)].map(c=>c+c).join('');return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():f}
@@ -422,8 +416,6 @@ function fill(){
   const as=$('arrowSty');as.style.display=s.frizza?'flex':'none';as.innerHTML='';
   [['w','Alva'],['b','Naira'],['g','Alva + contura']].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='pill'+((s.frizzaStyle||'w')===k?' on':'');b.textContent=l;b.onclick=()=>{upd(()=>s.frizzaStyle=k);fill()};as.appendChild(b)});
   $('showCr').checked=s.showCr!==false;$('credit').disabled=s.showCr===false;$('credit').style.opacity=s.showCr===false?.45:1;
-  const col=slideColor(s);$('colPick').value=col;$('colHex').value=col;
-  $('colHint').textContent='Il code da questa colur vala per tut las paginas che la utiliseschan. «Novitads» (#d92a5d) è adina la colur standard ed è puspè quella suenter avrir il tool.';
   buildColPills();
   const P=own(),o=P.o,linked=P.left!==P.right;
   $('span').checked=linked;
@@ -451,9 +443,6 @@ $('span').onchange=e=>{
 $('showCr').onchange=e=>{cs().showCr=e.target.checked;fill();redraw();save()};
 $('arrow').onchange=e=>{upd(()=>cs().frizza=e.target.checked);fill()};
 
-function setCol(hex,fromHex){S.pre[cs().colSrc]=hex;$('colPick').value=hex;if(!fromHex)$('colHex').value=hex;buildColPills();buildTabs();redraw();save()}
-$('colPick').oninput=e=>setCol(e.target.value);
-$('colHex').oninput=e=>{const h=normHex(e.target.value,null);if(h)setCol(h,true)};
 
 $('zoom').oninput=e=>{own().o.zoom=e.target.value/100;$('zv').textContent=e.target.value+'%';redraw();save()};
 $('ox').oninput=e=>{own().o.ox=e.target.value/100;redraw();save()};
