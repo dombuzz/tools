@@ -342,34 +342,38 @@ function wrap(c, text, maxW) {
   return out;
 }
 // Balken in Zeilenbreite, links- oder rechtsbündig; gibt die Unterkante zurück
-function bars(c, lines, font, size, X0, W, y, right, color) {
-  const padX = Math.round(size * .3), boxH = Math.round(size * 1.38), gap = Math.max(1, Math.round(size * .07));
+const shadowOn = (c, size) => { c.shadowColor = 'rgba(0,0,0,.65)'; c.shadowBlur = size * .22; c.shadowOffsetY = size * .03; };
+const shadowOff = c => { c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0; };
+// bg = farbige Fläche hinter jeder Zeile; shadow = Schatten (an der Fläche, ohne Fläche am Text)
+function bars(c, lines, font, size, X0, W, y, right, color, bg, shadow) {
+  const padX = bg ? Math.round(size * .3) : 0, boxH = Math.round(size * 1.38), gap = Math.max(1, Math.round(size * .07));
   c.font = font; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
   const cap = c.measureText('H').actualBoundingBoxAscent || size * .7;
   for (const l of lines) {
     const w = Math.ceil(c.measureText(l).width + 2 * padX), x = right ? W - X0 - w : X0;
-    c.fillStyle = color; c.fillRect(x, y, w, boxH);
-    c.fillStyle = '#fff'; c.fillText(l, x + padX, y + boxH / 2 + cap / 2);
+    if (bg) { if (shadow) shadowOn(c, size); c.fillStyle = color; c.fillRect(x, y, w, boxH); shadowOff(c); }
+    else if (shadow) shadowOn(c, size);
+    c.fillStyle = '#fff'; c.fillText(l, x + padX, y + boxH / 2 + cap / 2); shadowOff(c);
     y += boxH + gap;
   }
   return y;
 }
 function drawEl(c, e, W, H, k, alpha) {
-  const X0 = Math.round(86 * k), maxW = W - 2 * X0, size = e.size * k, right = e.align === 'r';
+  const X0 = Math.round(86 * k), maxW = W - 2 * X0, size = e.size * k, right = e.align === 'r', bg = e.bg !== false, sh = !!e.shadow;
   c.save(); c.globalAlpha = alpha;
   let y = Math.round(H * e.y / 100);
   if (e.type === 'lower') {
     c.font = fb(size); c.textBaseline = 'alphabetic';
-    const nl = wrap(c, (e.name || '').toUpperCase(), maxW), cap = c.measureText('H').actualBoundingBoxAscent || size * .7;
-    c.fillStyle = '#fff'; c.shadowColor = 'rgba(0,0,0,.65)'; c.shadowBlur = size * .22; c.shadowOffsetY = size * .03;
+    const nl = wrap(c, e.caps !== false ? (e.name || '').toUpperCase() : (e.name || ''), maxW), cap = c.measureText('H').actualBoundingBoxAscent || size * .7;
+    c.fillStyle = '#fff'; if (sh) shadowOn(c, size);
     c.textAlign = right ? 'right' : 'left';
     for (const l of nl) { y += cap; c.fillText(l, right ? W - X0 : X0, y); y += Math.round(size * .28); }
-    c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+    shadowOff(c);
     const fs = size * .62; c.font = fl(fs);
-    bars(c, wrap(c, e.func || '', maxW - fs * .6), fl(fs), fs, X0, W, y, right, S.color);
+    bars(c, wrap(c, e.func || '', maxW - fs * .6), fl(fs), fs, X0, W, y, right, S.color, bg, sh);
   } else {
     c.font = fb(size);
-    bars(c, wrap(c, e.text || '', maxW - size * .6), fb(size), size, X0, W, y, right, S.color);
+    bars(c, wrap(c, e.text || '', maxW - size * .6), fb(size), size, X0, W, y, right, S.color, bg, sh);
   }
   c.restore();
 }
@@ -656,7 +660,7 @@ $('zAll').onclick = () => { if (V && !job) { const s = shots[cur]; shots.forEach
 const TYPES = { title: 'Tetel', text: 'Text', lower: 'Num' };
 function addEl(type) {
   if (!V || job) return;
-  const a = Math.round(v.currentTime * 10) / 10, e = { id: uid++, type, text: '', name: '', func: '', a, b: Math.min(V.dur, a + (type === 'lower' ? 4 : 3)), align: 'l', y: type === 'title' ? 40 : type === 'text' ? 58 : 52, size: type === 'title' ? 60 : type === 'text' ? 46 : 58 };
+  const a = Math.round(v.currentTime * 10) / 10, e = { id: uid++, type, text: '', name: '', func: '', a, b: Math.min(V.dur, a + (type === 'lower' ? 4 : 3)), align: 'l', y: type === 'title' ? 40 : type === 'text' ? 58 : 52, size: type === 'title' ? 60 : type === 'text' ? 46 : 58, bg: true, shadow: type === 'lower', caps: true };
   els.push(e); selEl = e.id; renderEls(); renderShots();
   const f = document.querySelector('.elc.sel textarea, .elc.sel input[type=text]'); if (f) f.focus();
 }
@@ -676,6 +680,11 @@ function renderEls() {
         <label class="f">Posiziun verticala <input type="range" data-k="y" min="4" max="92" step="0.5" value="${e.y}"></label>
         <label class="f">Grondezza <input type="range" data-k="size" min="28" max="110" value="${e.size}"></label>
       </div>
+      <div class="row mid">
+        <label class="c"><input type="checkbox" data-c="bg"${e.bg !== false ? ' checked' : ''}> Colur da fund</label>
+        <label class="c"><input type="checkbox" data-c="shadow"${e.shadow ? ' checked' : ''}> Sumbriva</label>
+        ${e.type === 'lower' ? `<label class="c"><input type="checkbox" data-c="caps"${e.caps !== false ? ' checked' : ''}> Num en bustabs gronds</label>` : ''}
+      </div>
       <div class="row"><button class="sm" data-show>Mussar en la prevista</button><button class="sm" data-del>Stizzar</button></div>
     </div></div>`).join('');
 }
@@ -689,6 +698,7 @@ $('els').addEventListener('input', e => {
   if (k === 'a' || k === 'b') renderShots();
   resetOut(); dirty = true;
 });
+$('els').addEventListener('change', e => { const k = e.target.dataset.c; if (!k) return; elOf(e.target)[k] = e.target.checked; resetOut(); dirty = true; });
 $('els').addEventListener('click', e => {
   const c = e.target.closest('.elc'); if (!c) return; const el = elOf(e.target);
   if (e.target.closest('[data-del]')) { els = els.filter(x => x !== el); selEl = null; renderEls(); renderShots(); resetOut(); }
