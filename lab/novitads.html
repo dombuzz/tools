@@ -115,6 +115,7 @@ input[type=file]{display:none}
         <div class="f">
           <div class="row">
             <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="arrow"> Frizza</label>
+            <div class="pills" id="arrowSty" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -178,7 +179,7 @@ let S,cur=0,dateEdited=false;
 const imgs={};
 
 function uid(){return Math.random().toString(36).slice(2,9)}
-function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'N',zoom:1,ox:0,oy:0,dark:0,span:false,frizza:false,logo:true},o)}
+function mk(o){return Object.assign({id:uid(),type:'text',title:'',text:'',credit:'',showCr:true,colSrc:'N',zoom:1,ox:0,oy:0,dark:0,span:false,frizza:false,frizzaStyle:'w',logo:true},o)}
 function today(){const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear()}
 function ymd(){const m=(S.date||'').match(/^(\d{1,2})[-.](\d{1,2})[-.](\d{4})$/);if(m)return m[3]+m[2].padStart(2,'0')+m[1].padStart(2,'0');const t=today().split('-');return t[2]+t[1]+t[0]}
 function defaults(){return{v:3,pre:{N:'#d92a5d',O:'#ff8a1f',V:'#8b5cf6'},size:52,date:today(),slides:[
@@ -271,6 +272,13 @@ function readFile(f){return new Promise(r=>{const fr=new FileReader();fr.onload=
 /* ---------- logo ---------- */
 
 /* ---------- render ---------- */
+let _tint=null;
+function arrowTint(){
+  if(_tint||!arrowImg.complete||!arrowImg.naturalWidth)return _tint;
+  const o=document.createElement('canvas');o.width=arrowImg.naturalWidth;o.height=arrowImg.naturalHeight;
+  const x=o.getContext('2d');x.drawImage(arrowImg,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#000';x.fillRect(0,0,o.width,o.height);
+  return _tint=o;
+}
 function wrap(c,text,maxW){
   const out=[];
   for(const para of String(text).split(/\n/)){
@@ -312,6 +320,8 @@ function render(c,idx,preview){
   /* text lines, bottom-anchored, each box exactly as wide as its line */
   c.font=fl(n);
   const lines=wrap(c,s.text||'',maxW);
+  const FLIM=s.frizza?735:maxW; /* letzte Zeile bleibt links vom Pfeil */
+  if(s.frizza&&lines.length&&c.measureText(lines[lines.length-1]).width>FLIM){const l=lines.pop();lines.push(...wrap(c,l,FLIM))}
   for(let i=lines.length-1;i>=0;i--){
     const w=c.measureText(lines[i]).width;
     y-=boxH;
@@ -325,6 +335,7 @@ function render(c,idx,preview){
   if(title||suffix){
     c.font=fb(tN);
     const tl=isCover?[title]:wrap(c,title,maxW);
+    if(s.frizza&&!isCover&&!lines.length&&tl.length&&c.measureText(tl[tl.length-1]).width>FLIM){const l=tl.pop();tl.push(...wrap(c,l,FLIM))}
     for(let i=tl.length-1;i>=0;i--){
       c.font=fb(tN);const wb=c.measureText(tl[i]).width;
       let wl=0;if(isCover&&suffix){c.font=fb(tN);wl=c.measureText(suffix).width}
@@ -336,7 +347,15 @@ function render(c,idx,preview){
     }
   }
   /* arrow */
-  if(s.frizza&&arrowImg.complete){c.drawImage(arrowImg,879,1241-34,136,68)}
+  if(s.frizza&&arrowImg.complete){
+    const st=s.frizzaStyle||'w';
+    if(st==='b'){const tc=arrowTint();if(tc)c.drawImage(tc,879,1241-34,136,68)}
+    else{
+      if(st==='g'){c.save();c.shadowColor='rgba(0,0,0,.9)';c.shadowOffsetX=c.shadowOffsetY=0;
+        for(const b of [26,16,8]){c.shadowBlur=b;c.drawImage(arrowImg,879,1241-34,136,68)}c.restore()}
+      c.drawImage(arrowImg,879,1241-34,136,68);
+    }
+  }
   /* logo */
   if(isCover&&logoImg.complete)c.drawImage(logoImg,X0,65,108,70);
   /* credit */
@@ -385,6 +404,8 @@ function fill(){
   $('ctl').classList.toggle('is-cover',cur===0);
     $('title').value=s.title;$('text').value=s.text;$('credit').value=s.credit;$('date').value=S.date;
   $('arrow').checked=!!s.frizza;
+  const as=$('arrowSty');as.style.display=s.frizza?'flex':'none';as.innerHTML='';
+  [['w','Alva'],['b','Nera'],['g','Alva + contura']].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='pill'+((s.frizzaStyle||'w')===k?' on':'');b.textContent=l;b.onclick=()=>{upd(()=>s.frizzaStyle=k);fill()};as.appendChild(b)});
   $('showCr').checked=s.showCr!==false;$('credit').disabled=s.showCr===false;$('credit').style.opacity=s.showCr===false?.45:1;
   const col=slideColor(s);$('colPick').value=col;$('colHex').value=col;
   $('colHint').textContent='Il code da questa colur vala per tut las paginas che la utiliseschan. «Novitads» (#d92a5d) è adina la colur standard ed è puspè quella suenter avrir il tool.';
@@ -413,7 +434,7 @@ $('span').onchange=e=>{
   fill();buildTabs();redraw();save();
 };
 $('showCr').onchange=e=>{cs().showCr=e.target.checked;fill();redraw();save()};
-$('arrow').onchange=e=>upd(()=>cs().frizza=e.target.checked);
+$('arrow').onchange=e=>{upd(()=>cs().frizza=e.target.checked);fill()};
 
 function setCol(hex,fromHex){S.pre[cs().colSrc]=hex;$('colPick').value=hex;if(!fromHex)$('colHex').value=hex;buildColPills();buildTabs();redraw();save()}
 $('colPick').oninput=e=>setCol(e.target.value);
