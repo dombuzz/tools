@@ -222,6 +222,7 @@ function render(){
   if(!plan){out.innerHTML="";return}
   store.set("servetsch-who",who);
   if(!who){out.innerHTML='<p class="empty">Tscherna ina persuna per vesair ses servetschs.</p>';return}
+  if(!render.liked){render.liked=true; setTimeout(()=>dispatchEvent(new Event('dbz-success')),20000)} // Nutzung fuer die Statistik zaehlen (wie Plans da teams)
   const mine=plan.byName[who]||{}, today=new Date(), todayIso=iso(today), todayMon=monday(today);
   let h="";
   // oz
