@@ -926,7 +926,7 @@
         items.forEach(x => { slots[hourly ? x.d.getHours() : (x.d.getDay() + 6) % 7] += x.n; });
         const mx = Math.max(0, ...slots);
         if (mx) { const i = slots.indexOf(mx), nm = DAYS_L[i] || '';
-          tiles.push(tile('peak', hourly ? `${pad2(i)}–${pad2((i + 1) % 24)} h` : nm.charAt(0).toUpperCase() + nm.slice(1), `${hourly ? 'pli activa ura' : 'pli activ di'} · ${fmt(mx)}`, hourly ? 'Ura cun las pli blertas giadas duvrà oz.' : 'Di da l’emna cun las pli blertas giadas duvrà en l’entir temp tscherni.')); }
+          tiles.push(tile('peak', hourly ? `${pad2(i)}–${pad2((i + 1) % 24)} h` : nm.charAt(0).toUpperCase() + nm.slice(1), `${hourly ? 'pli activa ura' : 'pli activ di'} · ${fmt(mx)}`, hourly ? 'Ura cun las pli bleras utilisaziuns oz.' : `Di da l’emna cun las pli bleras utilisaziuns ${/^\d{4}-\d\d$/.test(range) ? `durant ${MONTHS[+range.slice(5) - 1]} ${range.slice(0, 4)}` : { week: "durant quest'emna", month: 'durant quest mais', '30d': 'ils davos 30 dis', all: 'durant tut il temp' }[range] || 'durant quest temp'}.`)); }
       }
       let visTile = '';
       // Visualisaziun: Hell/Dunkel und Farbstärke – Anteil der Aufrufe (Balken) und Zahl der Visitaders je Variante
