@@ -230,7 +230,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
 </div>
 
 <script src="/vendor/pdfjs/pdf.min.js"></script>
-<script src="/plan-core.js"></script>
+<script src="/plan-core.js?v=20261113"></script>
 <script>
 
 let sparte="newsdesk";
@@ -283,7 +283,7 @@ async function readPdfs(files,extraErrs){
   }
   const names=Object.keys(sources);
   if(names.length){
-    saveHandoff(sources,others);
+    try{saveHandoff(sources,others)}catch(_){}
     const entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
     setPlan({label:`${names.join(", ")} · chargià ils ${iso(new Date()).split("-").reverse().join("-")}`,entries},true);
   }
@@ -446,7 +446,7 @@ try{localStorage.removeItem("plan")}catch(e){}
 $("status").textContent="Anc nagin plan chargià.";
 render();
 { // Plan aus Persunal (gleicher Tab) uebernehmen
-  const h=loadHandoff();
+  let h=null; try{h=loadHandoff()}catch(_){}
   if(h){ Object.assign(sources,h.sources); Object.assign(others,h.others||{});
     const names=Object.keys(sources), entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
     setPlan({label:`${names.join(", ")} · gia chargià`,entries},true) }
