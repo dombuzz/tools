@@ -930,7 +930,7 @@
             h += `<div class="thbar" title="${fmt(tl)}× cler · ${fmt(td)}× stgir"><span class="tl" style="flex:${tl} 1 0">${SUN}${pl} %</span><span class="td" style="flex:${td} 1 0">${100 - pl} %${MOON}</span></div><div class="vn"><small>cler · ${vs(th.lightUsers)}</small><small>stgir · ${vs(th.darkUsers)}</small></div>`; }
           if (tt) { const ps = Math.round(ts / tt * 100);
             h += `<div class="thbar vg" title="${fmt(tk)}× normal · ${fmt(ts)}× saturaziun reducida"><span class="tn" style="flex:${tk} 1 0">${100 - ps} %</span><span class="ts" style="flex:${ts} 1 0">${ps} %</span></div><div class="vn"><small>normal · ${vs(t2.normalUsers)}</small><small>main intensiv · ${vs(t2.softUsers)}</small></div>`; }
-          visTile = (`<div class="kz-t vis" data-tip="1" role="button" tabindex="0" aria-expanded="false">${h}<em class="tipx" hidden>Barra = part da las visitas. Mintga visitader vegn dumbrà tar mintga variant ch’el ha duvrà – er tuts dus èsi pussibel.</em></div>`);
+          visTile = (`<div class="kz-t vis">${h}</div>`);
         }
       }
       meta.innerHTML = `${ids[3] === 'meta' ? '<h2 class="kz-h">Ulteriuras cifras</h2>' : ''}<div class="kz-label">${esc(label)}</div><div class="kz">
