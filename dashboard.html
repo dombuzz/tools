@@ -95,6 +95,11 @@
   @media (max-width:520px){.kz{grid-template-columns:1fr}.kz-hero{min-height:0}}
   .thbar{margin:10px 0 0 auto;display:flex;width:150px;max-width:100%;height:34px;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
   .thbar[hidden]{display:none}
+  .thcol{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end}
+  .thcol .thbar{margin-left:0}
+  .thbar .tn{background:linear-gradient(90deg,#ff4d64,#ffa529);color:#fff;justify-content:flex-start}
+  .thbar .ts{background:linear-gradient(90deg,#b9808a,#b8a07a);color:#fff;justify-content:flex-end}
+  .thnote{margin-top:4px;font-size:.75rem;color:var(--muted);text-align:right}
   .thbar>span{display:flex;align-items:center;gap:6px;padding:0 8px;min-width:60px;white-space:nowrap}
   .thbar svg{width:16px;height:16px;flex:none;fill:none;stroke:#8a8a94;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .thbar .tl{background:#ececf1;color:#1c1c20;justify-content:flex-start}
@@ -351,7 +356,7 @@
     <p class="meta" id="labmeta"></p>
   </details>
   <div class="ticker" id="ticker" hidden aria-live="off"><span id="tickt"></span></div>
-  <div class="metarow"><div class="meta" id="meta"></div><div class="thbar" id="themeBar" hidden></div></div>
+  <div class="metarow"><div class="meta" id="meta"></div><div class="thcol"><div class="thbar" id="themeBar" hidden></div><div class="thbar" id="toneBar" hidden></div><div class="thnote" id="toneNote" hidden></div></div></div>
 
   <section class="pan"><p class="sec" id="sparkh">Activitad · ultimas 24 uras</p><div id="spark"><div class="msg">Chargel …</div></div></section>
   <section class="pan"><p class="sec">Cura vegnan ils tools duvrads</p><div id="heat"><div class="msg">Chargel …</div></div></section>
@@ -897,6 +902,15 @@
         const pl = Math.round(tl / tn * 100), SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>', MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
         bar.title = `Visualisaziun: ${fmt(tl)}× cler · ${fmt(td)}× stgir`;
         bar.innerHTML = `<span class="tl" style="flex:${tl} 1 0" title="${fmt(tl)}× cler">${SUN}${pl} %</span><span class="td" style="flex:${td} 1 0" title="${fmt(td)}× stgir">${100 - pl} %${MOON}</span>`;
+      }
+      // Farbstärke: wie oft / von wie vielen Visitaders la saturaziun è reducida
+      const tn2 = d.tones || {}, ts = tn2.soft || 0, tk = tn2.normal || 0, tt = ts + tk, tb = document.getElementById('toneBar'), tnote = document.getElementById('toneNote');
+      tb.hidden = tnote.hidden = !tt;
+      if (tt) {
+        const ps = Math.round(ts / tt * 100), su = tn2.softUsers || 0;
+        tb.title = `Colurs: ${fmt(tk)}× normal · ${fmt(ts)}× saturaziun reducida`;
+        tb.innerHTML = `<span class="tn" style="flex:${tk} 1 0" title="${fmt(tk)}× normal">${100 - ps} %</span><span class="ts" style="flex:${ts} 1 0" title="${fmt(ts)}× saturaziun reducida">${ps} %</span>`;
+        tnote.textContent = `Saturaziun reducida: ${fmt(ts)}× · ${fmt(su)} ${su === 1 ? 'visitader' : 'visitaders'}`;
       }
     }
   }

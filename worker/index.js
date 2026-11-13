@@ -80,6 +80,7 @@ const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS usage (day TEXT PRIMARY KEY, r INTEGER NOT NULL DEFAULT 0, w INTEGER NOT NULL DEFAULT 0)'), // gelesene/geschriebene Zeilen pro Tag (UTC)
   env.DB.prepare('CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, ts INTEGER NOT NULL, body TEXT NOT NULL)'), // Zwischenspeicher für /ranking und /hourly
 ]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
+  .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN tone TEXT').run().catch(() => {})) // Spalte «tone» (soft|normal): Sättigung reduziert?
   .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
   .then(() => env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {})) // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
   .then(() => env.DB.prepare('ALTER TABLE favs ADD COLUMN sync INTEGER').run().catch(() => {})) // 1 = beim Abgleich nachgetragen (zählt für «aktuell», nicht als «im Zeitraum gesetzt»)
@@ -698,6 +699,11 @@ async function handle(request, env, ctx) {
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const themes = { light: 0, dark: 0, unknown: 0 };
         for (const r of themeRows) themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count;
+        const { results: toneRows } = await env.DB
+          .prepare('SELECT tone, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tone')
+          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const tones = { soft: 0, normal: 0, unknown: 0, softUsers: 0 };
+        for (const r of toneRows) { if (r.tone === 'soft') { tones.soft += r.count; tones.softUsers += r.users; } else tones[r.tone === 'normal' ? 'normal' : 'unknown'] += r.count; }
         const { results: clientRows } = await env.DB
           .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
@@ -730,7 +736,7 @@ async function handle(request, env, ctx) {
         const { results: [fp] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(p?.from ?? '0', p?.to ?? '9999').all();
         const favsNow = Object.fromEntries(favNowRows.map(r => [r.tool, Math.max(0, r.n)]));
         const favsTotal = Object.values(favs).reduce((t, n) => t + n, 0);
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, saved, savedTotal, views, viewsTotal, themes, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, saved, savedTotal, views, viewsTotal, themes, tones, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';
@@ -828,7 +834,8 @@ async function handle(request, env, ctx) {
         await ensureViews(env);
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
-        await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid) VALUES (?1, datetime('now'), ?2, ?3)").bind(tool, theme, cid).run();
+        const tone = url.searchParams.get('s') === '1' ? 'soft' : url.searchParams.get('s') === '0' ? 'normal' : null; // Farbstärke (soft = Sättigung reduziert)
+        await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid, tone) VALUES (?1, datetime('now'), ?2, ?3, ?4)").bind(tool, theme, cid, tone).run();
         return json({ ok: true }, request);
       }
 

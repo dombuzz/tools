@@ -80,6 +80,6 @@ for (const t of TOOLS) {
   document.getElementById('g').appendChild(a);
 }
 </script>
-<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/social'+(window.dbzCid&&dbzCid()?'?c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/social?s='+(document.documentElement.dataset.tone==='soft'?'1':'0')+(window.dbzCid&&dbzCid()?'&c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>

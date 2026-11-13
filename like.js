@@ -121,7 +121,7 @@ const HTML = `<div class="dbz-like" id="dbz-like">
   // Seitenaufruf zählen (einmal pro Aufruf; nur Tool-Name und Zeitpunkt)
   // Anonyme Zufalls-Kennung pro Browser (nur zum Zählen verschiedener Besucher, gilt für alle Tools gemeinsam)
   let cid = ''; try { cid = localStorage.getItem('dbz-cid') || ''; if (!/^[A-Za-z0-9-]{8,40}$/.test(cid)) { cid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)); localStorage.setItem('dbz-cid', cid); } } catch (e) { cid = ''; }
-  fetch(API + '/view/' + encodeURIComponent(tool) + '?t=' + (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark') + (cid ? '&c=' + cid : ''), { method: 'POST', keepalive: true }).catch(() => {});
+  fetch(API + '/view/' + encodeURIComponent(tool) + '?t=' + (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark') + '&s=' + (document.documentElement.dataset.tone === 'soft' ? '1' : '0') + (cid ? '&c=' + cid : ''), { method: 'POST', keepalive: true }).catch(() => {});
   const box = document.getElementById('dbz-like'), btn = box.querySelector('button'), out = box.querySelector('.n');
   const toast = document.getElementById('dbz-toast'), tBtn = toast.querySelector('.dbz-yes'), tOut = toast.querySelector('small');
   // in den Hauptbereich der Seite verschieben, damit der Block unter dem Tool steht
