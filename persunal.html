@@ -179,7 +179,7 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
   </div>
 
   <div id="out"></div>
-  <p class="note" style="text-align:center;margin:0 auto">Las emnas van dal glindesdi fin la dumengia. Il plan vegn mo en il browser e na vegn betg memorisà.</p>
+  <p class="note" style="text-align:center;margin:0 auto">Las emnas van dal glindesdi fin la dumengia. Il plan vegn mo en il browser e na vegn betg memorisà (be en questa tab, fin ch'ella vegn serrada).</p>
 </div>
 
 <script src="/vendor/pdfjs/pdf.min.js"></script>
@@ -330,6 +330,7 @@ async function readPdfs(files,extraErrs){
   }
   const names=Object.keys(sources);
   if(names.length){
+    saveHandoff(sources,others);
     const entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
     setPlan(entries,names.flatMap(n=>others[n]||[]),`${names.join(", ")} \u00b7 chargi\u00e0 ils ${iso(new Date()).split("-").reverse().join("-")}`);
   }
@@ -369,6 +370,12 @@ window.addEventListener("message",e=>{
   }
 });
 if(window.name==="plan") window.name=""; // damit jeder Bookmarklet-Klick ein frisches Fenster oeffnet
+{ // Plan aus Plans da teams (gleicher Tab) uebernehmen
+  const h=loadHandoff();
+  if(h){ Object.assign(sources,h.sources); Object.assign(others,h.others||{});
+    const names=Object.keys(sources), entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
+    setPlan(entries,names.flatMap(n=>others[n]||[]),`${names.join(", ")} \u00b7 gia chargi\u00e0`) }
+}
 // Gegenstelle: bei neuem Fenster window.opener, beim Overlay im SharePoint-Tab das uebergeordnete Fenster
 const hostWin=window.opener||(window.top!==window?window.parent:null);
 if(location.hash==="#sharepoint"){

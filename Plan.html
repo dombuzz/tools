@@ -237,7 +237,7 @@ let sparte="newsdesk";
 document.documentElement.lang="rm";
 const $=id=>document.getElementById(id);
 
-let plan=null, weeks=1; const sources={};
+let plan=null, weeks=1; const sources={}, others={};
 
 async function refreshAliases(){ // beim Start automatisch laden (mit gespeichertem Code, falls der Worker einen verlangt)
   try{await loadAliases(store.get("plan-alias-code")||""); if(plan) setPlan(plan,false); $("aliasbtn").hidden=true}
@@ -278,11 +278,12 @@ async function readPdfs(files,extraErrs){
     try{
       const en=await pdfEntries(f);
       if(!en.length) errs.push(`En «${f.name}» na sa chattan nagins servetschs. È quai l'export da VimBiz «Team Published Shifts by Month»?`);
-      else sources[f.name]=en.map(e=>[e.date,e.svc,e.name]);
+      else {sources[f.name]=en.map(e=>[e.date,e.svc,e.name]); others[f.name]=en.other||[]}
     }catch(e){errs.push(`«${f.name}»: `+(e.message||"Il PDF n'ha betg pudì vegnir legì."))}
   }
   const names=Object.keys(sources);
   if(names.length){
+    saveHandoff(sources,others);
     const entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
     setPlan({label:`${names.join(", ")} · chargià ils ${iso(new Date()).split("-").reverse().join("-")}`,entries},true);
   }
@@ -444,6 +445,12 @@ document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed
 try{localStorage.removeItem("plan")}catch(e){}
 $("status").textContent="Anc nagin plan chargià.";
 render();
+{ // Plan aus Persunal (gleicher Tab) uebernehmen
+  const h=loadHandoff();
+  if(h){ Object.assign(sources,h.sources); Object.assign(others,h.others||{});
+    const names=Object.keys(sources), entries=names.flatMap(n=>sources[n]).sort((a,b)=>a[0].localeCompare(b[0]));
+    setPlan({label:`${names.join(", ")} · gia chargià`,entries},true) }
+}
 $("aliasbtn").addEventListener("click",askAliases); refreshAliases();
 
 // SharePoint-Bookmarklet: PDF via postMessage empfangen
