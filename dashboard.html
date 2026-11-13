@@ -108,6 +108,8 @@
   .labh.other{color:var(--text)}
   .labh{font-size:1.05rem;margin:34px 0 10px;color:var(--lab)}
   .card.lab{border-style:dashed;border-color:rgba(255,154,60,.35)}
+  .card.soc{border-style:dashed;border-color:color-mix(in srgb,var(--accent) 38%,transparent)}.card.soc .bar{background:var(--accent)}.card.soc .name a:hover{color:var(--accent)}.subh.soc{color:var(--accent)}
+  .card.soc.jump,.fold.jump{animation:fxGlow .8s ease-out}
   /* Box «Game · profils»: blau wie /game */
   .card.gbox{border:1px solid #5aa6ff;padding:14px 16px}
   :root[data-theme="light"] .card.gbox{border-color:#1f6fd1}
@@ -142,13 +144,13 @@
   @keyframes fxRow{0%{background:rgba(255,77,100,.16)}100%{background:transparent}}
   @keyframes fxNum{0%{color:var(--accent);transform:scale(1.35)}100%{transform:none}}
   .fx #list,.fx #otherlist{animation:fxGlow .5s ease-out}
-  .fx #lablist{animation:fxGlow .5s ease-out}
+  .fx #lablist,.fx #sociallist{animation:fxGlow .5s ease-out}
   .fx .upd .updbtn{animation:spin .5s ease-in-out}
   .fx #updt{animation:fxTime .5s}
   .fx .row.chg{animation:fxRow .5s ease-out}
   .fx .chg>.c,.fx .c.chg,.fx .cnt.chg{display:inline-block;animation:fxNum .5s ease-out}
   .row.m .c.chg{display:inline-block}
-  @media (prefers-reduced-motion:reduce){.fx *,.fx #list,.fx #otherlist,.fx #lablist{animation:none!important}}
+  @media (prefers-reduced-motion:reduce){.fx *,.fx #list,.fx #otherlist,.fx #lablist,.fx #sociallist{animation:none!important}}
   @keyframes spin{to{transform:rotate(360deg)}}
   .archive{margin-top:64px;padding:22px 18px 20px;background:var(--surface2);border:2px solid var(--accent);border-radius:16px}
   .archive .archh{margin:0 0 2px;font-size:1.25rem;color:var(--accent)}
@@ -351,6 +353,9 @@
   <details class="fold" data-k="other">
     <summary class="labh other">Autras paginas</summary>
     <div class="card" id="otherlist"><div class="msg">Chargel …</div></div>
+    <p class="subh soc" id="socialh">Social <span>📱</span></p>
+    <div class="card soc" id="sociallist"><div class="msg">Chargel …</div></div>
+    <p class="meta" id="socialmeta"></p>
     <p class="subh lab">Lab <span>🧪</span></p>
     <div class="card lab" id="lablist"><div class="msg">Chargel …</div></div>
     <p class="meta" id="labmeta"></p>
@@ -391,6 +396,11 @@
       <summary class="subh">Autras paginas</summary>
       <div class="card" id="aotherlist"></div>
     </details>
+    <details class="fold" data-k="asocial">
+      <summary class="subh soc">Social <span>📱</span></summary>
+      <div class="card soc" id="asociallist"></div>
+      <p class="meta" id="asocialmeta"></p>
+    </details>
     <details class="fold" data-k="alab">
       <summary class="subh lab">Lab <span>🧪</span></summary>
       <div class="card lab" id="alablist"></div>
@@ -409,7 +419,7 @@
   const AUTH = () => ({ headers: { Authorization: 'Bearer ' + (typeof fbPw === 'string' ? fbPw : '') } });
   // Anzeigenamen; Tools ohne Klick erscheinen mit 0
   const NAMES = {
-    'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social-profil': 'Social · Profil', 'social-newsdaldi': 'Social · News dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News', 'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
+    'rtr-picture': 'RTR Picture-downloader', 'visual': 'Magazin / Il di', 'social-profil': 'Social · Profil', 'social-newsdaldi': 'Social · News dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News', 'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail', 'tools-social': 'Tools social', 'maletgs': 'Elavurar maletgs', 'Resizer2000': 'Resizer 2000',
     'Plan': 'Plans da teams', 'persunal': 'Persunal', 'artitgel': "Links d'artitgels", 'artitgel-challenge': 'Artitgel-challenge', 'audio-recorder': 'Audio-Recorder', 'srt2ttml': 'SRT → TTML', 'studio': 'Subtitle Studio',
     'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'avis-votelec': 'Avis sin votaziuns ed elecziuns'
   };
@@ -506,7 +516,7 @@
     if (before) for (const t of new Set([...Object.keys(before), ...Object.keys(after)])) {
       const o = before[t] || { n: 0, h: 0, v: 0 }, n = after[t] || { n: 0, h: 0, v: 0 };
       for (const f of ['n', 'h', 'v']) if (o[f] !== n[f]) {
-        document.querySelectorAll(`#list [data-t="${CSS.escape(t)}"], #otherlist [data-t="${CSS.escape(t)}"], #lablist [data-t="${CSS.escape(t)}"]`).forEach(row => {
+        document.querySelectorAll(`#list [data-t="${CSS.escape(t)}"], #sociallist [data-t="${CSS.escape(t)}"], #otherlist [data-t="${CSS.escape(t)}"], #lablist [data-t="${CSS.escape(t)}"]`).forEach(row => {
           row.classList.add('chg'); const c = row.querySelector(`[data-f="${f}"]`); if (c) c.classList.add('chg');
         });
       }
@@ -517,7 +527,7 @@
   // silent = Refresh im Hintergrund (automatisch oder per ⟳): keine «Chargel …»-Anzeige, bei Fehler bleiben die alten Daten stehen
   async function load(range, silent) {
     const meta = document.getElementById('meta'), upd = document.getElementById('upd');
-    if (!silent) { lastRange = range; ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = ''; }
+    if (!silent) { lastRange = range; ['list', 'otherlist', 'lablist', 'sociallist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>'); meta.textContent = ''; }
     upd.classList.add('busy');
     try {
       const r = await fetch(`${API}/ranking?range=${range}`, AUTH());
@@ -531,10 +541,17 @@
       render(); stamp(); loadHourly(range); loadUsage(); loadArt(); loadGame();
       if (silent) playFx(before, snap(d));
     } catch (e) {
-      if (!silent) ['list', 'otherlist', 'lablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
+      if (!silent) ['list', 'otherlist', 'lablist', 'sociallist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
     } finally { upd.classList.remove('busy'); }
   }
   // Auf-/Zuklappen merken (Standard: zugeklappt)
+  // «Tools social» → springt zur Social-Karte (klappt «Autras paginas» bzw. das Archiv-Fach auf)
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href="#sociallist"], a[href="#asociallist"]'); if (!a) return; e.preventDefault();
+    const card = document.getElementById(a.getAttribute('href').slice(1)), f = card.closest('details'); if (f) f.open = true;
+    card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    card.classList.remove('jump'); void card.offsetWidth; card.classList.add('jump'); setTimeout(() => card.classList.remove('jump'), 900);
+  });
   document.querySelectorAll('details.fold').forEach(el => {
     try { if (localStorage.getItem('dbz-fold-' + el.dataset.k) === '1') el.open = true; } catch (e) {}
     el.addEventListener('toggle', () => { try { localStorage.setItem('dbz-fold-' + el.dataset.k, el.open ? '1' : '0'); } catch (e) {} });
@@ -835,7 +852,7 @@
     cfRange = b.dataset.cf; try { localStorage.setItem('dbz-cf-range', cfRange); } catch (x) {}
     drawUsage();
   });
-  function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta']); }
+  function render() { if (archData) drawChart(archData, archRange); renderInto(lastData, lastRange, ['list', 'otherlist', 'lablist', 'meta', 'labmeta', 'sociallist', 'socialmeta']); if (archData) renderInto(archData, archRange, ['alist', 'aotherlist', 'alablist', 'ameta', 'alabmeta', 'asociallist', 'asocialmeta']); }
   function renderInto(d, range, ids) {
     const meta = document.getElementById(ids[3]);
     {
@@ -843,7 +860,13 @@
       const views = d.views || {};
       const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
       const isLab = t => t.startsWith('lab-');
-      const main = draw(document.getElementById(ids[0]), NAMES, uses, likes, t => !isLab(t) && t !== 'social', t => t.startsWith('social-') ? '/social/' + t.slice(7) : t === 'social' ? '/social/' : '/' + t, views, d.saved || {});
+      // Social-Tools (social-<tool>) haben eine eigene Karte; in der Hauptliste erscheinen sie als eine Zeile «Tools social» (Link zur Karte)
+      const isSoc = t => t.startsWith('social-'), socK = Object.keys(NAMES).filter(isSoc);
+      const sumOf = m => Object.keys(m).filter(isSoc).reduce((a, t) => a + (m[t] || 0), 0);
+      const mUses = { ...uses, 'tools-social': sumOf(uses) }, mLikes = { ...likes, 'tools-social': sumOf(likes) }, mViews = { ...views, 'tools-social': sumOf(views) };
+      const sv = d.saved || {}, mSaved = { ...sv, 'tools-social': sumOf(sv) };
+      const main = draw(document.getElementById(ids[0]), Object.fromEntries(Object.entries(NAMES).filter(([t]) => !isSoc(t))), mUses, mLikes, t => !isLab(t) && !isSoc(t) && t !== 'social', t => t === 'tools-social' ? '#' + ids[5] : t === 'social' ? '/social/' : '/' + t, mViews, mSaved);
+      const soc = draw(document.getElementById(ids[5]), Object.fromEntries(socK.map(t => [t, NAMES[t]])), uses, likes, isSoc, t => '/social/' + t.slice(7), views, sv);
       const lab = draw(document.getElementById(ids[2]), LAB, uses, likes, isLab, t => '/lab/' + t.slice(4), views);
       const hrefs = { index: '/', social: '/social/', game: '/game', 'top-popup': '/', top: '/cifras', 'lab-index': '/lab/', '404': '/404' };
       if (ids[0] === 'list') { // Favurits: ★ gesetzt im Zeitraum, darunter wie viele es aktuell markiert haben
@@ -896,6 +919,7 @@
         <div class="kz-hero"><div><div class="kz-big">${fmt(main.n)}</div><div class="kz-sub">${ic('zap')}${main.n === 1 ? 'giada' : 'giadas'} duvrà</div></div><div class="kz-hrt">♥ ${fmt(main.h)}</div></div>
         <div class="kz-grid">${tiles.join('')}</div></div>`;
       document.getElementById(ids[4]).textContent = `${label} · ${sum(lab)} en il Lab`;
+      document.getElementById(ids[6]).textContent = `${label} · ${sum(soc)} tar ils tools social`;
       const th = d.themes || {}, tl = th.light || 0, td = th.dark || 0, tn = tl + td, bar = document.getElementById('themeBar');
       bar.hidden = !tn;
       if (tn) {
@@ -927,7 +951,7 @@
       const body = document.getElementById('archbody');
       if (!sel.value) { archData = null; body.hidden = true; return; }
       body.hidden = false;
-      ['alist', 'aotherlist', 'alablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>');
+      ['alist', 'aotherlist', 'alablist', 'asociallist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Chargel …</div>');
       try {
         const r = await fetch(`${API}/ranking?range=${sel.value}&daily=1`, AUTH());
         const d = await r.json();
@@ -935,7 +959,7 @@
         archData = d; archRange = sel.value; render();
       } catch (e) {
         archData = null;
-        ['alist', 'aotherlist', 'alablist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
+        ['alist', 'aotherlist', 'alablist', 'asociallist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
       }
     };
   })();
@@ -946,7 +970,7 @@
     const uses = Object.fromEntries((d.uses || []).map(i => [i.tool, i.count]));
     const all = { ...NAMES, ...LAB, ...OTHER };
     const tools = [...new Set([...Object.keys(all), ...Object.keys(uses), ...Object.keys(likes), ...Object.keys(views)])];
-    const area = t => t in OTHER ? 'Autras paginas' : t.startsWith('lab-') ? 'Lab' : 'Tools';
+    const area = t => t in OTHER ? 'Autras paginas' : t.startsWith('lab-') ? 'Lab' : t.startsWith('social-') ? 'Social' : 'Tools';
     const q = v => '"' + String(v).replace(/"/g, '""') + '"';
     const rowsT = tools.map(t => ({ a: area(t), t, name: all[t] || t, n: uses[t] || 0, h: likes[t] || 0, v: views[t] || 0 }))
       .filter(r => r.n || r.h || r.v).sort((x, y) => x.a.localeCompare(y.a) || y.n - x.n || y.h - x.h || y.v - x.v);
