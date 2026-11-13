@@ -695,15 +695,15 @@ async function handle(request, env, ctx) {
         const views = Object.fromEntries(merge(viewRows).map(r => [r.tool, r.count]));
         const viewsTotal = merge(viewRows).reduce((t, r) => t + r.count, 0);
         const { results: themeRows } = await env.DB
-          .prepare('SELECT theme, COUNT(*) AS count FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY theme')
+          .prepare('SELECT theme, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY theme')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
-        const themes = { light: 0, dark: 0, unknown: 0 };
-        for (const r of themeRows) themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count;
+        const themes = { light: 0, dark: 0, unknown: 0, lightUsers: 0, darkUsers: 0 };
+        for (const r of themeRows) { themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count; if (r.theme === 'light') themes.lightUsers = r.users; else if (r.theme === 'dark') themes.darkUsers = r.users; } // Besucher je Variante (ein Besucher kann in beiden vorkommen)
         const { results: toneRows } = await env.DB
           .prepare('SELECT tone, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tone')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
-        const tones = { soft: 0, normal: 0, unknown: 0, softUsers: 0 };
-        for (const r of toneRows) { if (r.tone === 'soft') { tones.soft += r.count; tones.softUsers += r.users; } else tones[r.tone === 'normal' ? 'normal' : 'unknown'] += r.count; }
+        const tones = { soft: 0, normal: 0, unknown: 0, softUsers: 0, normalUsers: 0 };
+        for (const r of toneRows) { if (r.tone === 'soft') { tones.soft += r.count; tones.softUsers += r.users; } else if (r.tone === 'normal') { tones.normal += r.count; tones.normalUsers += r.users; } else tones.unknown += r.count; }
         const { results: clientRows } = await env.DB
           .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
           .bind(p?.from ?? '0', p?.to ?? '9999').all();
