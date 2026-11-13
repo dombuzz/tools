@@ -119,7 +119,7 @@
   window.addEventListener('dbz-theme', function () { dbzGrad(); });
 
   // ---- Farbstärke: Variablen der Seite lesen, Sättigung halbieren, als Überschreibung an <html> setzen ----
-  var TV = ['--accent', '--acc', '--accent-dark', '--acc2', '--link', '--lab', '--ok', '--warn', '--err', '--bad'], tprobe;
+  var TV = ['--hi', '--accent', '--acc', '--accent-dark', '--acc2', '--link', '--lab', '--ok', '--warn', '--err', '--bad'], tprobe;
   function parseCol(c) {
     var m = /rgba?\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/.exec(c); if (m) return [+m[1], +m[2], +m[3]];
     m = /color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/.exec(c); return m ? [m[1] * 255, m[2] * 255, m[3] * 255] : null;
