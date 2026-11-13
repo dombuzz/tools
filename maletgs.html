@@ -290,8 +290,14 @@
     #layWork > div:first-child, #collage .work > div:first-child{ position:sticky; top:12px; }
   }
   @media (max-width:860px){
-    #layWork, #collage .work{ display:block; }
-    #layWork > div:first-child{ position:sticky; top:0; z-index:20; background:var(--card); padding:0 0 8px; box-shadow:0 8px 8px -8px rgba(0,0,0,.4); }
+    #collage .work{ display:block; }
+    /* Mobil: Bild bleibt oben, darunter Buttons, dann die Regler, der Hilfetext ganz unten */
+    #layWork{ display:flex; flex-direction:column; }
+    #layWork > div:first-child{ display:contents; }
+    #stageWrap{ position:sticky; top:0; z-index:20; background:var(--card); padding:0 0 8px; box-shadow:0 8px 8px -8px rgba(0,0,0,.4); }
+    #layActions{ order:1; margin-top:8px; }
+    #layWork .side{ order:2; }
+    #layHint{ order:3; }
     #layWork .stage{ padding:12px 6%; }
     #layWork .frame{ max-width:min(100%, calc(30vh * var(--ar, 1.7778))); }
     #collage .work > div:first-child{ display:contents; }
@@ -378,6 +384,7 @@
 
     <div class="work" id="layWork">
       <div>
+        <div id="stageWrap">
         <div class="stage" id="stage" tabindex="0" aria-label="Surfatscha da lavur">
           <div class="beforetag">Avant</div>
           <div class="frame" id="frame">
@@ -396,6 +403,13 @@
             </div>
           </div>
         </div>
+        </div>
+        <div class="actions" id="layActions">
+        <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
+        <button type="button" class="ghost" id="fitBtn" disabled>Reposiziunar</button>
+        <span class="msg" id="msg"></span>
+      </div>
+        <p class="hint" id="layHint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. Cun ils simbols →|← e ↓—↑ centreschas ti il layer orizontalmain u verticalmain. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «BG blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Blur» mussa mo la versiun blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Cliccar sin il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
       </div>
 
       <div class="side" id="laySide">
@@ -474,14 +488,6 @@
           <button type="button" class="ghost add" id="addBtn">+ Agiuntar in layer</button>
         </div>
       </div>
-    </div>
-
-    <p class="hint" id="layHint">Tscherna in layer en la glista, lura al pos ti spustar, scalar vi dals chantuns u zoomar (rodella dal mieur, dus dets). Cun 🔒 bloccas ti in layer. Cun ils simbols →|← e ↓—↑ centreschas ti il layer orizontalmain u verticalmain. «Emplenir» cuvra adina l'entira surfatscha, «Liber» lascha plazzar e scalar libramain, p.ex. per logos. «BG blur» emplenescha la surfatscha davostiers il layer cun ina versiun blur dal medem maletg – il maletg sez vegn mussà entir, p.ex. per fotos en format autezza. «Blur» mussa mo la versiun blur, senza il maletg davant. Rotar, drizzar e las colurs valan adina per il layer tschernì. Cliccar sin il num d'in regulatur al metta enavos sin 0, ↺ metta enavos l'entira gruppa. Quai che surpassa vegn taglià giu tar l'export.</p>
-
-    <div class="actions" id="layActions">
-      <button type="button" id="dlBtn" disabled>Telechargiar il maletg</button>
-      <button type="button" class="ghost" id="fitBtn" disabled>Reposiziunar</button>
-      <span class="msg" id="msg"></span>
     </div>
 
     <section id="collage" hidden>
