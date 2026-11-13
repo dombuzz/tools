@@ -634,7 +634,7 @@
       const get = async q => { const r = await fetch(`${API}/hourly?range=${q}`, AUTH()); if (!r.ok) throw new Error(r.status); return r.json(); };
       const [all, hr] = await Promise.all([get('all'), range === 'all' ? null : get(range)]);
       hourAll = all; hourRange = hr || all; hourRangeKey = range;
-      drawHourly();
+      drawHourly(); if (lastData && lastRange === range) render();
     } catch (e) {
       ['spark', 'heat'].forEach(id => { const el = document.getElementById(id); if (!hourRange) el.innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas.</div>'; });
     }
@@ -895,6 +895,7 @@
         eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
         plus: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
         known: '<path d="M20 6L9 17l-5-5"/>',
+        peak: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
         clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
         bars: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'
       };
@@ -917,6 +918,16 @@
       tiles.push(tile('eye', fmt(d.viewsTotal || 0), 'visitas'));
       if (main.s) tiles.push(tile('clock', dur(main.s), 'temp spargnà', 'Stimaziun: giadas duvrà × minutas spargnadas per giada. Mo per tools cun ina valur definida.'));
       if (d.usingClients) tiles.push(tile('bars', String(d.usesPerClient).replace('.', ','), 'Ø per visitader activ', 'Ø giadas duvrà per visitader che ha duvrà almain in tool.'));
+      // Stärkste Stunde (oz) bzw. stärkster Wochentag (übrige Zeiträume), aus den Stundenzahlen bzw. (Archiv) den Tageszahlen
+      {
+        const items = ids[3] === 'meta' ? (hourAll && hourRange && hourRangeKey === range ? hourRange.uses.map(x => ({ d: hourDate(x.h), n: x.n })) : [])
+          : (d.daily || []).map(r => ({ d: new Date(r.day + 'T12:00'), n: r.uses || 0 }));
+        const hourly = ids[3] === 'meta' && range === 'today', slots = Array(hourly ? 24 : 7).fill(0);
+        items.forEach(x => { slots[hourly ? x.d.getHours() : (x.d.getDay() + 6) % 7] += x.n; });
+        const mx = Math.max(0, ...slots);
+        if (mx) { const i = slots.indexOf(mx), nm = DAYS_L[i] || '';
+          tiles.push(tile('peak', hourly ? `${pad2(i)}–${pad2((i + 1) % 24)} h` : nm.charAt(0).toUpperCase() + nm.slice(1), `${hourly ? 'pli activa ura' : 'pli activ di'} · ${fmt(mx)}`, hourly ? 'Ura cun las pli blertas giadas duvrà oz.' : 'Di da l’emna cun las pli blertas giadas duvrà en l’entir temp tscherni.')); }
+      }
       let visTile = '';
       // Visualisaziun: Hell/Dunkel und Farbstärke – Anteil der Aufrufe (Balken) und Zahl der Visitaders je Variante
       {
