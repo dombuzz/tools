@@ -664,15 +664,33 @@ async function handle(request, env, ctx) {
         const rq = url.searchParams.get('range') || '';
         const range = ['all', 'today', 'week', '30d', 'month', 'lastmonth'].includes(rq) || /^\d{4}-(0[1-9]|1[0-2])$/.test(rq) ? rq : 'all';
         const p = period(range);
-        const { results: resultsRaw } = p
-          ? await env.DB.prepare('SELECT tool, COUNT(*) AS count FROM clicks WHERE ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC')
-              .bind(p.from, p.to ?? '9999').all()
-          : await env.DB.prepare('SELECT tool, count FROM likes ORDER BY count DESC').all();
+        const F = p?.from ?? '0', T = p?.to ?? '9999', pr = q => env.DB.prepare(q);
+        // alle Abfragen in einem einzigen Aufruf an die Datenbank (statt nacheinander): deutlich schnellere Antwort
+        const [resultsRaw, usesRaw, viewRows, themeRows, toneRows, clientRows, retRows, nwRows, ucRows, favRows, favNowRows, fcRows, fpRows] = (await env.DB.batch([
+          p ? pr('SELECT tool, COUNT(*) AS count FROM clicks WHERE ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC').bind(p.from, p.to ?? '9999')
+            : pr('SELECT tool, count FROM likes ORDER BY count DESC'),
+          pr('SELECT tool, COUNT(*) AS count FROM uses WHERE ' + EX('uses') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC').bind(F, T),
+          pr('SELECT tool, COUNT(*) AS count FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool').bind(F, T),
+          pr('SELECT theme, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY theme').bind(F, T),
+          pr('SELECT tone, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tone').bind(F, T),
+          pr('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2').bind(F, T),
+          // wiederkehrend = Besucher, die im Zeitraum an mindestens zwei verschiedenen Tagen (UTC) da waren
+          pr('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)').bind(F, T),
+          // nur für «quest'emna»: wie viele Besucher dieser Woche zum ersten Mal da waren (Dashboard-Kacheln)
+          range === 'week'
+            ? pr('SELECT SUM(CASE WHEN first >= ?1 THEN 1 ELSE 0 END) AS n FROM (SELECT cid, MIN(ts) AS first, MAX(ts) AS last FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL GROUP BY cid) WHERE last >= ?1').bind(p.from)
+            : pr('SELECT 0 AS n'),
+          // Nutzungen pro Besucher: Durchschnitt unter den Besuchern, die mindestens eine Nutzung ausgelöst haben (nur Nutzungen mit Kennung)
+          pr('SELECT COUNT(*) AS n, COUNT(DISTINCT cid) AS c FROM uses WHERE ' + NO_STATS_SQL + ' AND ' + EX('uses') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2').bind(F, T),
+          // Favurits: wie oft ☆ im Zeitraum gesetzt wurde (favs) und wie viele aktuell markiert sind (favsNow = gesetzt − entfernt, gesamthaft)
+          pr('SELECT tool, SUM(added) AS adds FROM favs WHERE COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool').bind(F, T),
+          pr('SELECT tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS n FROM favs WHERE ' + EX('favs') + ' GROUP BY tool'),
+          // Geräte mit Favoriten: aktuell (mindestens ein ★ gesetzt) und im Zeitraum (mindestens ein ★ gesetzt)
+          pr('SELECT COUNT(DISTINCT cid) AS n FROM (SELECT cid, tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS k FROM favs WHERE cid IS NOT NULL AND ' + EX('favs') + ' GROUP BY cid, tool HAVING k > 0)'),
+          pr('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(F, T),
+        ])).map(x => x.results);
         const results = merge(resultsRaw).sort((a, b) => b.count - a.count);
         const total = results.reduce((t, r) => t + r.count, 0);
-        const { results: usesRaw } = await env.DB
-          .prepare('SELECT tool, COUNT(*) AS count FROM uses WHERE ' + EX('uses') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const heart = Object.fromEntries(results.map(r => [r.tool, r.count]));
         const useMap = Object.fromEntries(merge(usesRaw).map(r => [r.tool, r.count]));
         // optional: scope=main (ohne Lab) oder scope=lab (nur Lab)
@@ -688,54 +706,21 @@ async function handle(request, env, ctx) {
         const saved = {};
         for (const r of usesRaw) { const m = savedMin(r.tool) * r.count, t = grp(r.tool); if (m && inScope(t)) saved[t] = Math.round(((saved[t] || 0) + m) * 10) / 10; }
         const savedTotal = Math.round(Object.values(saved).reduce((t, n) => t + n, 0) * 10) / 10;
-        await ensureViews(env);
-        const { results: viewRows } = await env.DB
-          .prepare('SELECT tool, COUNT(*) AS count FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const views = Object.fromEntries(merge(viewRows).map(r => [r.tool, r.count]));
         const viewsTotal = merge(viewRows).reduce((t, r) => t + r.count, 0);
-        const { results: themeRows } = await env.DB
-          .prepare('SELECT theme, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY theme')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const themes = { light: 0, dark: 0, unknown: 0, lightUsers: 0, darkUsers: 0 };
         for (const r of themeRows) { themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count; if (r.theme === 'light') themes.lightUsers = r.users; else if (r.theme === 'dark') themes.darkUsers = r.users; } // Besucher je Variante (ein Besucher kann in beiden vorkommen)
-        const { results: toneRows } = await env.DB
-          .prepare('SELECT tone, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tone')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const tones = { soft: 0, normal: 0, unknown: 0, softUsers: 0, normalUsers: 0 };
         for (const r of toneRows) { if (r.tone === 'soft') { tones.soft += r.count; tones.softUsers += r.users; } else if (r.tone === 'normal') { tones.normal += r.count; tones.normalUsers += r.users; } else tones.unknown += r.count; }
-        const { results: clientRows } = await env.DB
-          .prepare('SELECT COUNT(DISTINCT cid) AS n FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const clients = clientRows[0]?.n || 0;
-        // wiederkehrend = Besucher, die im Zeitraum an mindestens zwei verschiedenen Tagen (UTC) da waren
-        const { results: retRows } = await env.DB
-          .prepare('SELECT COUNT(*) AS n FROM (SELECT cid FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2 GROUP BY cid HAVING COUNT(DISTINCT substr(ts, 1, 10)) > 1)')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
         const returning = retRows[0]?.n || 0;
-        // nur für «quest'emna»: wie viele Besucher dieser Woche zum ersten Mal da waren (Dashboard-Kacheln)
-        let newClients = null;
-        if (range === 'week') {
-          const { results: [nw] } = await env.DB.prepare('SELECT SUM(CASE WHEN first >= ?1 THEN 1 ELSE 0 END) AS n FROM (SELECT cid, MIN(ts) AS first, MAX(ts) AS last FROM views WHERE ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND cid IS NOT NULL GROUP BY cid) WHERE last >= ?1').bind(p.from).all();
-          newClients = nw?.n || 0;
-        }
-        // Nutzungen pro Besucher: Durchschnitt unter den Besuchern, die mindestens eine Nutzung ausgelöst haben (nur Nutzungen mit Kennung)
-        const { results: ucRows } = await env.DB
-          .prepare('SELECT COUNT(*) AS n, COUNT(DISTINCT cid) AS c FROM uses WHERE ' + NO_STATS_SQL + ' AND ' + EX('uses') + ' AND cid IS NOT NULL AND ts >= ?1 AND ts < ?2')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
+        const newClients = range === 'week' ? (nwRows[0]?.n || 0) : null;
         const usingClients = ucRows[0]?.c || 0;
         const usesPerClient = usingClients ? Math.round((ucRows[0].n / usingClients) * 10) / 10 : 0;
-        // Favurits: wie oft ☆ im Zeitraum gesetzt wurde (favs) und wie viele aktuell markiert sind (favsNow = gesetzt − entfernt, gesamthaft)
-        const { results: favRows } = await env.DB
-          .prepare('SELECT tool, SUM(added) AS adds FROM favs WHERE COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool')
-          .bind(p?.from ?? '0', p?.to ?? '9999').all();
-        const { results: favNowRows } = await env.DB.prepare('SELECT tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS n FROM favs WHERE ' + EX('favs') + ' GROUP BY tool').all();
         const favs = Object.fromEntries(favRows.filter(r => r.adds).map(r => [r.tool, r.adds]));
-        // Geräte mit Favoriten: aktuell (mindestens ein ★ gesetzt) und im Zeitraum (mindestens ein ★ gesetzt)
-        const { results: [fc] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM (SELECT cid, tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS k FROM favs WHERE cid IS NOT NULL AND ' + EX('favs') + ' GROUP BY cid, tool HAVING k > 0)').all();
-        const { results: [fp] } = await env.DB.prepare('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(p?.from ?? '0', p?.to ?? '9999').all();
         const favsNow = Object.fromEntries(favNowRows.map(r => [r.tool, Math.max(0, r.n)]));
         const favsTotal = Object.values(favs).reduce((t, n) => t + n, 0);
+        const fc = fcRows[0], fp = fpRows[0];
         const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, saved, savedTotal, views, viewsTotal, themes, tones, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {

@@ -536,11 +536,12 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const d = await r.json();
       // «oz»: regulare Visitaders ergeben nur über mehrere Tage Sinn – dafür die Zahl der Woche holen
-      if (range === 'today') { try { const w = await fetch(`${API}/ranking?range=week`, AUTH()); if (w.ok) d.weekReturning = (await w.json()).returning || 0; } catch (e) {} }
       if (silent && range !== lastRange) return; // Tab wurde inzwischen gewechselt
       const before = silent && lastData ? snap(lastData) : null;
       lastData = d; lastRange = range;
       render(); stamp(); loadHourly(range); loadUsage(); loadArt(); loadGame();
+      // «oz»: die Wochenzahl kommt parallel nach (blockiert die Anzeige nicht mehr)
+      if (range === 'today') fetch(`${API}/ranking?range=week`, AUTH()).then(w => w.ok ? w.json() : null).then(w => { if (w && lastData === d && lastRange === range) { d.weekReturning = w.returning || 0; render(); } }).catch(() => {});
       if (silent) playFx(before, snap(d));
     } catch (e) {
       if (!silent) ['list', 'otherlist', 'lablist', 'sociallist'].forEach(id => document.getElementById(id).innerHTML = '<div class="msg">Las datas n\'han betg pudì vegnir chargiadas. Emprova pli tard.</div>');
