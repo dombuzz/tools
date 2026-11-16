@@ -1846,11 +1846,12 @@ list.addEventListener('click', e => {
   const b = e.target.closest('button[data-a]');
   if (b) { select(c); if (b.dataset.a === 'split') split(c, el.querySelector('textarea').selectionStart); else act(b.dataset.a, c); b.blur(); return; }
   if (e.target.closest('.c-n') && hasMedia()) { media.currentTime = c.start / 1000; select(c); tick(); return; }
+  if (c !== sel && hasMedia()) { media.currentTime = c.start / 1000; tick(); }
   select(c);
 });
 list.addEventListener('focusin', e => {
   const el = e.target.closest('.cue'); if (!el) return;
-  const c = byId(el.dataset.id); if (c && c !== sel) select(c);
+  const c = byId(el.dataset.id); if (c && c !== sel) { select(c); if (hasMedia()) { media.currentTime = c.start / 1000; tick(); } } // nov bloc activà: video sglischa a l'entschatta
   if (e.target.matches('textarea')) snap();
 });
 list.addEventListener('input', e => {
@@ -1882,7 +1883,7 @@ list.addEventListener('keydown', e => {
     const c = byId(ta.closest('.cue').dataset.id), i = cues.indexOf(c), n = cues[i + (up ? -1 : 1)];
     e.preventDefault(); if (!n) return;
     const t2 = rows.get(n.id)?.querySelector('textarea'); if (!t2) return;
-    select(n, true); t2.focus({ preventScroll: true });
+    select(n, true); if (hasMedia()) { media.currentTime = n.start / 1000; tick(); } t2.focus({ preventScroll: true });
     const pos = up ? t2.value.length : 0; t2.setSelectionRange(pos, pos);
     rows.get(n.id).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
