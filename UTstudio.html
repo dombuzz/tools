@@ -1868,6 +1868,24 @@ list.addEventListener('change', e => {
 });
 list.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.matches('input[data-f]')) { e.preventDefault(); e.target.blur(); }
+  else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey && e.target.matches('textarea')) {
+    const ta = e.target; if (ta.selectionStart !== ta.selectionEnd) return;
+    const up = e.key === 'ArrowUp', cs = getComputedStyle(ta), m = document.createElement('div');
+    for (const k of ['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'lineHeight', 'paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth', 'boxSizing', 'whiteSpace', 'overflowWrap', 'wordBreak', 'tabSize']) m.style[k] = cs[k];
+    m.style.cssText += ';position:absolute;visibility:hidden;top:0;left:-9999px;white-space:pre-wrap;overflow-wrap:break-word;width:' + ta.clientWidth + 'px;padding-top:0;padding-bottom:0;box-sizing:border-box';
+    m.style.width = ta.clientWidth + 'px'; m.style.paddingLeft = cs.paddingLeft; m.style.paddingRight = cs.paddingRight;
+    document.body.appendChild(m);
+    m.textContent = ta.value.slice(0, ta.selectionStart) + '\u200b'; const h = m.offsetHeight;
+    m.textContent = ta.value + '\u200b'; const H = m.offsetHeight; m.remove();
+    const lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.4;
+    if (up ? h > lh * 1.5 : H - h > lh * 0.5) return; // nit sin l'emprima/davosa lingia visibla: cursor sa mova normalmain
+    const c = byId(ta.closest('.cue').dataset.id), i = cues.indexOf(c), n = cues[i + (up ? -1 : 1)];
+    e.preventDefault(); if (!n) return;
+    const t2 = rows.get(n.id)?.querySelector('textarea'); if (!t2) return;
+    select(n, true); t2.focus({ preventScroll: true });
+    const pos = up ? t2.value.length : 0; t2.setSelectionRange(pos, pos);
+    rows.get(n.id).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
   else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && e.target.matches('textarea')) { e.preventDefault(); split(byId(e.target.closest('.cue').dataset.id), e.target.selectionStart); }
 });
 strip.addEventListener('click', e => {
