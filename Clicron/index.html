@@ -294,6 +294,15 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi video{max-height:30vh}
 #tab-vi .cues{max-height:60vh}}
 .tabs{display:none!important}
+#tab-vi .foldb{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;cursor:pointer;font:inherit;font-weight:inherit;color:inherit;border-radius:6px}
+#tab-vi .foldb:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#tab-vi .foldb .chev{margin-left:auto;color:var(--muted);transition:transform .2s}
+#tab-vi .foldb:hover .chev{color:var(--accent)}
+#tab-vi .foldsum{display:none;font-weight:400;color:var(--muted);font-size:.85rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tab-vi .fold.shut .foldsum{display:block}
+#tab-vi .fold.shut .chev{transform:rotate(-90deg)}
+#tab-vi .fold.shut > :not(h2):not(#vi-msg){display:none!important}
+#tab-vi .fold.shut #vi-msg:empty{display:none}
 #tab-vi .ghtok{display:grid;gap:6px;margin-top:12px}
 #tab-vi .ghtok label{font-size:.85rem;color:var(--muted)}
 #tab-vi .ghtok input{flex:1;min-width:0;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit}
@@ -499,8 +508,8 @@ p.sub{margin:0;color:var(--muted)}
   <section class="pane" id="tab-vi" role="tabpanel" hidden>
 <div class="intro"><p class="sub">Chargiar video u audio ed ils suttitels, controllar ils blocs sin il filmat e meglierar il timing da singuls blocs.</p></div>
 
-  <section class="card">
-    <h2><span class="num">1</span> Video u audio e suttitels</h2>
+  <section class="card fold" id="vi-box1">
+    <h2><button type="button" class="foldb" id="vi-fold" aria-expanded="true" aria-controls="vi-box1"><span class="num">1</span> Video u audio e suttitels<span class="foldsum" id="vi-foldsum"></span><span class="chev" aria-hidden="true">▾</span></button></h2>
     <div class="drops">
       <div class="drop" id="vi-dropM" tabindex="0" role="button" aria-label="Tscherner video u audio"><b id="vi-mName">Video u audio</b><small id="vi-mInfo">Trair qua «CLIC ICF v20261111_ low per UT.mp4» u cliccar</small><input id="vi-fileM" type="file" accept="video/*,audio/*,.mkv,.mov,.m4a,.mp3,.wav" hidden></div>
       <div class="drop" id="vi-dropS" tabindex="0" role="button" aria-label="Tscherner in file da suttitels"><b id="vi-sName">Suttitels</b><small id="vi-sInfo">SRT, TTML, VTT … · trair qua u cliccar</small><input id="vi-fileS" type="file" accept=".srt,.ttml,.xml,.vtt,.sbv,.ass,.ssa,.txt" hidden></div>
@@ -1982,6 +1991,13 @@ document.addEventListener('keydown', onKey);
   // ---- In GitHub speichern (überschreibt Clicron/ICF-Film_DE_Untertitel_SRG.srt) ----
   const b64 = str => { const u = new TextEncoder().encode(str); let b = ''; for (let i = 0; i < u.length; i += 0x8000) b += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(b); };
   const ghInfo = (t, err) => { $('dlinfo').textContent = t; $('dlinfo').style.color = err ? 'var(--err)' : ''; };
+  // ---- Box 1 zuklappbar (Zustand bleibt gespeichert) ----
+  const box = $('box1'), fb = $('fold');
+  const sum = () => { $('foldsum').textContent = '· ' + [$('mName').textContent, $('sName').textContent].join(' · '); };
+  const setFold = shut => { box.classList.toggle('shut', shut); fb.setAttribute('aria-expanded', String(!shut)); if (shut) sum(); try { localStorage.setItem('clicron-box1', shut ? '1' : '0'); } catch (e) {} };
+  fb.onclick = () => setFold(!box.classList.contains('shut'));
+  try { if (localStorage.getItem('clicron-box1') === '1') setFold(true); } catch (e) {}
+  setInterval(() => { if (box.classList.contains('shut')) sum(); }, 2000);
   // ---- Undas da tun: einmal aus der lokalen Datei berechnen, dann speichern (Browser + GitHub) ----
   const PFN = 'ICF-peaks.bin', PKEY = 'clicron-icf-peaks';
   let peaksUp = false;   // true = berechnete Undas noch nicht in GitHub
