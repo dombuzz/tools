@@ -1824,12 +1824,15 @@ function directUrl(u) {
   if (/(^|\.)dropbox\.com$/.test(x.hostname)) { x.searchParams.delete('dl'); x.searchParams.set('raw', '1'); }
   const g = /drive\.google\.com$/.test(x.hostname) && (x.pathname.match(/\/file\/d\/([^/]+)/) || [])[1];
   if (g) return 'https://drive.google.com/uc?export=download&id=' + g;
+  // SharePoint/OneDrive-Freigabelink (:v:, :u: …) -> Datei statt Player-Seite
+  if (/sharepoint\.com$|1drv\.ms$|onedrive\.live\.com$/.test(x.hostname) && !x.searchParams.has('download')) x.searchParams.set('download', '1');
   return x.href;
 }
 function loadMediaUrl(raw) {
   const u = directUrl(raw);
   if (!u) return msg('Quai n’è nagina URL valida (https://…).', true);
-  if (/(youtube\.com|youtu\.be|vimeo\.com|srf\.ch\/play|rtr\.ch\/play)/i.test(u)) return msg('Quella URL è ina pagina da video, betg il file sez. Duvra in link direct ad in file (.mp4, .mp3 …).', true);
+  if (/rtr\.ch\/(audio|video|play)/i.test(u)) return msg('Quai è ina pagina da RTR, betg il file. Sin la pagina: «Telechargiar» u clic dretg sin il player → copiar l’adressa dal file (download-media.srf.ch/…mp3) ed encollar qua.', true);
+  if (/(youtube\.com|youtu\.be|vimeo\.com|srf\.ch\/play)/i.test(u)) return msg('Quella URL è ina pagina da video, betg il file sez. Duvra in link direct ad in file (.mp4, .mp3 …).', true);
   if (mediaUrl) URL.revokeObjectURL(mediaUrl); mediaUrl = null;
   media.pause(); stopAt = 0;
   media.src = u;
