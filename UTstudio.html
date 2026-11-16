@@ -1498,10 +1498,11 @@ function act(a, c) {
 function split(c, pos) {
   const text = rows.get(c.id).querySelector('textarea').value;
   const before = text.slice(0, pos).replace(/\s+$/, ''), after = text.slice(pos).replace(/^\s+/, '');
-  if (!before || !after) return msg('Metta il cursor en il text, avant il toc che duai daventar in nov bloc.', true);
+  if (!before) return msg('Metta il cursor en il text, suenter il toc che resta en il bloc current.', true); // suenter il cursor po er star nagut: nov bloc vid
   msg(''); snap();
   const t = nowMs(); let at;
   if (hasMedia() && t > c.start + MINMS && t < c.end - MINMS) at = t; // Position dal video
+  else if (!after) at = Math.round((c.start + c.end) / 2); // nagin text suenter il cursor: nov bloc vid, mesa-mesa
   else at = Math.round(c.start + (c.end - c.start) * before.length / (before.length + after.length)); // sinaquai: tenor la dimensiun dal text
   at = Math.min(Math.max(at, c.start + MINMS), Math.max(c.start + MINMS, c.end - MINMS));
   const n = { id: ++uid, start: at, end: Math.max(c.end, at + MINMS), lines: after.split('\n') };
