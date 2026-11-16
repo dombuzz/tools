@@ -551,7 +551,7 @@ p.sub{margin:0;color:var(--muted)}
           <button class="btn" id="vi-fixsp" type="button" title="Spazis dubels e spazis a l'ur stizzar">Stizzar spazis dubels</button>
           <button class="btn" id="vi-all" type="button">☑ Marcar tut</button>
         </div>
-        <div class="tools mbar" id="vi-mbar" hidden><b id="vi-mcount"></b><button class="btn" data-m="-" type="button">◀ spustar</button><button class="btn" data-m="+" type="button">spustar ▶</button><button class="btn" data-m="del" type="button">🗑 Stizzar</button><button class="btn" data-m="none" type="button">Deselectar</button></div>
+        <div class="tools mbar" id="vi-mbar" hidden><b id="vi-mcount"></b><button class="btn" data-m="-" type="button">◀ spustar</button><button class="btn" data-m="+" type="button">spustar ▶</button><button class="btn" data-m="del" type="button">✕ Stizzar</button><button class="btn" data-m="none" type="button">Deselectar</button></div>
         <details class="find"><summary>Chattar e remplazzar</summary>
           <div class="row"><label>Chattar <input id="vi-q" autocomplete="off"></label><label>Remplazzar cun <input id="vi-r" autocomplete="off"></label><label class="chk"><input type="checkbox" id="vi-case"> Majuscul/minuscul</label></div>
           <div class="row"><button class="btn" id="vi-fnext" type="button">Chattar</button><button class="btn" id="vi-frep" type="button">Remplazzar</button><button class="btn" id="vi-fall" type="button">Remplazzar tut</button><span class="note" id="vi-fcount"></span></div>
@@ -1400,7 +1400,7 @@ function check(c, i) {
 }
 
 // ---- Liste ----
-const ROW = `<div class="c-top"><input type="checkbox" class="mk" aria-label="Marcar quest bloc" title="Marcar (Shift = champ)"><b class="c-n" title="Sautar a quest bloc"></b><span class="c-meta"></span><button class="ib" data-a="reset" type="button" title="Turnar a l'original">↺</button><button class="ib" data-a="del" type="button" title="Stizzar il bloc">🗑</button></div>
+const ROW = `<div class="c-top"><input type="checkbox" class="mk" aria-label="Marcar quest bloc" title="Marcar (Shift = champ)"><b class="c-n" title="Sautar a quest bloc"></b><span class="c-meta"></span><button class="ib" data-a="reset" type="button" title="Turnar a l'original">↺</button><button class="ib" data-a="del" type="button" title="Stizzar il bloc" aria-label="Stizzar il bloc">✕</button></div>
 <div class="c-times">
 <div class="tf"><span>Start</span><button class="ib" data-a="s-" type="button">−</button><input data-f="start" inputmode="decimal" aria-label="Start"><button class="ib" data-a="s+" type="button">+</button><button class="ib" data-a="s-now" type="button" title="Start = posiziun dal video (I)">⇤ ussa</button></div>
 <div class="tf"><span>Fin</span><button class="ib" data-a="e-" type="button">−</button><input data-f="end" inputmode="decimal" aria-label="Fin"><button class="ib" data-a="e+" type="button">+</button><button class="ib" data-a="e-now" type="button" title="Fin = posiziun dal video (O)">ussa ⇥</button></div>
