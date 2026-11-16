@@ -1,27 +1,28 @@
-1
+﻿1
 00:00:00,260 --> 00:00:07,260
-Dank Jesus bin ich frei.
+Because of Jesus I am free.
 
 2
-00:00:08,683 --> 00:00:15,683
-Ich bin frei. Ich bin frei.
+00:00:08,683 --> 00:00:14,716
+I am free. I am free.
 
 3
-00:00:17,870 --> 00:00:22,698
+00:00:15,470 --> 00:00:22,698
 Gott ist Liebe.
 Er hat alles aus Liebe geschaffen.
 
 4
-00:00:22,698 --> 00:00:28,169
-Doch plötzlich wurde der Mensch
-von dieser Liebe getrennt.
+00:00:22,698 --> 00:00:30,183
+Doch plötzlich trennte sich
+der Mensch von dieser Liebe.
 
 5
-00:00:28,169 --> 00:00:31,790
-Dafür ist Jesus am Kreuz gestorben.
+00:00:30,224 --> 00:00:32,629
+Das ist Jesus der
+am Kreuz gestorben ist.
 
 6
-00:00:32,720 --> 00:00:39,361
+00:00:32,684 --> 00:00:37,088
 Die Frage ist: Glaubst du das?
 
 7
