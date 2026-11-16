@@ -1933,6 +1933,9 @@ function onKey(e) {
   else if (sel && (k === 'i' || k === 'o' || k === 'm')) { e.preventDefault(); act(k === 'i' ? 's-now' : k === 'o' ? 'e-now' : 'b-now', sel); }
 }
 document.addEventListener('keydown', onKey);
+// Hat das Video den Fokus, würde der Browser zusätzlich selber springen (±5 s) – das unterbinden wir
+const mediaKeys = e => { if (e.target === media && /^(Arrow(Left|Right|Up|Down)| )$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); e.stopPropagation(); onKey(e); } };
+document.addEventListener('keydown', mediaKeys, true);
 
 
 // ---- Video en in'atgna fanestra (Document Picture-in-Picture, sonst Popup) ----
@@ -1964,7 +1967,7 @@ async function pipOpen() {
   const pl = $('player'); pl.parentNode.insertBefore(pipHome, pl); wrap.appendChild(pl);
   $('pip').textContent = '↙ Turnar enavos'; $('pip').title = 'Video puspè en la fanestra principala';
   $('pipnote').hidden = false;
-  d.addEventListener('keydown', onKey);
+  d.addEventListener('keydown', onKey); d.addEventListener('keydown', mediaKeys, true);
   win.addEventListener('pagehide', pipBack, { once: true });
   media.currentTime = t; if (wasPlaying) media.play().catch(() => {});
   refreshLayout(); 
