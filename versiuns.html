@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Tge che dombuzz Tools san – e cur che mintga funcziun è vegnida tar.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Versiuns &amp; novitads">
+<meta property="og:description" content="Tge che dombuzz Tools san – e cur che mintga funcziun è vegnida tar.">
+<meta property="og:url" content="https://tools.dombuzz.ch/versiuns">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<meta name="color-scheme" content="dark light">
+<title>Versiuns &amp; novitads</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='%23ff4d64' stroke-width='9'/%3E%3Ccircle cx='50' cy='31' r='6' fill='%23ff4d64'/%3E%3Crect x='44' y='43' width='12' height='28' rx='4' fill='%23ff4d64'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+/* Layout wie die übrigen Tools: dunkle Karten, Systemschrift, Akzent Koralle */
+:root{
+  --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+  --accent:#ff4d64; --border:#2f2f34; --mono:#26262a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:0 16px;padding-block:40px 56px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
+h1 .acc{color:var(--accent)}
+.lead{color:var(--muted);margin:0;font-size:.9rem;max-width:65ch}
+.step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.step h2{margin:0;font-size:.95rem;display:flex;gap:10px;align-items:center}
+.num{font-size:.8rem;font-weight:700;background:var(--accent);color:var(--on-accent);border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.step p{margin:0;font-size:.92rem;max-width:68ch}
+.step a{color:var(--accent)}
+.key{border-left:3px solid var(--accent);padding-left:12px}
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.85rem}
+th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:9px 10px;text-align:left;vertical-align:top}
+tr:last-child td{border-bottom:0}
+th:last-child,td:last-child{border-right:0}
+thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:600;background:var(--mono)}
+tbody th{font-weight:600;width:28%}
+td p{margin:0 0 8px;font-size:inherit;max-width:none}
+td p:last-child{margin-bottom:0}
+.note{font-size:.82rem;color:var(--muted);margin:0}
+@media (max-width:640px){
+  .tw{overflow:visible;border:0}
+  table,tbody,tr,th,td{display:block;min-width:0;width:100%}
+  thead{display:none}
+  table{min-width:0}
+  tr{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  tr:last-child{margin-bottom:0}
+  th,td{border:0!important}
+  tbody th{width:100%;background:var(--mono);padding:9px 12px}
+  td{padding:8px 12px}
+  td::before{content:attr(data-l);display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:1px}
+}
+.fb{display:flex;flex-direction:column;gap:8px;margin-top:4px;max-width:480px}
+.fb textarea,.fb input{width:100%;font:inherit;font-size:.92rem;color:var(--text);background:var(--mono);border:1px solid var(--border);border-radius:8px;padding:9px 12px}
+.fb textarea{min-height:96px;resize:vertical}
+.fb textarea:focus,.fb input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.fb .frow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fb .frow input{flex:1 1 180px;width:auto}
+.fb button{font:inherit;font-weight:700;font-size:.9rem;background:var(--accent);color:var(--on-accent);border:0;border-radius:8px;padding:9px 18px;cursor:pointer}
+.fb button:disabled{opacity:.6;cursor:default}
+.fb .msg{font-size:.85rem;min-height:1.2em}
+.fb .msg.err{color:#ff6b7d}
+.step a.c-lab{color:var(--lab,#ff9a3c)}
+.step a.c-game{color:#5aa6ff}
+:root[data-theme="light"] .step a.c-game{color:#1f6fd1}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+<style>
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.tl li{display:grid;grid-template-columns:76px 1fr;gap:4px 14px;padding:11px 0;border-top:1px solid var(--border)}
+.tl li:first-child{border-top:0}
+.tl time{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px}
+.tl b{font-size:.92rem;font-weight:650}
+.tl p{margin:2px 0 0;font-size:.86rem;color:var(--muted);max-width:62ch}
+.tl a{color:var(--accent)}
+.tl .lab{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--lab,#ff9a3c);margin-left:6px}
+@media (max-width:520px){.tl li{grid-template-columns:1fr}.tl time{padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="homelink" href="/">← Tools</a>
+    <h1>Versiuns <span class="acc">&amp;</span> novitads</h1>
+    <p class="lead">Las novas funcziuns pli grondas da dombuzz Tools e cur ch’ellas èn vegnidas tar. Pitschnas modificaziuns (distanzas, smistgas da layout u pitschens ajustaments) n’èn betg listadas.</p>
+  </header>
+
+  <section class="step">
+    <h2>November 2026</h2>
+    <ul class="tl">
+    <li><time datetime="2026-11-16">16.11.</time><div><b>HEIC/HEIF en tut ils tools da maletgs</b><p>Maletgs HEIC/HEIF (p. ex. dal iPhone) vegnan avrids directamain e convertids automaticamain en PNG – en Magazin / Il di, Elavurar maletgs, Resizer 2000 e tut ils tools Social.</p></div></li>
+    <li><time datetime="2026-11-12">12.11.</time><div><b>Social: 11 templates sco paginas atgnas</b><p>Profil, News dal di, #mument, Quote solo, Breaking News, Dumonda, Cifra, Pled da l’emna, Focus, Novitad e Thumbnail – cun survista sut <a href="/social/">/social</a>.</p></div></li>
+    <li><time datetime="2026-11-12">12.11.</time><div><b>Plan persunal</b><p>Ils servetschs d’ina persona per oz, questa emna u tut las emnas, legids or dal plan da lavur. Era sco overlay en SharePoint (bookmarklet).</p></div></li>
+    <li><time datetime="2026-11-12">12.11.</time><div><b>Feedback cun notizias</b><p>Ina notizia pon vegnir agiuntada a mintga resposta; la pagina e il tab avert vegnan trametts cun.</p></div></li>
+    <li><time datetime="2026-11-12">12.11.</time><div><b>Dashboard: temp spargnà</b><p>Calculaziun dal temp ch’ins spargna cun mintga tool, era en il rapport mensil.</p></div></li>
+    <li><time datetime="2026-11-12">12.11.</time><div><b>Colur main intensiva</b><p>Cumutatur sper il modus cler/stgir che fa ils colurs d’accent e da status main fortas.</p></div></li>
+    <li><time datetime="2026-11-11">11.11.</time><div><b>Subtitle Studio: Sincronisar</b><p>Chargiar video u audio e scumenzar mintga bloc da suttitels da nov (cun ondas dal tun opziunalas, spartir, colliar, tschertgar e remplazzar).</p></div></li>
+    <li><time datetime="2026-11-09">09.11.</time><div><b>Elavurar maletgs: expert / experimental</b><p>Regladers supplementars per detagls, valurs da tun, nair/alv, duoton, grana e vignetta.</p></div></li>
+    <li><time datetime="2026-11-09">09.11.</time><div><b>Chat-Generator</b><span class=lab>Lab</span><p>Overlay da chat transparent sco successiun da PNG cun alfa; pli tard era sco MOV (ProRes 4444).</p></div></li>
+    <li><time datetime="2026-11-06">06.11.</time><div><b>Avis sin votaziuns ed elecziuns</b><p>Grafica generala per ils avis da votaziun e d’elecziun cun vopnas da vischnanca.</p></div></li>
+    <li><time datetime="2026-11-05">05.11.</time><div><b>Graficas dumengias da votaziuns</b><p>Communal, Chantunal e Federal en in tool, cun scrittiras e parcadi cuminaivels.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="step">
+    <h2>Oktober 2026</h2>
+    <ul class="tl">
+    <li><time datetime="2026-10-30">30.10.</time><div><b>Tschertga rtr.ch</b><p>Tschertgar artitgels da rtr.ch, cun in budget dal di per ils pleds.</p></div></li>
+    <li><time datetime="2026-10-29">29.10.</time><div><b>Subtitle Studio</b><p>Spustar temps, cumparegliar suttitels e translatar RM ⇄ DE en in tool.</p></div></li>
+    <li><time datetime="2026-10-29">29.10.</time><div><b>Game</b><p>Collecziun, seria, acziuns e badges – mo en tes browser, senza ranglistas.</p></div></li>
+    <li><time datetime="2026-10-29">29.10.</time><div><b>Dashboard e feedback</b><p>Survista da l’utilisaziun e pagina per tramettre fidbeck.</p></div></li>
+    <li><time datetime="2026-10-27">27.10.</time><div><b>Mes favurits e «nov»</b><p>Tools cun ☆ marcar sco favurit; tools novs u midads èn marcads fin ch’ins als avra.</p></div></li>
+    <li><time datetime="2026-10-25">25.10.</time><div><b>Elavurar maletgs</b><p>Clerezza e colurs, rotar e drizzar, collaschas e layers en in tool.</p></div></li>
+    <li><time datetime="2026-10-21">21.10.</time><div><b>#mument</b><p>Visual 4:5 per las medias socialas (pli tard integrà en Magazin / Il di).</p></div></li>
+    <li><time datetime="2026-10-17">17.10.</time><div><b>Installabel sin il telefonin</b><p>Preview da links (Open Graph), icon d’app ed access senza rait per las paginas visitadas.</p></div></li>
+    <li><time datetime="2026-10-16">16.10.</time><div><b>Modus cler e stgir</b><p>Cumutatur per tut las paginas, tenor apparat u a maun; era bedienaziun cun tastatura.</p></div></li>
+    <li><time datetime="2026-10-16">16.10.</time><div><b>Links d’artitgels</b><p>Midar tranter link da preview, da lavur ed URN d’in artitgel.</p></div></li>
+    <li><time datetime="2026-10-14">14.10.</time><div><b>Statistica e «Ha quest tool gidà?»</b><p>Dumonda cun cor en ils tools e statistica cun utilisaziuns, likes e visitaders.</p></div></li>
+    <li><time datetime="2026-10-13">13.10.</time><div><b>Lab</b><span class=lab>Lab</span><p>Experiments: CSV-Analisa, Plan → GeoJSON, Hockey regiunal, Idioms. Plus: chargiar il plan da lavur directamain da SharePoint (bookmarklet).</p></div></li>
+    <li><time datetime="2026-10-12">12.10.</time><div><b>Plans da teams e Audio-Recorder</b><p>Plans da lavur filtrads tenor redacziun (PDF) e registraziun d’audio en il browser; tools en il menu raggruppads.</p></div></li>
+    <li><time datetime="2026-10-02">02.10.</time><div><b>Magazin / Il di e Resizer 2000</b><p>Visual cun overlay RTR e redimensiunar maletgs sin 2000 px.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="step">
+    <h2>September 2026</h2>
+    <ul class="tl">
+    <li><time datetime="2026-09-29">29.09.</time><div><b>SRT → TTML, Datawrapper e pagina da partenza</b><p>Transfurmar suttitels, memorisar graficas Datawrapper sco PNG 16:9 e la pagina d’entrada.</p></div></li>
+    <li><time datetime="2026-09-28">28.09.</time><div><b>RTR Picture-downloader</b><p>Memorisar maletgs da rtr.ch en la meglra qualitad.</p></div></li>
+    </ul>
+  </section>
+
+  <p class="note">Il numer da versiun sin la pagina d’entrada mussa la data da la davosa modificaziun e quantas modificaziuns che han dà quel di.</p>
+</div>
+</body>
+</html>
