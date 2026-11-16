@@ -274,6 +274,12 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi details.find summary{cursor:pointer;font-weight:600;font-size:.9rem}
 #tab-vi details.find .row{margin-top:8px}
 #tab-vi .tools .note,#tab-vi p.note#vi-rules{margin:0 0 8px}
+#tab-vi .nav .pipb{margin-left:auto}
+#tab-vi .pipnote{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:.88rem;color:var(--muted)}
+#tab-vi.pipwin{padding:10px;min-height:100vh;box-sizing:border-box}
+#tab-vi.pipwin .player{position:static}
+#tab-vi.pipwin video{max-height:calc(100vh - 150px)}
+#tab-vi.pipwin .ov{font-size:clamp(14px,3.2vw,30px)}
 #tab-vi .wave{position:sticky;top:0;z-index:6;background:var(--panel);display:grid;gap:4px;padding:0 0 6px}
 #tab-vi .wave canvas{display:block;width:100%;height:120px;border:1px solid var(--line);border-radius:8px;touch-action:none;background:var(--field)}
 #tab-vi .wbar{display:flex;gap:8px;align-items:center;font-size:.78rem;color:var(--muted);flex-wrap:wrap}
@@ -501,16 +507,18 @@ p.sub{margin:0;color:var(--muted)}
       <div class="player" id="vi-player" hidden>
         <div class="stage" id="vi-stage"><video id="vi-media" controls playsinline preload="metadata"></video><div class="ov" id="vi-ov"></div></div>
         <div class="strip" id="vi-strip" title="Cliccar per sautar"><div class="ph" id="vi-playhead"></div></div>
-        <div class="nav"><button class="ib" data-n="pb" type="button" title="Bloc avant (↑)">⏮ Bloc</button><button class="ib" data-n="f-" type="button" title="1 maletg enavos (,)">◀ 1 maletg</button><button class="ib" data-n="f+" type="button" title="1 maletg enavant (.)">1 maletg ▶</button><button class="ib" data-n="nb" type="button" title="Proxim bloc (↓)">Bloc ⏭</button></div>
+        <div class="nav"><button class="ib" data-n="pb" type="button" title="Bloc avant (↑)">⏮ Bloc</button><button class="ib" data-n="f-" type="button" title="1 maletg enavos (,)">◀ 1 maletg</button><button class="ib" data-n="f+" type="button" title="1 maletg enavant (.)">1 maletg ▶</button><button class="ib" data-n="nb" type="button" title="Proxim bloc (↓)">Bloc ⏭</button><button class="ib pipb" id="vi-pip" type="button" title="Video en in'atgna fanestra – uschia survegn la glista da text tut la ladezza">⧉ Atgna fanestra</button></div>
         <div class="pbar"><span class="clock" id="vi-clock">00:00,000 / 00:00,000</span>
           <label class="chk"><input type="checkbox" id="vi-wavetog"> Undas dal tun</label>
           <label>Spertadad <select id="vi-rate"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div>
       </div>
       <div class="lst" id="vi-lst" hidden>
+        <div class="pipnote" id="vi-pipnote" hidden><span>⧉ Il video è en in'atgna fanestra.</span><button class="btn" id="vi-pipback" type="button">↙ Turnar enavos</button></div>
         <div class="tools">
           <label>Pass <select id="vi-step"><option value="40">1 maletg (40 ms)</option><option value="100" selected>0,1 s</option><option value="250">0,25 s</option><option value="500">0,5 s</option><option value="1000">1 s</option></select></label>
           <label class="chk"><input type="checkbox" id="vi-ripple"> Ils blocs suandants era spustar</label>
           <label class="chk"><input type="checkbox" id="vi-follow" checked> Suandar il video</label>
+          <label class="chk" title="Il video sa ferma automaticamain cura che ti scrivas en in bloc"><input type="checkbox" id="vi-typepause"> Pausa cun scriver</label>
           <button class="btn" id="vi-undo" type="button" disabled>↶ Annullar</button>
           <button class="btn" id="vi-add" type="button" title="Nov bloc vuid a la posiziun dal video">+ Nov bloc</button>
           <button class="btn" id="vi-fixlong" type="button" title="Rumper tut las lingias che sa surpassan la norma">Rumper lingias lungas</button>
@@ -524,7 +532,7 @@ p.sub{margin:0;color:var(--muted)}
         </details>
         <p class="note" id="vi-rules"></p>
         <div class="cues" id="vi-list"></div>
-        <p class="note keys">Scursanidas: Spazi = play/pausa · I = Start ussa · O = Fin ussa · M = Bloc ussa · ←/→ ±1 s (Shift ±0,1 s) · Ctrl+Z = annullar · Ctrl+Enter en il text = spartir il bloc al cursor · , / . = 1 maletg · ↑/↓ = bloc avant/suenter</p>
+        <p class="note keys">Scursanidas: Spazi = play/pausa · Esc = play/pausa (era durant scriver) · I = Start ussa · O = Fin ussa · M = Bloc ussa · ←/→ ±1 s (Shift ±0,1 s) · Ctrl+Z = annullar · Ctrl+Enter en il text = spartir il bloc al cursor · , / . = 1 maletg · ↑/↓ = bloc avant/suenter</p>
       </div>
     </div>
   </section>
@@ -1311,7 +1319,8 @@ window.__ut={loadText,get cues(){return cues;},get segs(){return segs;}};
 (() => {
 'use strict';
 const ROOT = document.getElementById('tab-vi');
-const $ = id => document.getElementById('vi-' + id);
+let pipWin = null; // eigenes Video-Fenster (Bild-im-Bild bzw. Popup)
+const $ = id => document.getElementById('vi-' + id) || (pipWin && pipWin.document.getElementById('vi-' + id));
 const dn = (id, d) => { const e = document.getElementById('de-' + id); return +(e && e.value) || d; };
 const lim = () => ({ cps: dn('maxCps', 15), min: dn('minDur', 1), max: dn('maxDur', 7), line: dn('maxLine', 37), lines: dn('maxLines', 2) }); // gleiche Normen wie RM → DE
 const MINMS = 200;
@@ -1755,7 +1764,7 @@ window.addEventListener('resize', () => { if (!wave.hidden) { wkey = ''; drawWav
 // ---- Dateien laden ----
 function showWork() {
   $('work').hidden = !(cues.length || hasMedia());
-  $('workgrid').classList.toggle('nomedia', !hasMedia());
+  $('workgrid').classList.toggle('nomedia', !hasMedia() || !!pipWin);
   $('player').hidden = !hasMedia(); $('lst').hidden = !cues.length; $('exp').hidden = !cues.length;
   syncWave();
 }
@@ -1819,6 +1828,7 @@ list.addEventListener('focusin', e => {
 });
 list.addEventListener('input', e => {
   if (!e.target.matches('textarea')) return;
+  if ($('typepause').checked && !media.paused) media.pause();
   const c = byId(e.target.closest('.cue').dataset.id); c.lines = e.target.value.split('\n'); dirty = true;
   updateRow(c); silentNow(); info();
 });
@@ -1862,8 +1872,10 @@ $('fnext').onclick = findNext; $('frep').onclick = replaceOne; $('fall').onclick
 rules();
 
 // ---- Tastatur ----
-document.addEventListener('keydown', e => {
+const togglePlay = () => { if (!hasMedia()) return; if (media.paused) media.play().catch(() => {}); else media.pause(); };
+function onKey(e) {
   if (ROOT.hidden) return;
+  if (e.key === 'Escape' && hasMedia() && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); togglePlay(); return; } // auch während dem Schreiben
   const t = e.target, tag = t && t.tagName;
   const typing = (tag === 'INPUT' && t.type !== 'checkbox') || tag === 'TEXTAREA' || tag === 'SELECT';
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { if (!typing) { e.preventDefault(); undo(); } return; }
@@ -1874,7 +1886,59 @@ document.addEventListener('keydown', e => {
   else if (k === ',' || k === '.') { e.preventDefault(); frame(k === ',' ? -1 : 1); }
   else if (k === 'arrowup' || k === 'arrowdown') { e.preventDefault(); gotoBlock(k === 'arrowdown' ? 1 : -1); }
   else if (sel && (k === 'i' || k === 'o' || k === 'm')) { e.preventDefault(); act(k === 'i' ? 's-now' : k === 'o' ? 'e-now' : 'b-now', sel); }
-});
+}
+document.addEventListener('keydown', onKey);
+
+
+// ---- Video en in'atgna fanestra (Document Picture-in-Picture, sonst Popup) ----
+try { $('typepause').checked = localStorage.getItem('dbz-vi-typepause') === '1'; } catch (e) {}
+$('typepause').onchange = e => { try { localStorage.setItem('dbz-vi-typepause', e.target.checked ? '1' : '0'); } catch (x) {} };
+const pipHome = document.createComment('vi-player');
+function copyLook(d) {
+  const r = document.documentElement;
+  for (const a of r.attributes) d.documentElement.setAttribute(a.name, a.value);
+  document.querySelectorAll('style,link[rel="stylesheet"]').forEach(n => d.head.appendChild(n.cloneNode(true)));
+  d.title = 'Video – Subtitle Studio';
+}
+async function pipOpen() {
+  if (pipWin || !hasMedia()) return;
+  const wasPlaying = !media.paused, t = media.currentTime, w = 720, h = 520;
+  let win = null;
+  try {
+    if (window.documentPictureInPicture) win = await documentPictureInPicture.requestWindow({ width: w, height: h });
+  } catch (e) { win = null; }
+  if (!win) {
+    win = window.open('', 'dbz-ut-video', `popup,width=${w},height=${h}`);
+    if (!win) { msg('Il browser ha bloccà la fanestra. Lubir popups per tools.dombuzz.ch.', true); return; }
+    win.document.open(); win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>'); win.document.close();
+  }
+  pipWin = win;
+  const d = win.document; copyLook(d);
+  d.body.style.margin = '0';
+  const wrap = d.createElement('div'); wrap.id = 'tab-vi'; wrap.className = 'pipwin'; d.body.appendChild(wrap);
+  const pl = $('player'); pl.parentNode.insertBefore(pipHome, pl); wrap.appendChild(pl);
+  $('pip').textContent = '↙ Turnar enavos'; $('pip').title = 'Video puspè en la fanestra principala';
+  $('pipnote').hidden = false;
+  d.addEventListener('keydown', onKey);
+  win.addEventListener('pagehide', pipBack, { once: true });
+  media.currentTime = t; if (wasPlaying) media.play().catch(() => {});
+  refreshLayout(); 
+}
+function pipBack() {
+  if (!pipWin) return;
+  const win = pipWin, wasPlaying = !media.paused, t = media.currentTime, pl = $('player');
+  if (pipHome.parentNode) pipHome.parentNode.replaceChild(pl, pipHome);
+  pipWin = null;
+  $('pip').textContent = '⧉ Atgna fanestra'; $('pip').title = "Video en in'atgna fanestra – uschia survegn la glista da text tut la ladezza";
+  $('pipnote').hidden = true;
+  try { win.close(); } catch (e) {}
+  media.currentTime = t; if (wasPlaying) media.play().catch(() => {});
+  refreshLayout();
+}
+function refreshLayout() { $('workgrid').classList.toggle('nomedia', !hasMedia() || !!pipWin); }
+$('pip').onclick = () => pipWin ? pipBack() : pipOpen();
+$('pipback').onclick = pipBack;
+window.addEventListener('pagehide', () => { if (pipWin) try { pipWin.close(); } catch (e) {} });
 
 // ---- Export ----
 $('dl').onclick = () => {
