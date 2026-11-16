@@ -79,6 +79,10 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .wholist label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text)}
 .wholist label:hover{background:var(--mono)}
 .wholist input{accent-color:var(--accent)}
+.wholist label[hidden]{display:none}
+.whosearch{width:100%;box-sizing:border-box;margin:0 0 8px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font:inherit;font-size:.9rem;text-transform:none;letter-spacing:0;font-weight:400}
+.whosearch:focus{outline:none;border-color:var(--accent)}
+.whonone{padding:8px;font-size:.85rem;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
 section h3{font-size:1rem;margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .kw{color:var(--accent);font-weight:700}
 .rng{font-weight:400;color:var(--muted);font-size:.88rem}
@@ -213,7 +217,9 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
       <div class="field wkpick" id="whopick">Marcar persunas
         <button type="button" class="link wkbtn" id="whobtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="whopop"><span id="wholbl">nagina</span><span aria-hidden="true">▾</span></button>
         <div class="wkpop whopop" id="whopop" role="dialog" aria-label="Marcar persunas" hidden>
-          <div class="wholist" id="wholist"></div>
+          <input type="search" class="whosearch" id="whosearch" placeholder="Tschertgar persuna …" aria-label="Tschertgar persuna" autocomplete="off" spellcheck="false">
+          <div class="wholist" id="wholist" role="group" aria-label="Persunas"></div>
+          <div class="whonone" id="whonone" hidden>Nagina persuna chattada.</div>
           <button type="button" class="link" id="whoclear">Nagina</button>
         </div>
       </div>
@@ -371,7 +377,27 @@ function fillWho(){
   box.dataset.k=sparte;
   const list=plan.names.filter(n=>plan.people[sparte].has(n));
   box.innerHTML=list.map(n=>`<label><input type="checkbox" value="${n.replace(/"/g,"&quot;")}"${whoSet.has(n)?" checked":""}><span>${DISP[n].replace(/</g,"&lt;")}</span></label>`).join("");
-  syncWho();
+  filterWho(); syncWho();
+}
+// Tschertgar + chatt cun tastatura (litera = siglir a la proxima persuna cun questa litera)
+const nrm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function filterWho(){
+  const q=nrm($("whosearch").value.trim()); let n=0;
+  $("wholist").querySelectorAll("label").forEach(l=>{const ok=!q||nrm(l.textContent).includes(q); l.hidden=!ok; if(ok) n++});
+  $("whonone").hidden=n>0;
+}
+function visWho(){return [...$("wholist").querySelectorAll("label:not([hidden]) input")]}
+let taBuf="",taT=0;
+function whoTypeahead(e){
+  if(e.key.length!==1||e.key===" "||e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=nrm(e.key); clearTimeout(taT); taT=setTimeout(()=>taBuf="",800);
+  taBuf+=k; const all=visWho(), cur=all.indexOf(document.activeElement);
+  const hit=i=>nrm(i.nextElementSibling.textContent).startsWith(taBuf);
+  let m=null;
+  if(taBuf.length>1||cur<0){ m=all.find(hit) }
+  else { m=all.slice(cur+1).find(hit)||all.find(hit) }
+  if(!m&&taBuf.length>1){ taBuf=k; m=all.find(hit) }
+  if(m){ e.preventDefault(); m.focus(); m.scrollIntoView({block:"nearest"}) }
 }
 function setSparte(s,save){
   if(!SPARTEN[s]) return;
@@ -418,8 +444,22 @@ $("wkdate").addEventListener("change",e=>pickStart(e.target.value));
 
 // ---- Marcar persunas (popover)
 const whopop=$("whopop"), whobtn=$("whobtn");
-function openWho(){ closeWk(); whopop.hidden=false; whobtn.setAttribute("aria-expanded","true") }
+function openWho(){ closeWk(); whopop.hidden=false; whobtn.setAttribute("aria-expanded","true");
+  $("whosearch").value=""; filterWho();
+  if(window.matchMedia&&matchMedia("(hover:hover)").matches) $("whosearch").focus() }
 function closeWho(){ whopop.hidden=true; whobtn.setAttribute("aria-expanded","false") }
+$("whosearch").addEventListener("input",filterWho);
+$("whosearch").addEventListener("keydown",e=>{
+  const v=visWho();
+  if(e.key==="ArrowDown"&&v.length){e.preventDefault();v[0].focus()}
+  else if(e.key==="Enter"){e.preventDefault(); if(v.length===1) v[0].click()}
+});
+$("wholist").addEventListener("keydown",e=>{
+  const v=visWho(), i=v.indexOf(document.activeElement);
+  if(e.key==="ArrowDown"&&i>=0&&i<v.length-1){e.preventDefault();v[i+1].focus()}
+  else if(e.key==="ArrowUp"&&i>=0){e.preventDefault(); i>0?v[i-1].focus():$("whosearch").focus()}
+  else whoTypeahead(e);
+});
 whobtn.addEventListener("click",()=>whopop.hidden?openWho():closeWho());
 $("wholist").addEventListener("change",e=>{
   const c=e.target; if(!c.matches("input")) return;
