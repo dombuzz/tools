@@ -170,8 +170,9 @@ p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem}
     const pool = unopened();
     next = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
     const go = $('go');
-    if (next) { go.href = next.url; go.setAttribute('aria-disabled', 'false'); go.textContent = 'Avrir in artitgel'; }
-    else { go.removeAttribute('href'); go.setAttribute('aria-disabled', 'true'); go.textContent = 'Tut avert 🎉'; }
+    // Der Knopf öffnet den Bearbeitungslink im CMS (wie ⬏ in der Liste); ohne Artikel-ID als Ausweg den Artikel auf rtr.ch
+    if (next) { go.href = cms(next); go.title = next.aid ? 'Avrir en il CMS (be cun login)' : ''; go.setAttribute('aria-disabled', 'false'); go.textContent = 'Avrir in artitgel'; }
+    else { go.removeAttribute('href'); go.title = ''; go.setAttribute('aria-disabled', 'true'); go.textContent = 'Tut avert 🎉'; }
   };
 
   function render() {
