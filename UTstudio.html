@@ -275,6 +275,13 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi details.find .row{margin-top:8px}
 #tab-vi .tools .note,#tab-vi p.note#vi-rules{margin:0 0 8px}
 #tab-vi .nav .pipb{margin-left:auto}
+#tab-vi .kb{position:relative}
+#tab-vi .kbtip{display:none;position:absolute;left:0;bottom:calc(100% + 6px);z-index:20;width:min(320px,88vw);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35);font-size:.82rem;line-height:1.35;grid-template-columns:auto 1fr;gap:5px 12px;text-align:left}
+#tab-vi .kb:hover .kbtip,#tab-vi .kb.open .kbtip,#tab-vi .kb .ib:focus-visible+.kbtip{display:grid}
+#tab-vi .kbtip b{color:var(--muted);font-weight:600;font-size:.74rem;text-transform:none;grid-column:1/-1;margin-top:4px}
+#tab-vi .kbtip b:first-child{margin-top:0}
+#tab-vi .kbtip kbd{font:inherit;font-size:.78rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--bg);white-space:nowrap;justify-self:start}
+#tab-vi .kbtip span{color:var(--ink)}
 #tab-vi .pipb,#tab-vi #vi-pipback{border-color:var(--accent)}
 #tab-vi .pipb:hover,#tab-vi #vi-pipback:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
 #tab-vi .pipnote{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:.88rem;color:var(--muted)}
@@ -511,6 +518,23 @@ p.sub{margin:0;color:var(--muted)}
         <div class="strip" id="vi-strip" title="Cliccar per sautar"><div class="ph" id="vi-playhead"></div></div>
         <div class="nav"><button class="ib" data-n="pb" type="button" title="Bloc avant (↑)">⏮ Bloc</button><button class="ib" data-n="f-" type="button" title="1 maletg enavos (,)">◀ 1 maletg</button><button class="ib" data-n="f+" type="button" title="1 maletg enavant (.)">1 maletg ▶</button><button class="ib" data-n="nb" type="button" title="Proxim bloc (↓)">Bloc ⏭</button><button class="ib pipb" id="vi-pip" type="button" title="Video en in'atgna fanestra – uschia survegn la glista da text tut la ladezza">⧉ Atgna fanestra</button></div>
         <div class="pbar"><span class="clock" id="vi-clock">00:00,000 / 00:00,000</span>
+          <span class="kb"><button class="ib" id="vi-kb" type="button" aria-label="Scursanidas da tastatura" title="Scursanidas da tastatura">⌨</button><div class="kbtip" role="tooltip">
+          <b>Video</b>
+          <kbd>Spazi</kbd><span>Play / pausa</span>
+          <kbd>Esc</kbd><span>Play / pausa – era durant scriver</span>
+          <kbd>←</kbd><span>1 secunda enavos (Shift: 0,1 s)</span>
+          <kbd>→</kbd><span>1 secunda enavant (Shift: 0,1 s)</span>
+          <kbd>,</kbd><span>1 maletg enavos</span>
+          <kbd>.</kbd><span>1 maletg enavant</span>
+          <b>Blocs</b>
+          <kbd>↑</kbd><span>Bloc avant</span>
+          <kbd>↓</kbd><span>Proxim bloc</span>
+          <kbd>I</kbd><span>Start ussa (posiziun dal video)</span>
+          <kbd>O</kbd><span>Fin ussa</span>
+          <kbd>M</kbd><span>Bloc ussa (spustar il bloc)</span>
+          <kbd>Ctrl + Enter</kbd><span>En il text: spartir il bloc al cursor</span>
+          <kbd>Ctrl + Z</kbd><span>Annullar</span>
+        </div></span>
           <label class="chk"><input type="checkbox" id="vi-wavetog"> Undas da tun</label>
           <label>Spertadad <select id="vi-rate"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div>
       </div>
@@ -1939,6 +1963,11 @@ function pipBack() {
 }
 function refreshLayout() { $('workgrid').classList.toggle('nomedia', !hasMedia() || !!pipWin); }
 $('pip').onclick = () => pipWin ? pipBack() : pipOpen();
+$('kb').onclick = e => { // Tastatur-Hilfe: Klick öffnet/schliesst (Hover geht auch)
+  const k = e.currentTarget.parentNode, d = k.ownerDocument, open = !k.classList.contains('open');
+  k.classList.toggle('open', open);
+  if (open) setTimeout(() => d.addEventListener('click', function f(ev) { if (!k.contains(ev.target)) { k.classList.remove('open'); d.removeEventListener('click', f); } }), 0);
+};
 $('pipback').onclick = pipBack;
 window.addEventListener('pagehide', () => { if (pipWin) try { pipWin.close(); } catch (e) {} });
 
