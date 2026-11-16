@@ -294,6 +294,8 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi video{max-height:30vh}
 #tab-vi .cues{max-height:60vh}}
 .tabs{display:none!important}
+#tab-vi #vi-notetxt{width:100%;min-height:9rem;margin:10px 0;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;line-height:1.5;resize:vertical}
+#tab-vi #vi-notetxt:focus{outline:none;border-color:var(--accent)}
 #tab-vi .foldb{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;cursor:pointer;font:inherit;font-weight:inherit;color:inherit;border-radius:6px}
 #tab-vi .foldb:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 #tab-vi .foldb .chev{margin-left:auto;color:var(--muted);transition:transform .2s}
@@ -585,6 +587,15 @@ p.sub{margin:0;color:var(--muted)}
       <label for="vi-ghtok">GitHub-Token (fine-grained, mo «Contents: Read and write» per dombuzz/tools) – vegn memorisà mo en quest navigatur</label>
       <div class="row"><input type="password" id="vi-ghtok" autocomplete="off" spellcheck="false" placeholder="github_pat_…"><button class="btn primary" type="submit">Memorisar token</button><button class="btn" type="button" id="vi-ghx">Interrumper</button></div>
     </form>
+  </section>
+
+  <section class="card" id="vi-notes">
+    <h2><span class="num">3</span> Notizias</h2>
+    <textarea id="vi-notetxt" rows="8" spellcheck="true" placeholder="Notizias per il film CLIC ICF – p. ex. «Bloc 120: verifitgar num», «Bloc 45–52: timing anc ina giada» …"></textarea>
+    <div class="row">
+      <button class="btn primary" id="vi-notegh" type="button" title="Memorisar las notizias en il repository (Clicron/ICF-notizias.md)">☁ Memorisar notizias en GitHub</button>
+      <span class="note" id="vi-noteinfo">Vegnan memorisadas automaticamain en quest navigatur.</span>
+    </div>
   </section>
   </section>
 </main>
@@ -2059,6 +2070,44 @@ document.addEventListener('keydown', onKey);
     }
   };
   if (waveOn && hasMedia() && !peaks) decodeWave();
+  // ---- Notizias: im Browser laufend, in GitHub als Clicron/ICF-notizias.md ----
+  const NPATH = 'Clicron/ICF-notizias.md', NKEY = 'clicron-icf-notes';
+  let note = { t: 0, text: '', up: true }; try { note = Object.assign(note, JSON.parse(localStorage.getItem(NKEY) || '{}')); } catch (e) {}
+  const nta = $('notetxt'), ninfo = (t, err) => { $('noteinfo').textContent = t; $('noteinfo').style.color = err ? 'var(--err)' : ''; };
+  nta.value = note.text;
+  let ntimer = 0;
+  nta.addEventListener('input', () => { clearTimeout(ntimer); ntimer = setTimeout(() => { note = { t: Date.now(), text: nta.value, up: false }; try { localStorage.setItem(NKEY, JSON.stringify(note)); } catch (e) {} ninfo('Memorisà en quest navigatur · betg anc en GitHub'); }, 500); });
+  (async () => {   // neuere Notizen aus GitHub holen
+    try {
+      const c = await fetch(GH + '/commits?path=' + encodeURIComponent(NPATH) + '&sha=main&per_page=1', { headers: ghH(), cache: 'no-store' });
+      if (!c.ok) return; const j = await c.json(); if (!j.length) return;
+      const tg = Date.parse(j[0]?.commit?.committer?.date || '') || 0;
+      if (tg <= note.t + 5000) return;
+      const r = await fetch(GH + '/contents/' + NPATH + '?ref=main', { headers: ghH({ Accept: 'application/vnd.github.raw+json' }), cache: 'no-store' });
+      if (!r.ok) return; const t = await r.text();
+      if (nta.value !== note.text) return;   // während des Ladens schon getippt: nicht überschreiben
+      nta.value = t; note = { t: tg, text: t, up: true }; try { localStorage.setItem(NKEY, JSON.stringify(note)); } catch (e) {}
+      ninfo('Chargià da GitHub (' + new Date(tg).toLocaleString('de-CH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ').');
+    } catch (e) {}
+  })();
+  async function noteSave(quiet) {
+    if (!tok) { $('ghf').hidden = false; $('exp').hidden = false; $('ghtok').focus(); return false; }
+    clearTimeout(ntimer); note = { t: Date.now(), text: nta.value, up: false }; try { localStorage.setItem(NKEY, JSON.stringify(note)); } catch (e) {}
+    $('notegh').disabled = true; if (!quiet) ninfo('Memorisescha en GitHub …');
+    try {
+      const g = await fetch(GH + '/contents/' + NPATH + '?ref=main', { headers: ghH(), cache: 'no-store' });
+      if (g.status === 401 || g.status === 403) throw new Error('auth');
+      const sha = g.ok ? (await g.json()).sha : undefined, now = new Date();
+      const r = await fetch(GH + '/contents/' + NPATH, { method: 'PUT', headers: ghH({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ message: 'Clicron: Notizen gespeichert (' + now.toLocaleString('de-CH') + ')', content: b64(nta.value || ' '), sha, branch: 'main' }) });
+      if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'auth' : 'http');
+      note.up = true; note.t = Date.now(); try { localStorage.setItem(NKEY, JSON.stringify(note)); } catch (e) {}
+      ninfo('Memorisà en GitHub · ' + now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }));
+      return true;
+    } catch (e) { ninfo(e.message === 'auth' ? 'Il token na funcziuna betg – endatar in nov sut «Exportar».' : 'Memorisar n’ha betg funcziunà. Emprova anc ina giada.', true); return false; }
+    finally { $('notegh').disabled = false; }
+  }
+  $('notegh').onclick = () => noteSave(false);
   async function ghSave() {
     if (!tok) { $('ghf').hidden = false; $('ghtok').focus(); return; }
     const out = cues.slice().sort((a, b) => a.start - b.start)
@@ -2077,6 +2126,7 @@ document.addEventListener('keydown', onKey);
       if (!r.ok) throw new Error('http');
       store(); try { const x = JSON.parse(localStorage.getItem(SKEY) || 'null'); if (x) { x.t = Date.now(); localStorage.setItem(SKEY, JSON.stringify(x)); } } catch (e) {}
       if (peaksUp) { try { await uploadPeaks(); } catch (e) {} }
+      if (!note.up && nta.value.trim()) { try { await noteSave(true); } catch (e) {} }
       dirty = false; ghInfo('Memorisà en GitHub · ' + now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }));
     } catch (e) {
       if (e.message === 'auth') { ghInfo('Il token na funcziuna betg (scadì u senza dretg «Contents: write»). Endatar in nov token.', true); tok = ''; try { localStorage.removeItem('clicron-gh-token'); } catch (x) {} $('ghf').hidden = false; }
