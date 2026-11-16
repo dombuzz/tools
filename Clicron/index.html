@@ -305,7 +305,7 @@ p.sub{margin:0;color:var(--muted)}
   <a class="homelink" href="/UTstudio#sincronisar">← Subtitle Studio</a>
   <h1>CLIC ICF – <span class="acc">Sincronisar</span></h1>
   <p class="sub">Copia privata per il film CLIC ICF. Ils suttitels DE vegnan chargiads automaticamain, midadas vegnan memorisadas en quest navigatur. Il video: avrir en SharePoint, telechargiar e trair en il champ «Video u audio».</p>
-  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><a href="ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT original</a><button type="button" id="vi-clreset">↺ Turnar a l’SRT original</button></div>
+  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><a href="/Clicron/ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT original</a><button type="button" id="vi-clreset">↺ Turnar a l’SRT original</button></div>
   <div class="exts"><a class="btn primary ext" href="https://dialogue.rts.ch/rm/tools/video/subtitles-editor/" target="_blank" rel="noopener">Dialog Subtitles editor ↗</a><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
@@ -1932,12 +1932,17 @@ function onKey(e) {
 document.addEventListener('keydown', onKey);
 // ---- clicron: SRT vorladen, Änderungen im Browser sichern ----
 (() => {
-  const SKEY = 'clicron-icf-cues', SRC = (location.pathname.endsWith('/') ? location.pathname : /\.html?$/i.test(location.pathname) ? location.pathname.replace(/[^/]*$/, '') : location.pathname + '/') + 'ICF-Film_DE_Untertitel_SRG.srt', NAME = 'ICF-Film_DE_Untertitel_SRG.srt';
+  const SKEY = 'clicron-icf-cues', FN = 'ICF-Film_DE_Untertitel_SRG.srt', NAME = 'ICF-Film_DE_Untertitel_SRG.srt';
   const p = (n, l) => String(n).padStart(l, '0');
   const ts = ms => { ms = Math.max(0, Math.round(ms)); return `${p(Math.floor(ms / 3600000), 2)}:${p(Math.floor(ms / 60000) % 60, 2)}:${p(Math.floor(ms / 1000) % 60, 2)},${p(ms % 1000, 3)}`; };
   const toSrt = a => a.map((c, i) => `${i + 1}\n${ts(c[0])} --> ${ts(c[1])}\n${c[2].join('\n')}`).join('\n\n') + '\n';
   let saved = null; try { saved = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) {}
-  const src = saved && saved.length ? Promise.resolve(toSrt(saved)) : fetch(SRC, { cache: 'no-cache' }).then(r => { if (!r.ok) throw 0; return r.text(); });
+  const src = saved && saved.length ? Promise.resolve(toSrt(saved)) : (async () => {
+    // Pfad der Seite kann /Clicron/, /Clicron/index oder /Clicron/index.html sein – mehrere Orte probieren
+    const p = location.pathname, dirs = [...new Set([p.replace(/[^/]*$/, ''), p.replace(/\/?$/, '/'), '/Clicron/', '/clicron/'])];
+    for (const d of dirs) { try { const r = await fetch(d + FN, { cache: 'no-cache' }); if (r.ok) { const t = await r.text(); if (/-->/.test(t)) return t; } } catch (e) {} }
+    throw 0;
+  })();
   const snap = () => JSON.stringify(cues.map(c => [c.start, c.end, c.lines]));
   let last = null;
   src.then(t => {
