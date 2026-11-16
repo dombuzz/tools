@@ -382,8 +382,9 @@ function fillWho(){
 // Tschertgar + chatt cun tastatura (litera = siglir a la proxima persuna cun questa litera)
 const nrm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function filterWho(){
-  const q=nrm($("whosearch").value.trim()); let n=0;
-  $("wholist").querySelectorAll("label").forEach(l=>{const ok=!q||nrm(l.textContent).includes(q); l.hidden=!ok; if(ok) n++});
+  const w=s=>" "+nrm(s).replace(/[,\-]+/g," ").replace(/\s+/g," ").trim(); // nur Wortanfaenge (Nachname oder Vorname)
+  const q=w($("whosearch").value).trimEnd(); let n=0;
+  $("wholist").querySelectorAll("label").forEach(l=>{const ok=q.trim()===""||w(l.textContent).includes(q); l.hidden=!ok; if(ok) n++});
   $("whonone").hidden=n>0;
 }
 function visWho(){return [...$("wholist").querySelectorAll("label:not([hidden]) input")]}
