@@ -238,8 +238,8 @@
     row.append(a); box.append(row); a.dataset.fav = 'chatta';
     chattaBox = box;
   }
-  // Nur diese Kategorien sind auf- und zuklappbar (Zustand pro Browser gemerkt, anfangs zu)
-  const FOLD = ['Audio e suttitels', 'Grafica'];
+  // Alle Kategorien sind auf- und zuklappbar (Zustand pro Browser gemerkt); anfangs offen: Maletgs, Redacziun; zu: Audio e suttitels, Grafica
+  const FOLD = ['Maletgs', 'Redacziun', 'Audio e suttitels', 'Grafica'], OPEN_FIRST = ['Maletgs', 'Redacziun'];
   for (const [label, paths] of GROUPS) {
     let dest = menu;
     if (FOLD.includes(label)) {
@@ -250,7 +250,7 @@
       h.append(t, c);
       const box = document.createElement('div'); box.className = 'mgbox'; box.id = id;
       const set = o => { box.classList.toggle('on', o); h.setAttribute('aria-expanded', o); };
-      set(!!subOpen[key]);
+      set(key in subOpen ? !!subOpen[key] : OPEN_FIRST.includes(label));
       h.addEventListener('click', e => { e.stopPropagation(); const o = !box.classList.contains('on'); set(o); subOpen[key] = o; saveSub(); });
       menu.append(h, box); dest = box;
     } else {
@@ -268,7 +268,7 @@
       t.addEventListener('click', e => { e.stopPropagation(); const o = !box.classList.contains('on'); set(o); subOpen[sub] = o; saveSub(); });
       dest.append(t, box);
     }
-    if (label === 'Redacziun') menu.append(chattaBox);
+    if (label === 'Redacziun') dest.append(chattaBox);
   }
   // ganz unten: Lab (Experimente) – sieht aus wie eine Kategorie, in Orange, führt direkt auf /lab/
   {
