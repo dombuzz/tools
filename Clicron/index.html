@@ -294,6 +294,10 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi video{max-height:30vh}
 #tab-vi .cues{max-height:60vh}}
 .tabs{display:none!important}
+#tab-vi .ghtok{display:grid;gap:6px;margin-top:12px}
+#tab-vi .ghtok label{font-size:.85rem;color:var(--muted)}
+#tab-vi .ghtok input{flex:1;min-width:0;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit}
+#tab-vi .ghtok input:focus{outline:none;border-color:var(--accent)}
 .cl-links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
 .cl-links a,.cl-links button{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:9px;border:1px solid var(--line);background:var(--field);color:var(--ink);font:inherit;font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer}
 .cl-links a.pri{border-color:var(--accent)}
@@ -305,7 +309,7 @@ p.sub{margin:0;color:var(--muted)}
   <a class="homelink" href="/UTstudio#sincronisar">← Subtitle Studio</a>
   <h1>CLIC ICF – <span class="acc">Sincronisar</span></h1>
   <p class="sub">Copia privata per il film CLIC ICF. Ils suttitels DE vegnan chargiads automaticamain, midadas vegnan memorisadas en quest navigatur. Il video: avrir en SharePoint, telechargiar e trair en il champ «Video u audio».</p>
-  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><a href="/Clicron/ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT original</a><button type="button" id="vi-clreset">↺ Turnar a l’SRT original</button></div>
+  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><a href="/Clicron/ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT memorisà</a></div>
   <div class="exts"><a class="btn primary ext" href="https://dialogue.rts.ch/rm/tools/video/subtitles-editor/" target="_blank" rel="noopener">Dialog Subtitles editor ↗</a><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
@@ -565,8 +569,13 @@ p.sub{margin:0;color:var(--muted)}
     <div class="row">
       <label>Format <select id="vi-fmt"></select></label>
       <button class="btn primary" id="vi-dl" type="button">Telechargiar</button>
+      <button class="btn primary" id="vi-gh" type="button" title="Memorisar ils suttitels sco SRT en il repository (Clicron/ICF-Film_DE_Untertitel_SRG.srt)">☁ Memorisar en GitHub</button>
       <span class="note" id="vi-dlinfo"></span>
     </div>
+    <form class="ghtok" id="vi-ghf" hidden>
+      <label for="vi-ghtok">GitHub-Token (fine-grained, mo «Contents: Read and write» per dombuzz/tools) – vegn memorisà mo en quest navigatur</label>
+      <div class="row"><input type="password" id="vi-ghtok" autocomplete="off" spellcheck="false" placeholder="github_pat_…"><button class="btn primary" type="submit">Memorisar token</button><button class="btn" type="button" id="vi-ghx">Interrumper</button></div>
+    </form>
   </section>
   </section>
 </main>
@@ -1936,20 +1945,72 @@ document.addEventListener('keydown', onKey);
   const p = (n, l) => String(n).padStart(l, '0');
   const ts = ms => { ms = Math.max(0, Math.round(ms)); return `${p(Math.floor(ms / 3600000), 2)}:${p(Math.floor(ms / 60000) % 60, 2)}:${p(Math.floor(ms / 1000) % 60, 2)},${p(ms % 1000, 3)}`; };
   const toSrt = a => a.map((c, i) => `${i + 1}\n${ts(c[0])} --> ${ts(c[1])}\n${c[2].join('\n')}`).join('\n\n') + '\n';
+  // lokaler Stand: {t: Zeit, c: Blöcke} (ältere Version: nur Blöcke)
   let saved = null; try { saved = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) {}
-  const src = saved && saved.length ? Promise.resolve(toSrt(saved)) : (async () => {
+  if (Array.isArray(saved)) saved = { t: 0, c: saved };
+  const GH = 'https://api.github.com/repos/dombuzz/tools', GPATH = 'Clicron/' + FN;
+  let tok = ''; try { tok = localStorage.getItem('clicron-gh-token') || ''; } catch (e) {}
+  const ghH = (x = {}) => Object.assign(tok ? { Authorization: 'Bearer ' + tok } : {}, { Accept: 'application/vnd.github+json' }, x);
+  let fromGh = false;
+  const fromServer = async () => {
+    // neuester Stand direkt aus GitHub (ohne Warten auf das Deploy); wenn das nicht geht: Datei auf tools.dombuzz.ch
+    try {
+      const r = await fetch(GH + '/contents/' + GPATH + '?ref=main', { headers: ghH({ Accept: 'application/vnd.github.raw+json' }), cache: 'no-store' });
+      if (r.ok) { const t = await r.text(); if (/-->/.test(t)) return t; }
+    } catch (e) {}
     // Pfad der Seite kann /Clicron/, /Clicron/index oder /Clicron/index.html sein – mehrere Orte probieren
     const p = location.pathname, dirs = [...new Set([p.replace(/[^/]*$/, ''), p.replace(/\/?$/, '/'), '/Clicron/', '/clicron/'])];
     for (const d of dirs) { try { const r = await fetch(d + FN, { cache: 'no-cache' }); if (r.ok) { const t = await r.text(); if (/-->/.test(t)) return t; } } catch (e) {} }
     throw 0;
+  };
+  const ghTime = async () => { try { const r = await fetch(GH + '/commits?path=' + encodeURIComponent(GPATH) + '&sha=main&per_page=1', { headers: ghH(), cache: 'no-store' }); if (!r.ok) return 0; const j = await r.json(); return Date.parse(j[0]?.commit?.committer?.date || '') || 0; } catch (e) { return 0; } };
+  const src = (async () => {
+    if (saved && saved.c && saved.c.length) {
+      const tg = await ghTime();
+      if (!tg || tg <= saved.t + 5000) return toSrt(saved.c);   // lokal ist neuer oder gleich
+      fromGh = true;
+    }
+    return fromServer();
   })();
   const snap = () => JSON.stringify(cues.map(c => [c.start, c.end, c.lines]));
   let last = null;
   src.then(t => {
     loadSubs(new File([t], NAME, { type: 'text/plain' }));
-    const w = setInterval(() => { if (!cues.length) return; clearInterval(w); last = snap(); if (saved && saved.length) msg('Tias midadas da la davosa giada èn restauradas.'); }, 50);
+    const w = setInterval(() => { if (!cues.length) return; clearInterval(w); last = snap(); if (fromGh) msg('Chargià il stadi memorisà en GitHub (pli nov ch’en quest navigatur).'); else if (saved && saved.c && saved.c.length) msg('Tias midadas da la davosa giada èn restauradas.'); }, 50);
   }).catch(() => msg('Ils suttitels n’han betg pudì vegnir chargiads.', true));
-  const store = () => { if (last === null || !cues.length) return; const s = snap(); if (s !== last) { try { localStorage.setItem(SKEY, s); } catch (e) {} last = s; } };
+  const store = () => { if (last === null || !cues.length) return; const s = snap(); if (s !== last) { try { localStorage.setItem(SKEY, '{"t":' + Date.now() + ',"c":' + s + '}'); } catch (e) {} last = s; } };
+  // ---- In GitHub speichern (überschreibt Clicron/ICF-Film_DE_Untertitel_SRG.srt) ----
+  const b64 = str => { const u = new TextEncoder().encode(str); let b = ''; for (let i = 0; i < u.length; i += 0x8000) b += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(b); };
+  const ghInfo = (t, err) => { $('dlinfo').textContent = t; $('dlinfo').style.color = err ? 'var(--err)' : ''; };
+  async function ghSave() {
+    if (!tok) { $('ghf').hidden = false; $('ghtok').focus(); return; }
+    const out = cues.slice().sort((a, b) => a.start - b.start)
+      .map(c => ({ start: c.start, end: c.end, lines: c.lines.map(l => l.trim()).filter(Boolean) })).filter(c => c.lines.length);
+    if (!out.length) return ghInfo('Nagins suttitels per memorisar.', true);
+    const btn = $('gh'); btn.disabled = true; ghInfo('Memorisescha en GitHub …');
+    try {
+      const g = await fetch(GH + '/contents/' + GPATH + '?ref=main', { headers: ghH(), cache: 'no-store' });
+      if (g.status === 401 || g.status === 403) throw new Error('auth');
+      const sha = g.ok ? (await g.json()).sha : undefined;
+      const now = new Date(), stamp = now.toLocaleString('de-CH');
+      const r = await fetch(GH + '/contents/' + GPATH, { method: 'PUT', headers: ghH({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ message: 'Clicron: Untertitel gespeichert (' + stamp + ')', content: b64(SUB.write(out, 'srt').text), sha, branch: 'main' }) });
+      if (r.status === 401 || r.status === 403 || r.status === 404) throw new Error('auth');
+      if (r.status === 409) throw new Error('conflict');
+      if (!r.ok) throw new Error('http');
+      store(); try { const x = JSON.parse(localStorage.getItem(SKEY) || 'null'); if (x) { x.t = Date.now(); localStorage.setItem(SKEY, JSON.stringify(x)); } } catch (e) {}
+      dirty = false; ghInfo('Memorisà en GitHub · ' + now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }));
+    } catch (e) {
+      if (e.message === 'auth') { ghInfo('Il token na funcziuna betg (scadì u senza dretg «Contents: write»). Endatar in nov token.', true); tok = ''; try { localStorage.removeItem('clicron-gh-token'); } catch (x) {} $('ghf').hidden = false; }
+      else if (e.message === 'conflict') ghInfo('Conflict: il file è vegnì midà en il fratemp. Smatgar anc ina giada.', true);
+      else ghInfo('Memorisar n’ha betg funcziunà (rait?). Emprova anc ina giada.', true);
+    } finally { btn.disabled = false; }
+  }
+  $('gh').onclick = ghSave;
+  $('ghf').addEventListener('submit', e => { e.preventDefault(); const v = $('ghtok').value.trim(); if (!v) return; tok = v; try { localStorage.setItem('clicron-gh-token', v); } catch (x) {} $('ghtok').value = ''; $('ghf').hidden = true; ghSave(); });
+  $('ghx').onclick = () => { $('ghf').hidden = true; };
+  // Ctrl+S = in GitHub speichern
+  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); ghSave(); } });
   setInterval(store, 1500);
   addEventListener('pagehide', store);
   // Video direkt von SharePoint (download=1 liefert die Datei statt der Player-Seite)
@@ -1960,7 +2021,6 @@ document.addEventListener('keydown', onKey);
     media.src = SP; mediaFile = null; peaks = null;
     $('mName').textContent = 'CLIC ICF v20261111 (SharePoint)'; $('mInfo').textContent = 'Chargia da SharePoint …'; $('dropM').classList.add('ok'); showWork();
   }
-  $('clreset').onclick = () => { if (!confirm('Stizzar tut tias midadas e chargiar l’SRT original da nov?')) return; try { localStorage.removeItem(SKEY); } catch (e) {} dirty = false; location.reload(); };
 })();
 // Hat das Video den Fokus, würde der Browser zusätzlich selber springen (±5 s) – das unterbinden wir
 const mediaKeys = e => { if (e.target === media && /^(Arrow(Left|Right|Up|Down)| )$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); e.stopPropagation(); onKey(e); } };
