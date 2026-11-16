@@ -305,7 +305,7 @@ p.sub{margin:0;color:var(--muted)}
   <a class="homelink" href="/UTstudio#sincronisar">← Subtitle Studio</a>
   <h1>CLIC ICF – <span class="acc">Sincronisar</span></h1>
   <p class="sub">Copia privata per il film CLIC ICF. Ils suttitels DE vegnan chargiads automaticamain, midadas vegnan memorisadas en quest navigatur. Il video: avrir en SharePoint, telechargiar e trair en il champ «Video u audio».</p>
-  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><a href="/clicron/ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT original</a><button type="button" id="vi-clreset">↺ Turnar a l’SRT original</button></div>
+  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><a href="ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT original</a><button type="button" id="vi-clreset">↺ Turnar a l’SRT original</button></div>
   <div class="exts"><a class="btn primary ext" href="https://dialogue.rts.ch/rm/tools/video/subtitles-editor/" target="_blank" rel="noopener">Dialog Subtitles editor ↗</a><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
@@ -1932,7 +1932,7 @@ function onKey(e) {
 document.addEventListener('keydown', onKey);
 // ---- clicron: SRT vorladen, Änderungen im Browser sichern ----
 (() => {
-  const SKEY = 'clicron-icf-cues', SRC = '/clicron/ICF-Film_DE_Untertitel_SRG.srt', NAME = 'ICF-Film_DE_Untertitel_SRG.srt';
+  const SKEY = 'clicron-icf-cues', SRC = (location.pathname.endsWith('/') ? location.pathname : /\.html?$/i.test(location.pathname) ? location.pathname.replace(/[^/]*$/, '') : location.pathname + '/') + 'ICF-Film_DE_Untertitel_SRG.srt', NAME = 'ICF-Film_DE_Untertitel_SRG.srt';
   const p = (n, l) => String(n).padStart(l, '0');
   const ts = ms => { ms = Math.max(0, Math.round(ms)); return `${p(Math.floor(ms / 3600000), 2)}:${p(Math.floor(ms / 60000) % 60, 2)}:${p(Math.floor(ms / 1000) % 60, 2)},${p(ms % 1000, 3)}`; };
   const toSrt = a => a.map((c, i) => `${i + 1}\n${ts(c[0])} --> ${ts(c[1])}\n${c[2].join('\n')}`).join('\n\n') + '\n';
@@ -1947,6 +1947,14 @@ document.addEventListener('keydown', onKey);
   const store = () => { if (last === null || !cues.length) return; const s = snap(); if (s !== last) { try { localStorage.setItem(SKEY, s); } catch (e) {} last = s; } };
   setInterval(store, 1500);
   addEventListener('pagehide', store);
+  // Video direkt von SharePoint (download=1 liefert die Datei statt der Player-Seite)
+  const SP = 'https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l&download=1';
+  if (!hasMedia()) {
+    const fail = () => { if (media.getAttribute('src') !== SP) return; media.removeAttribute('src'); media.load(); $('mName').textContent = 'Video u audio'; $('mInfo').textContent = 'SharePoint na lubescha betg il video directamain – telechargiar e trair qua'; $('dropM').classList.remove('ok'); showWork(); msg('Il video da SharePoint n’ha betg pudì vegnir chargià directamain. Avrir «Video en SharePoint», telechargiar e trair en il champ «Video u audio».', true); };
+    media.addEventListener('error', fail, { once: true });
+    media.src = SP; mediaFile = null; peaks = null;
+    $('mName').textContent = 'CLIC ICF v20261111 (SharePoint)'; $('mInfo').textContent = 'Chargia da SharePoint …'; $('dropM').classList.add('ok'); showWork();
+  }
   $('clreset').onclick = () => { if (!confirm('Stizzar tut tias midadas e chargiar l’SRT original da nov?')) return; try { localStorage.removeItem(SKEY); } catch (e) {} dirty = false; location.reload(); };
 })();
 // Hat das Video den Fokus, würde der Browser zusätzlich selber springen (±5 s) – das unterbinden wir
