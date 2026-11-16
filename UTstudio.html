@@ -205,6 +205,47 @@ p.sub{margin:0;color:var(--muted)}
 #tab-de .notice.err{background:var(--err-bg);color:var(--err)}
 @media (max-width:760px){#tab-de .seg-head{grid-template-columns:1fr}
 #tab-de .cue{grid-template-columns:1fr}}
+/* ---- text (avrir, elavurar e salvar SRT/TTML) ---- */
+#tab-tx{display:grid;gap:16px}
+#tab-tx .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
+#tab-tx .card h2{font-size:.95rem;margin:0;display:flex;gap:8px;align-items:center}
+#tab-tx .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:.75rem;font-weight:700}
+#tab-tx .drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;background:var(--bg);min-width:0}
+#tab-tx .drop:hover,#tab-tx .drop.over,#tab-tx .drop:focus-visible{border-color:var(--accent);outline:none}
+#tab-tx .drop.ok{border-style:solid;padding:16px}
+#tab-tx .drop b{display:block;word-break:break-all}
+#tab-tx .drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
+#tab-tx .note{color:var(--muted);font-size:13px;margin:0}
+#tab-tx .note.err{color:var(--err)}
+#tab-tx label{display:grid;gap:4px;font-size:.82rem;color:var(--muted)}
+#tab-tx label.chk{display:flex;gap:6px;align-items:center;color:var(--ink)}
+#tab-tx input,#tab-tx select,#tab-tx textarea{font:inherit;font-size:15px;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+#tab-tx input[type=checkbox]{width:auto;padding:0}
+#tab-tx input:focus,#tab-tx select:focus,#tab-tx textarea:focus{outline:none;border-color:var(--accent)}
+#tab-tx .tools{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+#tab-tx .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+#tab-tx button.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+#tab-tx button.btn:hover:not(:disabled){border-color:var(--accent)}
+#tab-tx button.btn:disabled{opacity:.45;cursor:default}
+#tab-tx button.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#tab-tx details.find{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+#tab-tx details.find summary{cursor:pointer;font-weight:600;font-size:.9rem}
+#tab-tx details.find .row{margin-top:8px}
+#tab-tx .cues{display:grid;gap:8px;max-height:72vh;overflow:auto;padding-right:4px}
+#tab-tx .cue{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);display:grid;gap:6px}
+#tab-tx .cue.mod{border-left-color:var(--warn)}
+#tab-tx .cue.err{border-left-color:var(--err)}
+#tab-tx .cue.hit{background:var(--warn-bg)}
+#tab-tx .c-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:.78rem;color:var(--muted)}
+#tab-tx .c-n{font-weight:700;color:var(--ink);min-width:2.2em}
+#tab-tx .c-t{font-variant-numeric:tabular-nums}
+#tab-tx .c-len{margin-left:auto;font-variant-numeric:tabular-nums}
+#tab-tx .c-len .bad{color:var(--err);font-weight:700}
+#tab-tx textarea{width:100%;resize:vertical;min-height:2.7em;font-size:15px;line-height:1.4}
+#tab-tx .hide-ok .cue:not(.err){display:none}
+#tab-tx .sum{font-size:.85rem;color:var(--muted)}
+#tab-tx .sum b{color:var(--ink)}
+#tab-tx .sum .e{color:var(--err)}
 /* ---- sincronisar (video/audio + timing da singuls blocs) ---- */
 #tab-vi{display:grid;gap:16px}
 #tab-vi .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
@@ -300,6 +341,7 @@ p.sub{margin:0;color:var(--muted)}
     <button type="button" role="tab" data-tab="cu" aria-selected="false" aria-controls="tab-cu">Cumparegliar</button>
     <button type="button" role="tab" data-tab="de" aria-selected="false" aria-controls="tab-de">RM <em>→</em> DE</button>
     <button type="button" role="tab" data-tab="vi" aria-selected="false" aria-controls="tab-vi">Sincronisar</button>
+    <button type="button" role="tab" data-tab="tx" aria-selected="false" aria-controls="tab-tx">Text</button>
   </div>
   <section class="pane" id="tab-sp" role="tabpanel">
 <div class="intro"><p class="sub">Spustar ils suttitels pli tard u pli baud – en uras, minutas, secundas e maletgs.</p></div>
@@ -538,6 +580,43 @@ p.sub{margin:0;color:var(--muted)}
     </div>
   </section>
   </section>
+  <section class="pane" id="tab-tx" role="tabpanel" hidden>
+<div class="intro"><p class="sub">Avrir in file SRT u TTML, curreger il text dals suttitels e salvar puspè sco SRT u TTML. Ils temps restan sco ch'els èn.</p></div>
+
+  <section class="card">
+    <h2><span class="num">1</span> File da suttitels</h2>
+    <div class="drop" id="tx-drop" tabindex="0" role="button" aria-label="Tscherner in file da suttitels"><b id="tx-name">Trair qua il file</b><small id="tx-info">u cliccar per tscherner · SRT · TTML</small><input id="tx-file" type="file" accept=".srt,.ttml,.xml,.vtt,.dfxp" hidden></div>
+    <p class="note" id="tx-msg" aria-live="polite"></p>
+  </section>
+
+  <section class="card" id="tx-work" hidden>
+    <h2><span class="num">2</span> Elavurar il text</h2>
+    <div class="tools">
+      <span class="sum" id="tx-sum"></span>
+      <label class="chk"><input type="checkbox" id="tx-onlybad"> Mo blocs cun lingias memia lungas</label>
+      <button class="btn" id="tx-fixsp" type="button" title="Spazis dubels e spazis a l'ur stizzar">Stizzar spazis dubels</button>
+    </div>
+    <details class="find"><summary>Chattar e remplazzar</summary>
+      <div class="row">
+        <label>Chattar <input id="tx-q" autocomplete="off" spellcheck="false"></label>
+        <label>Remplazzar cun <input id="tx-r" autocomplete="off" spellcheck="false"></label>
+        <label class="chk"><input type="checkbox" id="tx-case"> Majusclas/minusclas</label>
+      </div>
+      <div class="row"><button class="btn" id="tx-fnext" type="button">Chattar</button><button class="btn" id="tx-fall" type="button">Remplazzar tut</button><span class="note" id="tx-fmsg"></span></div>
+    </details>
+    <div class="cues" id="tx-list"></div>
+    <p class="note">Mintga lingia en il champ è ina lingia dal suttitel. Blocs senza text vegnan laschads davent cun salvar.</p>
+  </section>
+
+  <section class="card" id="tx-exp" hidden>
+    <h2><span class="num">3</span> Salvar</h2>
+    <div class="row">
+      <label>Format <select id="tx-fmt"><option value="srt">SRT</option><option value="ttml">TTML (RTR)</option></select></label>
+      <button class="btn primary" id="tx-dl" type="button">↓ Telechargiar</button>
+      <span class="note" id="tx-dlinfo"></span>
+    </div>
+  </section>
+  </section>
 </main>
 <script>
 // ---- Suttitels: lesen und schreiben (gleich in srt2ttml, spustar, cumparegliar) ----
@@ -684,18 +763,18 @@ const SUB = (() => {
 
 // ---- Tabs ----
 (() => {
-  const HASH = { spustar: 'sp', cumparegliar: 'cu', 'rm-de': 'de', 'de-rm': 'de', subs: 'de', sincronisar: 'vi' }, NAME = { sp: 'spustar', cu: 'cumparegliar', de: 'rm-de', vi: 'sincronisar' };
+  const HASH = { spustar: 'sp', cumparegliar: 'cu', 'rm-de': 'de', 'de-rm': 'de', subs: 'de', sincronisar: 'vi', text: 'tx' }, NAME = { sp: 'spustar', cu: 'cumparegliar', de: 'rm-de', vi: 'sincronisar', tx: 'text' };
   const btns = [...document.querySelectorAll('.tabs [data-tab]')];
   function setTab(t, push) {
     btns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-    for (const k of ['sp', 'cu', 'de', 'vi']) document.getElementById('tab-' + k).hidden = k !== t;
+    for (const k of ['sp', 'cu', 'de', 'vi', 'tx']) document.getElementById('tab-' + k).hidden = k !== t;
     try { localStorage.setItem('studio-tab', t); } catch (e) {}
     if (push) history.replaceState(null, '', '#' + (t === 'de' && window.__utDir && window.__utDir() === 'derm' ? 'de-rm' : NAME[t]));
   }
   btns.forEach(b => b.onclick = () => setTab(b.dataset.tab, true));
   let t = HASH[location.hash.slice(1)];
   if (!t) try { t = localStorage.getItem('studio-tab'); } catch (e) {}
-  setTab(/^(sp|cu|de|vi)$/.test(t || '') ? t : 'sp');
+  setTab(/^(sp|cu|de|vi|tx)$/.test(t || '') ? t : 'sp');
   addEventListener('hashchange', () => { const h = HASH[location.hash.slice(1)]; if (h) setTab(h); });
 })();
 // ---- spustar.html ----
@@ -1892,6 +1971,131 @@ new MutationObserver(() => { if (ROOT.hidden) media.pause(); }).observe(ROOT, { 
 window.__vi = { take, get cues() { return cues; }, act, select, get peaks() { return peaks; }, get view() { return [vs, vd]; } };
 })();
 
+
+// ---- text: avrir, elavurar e salvar ----
+(() => {
+'use strict';
+const ROOT = document.getElementById('tab-tx');
+const $ = id => document.getElementById('tx-' + id);
+let cues = [], base = 'suttitels', dirty = false;
+const esc = SUB.xesc;
+const maxLine = () => +(document.getElementById('de-maxLine') || {}).value || 37;
+const msg = (t, err) => { $('msg').textContent = t || ''; $('msg').classList.toggle('err', !!err); };
+const plural = (n, a, b) => n === 1 ? '1 ' + a : n + ' ' + b;
+
+function lens(c) { return c.text.split('\n').map(l => l.trim().length); }
+function badOf(c) { const m = maxLine(); return lens(c).some(n => n > m); }
+function lenHtml(c) { const m = maxLine(); return lens(c).map(n => n > m ? `<span class="bad">${n}</span>` : n).join(' / ') + ` <span title="Caracters per lingia (max. ${m})">car.</span>`; }
+
+function render() {
+  $('list').innerHTML = cues.map((c, i) => `<div class="cue${c.text !== c.orig ? ' mod' : ''}${badOf(c) ? ' err' : ''}" data-i="${i}">
+    <div class="c-top"><span class="c-n">${i + 1}</span><span class="c-t">${SUB.show(c.start)} – ${SUB.show(c.end)}</span><span class="c-len">${lenHtml(c)}</span></div>
+    <textarea rows="${Math.max(2, c.text.split('\n').length)}" spellcheck="true" lang="${document.documentElement.lang || 'rm'}">${esc(c.text)}</textarea></div>`).join('');
+  summary();
+}
+function refreshCue(el) {
+  const c = cues[+el.dataset.i];
+  el.classList.toggle('mod', c.text !== c.orig); el.classList.toggle('err', badOf(c));
+  el.querySelector('.c-len').innerHTML = lenHtml(c);
+}
+function summary() {
+  const mod = cues.filter(c => c.text !== c.orig).length, bad = cues.filter(badOf).length, empty = cues.filter(c => !c.text.trim()).length;
+  $('sum').innerHTML = `<b>${plural(cues.length, 'bloc', 'blocs')}</b> · ${mod} midads` + (bad ? ` · <span class="e">${bad} cun lingias memia lungas</span>` : '') + (empty ? ` · ${empty} vids` : '');
+  $('dlinfo').textContent = '';
+}
+
+$('list').addEventListener('input', e => {
+  if (e.target.tagName !== 'TEXTAREA') return;
+  const el = e.target.closest('.cue'), c = cues[+el.dataset.i];
+  c.text = e.target.value; dirty = true;
+  e.target.rows = Math.max(2, c.text.split('\n').length);
+  refreshCue(el); summary();
+});
+$('onlybad').onchange = e => $('list').classList.toggle('hide-ok', e.target.checked);
+$('fixsp').onclick = () => {
+  let n = 0;
+  cues.forEach(c => { const t = c.text.split('\n').map(l => l.replace(/[ \t ]{2,}/g, ' ').trim()).join('\n').replace(/\n{2,}/g, '\n').trim(); if (t !== c.text) { c.text = t; n++; } });
+  if (n) { dirty = true; render(); }
+  msg(n ? `${plural(n, 'bloc pulì', 'blocs pulids')}.` : 'Chattà nagins spazis dubels.');
+};
+
+// Chattar e remplazzar
+let pos = -1;
+function rx(global) {
+  const q = $('q').value; if (!q) return null;
+  return new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), (global ? 'g' : '') + ($('case').checked ? '' : 'i') + 'u');
+}
+function markHits() {
+  const r = rx(false); let n = 0;
+  $('list').querySelectorAll('.cue').forEach(el => { const h = !!r && r.test(cues[+el.dataset.i].text); el.classList.toggle('hit', h); if (h) n++; });
+  $('fmsg').textContent = r ? (n ? `En ${plural(n, 'bloc', 'blocs')}` : 'Chattà nagut') : '';
+  return n;
+}
+$('q').addEventListener('input', () => { pos = -1; markHits(); });
+$('case').addEventListener('change', () => { pos = -1; markHits(); });
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('fnext').click(); } });
+$('fnext').onclick = () => {
+  const r = rx(false); if (!r || !markHits()) return;
+  for (let k = 1; k <= cues.length; k++) {
+    const i = (pos + k) % cues.length;
+    if (r.test(cues[i].text)) {
+      pos = i; const el = $('list').querySelector(`.cue[data-i="${i}"]`), ta = el.querySelector('textarea');
+      if ($('onlybad').checked && !el.classList.contains('err')) { $('onlybad').checked = false; $('list').classList.remove('hide-ok'); }
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      const m = cues[i].text.match(r); ta.focus({ preventScroll: true }); ta.setSelectionRange(m.index, m.index + m[0].length);
+      return;
+    }
+  }
+};
+$('fall').onclick = () => {
+  const r = rx(true); if (!r) return; let n = 0, b = 0;
+  cues.forEach(c => { const m = c.text.match(r); if (m) { n += m.length; b++; c.text = c.text.replace(r, $('r').value); } });
+  if (n) { dirty = true; render(); markHits(); }
+  $('fmsg').textContent = n ? `${plural(n, 'remplazzament', 'remplazzaments')} en ${plural(b, 'bloc', 'blocs')}` : 'Chattà nagut';
+};
+
+// Avrir
+function load(f) {
+  if (!f) return;
+  if (dirty && cues.length && !confirm('Las midadas vegnan pers. Avrir tuttina in auter file?')) return;
+  SUB.read(f).then(text => {
+    const { format, cues: list } = SUB.parse(text);
+    if (!list.length) { msg('Chattà nagins suttitels – è quai in file SRT u TTML?', true); return; }
+    cues = list.map(c => { const t = c.lines.join('\n').normalize('NFC'); return { start: c.start, end: c.end, text: t, orig: t }; });
+    base = SUB.base(f.name); dirty = false; pos = -1;
+    $('name').textContent = f.name;
+    $('info').textContent = `${SUB.FORMATS[format]} · ${plural(cues.length, 'suttitel', 'suttitels')} · cliccar per in auter file`;
+    $('drop').classList.add('ok'); msg('');
+    $('fmt').value = format === 'ttml' ? 'ttml' : 'srt';
+    $('work').hidden = $('exp').hidden = false;
+    render(); markHits();
+  });
+}
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } };
+$('file').onchange = e => { load(e.target.files[0]); e.target.value = ''; };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove('over'); load(e.dataTransfer.files[0]); };
+document.addEventListener('drop', e => { if (ROOT.hidden) return; const f = e.dataTransfer && e.dataTransfer.files[0]; if (f && /\.(srt|ttml|xml|vtt|dfxp)$/i.test(f.name)) { e.preventDefault(); load(f); } });
+
+// Salvar
+$('dl').onclick = () => {
+  const out = cues.map(c => ({ start: c.start, end: c.end, lines: c.text.split('\n').map(l => l.trim().normalize('NFC')).filter(Boolean) }));
+  const keep = out.filter(c => c.lines.length), skipped = out.length - keep.length;
+  const o = SUB.write(keep, $('fmt').value);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([o.text], { type: o.mime })); a.download = base + '_elavurà' + o.ext;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  $('dlinfo').textContent = `${a.download} · ${plural(keep.length, 'suttitel', 'suttitels')}` + (skipped ? ` · ${skipped} vids laschads davent` : '');
+  dirty = false; window.dispatchEvent(new Event('dbz-success'));
+};
+window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+['maxLine'].forEach(id => document.getElementById('de-' + id)?.addEventListener('change', () => { if (cues.length) render(); }));
+
+window.__tx = { load, get cues() { return cues; } };
+})();
 </script>
 <script src="/like.js" defer></script>
 </body>
