@@ -318,7 +318,7 @@ p.sub{margin:0;color:var(--muted)}
   <a class="homelink" href="/UTstudio#sincronisar">← Subtitle Studio</a>
   <h1>CLIC ICF – <span class="acc">Sincronisar</span></h1>
   <p class="sub">Copia privata per il film CLIC ICF. Ils suttitels DE vegnan chargiads automaticamain, midadas vegnan memorisadas en quest navigatur. Il video: avrir en SharePoint, telechargiar e trair en il champ «Video u audio».</p>
-  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><a href="/Clicron/ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT memorisà</a></div>
+  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><button type="button" id="vi-golast">⤳ Davosa midada</button><a href="/Clicron/ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT memorisà</a></div>
   <div class="exts"><a class="btn primary ext" href="https://dialogue.rts.ch/rm/tools/video/subtitles-editor/" target="_blank" rel="noopener">Dialog Subtitles editor ↗</a><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
@@ -1972,22 +1972,42 @@ document.addEventListener('keydown', onKey);
     for (const d of dirs) { try { const r = await fetch(d + FN, { cache: 'no-cache' }); if (r.ok) { const t = await r.text(); if (/-->/.test(t)) return t; } } catch (e) {} }
     throw 0;
   };
-  const ghTime = async () => { try { const r = await fetch(GH + '/commits?path=' + encodeURIComponent(GPATH) + '&sha=main&per_page=1', { headers: ghH(), cache: 'no-store' }); if (!r.ok) return 0; const j = await r.json(); return Date.parse(j[0]?.commit?.committer?.date || '') || 0; } catch (e) { return 0; } };
+  const ghTime = async () => { try { const r = await fetch(GH + '/commits?path=' + encodeURIComponent(GPATH) + '&sha=main&per_page=1', { headers: ghH(), cache: 'no-store' }); if (!r.ok) return {}; const j = await r.json(), m = (j[0]?.commit?.message || '').match(/\[pos:(\d+)\]/); return { t: Date.parse(j[0]?.commit?.committer?.date || '') || 0, pos: m ? +m[1] : null }; } catch (e) { return {}; } };
+  let lastPos = saved && saved.pos != null ? saved.pos : null, ghPos = null;
   const src = (async () => {
+    const g = await ghTime(); ghPos = g.pos ?? null;
     if (saved && saved.c && saved.c.length) {
-      const tg = await ghTime();
-      if (!tg || tg <= saved.t + 5000) return toSrt(saved.c);   // lokal ist neuer oder gleich
+      if (!g.t || g.t <= saved.t + 5000) return toSrt(saved.c);   // lokal ist neuer oder gleich
       fromGh = true;
     }
+    if (ghPos != null) lastPos = ghPos;
     return fromServer();
   })();
   const snap = () => JSON.stringify(cues.map(c => [c.start, c.end, c.lines]));
   let last = null;
   src.then(t => {
     loadSubs(new File([t], NAME, { type: 'text/plain' }));
-    const w = setInterval(() => { if (!cues.length) return; clearInterval(w); last = snap(); if (fromGh) msg('Chargià il stadi memorisà en GitHub (pli nov ch’en quest navigatur).'); else if (saved && saved.c && saved.c.length) msg('Tias midadas da la davosa giada èn restauradas.'); }, 50);
+    const w = setInterval(() => {
+      if (!cues.length) return; clearInterval(w); last = snap();
+      const where = lastPos != null ? goLast(false) : '';
+      if (fromGh) msg('Chargià il stadi memorisà en GitHub (pli nov ch’en quest navigatur).' + where);
+      else if (saved && saved.c && saved.c.length) msg('Tias midadas da la davosa giada èn restauradas.' + where);
+      else if (where) msg(where.trim());
+    }, 50);
   }).catch(() => msg('Ils suttitels n’han betg pudì vegnir chargiads.', true));
-  const store = () => { if (last === null || !cues.length) return; const s = snap(); if (s !== last) { try { localStorage.setItem(SKEY, '{"t":' + Date.now() + ',"c":' + s + '}'); } catch (e) {} last = s; } };
+  const store = () => { if (last === null || !cues.length) return; const s = snap(); if (s !== last) { if (sel) lastPos = sel.start; try { localStorage.setItem(SKEY, '{"t":' + Date.now() + ',"pos":' + (lastPos ?? 'null') + ',"c":' + s + '}'); } catch (e) {} last = s; } };
+  // zur letzten Änderung springen (Block auswählen, Liste scrollen, Video dorthin)
+  function goLast(say = true) {
+    if (lastPos == null || !cues.length) return '';
+    let c = cues[0]; for (const x of cues) if (Math.abs(x.start - lastPos) < Math.abs(c.start - lastPos)) c = x;
+    select(c, true);
+    const seek = () => { try { media.currentTime = c.start / 1000; } catch (e) {} };
+    if (hasMedia() && media.readyState >= 1) seek(); else media.addEventListener('loadedmetadata', seek, { once: true });
+    const n = cues.indexOf(c) + 1, t = ' Davosa midada: bloc ' + n + ' (' + SUB.show(c.start).replace(/,\d+$/, '') + ').';
+    if (say) msg(t.trim());
+    return t;
+  }
+  $('golast').onclick = () => { if (!goLast(true)) msg('Anc nagina midada memorisada.'); };
   // ---- In GitHub speichern (überschreibt Clicron/ICF-Film_DE_Untertitel_SRG.srt) ----
   const b64 = str => { const u = new TextEncoder().encode(str); let b = ''; for (let i = 0; i < u.length; i += 0x8000) b += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(b); };
   const ghInfo = (t, err) => { $('dlinfo').textContent = t; $('dlinfo').style.color = err ? 'var(--err)' : ''; };
@@ -2051,7 +2071,7 @@ document.addEventListener('keydown', onKey);
       const sha = g.ok ? (await g.json()).sha : undefined;
       const now = new Date(), stamp = now.toLocaleString('de-CH');
       const r = await fetch(GH + '/contents/' + GPATH, { method: 'PUT', headers: ghH({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ message: 'Clicron: Untertitel gespeichert (' + stamp + ')', content: b64(SUB.write(out, 'srt').text), sha, branch: 'main' }) });
+        body: JSON.stringify({ message: 'Clicron: Untertitel gespeichert (' + stamp + ')' + (lastPos != null ? ' [pos:' + lastPos + ']' : ''), content: b64(SUB.write(out, 'srt').text), sha, branch: 'main' }) });
       if (r.status === 401 || r.status === 403 || r.status === 404) throw new Error('auth');
       if (r.status === 409) throw new Error('conflict');
       if (!r.ok) throw new Error('http');
