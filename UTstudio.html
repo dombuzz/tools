@@ -216,6 +216,10 @@ p.sub{margin:0;color:var(--muted)}
 #tab-vi .drop.ok{border-style:solid}
 #tab-vi .drop b{display:block;word-break:break-all}
 #tab-vi .drop small{display:block;margin-top:6px;color:var(--muted);font-size:.8rem}
+#tab-vi .urlrow{display:flex;gap:8px;margin:12px 0 0}
+#tab-vi .urlrow input{flex:1;min-width:0;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit}
+#tab-vi .urlrow input:focus{outline:none;border-color:var(--accent)}
+#tab-vi .urlrow .btn{flex:none;white-space:nowrap}
 #tab-vi .note{color:var(--muted);font-size:13px;margin:0}
 #tab-vi .note.err{color:var(--err)}
 #tab-vi .keys{margin-top:10px}
@@ -504,6 +508,7 @@ p.sub{margin:0;color:var(--muted)}
       <div class="drop" id="vi-dropM" tabindex="0" role="button" aria-label="Tscherner video u audio"><b id="vi-mName">Video u audio</b><small id="vi-mInfo">Trair qua u cliccar · il file resta en tes navigatur</small><input id="vi-fileM" type="file" accept="video/*,audio/*,.mkv,.mov,.m4a,.mp3,.wav" hidden></div>
       <div class="drop" id="vi-dropS" tabindex="0" role="button" aria-label="Tscherner in file da suttitels"><b id="vi-sName">Suttitels</b><small id="vi-sInfo">SRT, TTML, VTT … · trair qua u cliccar</small><input id="vi-fileS" type="file" accept=".srt,.ttml,.xml,.vtt,.sbv,.ass,.ssa,.txt" hidden></div>
     </div>
+    <form class="urlrow" id="vi-urlf"><input type="url" id="vi-url" placeholder="… u URL publica d’in video u audio (https://…)" aria-label="URL publica da video u audio" autocomplete="off" spellcheck="false"><button class="btn" type="submit">Chargiar URL</button></form>
     <p class="note" id="vi-msg" aria-live="polite"></p>
   </section>
 
@@ -1670,7 +1675,7 @@ media.addEventListener('loadedmetadata', () => {
   vd = Math.min(30000, Math.max(2000, media.duration * 1000 || 30000)); vs = 0; wkey = '';
   renderStrip(); tick();
 });
-media.addEventListener('error', () => msg('Quest file na po betg vegnir reproducì en quest navigatur (format?).', true));
+media.addEventListener('error', () => { if (!hasMedia()) return; msg(mediaFile && mediaFile.url ? 'La URL na po betg vegnir chargiada: è ella publica e maina directamain ad in file da video u audio?' : 'Quest file na po betg vegnir reproducì en quest navigatur (format?).', true); if (mediaFile && mediaFile.url) $('mInfo').textContent = 'Betg chargià · cliccar per in file local'; });
 $('rate').onchange = () => { media.playbackRate = +$('rate').value; };
 
 // ---- Undas da tun (Wellenform, optional) ----
@@ -1678,9 +1683,18 @@ async function decodeWave() {
   const f = mediaFile; if (!f || peaks) return;
   if (f.size > WAVE_MAX) { $('wmsg').textContent = 'File memia grond per las undas da tun.'; return; }
   $('wmsg').textContent = 'Chargia las undas da tun …';
+  let data;
+  if (f.url) {
+    try {
+      const r = await fetch(f.url); if (!r.ok) throw 0;
+      if (+r.headers.get('content-length') > WAVE_MAX) { $('wmsg').textContent = 'File memia grond per las undas da tun.'; return; }
+      data = await r.arrayBuffer();
+    } catch (e) { if (f === mediaFile) $('wmsg').textContent = 'Undas da tun: il server da la URL na lubescha betg l’access – telechargiar il file e trair qua.'; return; }
+    if (f !== mediaFile) return;
+  }
   try {
     const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    const buf = await new AC(1, 1, 4000).decodeAudioData(await f.arrayBuffer());
+    const buf = await new AC(1, 1, 4000).decodeAudioData(data || await f.arrayBuffer());
     if (f !== mediaFile) return;
     const n = buf.length, step = Math.max(1, Math.round(buf.sampleRate * BIN / 1000)), bins = Math.ceil(n / step), p = new Float32Array(bins);
     for (let ch = 0; ch < buf.numberOfChannels; ch++) {
@@ -1803,6 +1817,28 @@ function loadMedia(f) {
   $('mName').textContent = f.name; $('mInfo').textContent = 'Chargia …'; $('dropM').classList.add('ok');
   msg(''); showWork();
 }
+// Video/Audio via öffentliche URL (Dropbox/Google Drive werden in Direktlinks umgewandelt)
+function directUrl(u) {
+  let x; try { x = new URL(u.trim()); } catch (e) { return null; }
+  if (!/^https?:$/.test(x.protocol)) return null;
+  if (/(^|\.)dropbox\.com$/.test(x.hostname)) { x.searchParams.delete('dl'); x.searchParams.set('raw', '1'); }
+  const g = /drive\.google\.com$/.test(x.hostname) && (x.pathname.match(/\/file\/d\/([^/]+)/) || [])[1];
+  if (g) return 'https://drive.google.com/uc?export=download&id=' + g;
+  return x.href;
+}
+function loadMediaUrl(raw) {
+  const u = directUrl(raw);
+  if (!u) return msg('Quai n’è nagina URL valida (https://…).', true);
+  if (/(youtube\.com|youtu\.be|vimeo\.com|srf\.ch\/play|rtr\.ch\/play)/i.test(u)) return msg('Quella URL è ina pagina da video, betg il file sez. Duvra in link direct ad in file (.mp4, .mp3 …).', true);
+  if (mediaUrl) URL.revokeObjectURL(mediaUrl); mediaUrl = null;
+  media.pause(); stopAt = 0;
+  media.src = u;
+  let name = u; try { name = decodeURIComponent(new URL(u).pathname.split('/').pop()) || new URL(u).hostname; } catch (e) {}
+  mediaFile = { url: u, name }; peaks = null; wkey = ''; vs = 0; $('wmsg').textContent = '';
+  $('mName').textContent = name; $('mInfo').textContent = 'Chargia da la URL …'; $('dropM').classList.add('ok');
+  msg(''); showWork();
+}
+$('urlf').addEventListener('submit', e => { e.preventDefault(); if ($('url').value.trim()) loadMediaUrl($('url').value); });
 function loadSubs(f) {
   SUB.read(f).then(text => {
     const r = SUB.parse(text, 25);
@@ -1828,7 +1864,7 @@ for (const [d, i] of [['dropM', 'fileM'], ['dropS', 'fileS']]) {
   drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); inp.click(); } });
   ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
   ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', e => take([...e.dataTransfer.files]));
+  drop.addEventListener('drop', e => { const fs = [...e.dataTransfer.files]; if (fs.length) return take(fs); const u = (e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain') || '').split('\n')[0].trim(); if (d === 'dropM' && /^https?:\/\//.test(u)) { $('url').value = u; loadMediaUrl(u); } });
 }
 $('fmt').innerHTML = ['ttml', 'srt'].map(k => `<option value="${k}">${SUB.OUT[k][0]}</option>`).join('');
 
