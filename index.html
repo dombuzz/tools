@@ -160,7 +160,7 @@
   .ver a#vgame { color: #5aa6ff; }
   :root[data-theme="light"] .ver a#vgame { color: #1f6fd1; }
   .ver a#vnum { color: inherit; }
-  #vnum:not(:empty)::after { content: " · "; display: inline-block; text-decoration: none; }
+  #vnum:not(:empty)::after { content: "\00a0·\00a0"; display: inline-block; text-decoration: none; }
   /* Stil wie in den Tools (theme.js): Rotverlauf für rote Texte, Milchglas für Kacheln und Menü */
   h1 span, .favh, .mg { background-image: var(--rgrad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .favcard, .sel-btn { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-color: var(--glass-line); }
