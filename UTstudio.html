@@ -500,7 +500,7 @@ p.sub{margin:0;color:var(--muted)}
 
   <section class="card" id="vi-work" hidden>
     <div class="wave" id="vi-wave" hidden>
-      <canvas id="vi-cv" aria-label="Undas dal tun"></canvas>
+      <canvas id="vi-cv" aria-label="Undas da tun"></canvas>
       <div class="wbar"><button class="ib" id="vi-wzo" type="button" title="Zoom ora">−</button><button class="ib" id="vi-wzi" type="button" title="Zoom ainten">+</button><button class="ib" id="vi-wfit" type="button" title="Tut la durada">tut</button><span id="vi-wmsg"></span><span class="wh">Trair cunfins = Start/Fin · trair bloc tschernì = spustar · Ctrl + rodella = zoom</span></div>
     </div>
     <div class="work" id="vi-workgrid">
@@ -509,7 +509,7 @@ p.sub{margin:0;color:var(--muted)}
         <div class="strip" id="vi-strip" title="Cliccar per sautar"><div class="ph" id="vi-playhead"></div></div>
         <div class="nav"><button class="ib" data-n="pb" type="button" title="Bloc avant (↑)">⏮ Bloc</button><button class="ib" data-n="f-" type="button" title="1 maletg enavos (,)">◀ 1 maletg</button><button class="ib" data-n="f+" type="button" title="1 maletg enavant (.)">1 maletg ▶</button><button class="ib" data-n="nb" type="button" title="Proxim bloc (↓)">Bloc ⏭</button><button class="ib pipb" id="vi-pip" type="button" title="Video en in'atgna fanestra – uschia survegn la glista da text tut la ladezza">⧉ Atgna fanestra</button></div>
         <div class="pbar"><span class="clock" id="vi-clock">00:00,000 / 00:00,000</span>
-          <label class="chk"><input type="checkbox" id="vi-wavetog"> Undas dal tun</label>
+          <label class="chk"><input type="checkbox" id="vi-wavetog"> Undas da tun</label>
           <label>Spertadad <select id="vi-rate"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div>
       </div>
       <div class="lst" id="vi-lst" hidden>
@@ -1646,11 +1646,11 @@ media.addEventListener('loadedmetadata', () => {
 media.addEventListener('error', () => msg('Quest file na po betg vegnir reproducì en quest navigatur (format?).', true));
 $('rate').onchange = () => { media.playbackRate = +$('rate').value; };
 
-// ---- Undas dal tun (Wellenform, optional) ----
+// ---- Undas da tun (Wellenform, optional) ----
 async function decodeWave() {
   const f = mediaFile; if (!f || peaks) return;
-  if (f.size > WAVE_MAX) { $('wmsg').textContent = 'File memia grond per las undas dal tun.'; return; }
-  $('wmsg').textContent = 'Chargia las undas dal tun …';
+  if (f.size > WAVE_MAX) { $('wmsg').textContent = 'File memia grond per las undas da tun.'; return; }
+  $('wmsg').textContent = 'Chargia las undas da tun …';
   try {
     const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     const buf = await new AC(1, 1, 4000).decodeAudioData(await f.arrayBuffer());
