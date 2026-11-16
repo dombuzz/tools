@@ -1982,6 +1982,47 @@ document.addEventListener('keydown', onKey);
   // ---- In GitHub speichern (überschreibt Clicron/ICF-Film_DE_Untertitel_SRG.srt) ----
   const b64 = str => { const u = new TextEncoder().encode(str); let b = ''; for (let i = 0; i < u.length; i += 0x8000) b += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(b); };
   const ghInfo = (t, err) => { $('dlinfo').textContent = t; $('dlinfo').style.color = err ? 'var(--err)' : ''; };
+  // ---- Undas da tun: einmal aus der lokalen Datei berechnen, dann speichern (Browser + GitHub) ----
+  const PFN = 'ICF-peaks.bin', PKEY = 'clicron-icf-peaks';
+  let peaksUp = false;   // true = berechnete Undas noch nicht in GitHub
+  const pk2b = pp => { const u = new Uint8Array(pp.length); let mx = 0; for (const v of pp) if (v > mx) mx = v; mx = mx || 1; for (let i = 0; i < pp.length; i++) u[i] = Math.round(pp[i] / mx * 255); return u; };
+  const b2pk = u => { const pp = new Float32Array(u.length); for (let i = 0; i < u.length; i++) pp[i] = u[i] / 255; return pp; };
+  const u8b64 = u => { let b = ''; for (let i = 0; i < u.length; i += 0x8000) b += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(b); };
+  const setPeaks = u => { const pp = b2pk(u), so = Float32Array.from(pp).sort(); pscale = so[Math.floor(so.length * 0.98)] || so[so.length - 1] || 1; peaks = pp; wkey = ''; $('wmsg').textContent = ''; drawWave(); };
+  async function loadPeaks() {
+    try { const x = localStorage.getItem(PKEY); if (x) { setPeaks(Uint8Array.from(atob(x), c => c.charCodeAt(0))); return true; } } catch (e) {}
+    try { const r = await fetch(GH + '/contents/Clicron/' + PFN + '?ref=main', { headers: ghH({ Accept: 'application/vnd.github.raw+json' }), cache: 'no-store' }); if (r.ok) { const u = new Uint8Array(await r.arrayBuffer()); if (u.length > 100) { setPeaks(u); try { localStorage.setItem(PKEY, u8b64(u)); } catch (e) {} return true; } } } catch (e) {}
+    const pth = location.pathname;
+    for (const d of [...new Set([pth.replace(/[^/]*$/, ''), pth.replace(/\/?$/, '/'), '/Clicron/'])]) { try { const r = await fetch(d + PFN, { cache: 'no-cache' }); if (r.ok && !/text\/html/.test(r.headers.get('content-type') || '')) { const u = new Uint8Array(await r.arrayBuffer()); if (u.length > 100) { setPeaks(u); return true; } } } catch (e) {} }
+    return false;
+  }
+  async function uploadPeaks() {
+    if (!peaks || !tok) return false;
+    const u = pk2b(peaks), path = 'Clicron/' + PFN;
+    const g = await fetch(GH + '/contents/' + path + '?ref=main', { headers: ghH(), cache: 'no-store' });
+    const sha = g.ok ? (await g.json()).sha : undefined;
+    const r = await fetch(GH + '/contents/' + path, { method: 'PUT', headers: ghH({ 'Content-Type': 'application/json' }), body: JSON.stringify({ message: 'Clicron: Undas da tun gespeichert', content: u8b64(u), sha, branch: 'main' }) });
+    if (r.ok) peaksUp = false;
+    return r.ok;
+  }
+  const origWave = decodeWave;
+  decodeWave = async function () {
+    if (peaks) return;
+    if (!mediaFile) {   // Video von SharePoint: gespeicherte Undas laden
+      $('wmsg').textContent = 'Chargia las undas da tun …';
+      if (await loadPeaks()) return;
+      $('wmsg').textContent = 'Las undas da tun mancan anc: trair il video ina giada local (telechargià da SharePoint) en il champ «Video u audio» – suenter vegnan ellas memorisadas.';
+      return;
+    }
+    await origWave();
+    if (peaks && mediaFile) {
+      const u = pk2b(peaks); try { localStorage.setItem(PKEY, u8b64(u)); } catch (e) {}
+      peaksUp = true;
+      if (tok) { try { if (await uploadPeaks()) $('wmsg').textContent = 'Undas da tun memorisadas en GitHub – ussa er cun il video da SharePoint.'; } catch (e) {} }
+      else $('wmsg').textContent = 'Undas da tun memorisadas en quest navigatur. Cun «Memorisar en GitHub» era per auters apparats.';
+    }
+  };
+  if (waveOn && hasMedia() && !peaks) decodeWave();
   async function ghSave() {
     if (!tok) { $('ghf').hidden = false; $('ghtok').focus(); return; }
     const out = cues.slice().sort((a, b) => a.start - b.start)
@@ -1999,6 +2040,7 @@ document.addEventListener('keydown', onKey);
       if (r.status === 409) throw new Error('conflict');
       if (!r.ok) throw new Error('http');
       store(); try { const x = JSON.parse(localStorage.getItem(SKEY) || 'null'); if (x) { x.t = Date.now(); localStorage.setItem(SKEY, JSON.stringify(x)); } } catch (e) {}
+      if (peaksUp) { try { await uploadPeaks(); } catch (e) {} }
       dirty = false; ghInfo('Memorisà en GitHub · ' + now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' }));
     } catch (e) {
       if (e.message === 'auth') { ghInfo('Il token na funcziuna betg (scadì u senza dretg «Contents: write»). Endatar in nov token.', true); tok = ''; try { localStorage.removeItem('clicron-gh-token'); } catch (x) {} $('ghf').hidden = false; }
