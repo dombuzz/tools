@@ -88,6 +88,13 @@
     ':root[data-theme="light"]{--bar0:color-mix(in srgb,var(--accent,#d02843) 85%,#000);--glass:rgba(255,255,255,.62);--glass-line:rgba(28,28,32,.09)}' +
     'body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(55% 35% at 0% 0%,color-mix(in srgb,var(--accent,#ff4d64) 13%,transparent),transparent 70%),radial-gradient(45% 30% at 100% 35%,color-mix(in srgb,var(--accent,#ff4d64) 7%,transparent),transparent 70%),radial-gradient(60% 35% at 40% 100%,color-mix(in srgb,var(--accent,#ff4d64) 8%,transparent),transparent 70%)}' +
     '.card,.step,.panel,.take,.tw{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border-color:var(--glass-line)!important}' +
+    /* Weitere Boxen als Milchglas (Rahmenfarbe bleibt, z. B. der rote Balken links bei .nowc) */
+    '.nowc,.wkg,.stage{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}' +
+    /* Zellen leicht durchsichtig: Wochenende, leer/ausserhalb, Lücke, heute – statt voller Flächen, die aus dem Glas herausfallen */
+    '.we,.d.we{background-color:color-mix(in srgb,var(--surface2) 55%,transparent)!important}' +
+    'td.off,td.off.we,.d.out-plan{background-color:color-mix(in srgb,var(--bg) 40%,transparent)!important}' +
+    'td.gapc{background-color:color-mix(in srgb,var(--gap,var(--err)) 55%,transparent)!important}' +
+    'td.today,th.today,.d.today{background-color:color-mix(in srgb,var(--accent,#ff4d64) 14%,transparent)!important}' +
     'h1 .acc,h1 em,.kw{background-image:var(--rgrad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}' +
     '.dbz-g{background-image:var(--rgrad)!important}.dbz-g:hover{filter:brightness(1.07)}' +
     /* Einheitliche Ablagefelder (Trair qua … / u cliccar per tscherner) in allen Tools */
