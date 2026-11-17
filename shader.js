@@ -173,9 +173,9 @@
     ' float core=smoothstep(.5,.95,ds)*(.55+.45*smoothstep(.2,.9,tb));',
     ' float edge=sheet*(1.-sheet)*4.;',
     // dunkel: leuchtender Violett-Schleier mit dunklem Kern; hell: Tinte auf Weiss
-    ' vec3 bgD=mix(vec3(.012,.012,.035),vec3(.045,.035,.1),smoothstep(.0,.9,1.-uv.y)),',
-    '      veD=vec3(.4,.28,.8),liD=vec3(.62,.5,1.),coD=mix(vec3(.06,.025,.14),vec3(.24,.13,.46),tb*.6);',
-    ' vec3 cD=mix(bgD,veD,sheet*.42*(.6+.4*rid));cD+=liD*(lines*.5+edge*.07);cD=mix(cD,coD,core*.9);',
+    ' vec3 bgD=mix(vec3(.012,.012,.035),vec3(.032,.024,.075),smoothstep(.0,.9,1.-uv.y)),',
+    '      veD=vec3(.29,.19,.6),liD=vec3(.5,.4,.88),coD=mix(vec3(.06,.025,.14),vec3(.24,.13,.46),tb*.6);',
+    ' vec3 cD=mix(bgD,veD,sheet*.38*(.6+.4*rid));cD+=liD*(lines*.5+edge*.07);cD=mix(cD,coD,core*.9);',
     ' vec3 bgL=vec3(.99,.985,1.),veL=vec3(.58,.45,.95),liL=vec3(.3,.18,.72),coL=mix(vec3(.2,.1,.55),vec3(.36,.24,.75),tb*.5);',
     ' vec3 cL=mix(bgL,veL,sheet*.38*(.6+.4*rid));cL=mix(cL,liL,lines*.4+edge*.06);cL=mix(cL,coL,core*.7);',
     ' vec2 px=gl_FragCoord.xy/uDpr;vec2 id=floor(px/3.);float h=h21(id+7.);',
