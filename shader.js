@@ -2,7 +2,7 @@
 // Hintergrund (Canvas hinter der Seite, per Attribut am <body>):
 //   <body data-shader="labA">   Lab-Übersicht: orange Glut statt Millimeterpapier und Warnband
 //   <body data-shader="e4d">    404-Seite: Blockfehler
-//   <body data-shader="soA|soB|soC">   Social (Prototypen): seitenfüllend, dunkel Rot auf Schwarz, hell Rot auf Weiss – A «Nebelraster», B «Auflösung», C «Bokeh» (Nebel + Raster)
+//   <body data-shader="soA|soB|soC|soM|soT">   Social (Prototypen): seitenfüllend, dunkel Rot auf Schwarz, hell Rot auf Weiss – A «Nebelraster», B «Auflösung», C «Bokeh» (Nebel + Raster)
 //   <body data-shader="rcE" data-shader-origin="rec">   Audio-Recorder: Blob um das Element mit dieser ID, folgt dem Pegel
 // Aufnahme-Pegel: dbzShader.level(0..1, übersteuert)  (0 = still, 1 = Vollausschlag)
 // Dank-Moment: dbzShader.spark(element)   (diffuser Schimmer um das Element, z. B. «Gea»-Herz)
@@ -114,6 +114,43 @@
     ' c=mix(c,mix(RD(),RH(),.5),dm*mix(.62,.5,uLight));',
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
+
+  // Marmor (Giessfarbe mit Glitzer): verwirbelte Strömung, helle Schaumlinien, feine Glitzerpunkte entlang der Wirbel.
+  // soM in den Seitenfarben (dunkel Rot/Schwarz, hell Weiss/Rot), soT als Referenz in Petrol und Gold.
+  function marble(pal) { return SOP + [
+    pal,
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;float t=uTime*.012;',
+    ' vec2 p=vec2(uv.x*asp,uv.y)*1.7;',
+    ' vec2 q=vec2(fbm(p+t),fbm(p+vec2(5.2,1.3)-t));',
+    ' vec2 r=vec2(fbm(p+3.*q+vec2(1.7,9.2)+t*.6),fbm(p+3.*q+vec2(8.3,2.8)-t*.6));',
+    ' float f=fbm(p+3.2*r);',
+    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
+    ' float s=sin((f*9.+r.x*4.)*1.0+t*8.);float ridge=pow(1.-abs(s),6.);',
+    ' float body=smoothstep(.2,.85,f);',
+    ' vec3 c=mix(M0(),mix(M1(),M2(),smoothstep(.35,.9,f)),body);',
+    ' c=mix(c,M3(),ridge*smoothstep(.3,.8,f)*.7*calm);',
+    ' c=mix(c,M0(),(1.-calm)*.45*(1.-body));',
+    // Glitzer
+    ' vec2 px=gl_FragCoord.xy/uDpr;vec2 id=floor(px/3.);float h=h21(id);',
+    ' float dens=(ridge*.9+body*.25)*smoothstep(.25,.7,f)*calm;',
+    ' vec2 cf=fract(px/3.)-.5;float sp=step(1.-.24*dens,h)*smoothstep(.5,.2,length(cf));',
+    ' float tw=.65+.35*sin(uTime*1.6+h*60.);',
+    ' c=mix(c,G(),sp*tw*.9);',
+    ' o=fin(c,gl_FragCoord.xy);',
+    '}'].join('\n'); }
+  SH.soM = marble([
+    'vec3 M0(){return mix(vec3(.05,.04,.05),vec3(.97,.95,.95),uLight);}',
+    'vec3 M1(){return mix(vec3(.42,.05,.11),vec3(.93,.55,.6),uLight);}',
+    'vec3 M2(){return mix(vec3(.78,.09,.17),vec3(.85,.2,.3),uLight);}',
+    'vec3 M3(){return mix(vec3(1.,.55,.6),vec3(1.),uLight);}',
+    'vec3 G(){return mix(vec3(1.,.8,.75),vec3(.72,.1,.2),uLight);}'].join('\n'));
+  SH.soT = marble([
+    'vec3 M0(){return vec3(.02,.1,.09);}',
+    'vec3 M1(){return vec3(.03,.28,.26);}',
+    'vec3 M2(){return vec3(.1,.62,.58);}',
+    'vec3 M3(){return vec3(.85,.98,.95);}',
+    'vec3 G(){return vec3(.95,.78,.4);}'].join('\n'));
 
   // 404-Seite: Blockfehler – Rechtecke blitzen auf wie ein defektes Display, die Textspalte bleibt ruhig
   SH.e4d = [
@@ -309,7 +346,7 @@
     cv.style.visibility = 'hidden';
     d.body.insertBefore(cv, d.body.firstChild); root.classList.add('dbz-sh');
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
-    var so = /^so[A-C]$/.test(key), heavy = key === 'labA';
+    var so = /^so[A-C]$|^so[MT]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
       scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
       size: function () { return [window.innerWidth, window.innerHeight]; },
