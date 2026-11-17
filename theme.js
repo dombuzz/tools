@@ -78,6 +78,10 @@
     '.themebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}.themebtn.tonebtn.opening{animation-delay:.07s}' +
     '.themebtn.closing{animation:dbz-split .45s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.optbtn.closing{animation-delay:.05s}' +
     '.themebtn.subbtn.opening{animation:dbz-fan .5s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--i,0)*.06s)}.themebtn.subbtn.closing{animation:dbz-fan .38s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.dividing{transform-origin:50% 0;animation:dbz-parent .5s ease-in-out}.themebtn.dividing-rev{transform-origin:50% 0;animation:dbz-parent .45s ease-in-out reverse}' +
+    /* Zufalls-Knopf im Shader-Fächer: Regenbogenring mit «?», Linie als Regenbogenverlauf */
+    '.themebtn.subbtn.rnd{border:2px solid transparent;background:linear-gradient(var(--card,#1c1c1f),var(--card,#1c1c1f)) padding-box,conic-gradient(from 200deg,#ff3b3b,#ffa629,#ffe14d,#4cd964,#2ec4ff,#6a5cff,#c04bff,#ff3b3b) border-box}' +
+    '.themebtn.subbtn.rnd:hover,.themebtn.subbtn.rnd:focus-visible{background:conic-gradient(from 200deg,#ff3b3b,#ffa629,#ffe14d,#4cd964,#2ec4ff,#6a5cff,#c04bff,#ff3b3b) border-box;color:#fff;border-color:transparent}' +
+    '.fanline.rnd{background:linear-gradient(90deg,#ff3b3b,#ffa629,#ffe14d,#4cd964,#2ec4ff,#6a5cff,#c04bff)}.fanline.rnd.hov{opacity:1}' +
     /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
     ':where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent,#ff4d64)!important;outline-offset:2px}' +
     '.themebtn:focus-visible{outline-offset:2px}' +
@@ -205,6 +209,7 @@
     if (on) bbtn.style.setProperty('--c', BGC[c] || '#ff4d64'); else bbtn.style.removeProperty('--c');
     var set = window.dbzShader.choices();
     sbtns.forEach(function (b, i) {
+      if (b.rnd) { b.title = 'Fund casual'; b.setAttribute('aria-label', 'Fund casual'); return; }
       var k = set[i], t = 'Fund ' + (i + 1) + ': ' + (BGN[k] || k);
       b.title = t; b.setAttribute('aria-label', t); b.setAttribute('aria-pressed', k === c ? 'true' : 'false');
       b.style.setProperty('--c', BGC[k] || '#ff4d64'); if (lines[i]) { lines[i].style.setProperty('--c', BGC[k] || '#ff4d64'); lines[i].classList.toggle('on', k === c); }
@@ -281,15 +286,21 @@
       });
       d.body.appendChild(bbtn);
       var set0 = d.body.getAttribute('data-shader-set').split(','), nSet = set0.length;
-      for (var i = 0; i < nSet; i++) (function (i) {
-        var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn'; sb.hidden = true; sb.textContent = i + 1;
+      var nAll = nSet + 1; // letzter Knopf = Zufall (kein eigener Shader)
+      for (var i = 0; i < nAll; i++) (function (i) {
+        var rnd = i === nSet;
+        var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn' + (rnd ? ' rnd' : ''); sb.hidden = true; sb.textContent = rnd ? '?' : i + 1; sb.rnd = rnd;
         // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten (bei drei und vier Nummern von Hand gesetzte Lage)
-        var P3 = [[-41, -26], [-54, 10], [-33, 43]], P4 = [[-40, -29], [-56, 4], [-47, 39], [-22, 62]], fx, fy;
-        if (nSet === 3) { fx = P3[i][0]; fy = P3[i][1]; } else if (nSet === 4) { fx = P4[i][0]; fy = P4[i][1]; } else { var an = nSet === 1 ? 0 : (-40 + 80 * i / (nSet - 1)) * Math.PI / 180; fx = -50 * Math.cos(an); fy = 50 * Math.sin(an) + 8; }
+        var P3 = [[-41, -26], [-54, 10], [-33, 43]], P4 = [[-40, -29], [-56, 4], [-47, 39], [-22, 62]], P5 = P4.concat([[8, 70]]), fx, fy;
+        if (nAll === 3) { fx = P3[i][0]; fy = P3[i][1]; } else if (nAll === 4) { fx = P4[i][0]; fy = P4[i][1]; } else if (nAll === 5) { fx = P5[i][0]; fy = P5[i][1]; } else { var an = nAll === 1 ? 0 : (-40 + 80 * i / (nAll - 1)) * Math.PI / 180; fx = -50 * Math.cos(an); fy = 50 * Math.sin(an) + 8; }
         var R = Math.hypot(fx, fy), ang = Math.atan2(fy, -fx);
         sb.style.setProperty('--fx', fx.toFixed(1) + 'px'); sb.style.setProperty('--fy', fy.toFixed(1) + 'px'); sb.style.setProperty('--i', i);
-        sb.addEventListener('click', function () { if (window.dbzShader) window.dbzShader.pick(set0[i]); keepMenu(); });
-        var ln = d.createElement('span'); ln.className = 'fanline'; ln.hidden = true; ln.setAttribute('aria-hidden', 'true');
+        sb.addEventListener('click', function () {
+          if (!window.dbzShader) return;
+          if (rnd) { var cur = window.dbzShader.current(), pool = set0.filter(function (k) { return k !== cur; }); if (!pool.length) pool = set0; window.dbzShader.pick(pool[Math.floor(Math.random() * pool.length)]); } else window.dbzShader.pick(set0[i]);
+          keepMenu();
+        });
+        var ln = d.createElement('span'); ln.className = 'fanline' + (rnd ? ' rnd' : ''); ln.hidden = true; ln.setAttribute('aria-hidden', 'true');
         ln.style.setProperty('--r', R + 'px'); ln.style.setProperty('--a', (-ang).toFixed(4) + 'rad'); ln.style.setProperty('--i', i);
         d.body.appendChild(ln); lines.push(ln);
         sb.addEventListener('mouseenter', function () { ln.classList.add('hov'); }); sb.addEventListener('mouseleave', function () { ln.classList.remove('hov'); });
