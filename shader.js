@@ -440,6 +440,7 @@
     // Wählbarer Hintergrund: <body data-shader-set="soA,soT"> – Zahnrad-Menü (theme.js) schaltet durch die Liste und «aus»; Wahl in dbz-bg gespeichert
     choices: function () { var v = d.body && d.body.getAttribute('data-shader-set'); return v ? v.split(',') : []; },
     current: function () { return curBg; },
+    pick: function (k) { pickBg(k, true); },
     cycle: function () {
       var set = window.dbzShader.choices(); if (!set.length) return;
       var i = curBg === 'off' ? set.length : set.indexOf(curBg), n = (i + 1) % (set.length + 1);
