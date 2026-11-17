@@ -13,7 +13,7 @@
 //   GET  /likes                 -> {"Resizer2000": 14, ...}            (Total pro Tool)
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000?c=<Zufalls-ID> -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
-//   POST /view/social?...&b=soA|soT|labA|off (gewählter Hintergrund-Shader; Spalte views.shader, Auswertung in /stats als shaders = {Variante: {count, users}})
+//   POST /view/social?...&b=soA|soT|labA|soK|off|rnd (rnd = Zufallsmodus; gewählter Hintergrund-Shader; Spalte views.shader, Auswertung in /stats als shaders = {Variante: {count, users}})
 //   POST /view/Resizer2000?t=light|dark&c=<Zufalls-ID> -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an; c = anonyme Kennung pro Browser)
 //   (geschützt: /ranking, /hourly, /usage, /insights, /export nur mit Authorization: Bearer <FEEDBACK_PASSWORD>; öffentlich: GET /top?range=month|30d|all|week|today, inkl. views pro Tool)
 //   GET  /ranking?range=all     -> Rangliste: all | today | week | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
@@ -825,7 +825,7 @@ async function handle(request, env, ctx) {
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
         const tone = url.searchParams.get('s') === '1' ? 'soft' : url.searchParams.get('s') === '0' ? 'normal' : null; // Farbstärke (soft = Sättigung reduziert)
-        const bgp = url.searchParams.get('b'), shader = /^(soA|soT|labA|soK|off)$/.test(bgp || '') ? bgp : null; // gewählter Hintergrund-Shader (nur Social)
+        const bgp = url.searchParams.get('b'), shader = /^(soA|soT|labA|soK|off|rnd)$/.test(bgp || '') ? bgp : null; // gewählter Hintergrund-Shader (nur Social)
         await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid, tone, shader) VALUES (?1, datetime('now'), ?2, ?3, ?4, ?5)").bind(tool, theme, cid, tone, shader).run();
         return json({ ok: true }, request);
       }
