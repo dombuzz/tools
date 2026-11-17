@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
+<script src="/shader.js" defer></script>
 <meta name="robots" content="noindex">
 <meta name="description" content="Transfurmescha videos en MP4 vertical (9:16) per las medias socialas – en il browser.">
 <meta property="og:type" content="website">
@@ -165,7 +166,7 @@
     <div class="actions">
       <button class="ghost" id="clear" data-dbz-hold disabled>Svidar la glista</button>
       <button class="ghost" id="dlall" disabled>Telechargiar tuts</button>
-      <button id="start" disabled>Convertar tut</button>
+      <button id="start" data-dbz-glint disabled>Convertar tut</button>
     </div>
     <div class="list" id="list"><div class="empty">Anc nagins videos.</div></div>
   </div>
@@ -345,9 +346,9 @@ async function convert(job) {
 }
 
 startBtn.onclick = async () => {
-  running = true; render();
+  running = true; startBtn.setAttribute('aria-busy', 'true'); render();
   for (const j of jobs.filter(j => j.status === 'spetga' && j.w)) { await convert(j); render(); }
-  running = false; render();
+  running = false; startBtn.removeAttribute('aria-busy'); render();
 };
 window.addEventListener('beforeunload', e => { if (running) { e.preventDefault(); e.returnValue = ''; } });
 </script>
