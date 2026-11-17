@@ -2,7 +2,7 @@
 // Hintergrund (Canvas hinter der Seite, per Attribut am <body>):
 //   <body data-shader="labA">   Lab-Übersicht: orange Glut statt Millimeterpapier und Warnband
 //   <body data-shader="e4d">    404-Seite: Blockfehler
-//   <body data-shader="soA|soB|soC">   Social (Prototypen): seitenfüllend, dunkel Rot auf Schwarz, hell Rot auf Weiss – A «Flow», B «Bänder», C «Raster»
+//   <body data-shader="soA|soB|soC">   Social (Prototypen): seitenfüllend, dunkel Rot auf Schwarz, hell Rot auf Weiss – A «Nebel», B «Orbs», C «Schleier» (diffus)
 //   <body data-shader="rcE" data-shader-origin="rec">   Audio-Recorder: Blob um das Element mit dieser ID, folgt dem Pegel
 // Aufnahme-Pegel: dbzShader.level(0..1, übersteuert)  (0 = still, 1 = Vollausschlag)
 // Dank-Moment: dbzShader.spark(element)   (diffuser Schimmer um das Element, z. B. «Gea»-Herz)
@@ -51,63 +51,61 @@
     ' o=outA(c,k);',
     '}'].join('\n');
 
-  // Social (Prototypen): seitenfüllend. Dunkel: Rot auf Schwarz, hell: Rot auf Weiss. Oben bewusst ruhiger (Titel), unten kräftiger.
+  // Social (Prototypen, diffus): seitenfüllend. Dunkel: Rot auf Schwarz, hell: Rot auf Weiss. Läuft in kleiner Auflösung (weich), Titelbereich oben links und Kopf der Seite bewusst ruhig.
   var SOP = [
     'vec3 K0(){return mix(vec3(.05,.05,.056),vec3(1.),uLight);}',
-    'vec3 RD(){return mix(vec3(.80,.10,.18),vec3(.816,.157,.263),uLight);}',
-    'vec3 RH(){return mix(vec3(1.,.302,.392),vec3(1.,.40,.48),uLight);}',
-    'float calm(vec2 uv){return mix(.45,1.,smoothstep(1.,.15,uv.y));}',
-    'vec4 fin(vec3 c,vec2 fc){c+=(h21(fc+fract(uTime))-.5)*mix(.018,.012,uLight);return vec4(clamp(c,0.,1.),1.);}',
+    'vec3 RD(){return mix(vec3(.78,.09,.17),vec3(.9,.2,.3),uLight);}',
+    'vec3 RH(){return mix(vec3(1.,.302,.392),vec3(.816,.157,.263),uLight);}',
+    'float calm(vec2 uv){vec2 px=gl_FragCoord.xy/uDpr;float yt=uCss.y-px.y;',
+    ' float t=exp(-pow((px.x-170.)/460.,2.))*exp(-pow((yt-100.)/150.,2.));',
+    ' return mix(.55,1.,smoothstep(1.,.2,uv.y))*(1.-.8*t);}',
+    'vec4 fin(vec3 c,vec2 fc){c+=(h21(fc+fract(uTime))-.5)*.008;return vec4(clamp(c,0.,1.),1.);}',
     ''].join('\n');
 
-  // A «Flow»: verwirbelte Adern wie Lava unter Glas – gross, langsam, organisch
+  // A «Nebel»: grosse, weiche Wolkenfelder – kein Kontrast, nur langsam wandernde Dichte
   SH.soA = SOP + [
     'void main(){',
     ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);',
-    ' float t=uTime*.035;',
-    ' vec2 q=vec2(fbm(p*1.25+vec2(0.,t)),fbm(p*1.25+vec2(5.2,1.3)-t));',
-    ' vec2 r=vec2(fbm(p*1.25+2.*q+vec2(1.7,9.2)+t*.7),fbm(p*1.25+2.*q+vec2(8.3,2.8)-t*.6));',
-    ' float f=fbm(p*1.1+2.4*r);',
-    ' float vein=exp(-pow((f-.52)/.06,2.));',
-    ' float body=smoothstep(.38,.88,f);',
-    ' float k=(body*.5+vein*.55)*calm(uv);',
-    ' k*=mix(1.,.82,uLight);',
-    ' vec3 c=mix(K0(),RD(),clamp(k*1.15,0.,1.));',
-    ' c=mix(c,RH(),smoothstep(.55,.95,vein*calm(uv))*.55);',
+    ' float t=uTime*.02;',
+    ' float f=fbm(p*.85+vec2(t,-t*.6)+fbm(p*.6-t)*1.3);',
+    ' float k=smoothstep(.22,.95,f);k=k*k*(3.-2.*k);',
+    ' k*=.62*calm(uv)*mix(1.35,.85,uLight);',
+    ' vec3 c=mix(K0(),RD(),k);',
+    ' c=mix(c,RH(),smoothstep(.45,.62,k)*.18);',
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
 
-  // B «Bänder»: schräge, weich auslaufende Lichtbänder, die langsam durchs Bild ziehen
+  // B «Orbs»: wenige riesige, unscharfe Lichtflecken, die langsam umeinander driften (Gradient-Mesh-Look)
   SH.soB = SOP + [
     'void main(){',
     ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);',
-    ' float t=uTime*.06;',
-    ' float s=p.x*.85+p.y*1.35+.33*sin(p.y*3.+t*1.5)+.24*sin(p.x*4.2-t*1.2)+.18*fbm(p*2.6+t*.5);',
-    ' float b1=.5+.5*sin(s*6.9-t*2.);',
-    ' float b2=.5+.5*sin(s*3.4+t*1.1+1.7);',
-    ' float k=(pow(smoothstep(.15,1.,b1),1.9)*.6+pow(b2,3.)*.28)*calm(uv);',
-    ' k*=mix(1.,.85,uLight);',
-    ' vec3 c=mix(K0(),RD(),clamp(k*1.25,0.,1.));',
-    ' c=mix(c,RH(),smoothstep(.45,.9,k)*.5);',
+    ' float t=uTime*.06;float k=0.;',
+    ' for(int i=0;i<5;i++){',
+    '  float fi=float(i);',
+    '  vec2 c=vec2(asp*(.5+.46*sin(t*(.42+.11*fi)+fi*2.3)),.5+.42*sin(t*(.33+.09*fi)+fi*1.7));',
+    '  float r=.30+.12*sin(fi*3.1+t*.8);float d=length(p-c)/r;',
+    '  k+=exp(-d*d*1.35)*(.55+.45*h11(fi+3.));',
+    ' }',
+    ' k=clamp(k,0.,1.)*.66*calm(uv)*mix(1.35,.85,uLight);',
+    ' vec3 c=mix(K0(),RD(),k);',
+    ' c=mix(c,RH(),smoothstep(.5,.75,k)*.16);',
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
 
-  // C «Raster»: schräg gestellter Halbton-Raster – Punktgrösse folgt einem wandernden Feld (Druck-Look)
+  // C «Schleier»: überlagerte, breite Vorhänge – so weich, dass keine Kanten bleiben
   SH.soC = SOP + [
     'void main(){',
-    ' vec2 px=gl_FragCoord.xy/uDpr;vec2 uv=gl_FragCoord.xy/uRes;',
-    ' float cs=15.;float a=.38;mat2 R=mat2(cos(a),-sin(a),sin(a),cos(a));',
-    ' vec2 g=R*px/cs;vec2 id=floor(g);vec2 f=fract(g)-.5;',
-    ' vec2 pc=(id+.5)*cs;vec2 w=pc/uCss.y;float t=uTime*.05;',
-    ' float fld=fbm(w*1.1+vec2(t,-t*.7))*.8+.18*sin(w.x*3.2+w.y*2.1-t*3.)+.08;',
-    ' fld*=calm(uv);',
-    ' float rad=clamp(fld,0.,1.)*.5;',
-    ' float d=length(f);',
-    ' float dm=smoothstep(rad+.07,rad-.07,d)*step(.03,rad);',
-    ' float glow=pow(clamp(fld,0.,1.),3.)*.14;',
-    ' vec3 col=mix(RD(),RH(),smoothstep(.3,.7,fld));',
-    ' vec3 c=mix(K0(),RD(),glow*mix(1.,.8,uLight));',
-    ' c=mix(c,col,dm*mix(1.,.9,uLight));',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);',
+    ' float t=uTime*.045;float k=0.;',
+    ' for(int i=0;i<3;i++){',
+    '  float fi=float(i);',
+    '  float s=p.x*(.7+.22*fi)+.4*sin(p.y*1.5+t*(.9+.3*fi)+fi*2.)+.25*fbm(p*1.1+fi*3.+t);',
+    '  float b=.5+.5*sin(s*2.9+fi*1.9-t*1.3);',
+    '  k+=pow(b,2.4)*.36;',
+    ' }',
+    ' k*=(.4+.6*(1.-uv.y))*calm(uv)*mix(1.35,.85,uLight);',
+    ' vec3 c=mix(K0(),RD(),clamp(k,0.,1.)*.9);',
+    ' c=mix(c,RH(),smoothstep(.5,.8,k)*.14);',
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
 
@@ -305,9 +303,9 @@
     cv.style.visibility = 'hidden';
     d.body.insertBefore(cv, d.body.firstChild); root.classList.add('dbz-sh');
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
-    var heavy = key === 'labA' || key === 'soA' || key === 'soB', so = /^so[A-C]$/.test(key);
+    var so = /^so[A-C]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
-      scale: heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
+      scale: so ? .35 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
       size: function () { return [window.innerWidth, window.innerHeight]; },
       active: function () {
         if (key === 'rcE') return AU.level > .003 || AU.target > .003 || AU.clearPending ? true : false;

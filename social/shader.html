@@ -37,13 +37,7 @@ a.tool span{font-size:.82rem;color:var(--muted);line-height:1.4}
 a.tool span{overflow-wrap:anywhere;hyphens:auto}
 @media(max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}a.tool{padding:13px;min-height:0}a.tool span{font-size:.78rem}}
 
-/* ---- Shader-Vorschau: Titel vor Schatten, Karten als Milchglas ---- */
-:root{--halo:0,0,0;--halo-a:.78}
-:root[data-theme="light"]{--halo:255,255,255;--halo-a:.9}
-.hd{position:relative;isolation:isolate}
-.hd::before{content:"";position:absolute;z-index:-1;left:-90px;top:-70px;width:min(620px,calc(100% + 140px));height:230px;background:radial-gradient(ellipse at 38% 46%,rgba(var(--halo),var(--halo-a)) 0%,rgba(var(--halo),calc(var(--halo-a) * .72)) 34%,rgba(var(--halo),0) 72%);pointer-events:none}
-.hd h1{font-size:1.9rem;filter:drop-shadow(0 0 .3em rgba(var(--halo),.95)) drop-shadow(0 0 .9em rgba(var(--halo),.9)) drop-shadow(0 0 2em rgba(var(--halo),.7))}
-.hd .homelink,.hd .sub{text-shadow:0 0 .6em rgba(var(--halo),.95),0 0 1.4em rgba(var(--halo),.8)}
+/* ---- Shader-Vorschau: Karten als Milchglas ---- */
 html.dbz-sh a.tool{background:color-mix(in srgb,var(--card) 78%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .pick{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:4px;padding:5px;border-radius:999px;background:color-mix(in srgb,var(--card) 86%,transparent);border:1px solid var(--line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:20}
 .pick button{font:inherit;font-size:.82rem;font-weight:600;border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;cursor:pointer}
@@ -53,7 +47,7 @@ html.dbz-sh a.tool{background:color-mix(in srgb,var(--card) 78%,transparent);-we
 </head>
 <body>
 <div class="wrap">
-  <div class="hd">
+  <div>
     <a class="homelink" href="/">← Tools</a>
     <h1><span class="acc">Social</span></h1>
     <p class="sub">Visuals per las medias socialas – tscherner il tool.</p>
@@ -90,9 +84,9 @@ for (const t of TOOLS) {
 }
 </script>
 <div class="pick" role="group" aria-label="Shader">
-  <button data-k="soA" aria-pressed="false">A · Flow</button>
-  <button data-k="soB" aria-pressed="false">B · Bänder</button>
-  <button data-k="soC" aria-pressed="false">C · Raster</button>
+  <button data-k="soA" aria-pressed="false">A · Nebel</button>
+  <button data-k="soB" aria-pressed="false">B · Orbs</button>
+  <button data-k="soC" aria-pressed="false">C · Schleier</button>
 </div>
 <script>
 (() => {
