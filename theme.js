@@ -79,8 +79,6 @@
     '.themebtn.closing{animation:dbz-split .45s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.optbtn.closing{animation-delay:.05s}' +
     '.themebtn.subbtn.opening{animation:dbz-fan .5s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--i,0)*.06s)}.themebtn.subbtn.closing{animation:dbz-fan .38s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.dividing{transform-origin:50% 0;animation:dbz-parent .5s ease-in-out}.themebtn.dividing-rev{transform-origin:50% 0;animation:dbz-parent .45s ease-in-out reverse}' +
     /* Zufalls-Knopf im Shader-Fächer: Regenbogenring mit «?», Linie als Regenbogenverlauf */
-    '.themebtn.subbtn.rnd{border:2px solid transparent;background:linear-gradient(var(--card,#1c1c1f),var(--card,#1c1c1f)) padding-box,conic-gradient(from 200deg,#ff3b3b,#ffa629,#ffe14d,#4cd964,#2ec4ff,#6a5cff,#c04bff,#ff3b3b) border-box}' +
-    '.themebtn.subbtn.rnd:hover,.themebtn.subbtn.rnd:focus-visible{background:conic-gradient(from 200deg,#ff3b3b,#ffa629,#ffe14d,#4cd964,#2ec4ff,#6a5cff,#c04bff,#ff3b3b) border-box;color:#fff;border-color:transparent}' +
     '.fanline.rnd{background:linear-gradient(90deg,#ff3b3b,#ffa629,#ffe14d,#4cd964,#2ec4ff,#6a5cff,#c04bff)}.fanline.rnd.hov{opacity:1}' +
     /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
     ':where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent,#ff4d64)!important;outline-offset:2px}' +
