@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="rm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<script src="/shader.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Visuals per las medias socialas: Profil, News dal di, #mument e dapli templates.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<meta name="color-scheme" content="dark light">
+<title>Social – Shader-Vorschau</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='2.5' width='10' height='19' rx='2'/%3E%3Cpath d='M10 9h4'/%3E%3Cpath d='M10.5 12h3'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{--bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;--line:#2f2f34;--accent:#ff4d64;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
+h1 .acc{color:var(--accent)}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+a.tool{display:flex;flex-direction:column;gap:6px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:14px;color:var(--text);text-decoration:none;min-height:112px}
+a.tool:hover,a.tool:focus-visible{border-color:var(--accent);outline:none}
+a.tool:hover svg,a.tool:focus-visible svg{stroke:#fff}
+a.tool:hover span,a.tool:focus-visible span{color:#fff}
+a.tool:hover em.beta,a.tool:focus-visible em.beta{color:#fff;border-color:#fff}
+a.tool svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+a.tool b{font-size:1rem}
+a.tool em.beta{font-style:normal;font-size:.62rem;font-weight:700;letter-spacing:.08em;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 7px;vertical-align:2px}
+a.tool span{font-size:.82rem;color:var(--muted);line-height:1.4}
+a.tool span{overflow-wrap:anywhere;hyphens:auto}
+@media(max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}a.tool{padding:13px;min-height:0}a.tool span{font-size:.78rem}}
+
+/* ---- Shader-Vorschau: Karten als Milchglas ---- */
+html.dbz-sh a.tool{background:color-mix(in srgb,var(--card) 78%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.pick{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:4px;padding:5px;border-radius:999px;background:color-mix(in srgb,var(--card) 86%,transparent);border:1px solid var(--line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:20}
+.pick button{font:inherit;font-size:.82rem;font-weight:600;border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;cursor:pointer}
+.pick button:hover{color:var(--text)}
+.pick button[aria-pressed="true"]{background:var(--accent);color:#fff}
+</style>
+</head>
+<body data-shader="none">
+<div class="wrap">
+  <div>
+    <a class="homelink" href="/">← Tools</a>
+    <h1><span class="acc">Social</span></h1>
+    <p class="sub">Visuals per las medias socialas – tscherner il tool.</p>
+  </div>
+  <div class="grid" id="g"></div>
+  <div class="grid" id="g2"></div>
+</div>
+
+<script>
+/* Neues Tool: ein Eintrag hier (id = Dateiname in /social); die Reihenfolge hier ist die Reihenfolge auf der Seite. */
+const TOOLS = [
+  { id: 'mument',    t: '#mument',           d: 'Foto, visual e retagl – export sco PNG 1080 × 1350.', i: '<path d="M9 4 7 20"/><path d="M17 4l-2 16"/><path d="M4 9h17"/><path d="M3 15h17"/>' },
+  { id: 'thumbnail', t: 'Thumbnail',         d: 'Thumbnail 9:16 per reels e stories.', i: '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 9h4"/><path d="M10.5 12h3"/>' },
+  { id: 'newsdaldi', t: 'News dal di',       d: 'Visuals 4:5 per las news dal di – texts, colurs e paginas.', i: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h5"/>' },
+  { id: 'novitad',   t: 'Novitad',           d: 'Duas paginas: maletg cun textbox e pagina da text.', i: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h8"/><path d="M8 17h5"/>' },
+  { id: 'breaking',  t: 'Breaking News',     d: 'Trais paginas per novitads urgentas.', i: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>' },
+  { id: 'focus',     t: 'Focus',             d: 'Trais paginas: maletg, titel, textbox e puncts.', i: '<circle cx="12" cy="12" r="3"/><path d="M4 9V5h4"/><path d="M20 9V5h-4"/><path d="M4 15v4h4"/><path d="M20 15v4h-4"/>' },
+  { id: 'profil',    t: 'Profil',            d: 'Duas paginas per la seria «Profil» – citat, num, text e maletg.', i: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/>' },
+  { id: 'quote',     t: 'Quote solo',        d: 'In citat cun num, funcziun e maletg.', i: '<path d="M5 8h5v5c0 2-1 3.5-3 4"/><path d="M14 8h5v5c0 2-1 3.5-3 4"/>' },
+  { id: 'cifra',     t: 'Cifra da l’emna',   d: 'Duas paginas cun cifra e text.', i: '<path d="M9 4 7 20"/><path d="M17 4l-2 16"/><path d="M4 9h17"/><path d="M3 15h17"/>' },
+  { id: 'pled',      t: 'Pled da l’emna',    d: 'Maletg senza funs, pled ed idioms.', i: '<path d="M5 19 10 5h4l5 14"/><path d="M7.5 14h9"/>' },
+  { id: 'dumonda',   t: 'Dumonda da l’emna', d: 'Maletg cun segn da dumonda e banda.', i: '<path d="M8.5 9a3.5 3.5 0 1 1 5 3.2c-1 .6-1.5 1.3-1.5 2.3"/><path d="M12 18.5v.01"/>' },
+  { id: 'verticals', t: 'Verticals', v: 1,  d: 'Videos en MP4 vertical (9:16) per social – en il browser.', i: '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10.5 9.5v5l4-2.5z"/>' },
+  { id: 'reels',     t: 'Reels',     v: 1,    d: 'Videos per social preparar: tagls, maletg centrar, tetels e texts – export sco MP4.', href: '/lab/reels', beta: true, i: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/>' }
+];
+/* Alte Adressen: /social#novitads, /social#quote … führen direkt zum Tool */
+{ const h = ({ novitads: 'newsdaldi' })[location.hash.slice(1)] || location.hash.slice(1), t = TOOLS.find(x => x.id === h); if (t) location.replace('/social/' + t.id); }
+for (const t of TOOLS) {
+  const a = document.createElement('a'); a.className = 'tool'; a.href = t.href || '/social/' + t.id;
+  a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + t.i + '</svg><b></b><span></span>';
+  a.querySelector('b').textContent = t.t;
+  if (t.beta) { const m = document.createElement('em'); m.className = 'beta'; m.textContent = 'BETA'; a.querySelector('b').append(' ', m); } a.querySelector('span').textContent = t.d;
+  document.getElementById(t.v ? 'g2' : 'g').appendChild(a);
+}
+</script>
+<div class="pick" role="group" aria-label="Shader">
+  <button data-k="soU" aria-pressed="false">X · Aurora</button>
+  <button data-k="soH" aria-pressed="false">Y · Höhenlinien</button>
+  <button data-k="soL" aria-pressed="false">Z · Lava</button>
+</div>
+<script>
+(() => {
+  const map = { x: 'soU', y: 'soH', z: 'soL' }, rev = { soU: 'x', soH: 'y', soL: 'z' };
+  const btns = [...document.querySelectorAll('.pick button')];
+  let cur = map[location.hash.slice(1).toLowerCase()] || 'soU';
+  const set = k => {
+    cur = k; btns.forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+    try { history.replaceState(null, '', '#' + rev[k]); } catch (e) {}
+    if (window.dbzShader) dbzShader.setBg(k);
+  };
+  btns.forEach(b => b.onclick = () => set(b.dataset.k));
+  addEventListener('hashchange', () => { const k = map[location.hash.slice(1).toLowerCase()]; if (k && k !== cur) set(k); });
+  const start = () => set(cur);
+  if (window.dbzShader) start(); else addEventListener('load', start);
+})();
+</script>
+</body>
+</html>

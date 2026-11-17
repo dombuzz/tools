@@ -152,6 +152,56 @@
     'vec3 M3(){return vec3(.85,.98,.95);}',
     'vec3 G(){return vec3(.95,.78,.4);}'].join('\n'));
 
+  // Prototypen für eine vierte Auswahl: U «Aurora» (Violett/Cyan), H «Höhenlinien» (Mint), L «Lava» (Magenta/Violett)
+  SH.soU = SOP + [
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.02;',
+    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
+    ' float w=fbm(vec2(p.x*1.1,t))*2.4+fbm(p*.8+vec2(t,0.))*1.3;',
+    ' float y1=.62+.16*sin(p.x*1.6+w+t*4.);float y2=.40+.14*sin(p.x*1.2+w*1.3-t*3.+2.);',
+    ' float st=.55+.45*fbm(vec2(p.x*9.+w,uv.y*1.5+t*3.));',
+    ' float i1=exp(-pow((uv.y-y1)/.2,2.))*st, i2=exp(-pow((uv.y-y2)/.26,2.))*(.4+.6*st);',
+    ' i1*=calm; i2*=calm;',
+    ' vec3 v=vec3(.55,.25,1.),c2=vec3(.1,.85,.8);',
+    ' vec3 base=mix(vec3(.02,.025,.06),vec3(1.),uLight);',
+    ' vec3 c=base+mix(v*i1*.9+c2*i2*.75,vec3(0.),uLight);',
+    ' c=mix(c,mix(base,mix(v,c2,.5)*.9+.1,.55),uLight*clamp(i1+i2,0.,1.)*.75);',
+    ' c+=mix(vec3(0.),vec3(.05,.03,.09),1.-uLight)*fbm(p*1.5+t);',
+    ' o=fin(c,gl_FragCoord.xy);',
+    '}'].join('\n');
+
+  SH.soH = SOP + [
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.015;',
+    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
+    ' float f=fbm(p*1.15+vec2(t,-t*.7)+fbm(p*.7-t)*.9);',
+    ' float k=f*18.;float fr=fract(k);float dl=min(fr,1.-fr);',
+    ' float maj=step(mod(floor(k+.5),5.),.5);',
+    ' float ln=(1.-smoothstep(.0,.07+.05*maj,dl))*(.45+.55*maj);',
+    ' vec3 bgD=mix(vec3(.02,.05,.04),vec3(.04,.16,.12),smoothstep(.2,.8,f));',
+    ' vec3 bg=mix(bgD,mix(vec3(1.),vec3(.88,.97,.92),smoothstep(.2,.8,f)),uLight);',
+    ' vec3 lc=mix(vec3(.35,.95,.7),vec3(.05,.5,.36),uLight);',
+    ' vec3 c=mix(bg,lc,ln*calm*mix(.8,.7,uLight));',
+    ' o=fin(c,gl_FragCoord.xy);',
+    '}'].join('\n');
+
+  SH.soL = SOP + [
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.05;',
+    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
+    ' float F=0.;',
+    ' for(int i=0;i<6;i++){float fi=float(i);',
+    '  vec2 c=vec2(asp*(.5+.42*sin(t*(.6+.17*fi)+fi*2.1)),.5+.4*cos(t*(.5+.13*fi)+fi*1.7));',
+    '  float r=.1+.045*fract(fi*.37+.2);vec2 d=p-c;F+=r*r/(dot(d,d)+1e-4);}',
+    ' F*=calm;',
+    ' float body=smoothstep(.85,1.25,F);float glow=smoothstep(.15,1.,F);',
+    ' vec3 bg=mix(vec3(.05,.02,.07),vec3(1.,.97,.99),uLight);',
+    ' vec3 cb=mix(vec3(.45,.12,.85),vec3(1.,.28,.62),smoothstep(.9,2.2,F));',
+    ' vec3 c=mix(bg,mix(vec3(.3,.07,.5),vec3(.96,.7,.88),uLight),glow*.7);',
+    ' c=mix(c,mix(cb,mix(cb,vec3(1.),.35),uLight*.0),body*mix(.95,.8,uLight));',
+    ' o=fin(c,gl_FragCoord.xy);',
+    '}'].join('\n');
+
   // 404-Seite: Blockfehler – Rechtecke blitzen auf wie ein defektes Display, die Textspalte bleibt ruhig
   SH.e4d = [
     'void main(){',
@@ -346,7 +396,7 @@
     cv.style.visibility = 'hidden';
     d.body.insertBefore(cv, d.body.firstChild); root.classList.add('dbz-sh');
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
-    var so = /^so[A-C]$|^so[MT]$/.test(key), heavy = key === 'labA';
+    var so = /^so[A-C]$|^so[MTUHL]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
       scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
       size: function () { return [window.innerWidth, window.innerHeight]; },
