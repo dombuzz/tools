@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
+<script src="/shader.js" defer></script>
 <meta name="robots" content="noindex">
 <meta name="description" content="Far or d'ina sequenza da PNGs cun transparenza in film MOV (ProRes 4444 cun alpha) – per overlays en il program da tagl.">
 <meta property="og:type" content="website">
@@ -98,7 +99,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--
   <section class="card">
     <h2><span class="num">3</span>Convertar</h2>
     <div class="row">
-      <button id="go" disabled>Convertar en MOV</button>
+      <button id="go" data-dbz-glint disabled>Convertar en MOV</button>
       <a class="btn hidden" id="dl" download>Telechargiar MOV</a>
       <button class="ghost hidden" id="stop">Interrumper</button>
     </div>
@@ -194,7 +195,7 @@ try { const v = localStorage.getItem('dbz-mov-fps'); if (v && [...$('fps').optio
 const status = (t, cls) => { const s = $('status'); s.textContent = t; s.className = 'info' + (cls ? ' ' + cls : ''); };
 async function convert() {
   if (busy || !frames.length) return;
-  busy = true; reset(); $('go').disabled = true; $('stop').classList.remove('hidden'); $('barw').classList.remove('hidden');
+  busy = true; reset(); $('go').disabled = true; $('go').setAttribute('aria-busy', 'true'); $('stop').classList.remove('hidden'); $('barw').classList.remove('hidden');
   const n = frames.length, bar = $('bar');
   try {
     status('Chargel il program da conversiun …');
@@ -218,7 +219,7 @@ async function convert() {
     $('barw').classList.add('hidden');
   } finally {
     try { ff && ff.terminate(); } catch (e) {} ff = null; busy = false; stopped = false;
-    $('go').disabled = !frames.length; $('stop').classList.add('hidden');
+    $('go').removeAttribute('aria-busy'); $('go').disabled = !frames.length; $('stop').classList.add('hidden');
   }
 }
 let stopped = false;

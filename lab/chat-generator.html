@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
+<script src="/shader.js" defer></script>
 <meta name="robots" content="noindex">
 <meta name="description" content="Chat-Overlay mit transparentem Hintergrund und Animation – als PNG-Sequenz mit Alpha für den Schnitt exportieren. Alles im Browser.">
 <meta property="og:type" content="website">
@@ -149,10 +150,10 @@ code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;p
       <section class="card">
         <h2><span class="num">3</span>Export</h2>
         <div class="actions">
-          <button id="expMov" title="Fertiges Video mit Transparenz (ProRes 4444), direkt für Sony Hive / Schnittprogramme – wird im Browser berechnet">⬇ MOV mit Transparenz (ProRes 4444)</button>
-          <button id="expZip">⬇ PNG-Sequenz mit Transparenz (.zip)</button>
+          <button id="expMov" data-dbz-glint title="Fertiges Video mit Transparenz (ProRes 4444), direkt für Sony Hive / Schnittprogramme – wird im Browser berechnet">⬇ MOV mit Transparenz (ProRes 4444)</button>
+          <button id="expZip" data-dbz-glint>⬇ PNG-Sequenz mit Transparenz (.zip)</button>
           <button class="ghost" id="expFrame" title="Mit Schachbrett: transparent. Mit Dunkel/Hell/Grün/eigenem Bild: Hintergrund wird eingebrannt">Einzelbild (PNG)</button>
-          <button class="ghost" id="expWebm" title="Abspielbares Video mit Hintergrund, ohne Transparenz">Vorschau-Video (.webm)</button>
+          <button class="ghost" id="expWebm" data-dbz-glint title="Abspielbares Video mit Hintergrund, ohne Transparenz">Vorschau-Video (.webm)</button>
           <button class="ghost" id="saveJson">Projekt speichern</button>
           <button class="ghost" id="loadJson">Projekt laden</button>
           <input type="file" id="jsonFile" accept=".json,application/json" hidden>
@@ -746,7 +747,7 @@ async function exportPreview(){
   if(exporting)return;
   if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){alert('Dieser Browser kann das Video nicht aufnehmen (Chrome verwenden).');return;}
   exporting=true;playing=false;updPlay();
-  const btn=$('expWebm'),lbl=btn.textContent;btn.disabled=true;
+  const btn=$('expWebm'),lbl=btn.textContent;btn.disabled=true;btn.setAttribute('aria-busy','true');
   try{
     const Pp=Core.prepare(mctx,messages,S),W=S.width,H=S.height;
     Pp.avatarImg=await avatarReady();
@@ -777,14 +778,14 @@ async function exportPreview(){
     rec.stop();await done;
     download(new Blob(chunks,{type:'video/webm'}),'chat_vorschau_'+W+'x'+H+'.webm');
     $('expInfo').textContent='Vorschau-Video gespeichert (mit Hintergrund, ohne Transparenz – nur zum Ansehen).';
-  }finally{exporting=false;btn.disabled=false;btn.textContent=lbl;}
+  }finally{exporting=false;btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=lbl;}
 }
 $('expWebm').onclick=exportPreview;
 async function exportZip(opts){
   if(exporting)return null;
   exporting=true;opts=opts||{};
   const btn=$('expZip'),bar=$('bar'),bi=$('barI');
-  btn.disabled=true;bar.style.display='block';bi.style.width='0%';
+  btn.disabled=true;btn.setAttribute('aria-busy','true');bar.style.display='block';bi.style.width='0%';
   try{
     const Pp=Core.prepare(mctx,messages,S);
     Pp.avatarImg=await avatarReady();
@@ -828,7 +829,7 @@ async function exportZip(opts){
     $('expInfo').textContent='Fertig: '+n+' Bilder exportiert. ZIP entpacken und als PNG-Sequenz importieren oder mit dem ffmpeg-Befehl umwandeln.';
     return zip;
   }finally{
-    exporting=false;btn.disabled=false;setTimeout(()=>{bar.style.display='none';},1200);
+    exporting=false;btn.disabled=false;btn.removeAttribute('aria-busy');setTimeout(()=>{bar.style.display='none';},1200);
   }
 }
 $('expZip').onclick=()=>exportZip();
@@ -848,7 +849,7 @@ async function exportMov(){
   if(exporting)return;
   exporting=true;
   const btn=$('expMov'),bar=$('bar'),bi=$('barI'),info=$('expInfo');
-  btn.disabled=true;bar.style.display='block';bi.style.width='0%';
+  btn.disabled=true;btn.setAttribute('aria-busy','true');bar.style.display='block';bi.style.width='0%';
   let ff=null;
   try{
     info.textContent='Lade Konverter … (beim ersten Mal ca. 32 MB)';
@@ -877,7 +878,7 @@ async function exportMov(){
     info.textContent='MOV-Export fehlgeschlagen ('+(e&&e.message||e)+'). Bei sehr langen Overlays kann dem Browser der Speicher ausgehen – dann den ZIP-Weg nehmen.';
   }finally{
     try{ff&&ff.terminate();}catch(e){}
-    exporting=false;btn.disabled=false;setTimeout(()=>{bar.style.display='none';},1200);
+    exporting=false;btn.disabled=false;btn.removeAttribute('aria-busy');setTimeout(()=>{bar.style.display='none';},1200);
   }
 }
 $('expMov').onclick=()=>exportMov();

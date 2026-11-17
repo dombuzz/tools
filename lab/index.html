@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="/theme.js"></script>
 <script src="/motion.js" defer></script>
+<script src="/shader.js" defer></script>
 <meta name="robots" content="noindex">
 <meta name="description" content="Tscherner in experiment, el s&#x27;avra directamain.">
 <meta property="og:type" content="website">
@@ -31,17 +32,8 @@
   body {
     margin: 0; color: var(--text); min-height: 100vh;
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    /* Millimeterpapier */
+    /* Hintergrund: Glut-Shader (shader.js), sonst schlichtes Dunkel */
     background-color: var(--bg);
-    background-image:
-      linear-gradient(rgba(255,154,60,.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,154,60,.05) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-  /* Warnband oben */
-  .tape {
-    height: 10px;
-    background: repeating-linear-gradient(-45deg, var(--lab) 0 14px, var(--bg) 14px 28px);
   }
   main { max-width: 560px; margin: 0 auto; padding: 56px 16px 64px; }
   .homelink { display: inline-block; margin: 0 0 10px; font-size: .85rem; color: var(--muted); text-decoration: none; }
@@ -81,8 +73,7 @@
   .meta { margin-top: 40px; font: .75rem/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--dim); }
 </style>
 </head>
-<body>
-<div class="tape" aria-hidden="true"></div>
+<body data-shader="labA">
 <main>
   <a class="homelink" href="/">← Tools</a><br>
   <span class="badge">Labor · en emprova</span>

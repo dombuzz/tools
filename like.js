@@ -140,9 +140,16 @@ const HTML = `<div class="dbz-like" id="dbz-like">
     lim.textContent = 'Ti has gia dà tes 5 cors per oz en quest tool – Grazia ♥️'; };
   if (used() >= LIMIT) full();
 
+  // Dank-Moment: diffuser Schimmer um den Knopf (shader.js wird erst beim ersten Klick nachgeladen)
+  const spark = el => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const go = () => window.dbzShader && window.dbzShader.spark(el);
+    if (window.dbzShader) return go();
+    const s = document.createElement('script'); s.src = '/shader.js'; s.onload = go; document.head.appendChild(s);
+  };
   function like(el) {
     if (used() >= LIMIT) { full(); return false; }
-    use();
+    use(); spark(el);
     el.classList.add('done', 'pop'); setTimeout(() => el.classList.remove('pop'), 400);
     btn.classList.add('done');
     fetch(API + '/like/' + encodeURIComponent(tool), { method: 'POST' })
