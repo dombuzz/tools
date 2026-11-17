@@ -68,7 +68,7 @@
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
-    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn.bgbtn{top:132px;--dy:-120px}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.fanline{position:fixed;top:147.25px;right:28px;width:var(--r,52px);height:1.5px;margin:0;border-radius:1px;transform-origin:100% 50%;transform:rotate(var(--a,0deg));background:color-mix(in srgb,var(--accent,#ff4d64) 55%,var(--line,#2f2f34));z-index:49;pointer-events:none}.fanline[hidden]{display:none}.fanline.opening{animation:dbz-line .5s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--i,0)*.06s + .12s)}.fanline.closing{animation:dbz-line .3s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.subbtn{top:132px;right:12px;transform:translate(var(--fx,0),var(--fy,0));font:600 13px/1 system-ui,sans-serif}.themebtn.subbtn[aria-pressed="true"]{opacity:1;color:#fff;background:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn.bgbtn{top:132px;--dy:-120px}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.fanline{position:fixed;top:147.25px;right:28px;width:var(--r,52px);height:2px;margin:0;border-radius:1px;transform-origin:100% 50%;transform:rotate(var(--a,0deg));background:var(--c,var(--accent,#ff4d64));opacity:.55;transition:opacity .15s;z-index:49;pointer-events:none}.fanline[hidden]{display:none}.fanline.on,.fanline.hov{opacity:1}.fanline.opening{animation:dbz-line .5s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--i,0)*.06s + .12s)}.fanline.closing{animation:dbz-line .3s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.subbtn{top:132px;right:12px;transform:translate(var(--fx,0),var(--fy,0));font:600 13px/1 system-ui,sans-serif}.themebtn.subbtn:hover,.themebtn.subbtn:focus-visible{opacity:1;color:var(--c);border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--card,#1c1c1f))}.themebtn.subbtn[aria-pressed="true"]{opacity:1;color:#fff;background:var(--c);border-color:var(--c)}html .themebtn.bgbtn[aria-pressed="true"]{color:var(--c,var(--accent,#ff4d64));border-color:var(--c,var(--accent,#ff4d64))}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
     '.themebtn.gearbtn svg{transition:transform .5s cubic-bezier(.3,.7,.3,1)}.themebtn.gearbtn[aria-expanded="true"]{opacity:1}.themebtn.gearbtn[aria-expanded="true"] svg{transform:rotate(90deg)}' +
     /* Zellteilung nach unten: der Tropfen löst sich aus dem Modus-Knopf, dieser streckt sich dabei kurz; beim Schliessen läuft alles rückwärts */
     '@keyframes dbz-split{0%{transform:translateY(var(--dy,-40px)) scale(.9);opacity:0}25%{transform:translateY(calc(var(--dy,-40px)*.675)) scale(.82,1.32);opacity:.7}68%{transform:translateY(5px) scale(1.12,.9)}}' +
@@ -176,7 +176,7 @@
   }
   // Zahnrad: zeigt nach einem Klick Hell/Dunkel und den Tropfen (Zellteilung nach unten); schliesst nach 6 s ohne Bedienung oder per Klick aufs Zahnrad
   // Hintergrund-Shader (nur Seiten mit data-shader-set): schaltet durch die Auswahl und «aus»
-  var bbtn, sbtns = [], lines = [], bgOpen = false, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soM: 'Marmor ruber' };
+  var bbtn, sbtns = [], lines = [], bgOpen = false, BGC = { soA: '#ff4d64', soT: '#22b8aa', labA: '#ff9a3c', soM: '#ff4d64' }, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soM: 'Marmor ruber' };
   var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4z"/></svg>', CROSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   // Shader-Knopf: Stern = Fund aus (Klick fächert die Auswahl 1, 2, … im Halbkreis nach links auf), ✕ = Fund an (Klick schaltet aus)
   function paintBg() {
@@ -184,10 +184,12 @@
     var c = window.dbzShader.current(), on = c !== 'off', label = on ? 'Fund deactivar (' + (BGN[c] || c) + ')' : 'Fund (shader) tscherner';
     bbtn.innerHTML = on ? CROSS : STAR;
     bbtn.title = label; bbtn.setAttribute('aria-label', label); bbtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (on) bbtn.style.setProperty('--c', BGC[c] || '#ff4d64'); else bbtn.style.removeProperty('--c');
     var set = window.dbzShader.choices();
     sbtns.forEach(function (b, i) {
       var k = set[i], t = 'Fund ' + (i + 1) + ': ' + (BGN[k] || k);
       b.title = t; b.setAttribute('aria-label', t); b.setAttribute('aria-pressed', k === c ? 'true' : 'false');
+      b.style.setProperty('--c', BGC[k] || '#ff4d64'); if (lines[i]) { lines[i].style.setProperty('--c', BGC[k] || '#ff4d64'); lines[i].classList.toggle('on', k === c); }
     });
   }
   function openBg() {
@@ -270,6 +272,8 @@
         var ln = d.createElement('span'); ln.className = 'fanline'; ln.hidden = true; ln.setAttribute('aria-hidden', 'true');
         ln.style.setProperty('--r', R + 'px'); ln.style.setProperty('--a', (-ang).toFixed(4) + 'rad'); ln.style.setProperty('--i', i);
         d.body.appendChild(ln); lines.push(ln);
+        sb.addEventListener('mouseenter', function () { ln.classList.add('hov'); }); sb.addEventListener('mouseleave', function () { ln.classList.remove('hov'); });
+        sb.addEventListener('focus', function () { ln.classList.add('hov'); }); sb.addEventListener('blur', function () { ln.classList.remove('hov'); });
         d.body.appendChild(sb); sbtns.push(sb);
       })(i);
       paintBg();
