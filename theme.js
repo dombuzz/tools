@@ -67,16 +67,15 @@
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
-    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn.bgbtn{top:132px;--dy:-120px;transition:top .38s cubic-bezier(.3,.7,.3,1),right .38s cubic-bezier(.3,.7,.3,1),opacity .15s,border-color .15s,color .15s}.themebtn.bgbtn.bgup{top:12px;right:52px}.themebtn.subbtn{top:12px;right:calc(92px + var(--i,0)*40px);font:600 13px/1 system-ui,sans-serif}.themebtn.subbtn[aria-pressed="true"]{opacity:1;color:#fff;background:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn.bgbtn{top:132px;--dy:-120px}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn.subbtn{top:132px;right:12px;transform:translate(var(--fx,0),var(--fy,0));font:600 13px/1 system-ui,sans-serif}.themebtn.subbtn[aria-pressed="true"]{opacity:1;color:#fff;background:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
     '.themebtn.gearbtn svg{transition:transform .5s cubic-bezier(.3,.7,.3,1)}.themebtn.gearbtn[aria-expanded="true"]{opacity:1}.themebtn.gearbtn[aria-expanded="true"] svg{transform:rotate(90deg)}' +
     /* Zellteilung nach unten: der Tropfen löst sich aus dem Modus-Knopf, dieser streckt sich dabei kurz; beim Schliessen läuft alles rückwärts */
     '@keyframes dbz-split{0%{transform:translateY(var(--dy,-40px)) scale(.9);opacity:0}25%{transform:translateY(calc(var(--dy,-40px)*.675)) scale(.82,1.32);opacity:.7}68%{transform:translateY(5px) scale(1.12,.9)}}' +
-    '@keyframes dbz-splitx{0%{transform:translateX(var(--dx,40px)) scale(.9);opacity:0}25%{transform:translateX(calc(var(--dx,40px)*.675)) scale(1.32,.82);opacity:.7}68%{transform:translateX(-5px) scale(.9,1.12)}}' +
-    '@keyframes dbz-parentx{0%{transform:none}30%{transform:scale(1.16,.93)}62%{transform:scale(.95,1.05)}100%{transform:none}}' +
+    '@keyframes dbz-fan{0%{transform:translate(0,0) scale(.8);opacity:0}30%{opacity:.8}65%{transform:translate(calc(var(--fx)*1.14),calc(var(--fy)*1.14)) scale(1.08,.94)}100%{transform:translate(var(--fx),var(--fy))}}' +
     '@keyframes dbz-parent{0%{transform:none}30%{transform:scale(.93,1.16)}62%{transform:scale(1.05,.95)}100%{transform:none}}' +
-    '.themebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}.themebtn.tonebtn.opening{animation-delay:.07s}.themebtn.bgbtn.opening{animation-delay:.14s}' +
+    '.themebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}.themebtn.tonebtn.opening{animation-delay:.07s}' +
     '.themebtn.closing{animation:dbz-split .45s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.optbtn.closing{animation-delay:.05s}' +
-    '.themebtn.subbtn.opening{animation:dbz-splitx .5s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--i,0)*.06s)}.themebtn.subbtn.closing{animation:dbz-splitx .4s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.bgbtn.dividing{transform-origin:0 50%;animation:dbz-parentx .5s ease-in-out}.themebtn.bgbtn.dividing-rev{transform-origin:0 50%;animation:dbz-parentx .4s ease-in-out reverse}.themebtn.dividing{transform-origin:50% 0;animation:dbz-parent .5s ease-in-out}.themebtn.dividing-rev{transform-origin:50% 0;animation:dbz-parent .45s ease-in-out reverse}' +
+    '.themebtn.subbtn.opening{animation:dbz-fan .5s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--i,0)*.06s)}.themebtn.subbtn.closing{animation:dbz-fan .38s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.dividing{transform-origin:50% 0;animation:dbz-parent .5s ease-in-out}.themebtn.dividing-rev{transform-origin:50% 0;animation:dbz-parent .45s ease-in-out reverse}' +
     /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
     ':where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent,#ff4d64)!important;outline-offset:2px}' +
     '.themebtn:focus-visible{outline-offset:2px}' +
@@ -176,36 +175,32 @@
   // Zahnrad: zeigt nach einem Klick Hell/Dunkel und den Tropfen (Zellteilung nach unten); schliesst nach 6 s ohne Bedienung oder per Klick aufs Zahnrad
   // Hintergrund-Shader (nur Seiten mit data-shader-set): schaltet durch die Auswahl und «aus»
   var bbtn, sbtns = [], bgOpen = false, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soM: 'Marmor ruber' };
+  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4z"/></svg>', CROSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  // Shader-Knopf: Stern = Fund aus (Klick fächert die Auswahl 1, 2, … im Halbkreis nach links auf), ✕ = Fund an (Klick schaltet aus)
   function paintBg() {
     if (!bbtn || !window.dbzShader) return;
-    var c = window.dbzShader.current(), on = c !== 'off', label = 'Fund (shader): ' + (on ? (BGN[c] || c) : 'nagin');
-    bbtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.1 5.4L19.5 10l-5.4 2.1L12 17.5l-2.1-5.4L4.5 10l5.4-1.6z"/>' + (on ? '' : '<path d="M4 20L20 4"/>') + '</svg>';
+    var c = window.dbzShader.current(), on = c !== 'off', label = on ? 'Fund deactivar (' + (BGN[c] || c) + ')' : 'Fund (shader) tscherner';
+    bbtn.innerHTML = on ? CROSS : STAR;
     bbtn.title = label; bbtn.setAttribute('aria-label', label); bbtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     var set = window.dbzShader.choices();
     sbtns.forEach(function (b, i) {
-      var k = i < set.length ? set[i] : 'off', t = k === 'off' ? 'Fund deactivar' : 'Fund ' + (i + 1) + ': ' + (BGN[k] || k);
+      var k = set[i], t = 'Fund ' + (i + 1) + ': ' + (BGN[k] || k);
       b.title = t; b.setAttribute('aria-label', t); b.setAttribute('aria-pressed', k === c ? 'true' : 'false');
     });
   }
-  // Shader-Knopf gleitet nach oben links neben das Zahnrad; daraus teilen sich die Nummern 1, 2, … (und «aus») nach links ab
   function openBg() {
     if (bgOpen || !bbtn) return; bgOpen = true; bbtn.setAttribute('aria-expanded', 'true');
-    bbtn.classList.add('bgup');
-    setTimeout(function () {
-      if (!bgOpen) return;
-      sbtns.forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
-      bbtn.classList.remove('dividing-rev'); bbtn.classList.add('dividing');
-      setTimeout(function () { bbtn.classList.remove('dividing'); sbtns.forEach(function (b) { b.classList.remove('opening'); }); }, 700);
-    }, 330);
+    sbtns.forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
+    setTimeout(function () { sbtns.forEach(function (b) { b.classList.remove('opening'); }); }, 700);
   }
   function closeBg(now) {
     if (!bgOpen || !bbtn) return; bgOpen = false; bbtn.setAttribute('aria-expanded', 'false');
-    if (now) { sbtns.forEach(function (b) { b.hidden = true; b.classList.remove('opening', 'closing'); }); bbtn.classList.remove('bgup', 'dividing', 'dividing-rev'); return; }
+    if (now) { sbtns.forEach(function (b) { b.hidden = true; b.classList.remove('opening', 'closing'); }); return; }
     sbtns.forEach(function (b) { b.classList.remove('opening'); b.classList.add('closing'); });
-    bbtn.classList.remove('dividing'); bbtn.classList.add('dividing-rev');
-    setTimeout(function () { sbtns.forEach(function (b) { b.hidden = true; b.classList.remove('closing'); }); bbtn.classList.remove('dividing-rev'); if (!bgOpen) bbtn.classList.remove('bgup'); }, 420);
+    setTimeout(function () { if (!bgOpen) sbtns.forEach(function (b) { b.hidden = true; b.classList.remove('closing'); }); }, 420);
   }
   function btns() { return [btn, tbtn, bbtn].filter(Boolean); }
+  function bgInit() { if (bbtn && window.dbzShader && window.dbzShader.current() !== 'off') openBg(); }
   var gbtn, tTimer = 0, tOpen = false, GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
   function paintGear() { if (gbtn) { gbtn.setAttribute('aria-expanded', tOpen ? 'true' : 'false'); gbtn.title = 'Parameters'; gbtn.setAttribute('aria-label', 'Parameters'); } }
   function openMenu() {
@@ -213,7 +208,7 @@
     if (!tOpen) {
       tOpen = true; paintGear();
       btns().forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
-      gbtn.classList.remove('dividing-rev'); gbtn.classList.add('dividing');
+      gbtn.classList.remove('dividing-rev'); gbtn.classList.add('dividing'); setTimeout(bgInit, 450);
       setTimeout(function () { gbtn.classList.remove('dividing'); btns().forEach(function (b) { b.classList.remove('opening'); }); }, 620);
     }
     tTimer = setTimeout(closeMenu, 6000);
@@ -248,15 +243,18 @@
     d.body.appendChild(tbtn); paintTone(); paintGear(); applyTone();
     if (d.body.hasAttribute('data-shader-set')) {
       bbtn = d.createElement('button'); bbtn.type = 'button'; bbtn.className = 'themebtn bgbtn'; bbtn.hidden = true;
-      bbtn.addEventListener('click', function () { if (bgOpen) closeBg(); else openBg(); keepMenu(); });
+      bbtn.addEventListener('click', function () {
+        if (window.dbzShader.current() !== 'off') { window.dbzShader.pick('off'); closeBg(); } else if (bgOpen) closeBg(); else openBg();
+        keepMenu();
+      });
       d.body.appendChild(bbtn);
-      var nSet = d.body.getAttribute('data-shader-set').split(',').length;
-      for (var i = 0; i <= nSet; i++) (function (i) {
-        var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn'; sb.hidden = true;
-        var pp = i < nSet ? nSet - 1 - i : nSet; // Lage von rechts: 1 links, höchste Nummer neben dem Shader-Knopf, «aus» ganz links
-        sb.style.setProperty('--i', pp); sb.style.setProperty('--dx', (pp + 1) * 40 + 'px');
-        if (i < nSet) sb.textContent = i + 1; else sb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>';
-        sb.addEventListener('click', function () { var set = window.dbzShader.choices(); window.dbzShader.pick(i < set.length ? set[i] : 'off'); keepMenu(); });
+      var set0 = window.dbzShader.choices ? window.dbzShader.choices() : d.body.getAttribute('data-shader-set').split(','), nSet = set0.length;
+      for (var i = 0; i < nSet; i++) (function (i) {
+        var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn'; sb.hidden = true; sb.textContent = i + 1;
+        // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten
+        var ang = nSet === 1 ? 0 : (-55 + 110 * i / (nSet - 1)) * Math.PI / 180, R = 72;
+        sb.style.setProperty('--fx', (-R * Math.cos(ang)).toFixed(1) + 'px'); sb.style.setProperty('--fy', (R * Math.sin(ang)).toFixed(1) + 'px'); sb.style.setProperty('--i', i);
+        sb.addEventListener('click', function () { window.dbzShader.pick(window.dbzShader.choices()[i]); keepMenu(); });
         d.body.appendChild(sb); sbtns.push(sb);
       })(i);
       paintBg();
