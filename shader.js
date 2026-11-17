@@ -230,6 +230,50 @@
   SH.soK = aurLines(false);
   SH.soJ = aurLines(true);
 
+  // Neue ruhige Prototypen für die vierte Auswahl: P «Seide», Q «Berge», R «Tinte»
+  SH.soP = SOP + [
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.006;',
+    ' float calm=mix(1.,calmP(gl_FragCoord.xy/uDpr),.8);',
+    ' float w=fbm(p*.8+vec2(t,-t*.6))*3.2;',
+    ' float f=sin(p.x*2.1+p.y*1.3+w);float g=sin(p.x*1.2-p.y*2.2+w*1.4+1.7);',
+    ' float sh=.5+.5*f*.7+.5*g*.3;',
+    ' float sheen=pow(smoothstep(.55,1.,.5+.5*f),3.)*.55+pow(smoothstep(.7,1.,.5+.5*g),4.)*.3;',
+    ' vec3 dk=mix(vec3(.02,.018,.045),vec3(.17,.1,.34),sh*sh);',
+    ' dk+=vec3(.62,.62,.72)*sheen*.5*calm;',
+    ' vec3 lt=mix(vec3(.98,.97,1.),vec3(.8,.77,.9),sh*.9)+vec3(-.04)*sheen;',
+    ' vec3 c=mix(dk,lt,uLight);',
+    ' o=fin(c,gl_FragCoord.xy);',
+    '}'].join('\n');
+
+  SH.soQ = SOP + [
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;float t=uTime*.004;',
+    ' vec3 skyT=mix(vec3(.02,.02,.06),vec3(.93,.93,.99),uLight), skyH=mix(vec3(.26,.16,.4),vec3(.98,.9,.96),uLight);',
+    ' vec3 c=mix(skyH,skyT,smoothstep(.2,.95,uv.y));',
+    ' for(int i=0;i<5;i++){float fi=float(i);',
+    '  float x=uv.x*asp*(1.2+.35*fi)+t*(1.2+.5*fi)+fi*9.3;',
+    '  float h=.56-.1*fi+.11*(fbm(vec2(x,fi*3.1))-.5);',
+    '  float m=smoothstep(h+.003,h-.003,uv.y);',
+    '  float depth=fi/4.;',
+    '  vec3 far=mix(vec3(.2,.13,.33),vec3(.84,.8,.93),uLight), near=mix(vec3(.018,.016,.04),vec3(.6,.56,.74),uLight);',
+    '  vec3 lc=mix(far,near,depth);',
+    '  lc=mix(lc,skyH,.3*(1.-depth)*smoothstep(0.,.35,h-uv.y));',
+    '  c=mix(c,lc,m);}',
+    ' o=fin(c,gl_FragCoord.xy);',
+    '}'].join('\n');
+
+  SH.soR = SOP + [
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.005;',
+    ' float calm=mix(1.,calmP(gl_FragCoord.xy/uDpr),.7);',
+    ' float f=fbm(p*.75+vec2(t,-t*.4)+fbm(p*.5-t)*1.5);',
+    ' float k=smoothstep(.25,.85,f);',
+    ' vec3 dk=mix(vec3(.025,.022,.055),mix(vec3(.13,.08,.28),vec3(.36,.28,.58),k),smoothstep(0.,.7,k)*calm);',
+    ' vec3 lt=mix(vec3(.985,.98,1.),mix(vec3(.86,.82,.96),vec3(.7,.64,.88),k),smoothstep(0.,.7,k)*calm);',
+    ' o=fin(mix(dk,lt,uLight),gl_FragCoord.xy);',
+    '}'].join('\n');
+
   // 404-Seite: Blockfehler – Rechtecke blitzen auf wie ein defektes Display, die Textspalte bleibt ruhig
   SH.e4d = [
     'void main(){',
@@ -424,7 +468,7 @@
     cv.style.visibility = 'hidden';
     d.body.insertBefore(cv, d.body.firstChild); root.classList.add('dbz-sh');
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
-    var so = /^so[A-C]$|^so[MTUHLKJ]$/.test(key), heavy = key === 'labA';
+    var so = /^so[A-C]$|^so[MTUHLKJPQR]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
       scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
       size: function () { return [window.innerWidth, window.innerHeight]; },
