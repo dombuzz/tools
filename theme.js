@@ -63,6 +63,7 @@
     '.tabs button:hover,.tabs button[aria-selected="true"],.ctog button:hover,.ctog button[aria-pressed="true"],' +
     '.wseg button:hover,.wseg button[aria-pressed="true"],.tool:hover,.tool[aria-pressed="true"],.seg input:checked+label,.seg input+label:hover' +
     '{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}' +
+    'html.dbz-sh .card:not([style*="background"]),html.dbz-sh .panel,html.dbz-sh .pane{background:color-mix(in srgb,var(--card,#1c1c1f) 80%,transparent)}html.dbz-sh .card{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}' +
     '.themebtn{position:fixed;top:12px;right:12px;z-index:50;width:32px;height:32px;padding:0;display:grid;place-items:center;border-radius:50%;' +
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
@@ -232,7 +233,16 @@
     if (store) { try { localStorage.setItem('dbz-theme', t); } catch (e) {} }
     paint();
   }
+  // Hintergrund-Auswahl auf allen Seiten (Seiten mit eigenem Shader, data-shader, bleiben wie sie sind); shader.js wird bei Bedarf nachgeladen
+  window.dbzBg = function () {
+    var b = d.body; if (!b || b.hasAttribute('data-shader')) return '';
+    var set = (b.getAttribute('data-shader-set') || 'soA,soT,labA').split(','), v = ''; try { v = localStorage.getItem('dbz-bg') || ''; } catch (e) {}
+    return v === 'off' || set.indexOf(v) >= 0 ? v : (b.getAttribute('data-shader-default') || 'off');
+  };
   function mount() {
+    if (!d.body.hasAttribute('data-shader') && !d.body.hasAttribute('data-shader-set')) d.body.setAttribute('data-shader-set', 'soA,soT,labA');
+    if (window.dbzShader && window.dbzShader.init && d.body.hasAttribute('data-shader-set')) window.dbzShader.init();
+    if (d.body.hasAttribute('data-shader-set') && !window.dbzShader && !d.querySelector('script[src*="shader.js"]')) { var ss = d.createElement('script'); ss.src = '/shader.js'; d.head.appendChild(ss); }
     gbtn = d.createElement('button'); gbtn.type = 'button'; gbtn.className = 'themebtn gearbtn'; gbtn.innerHTML = GEAR;
     gbtn.addEventListener('click', function () { if (tOpen) closeMenu(); else openMenu(); });
     d.body.appendChild(gbtn);
@@ -245,17 +255,18 @@
     if (d.body.hasAttribute('data-shader-set')) {
       bbtn = d.createElement('button'); bbtn.type = 'button'; bbtn.className = 'themebtn bgbtn'; bbtn.hidden = true;
       bbtn.addEventListener('click', function () {
+        if (!window.dbzShader) return;
         if (window.dbzShader.current() !== 'off') { window.dbzShader.pick('off'); closeBg(); } else if (bgOpen) closeBg(); else openBg();
         keepMenu();
       });
       d.body.appendChild(bbtn);
-      var set0 = window.dbzShader.choices ? window.dbzShader.choices() : d.body.getAttribute('data-shader-set').split(','), nSet = set0.length;
+      var set0 = d.body.getAttribute('data-shader-set').split(','), nSet = set0.length;
       for (var i = 0; i < nSet; i++) (function (i) {
         var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn'; sb.hidden = true; sb.textContent = i + 1;
         // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten
         var ang = nSet === 1 ? 0 : (-52 + 104 * i / (nSet - 1)) * Math.PI / 180, R = 54;
         sb.style.setProperty('--fx', (-R * Math.cos(ang)).toFixed(1) + 'px'); sb.style.setProperty('--fy', (R * Math.sin(ang)).toFixed(1) + 'px'); sb.style.setProperty('--i', i);
-        sb.addEventListener('click', function () { window.dbzShader.pick(window.dbzShader.choices()[i]); keepMenu(); });
+        sb.addEventListener('click', function () { if (window.dbzShader) window.dbzShader.pick(set0[i]); keepMenu(); });
         var ln = d.createElement('span'); ln.className = 'fanline'; ln.hidden = true; ln.setAttribute('aria-hidden', 'true');
         ln.style.setProperty('--r', R + 'px'); ln.style.setProperty('--a', (-ang).toFixed(4) + 'rad'); ln.style.setProperty('--i', i);
         d.body.appendChild(ln); lines.push(ln);

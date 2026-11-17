@@ -441,6 +441,7 @@
     choices: function () { var v = d.body && d.body.getAttribute('data-shader-set'); return v ? v.split(',') : []; },
     current: function () { return curBg; },
     pick: function (k) { pickBg(k, true); },
+    init: function () { if (!bgItem) auto(); }, // nach dem Setzen von data-shader-set (theme.js) erneut auswerten
     cycle: function () {
       var set = window.dbzShader.choices(); if (!set.length) return;
       var i = curBg === 'off' ? set.length : set.indexOf(curBg), n = (i + 1) % (set.length + 1);
@@ -460,7 +461,7 @@
     var set = window.dbzShader.choices();
     if (set.length) {
       var sv = ''; try { sv = localStorage.getItem('dbz-bg') || ''; } catch (e) {}
-      pickBg(sv === 'off' ? 'off' : set.indexOf(sv) >= 0 ? sv : set[0], false);
+      pickBg(sv === 'off' ? 'off' : set.indexOf(sv) >= 0 ? sv : (d.body.getAttribute('data-shader-default') || 'off'), false);
       return;
     }
     var k = d.body && d.body.getAttribute('data-shader');

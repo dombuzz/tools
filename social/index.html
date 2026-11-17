@@ -48,7 +48,7 @@ a.tool span{overflow-wrap:anywhere;hyphens:auto}
 <script src="/shader.js" defer></script>
 <style>html.dbz-sh a.tool{background:color-mix(in srgb,var(--card) 78%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}</style>
 </head>
-<body data-shader-set="soA,soT,labA">
+<body data-shader-set="soA,soT,labA" data-shader-default="soA">
 <div class="wrap">
   <div>
     <a class="homelink" href="/">← Tools</a>
@@ -86,6 +86,6 @@ for (const t of TOOLS) {
   document.getElementById(t.v ? 'g2' : 'g').appendChild(a);
 }
 </script>
-<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/social?s='+(document.documentElement.dataset.tone==='soft'?'1':'0')+'&b='+(function(){var v='';try{v=localStorage.getItem('dbz-bg')||''}catch(e){}return /^(soT|labA|off)$/.test(v)?v:'soA'})()+(window.dbzCid&&dbzCid()?'&c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/social?s='+(document.documentElement.dataset.tone==='soft'?'1':'0')+'&b='+(function(){var v='';try{v=localStorage.getItem('dbz-bg')||''}catch(e){}return /^(soT|labA|off|soA)$/.test(v)?v:'soA'})()+(window.dbzCid&&dbzCid()?'&c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>

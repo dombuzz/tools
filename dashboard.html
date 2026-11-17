@@ -952,7 +952,7 @@
         if (sn) {
           const segs = SHV.filter(v => (sh[v[0]] || {}).count).map(v => `<span class="${v[3]}" style="flex:${sh[v[0]].count} 1 0" title="${esc(v[2])}: ${fmt(sh[v[0]].count)}×">${Math.round(sh[v[0]].count / sn * 100) >= 9 ? v[1] : ''}</span>`).join('');
           const leg = SHV.filter(v => (sh[v[0]] || {}).count).map(v => `<small><i class="${v[3]}"></i>${v[1]} · ${esc(v[2])} · ${Math.round(sh[v[0]].count / sn * 100)} % · ${vs(sh[v[0]].users)}</small>`).join('');
-          cols += `<div class="vcol vsh"><span class="vh">Fund (shader) en Social</span><div class="thbar shbar">${segs}</div><div class="vleg">${leg}</div></div>`;
+          cols += `<div class="vcol vsh"><span class="vh">Fund (shader)</span><div class="thbar shbar">${segs}</div><div class="vleg">${leg}</div></div>`;
         }
         if (cols) visBox = `<h2 class="kz-h">Visualisaziun</h2><div class="kz-t vis viswide">${cols}</div>`;
       }
