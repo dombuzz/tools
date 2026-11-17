@@ -89,12 +89,18 @@
     'body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(55% 35% at 0% 0%,color-mix(in srgb,var(--accent,#ff4d64) 13%,transparent),transparent 70%),radial-gradient(45% 30% at 100% 35%,color-mix(in srgb,var(--accent,#ff4d64) 7%,transparent),transparent 70%),radial-gradient(60% 35% at 40% 100%,color-mix(in srgb,var(--accent,#ff4d64) 8%,transparent),transparent 70%)}' +
     '.card,.step,.panel,.take,.tw{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border-color:var(--glass-line)!important}' +
     /* Weitere Boxen als Milchglas (Rahmenfarbe bleibt, z. B. der rote Balken links bei .nowc) */
-    '.nowc,.wkg,.stage{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}' +
-    'a.tool{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}' +
+    '.nowc,.wkg,.stage,.manual{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}' +
+    'a.tool{background-color:color-mix(in srgb,var(--card,#1c1c1f) 55%,transparent)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}' +
     /* Mit aktivem Shader-Hintergrund: Textfelder, Auswahlfelder und grau hinterlegte Schaltflächen halbdurchsichtig */
     'html.dbz-sh :is(select,textarea,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=hidden]):not([type=button]):not([type=submit])),' +
     'html.dbz-sh :is(.seg,.ctog,.wseg,.ratio-seg,.ghost,.btn-secondary,.btn-sm,details.more,.toplink,.recbtn){background-color:color-mix(in srgb,var(--mono,#26262a) 50%,transparent)!important}' +
     'html.dbz-sh :is(.ghost,.btn-secondary,.btn-sm,.toplink,.recbtn):hover{background-color:color-mix(in srgb,var(--mono,#26262a) 72%,transparent)!important}' +
+    /* Shader aktiv: Format-Pillen (Data), Wappen-Kacheln (Avis), Kantons-/Gemeindelisten (Votaziuns), Ergebnisbox (Hockey) durchsichtiger */
+    'html.dbz-sh .ratio-seg button:not(.active){background-color:color-mix(in srgb,var(--mono,#26262a) 40%,transparent)!important}' +
+    'html.dbz-sh .cgrid .cc{background-color:color-mix(in srgb,var(--field,#26262a) 30%,transparent)!important}' +
+    'html.dbz-sh #cSel{background-color:color-mix(in srgb,var(--card,#1c1c1f) 45%,transparent)!important}' +
+    'html.dbz-sh .xlist{background-color:color-mix(in srgb,var(--field,#26262a) 28%,transparent)!important}' +
+    'html.dbz-sh .out{background-color:color-mix(in srgb,var(--surface2,#18181b) 50%,transparent)!important}' +
     /* Zellen leicht durchsichtig: Wochenende, leer/ausserhalb, Lücke, heute – statt voller Flächen, die aus dem Glas herausfallen */
     '.we,.d.we{background-color:color-mix(in srgb,var(--surface2) 55%,transparent)!important}' +
     'td.off,td.off.we,.d.out-plan{background-color:color-mix(in srgb,var(--bg) 40%,transparent)!important}' +
