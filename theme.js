@@ -67,12 +67,12 @@
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
-    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn.bgbtn{top:132px;--dy:-120px}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
     '.themebtn.gearbtn svg{transition:transform .5s cubic-bezier(.3,.7,.3,1)}.themebtn.gearbtn[aria-expanded="true"]{opacity:1}.themebtn.gearbtn[aria-expanded="true"] svg{transform:rotate(90deg)}' +
     /* Zellteilung nach unten: der Tropfen löst sich aus dem Modus-Knopf, dieser streckt sich dabei kurz; beim Schliessen läuft alles rückwärts */
     '@keyframes dbz-split{0%{transform:translateY(var(--dy,-40px)) scale(.9);opacity:0}25%{transform:translateY(calc(var(--dy,-40px)*.675)) scale(.82,1.32);opacity:.7}68%{transform:translateY(5px) scale(1.12,.9)}}' +
     '@keyframes dbz-parent{0%{transform:none}30%{transform:scale(.93,1.16)}62%{transform:scale(1.05,.95)}100%{transform:none}}' +
-    '.themebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}.themebtn.tonebtn.opening{animation-delay:.07s}' +
+    '.themebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}.themebtn.tonebtn.opening{animation-delay:.07s}.themebtn.bgbtn.opening{animation-delay:.14s}' +
     '.themebtn.closing{animation:dbz-split .45s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.optbtn.closing{animation-delay:.05s}' +
     '.themebtn.dividing{transform-origin:50% 0;animation:dbz-parent .5s ease-in-out}.themebtn.dividing-rev{transform-origin:50% 0;animation:dbz-parent .45s ease-in-out reverse}' +
     /* Tastatur: sichtbarer Fokus-Rahmen überall (nur bei Tastaturbedienung), einheitlich */
@@ -172,23 +172,32 @@
     tbtn.title = label; tbtn.setAttribute('aria-label', label); tbtn.setAttribute('aria-pressed', soft ? 'true' : 'false');
   }
   // Zahnrad: zeigt nach einem Klick Hell/Dunkel und den Tropfen (Zellteilung nach unten); schliesst nach 6 s ohne Bedienung oder per Klick aufs Zahnrad
+  // Hintergrund-Shader (nur Seiten mit data-shader-set): schaltet durch die Auswahl und «aus»
+  var bbtn, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', soM: 'Marmor ruber' };
+  function paintBg() {
+    if (!bbtn || !window.dbzShader) return;
+    var c = window.dbzShader.current(), on = c !== 'off', label = 'Fund: ' + (on ? (BGN[c] || c) : 'nagin') + ' – cliccar per midar';
+    bbtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.1 5.4L19.5 10l-5.4 2.1L12 17.5l-2.1-5.4L4.5 10l5.4-1.6z"/>' + (on ? '' : '<path d="M4 20L20 4"/>') + '</svg>';
+    bbtn.title = label; bbtn.setAttribute('aria-label', label); bbtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function btns() { return [btn, tbtn, bbtn].filter(Boolean); }
   var gbtn, tTimer = 0, tOpen = false, GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
   function paintGear() { if (gbtn) { gbtn.setAttribute('aria-expanded', tOpen ? 'true' : 'false'); gbtn.title = 'Parameters'; gbtn.setAttribute('aria-label', 'Parameters'); } }
   function openMenu() {
     if (!gbtn) return; clearTimeout(tTimer);
     if (!tOpen) {
       tOpen = true; paintGear();
-      [btn, tbtn].forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
+      btns().forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
       gbtn.classList.remove('dividing-rev'); gbtn.classList.add('dividing');
-      setTimeout(function () { gbtn.classList.remove('dividing'); [btn, tbtn].forEach(function (b) { b.classList.remove('opening'); }); }, 620);
+      setTimeout(function () { gbtn.classList.remove('dividing'); btns().forEach(function (b) { b.classList.remove('opening'); }); }, 620);
     }
     tTimer = setTimeout(closeMenu, 6000);
   }
   function closeMenu() {
     clearTimeout(tTimer); if (!gbtn || !tOpen) return; tOpen = false; paintGear();
-    [btn, tbtn].forEach(function (b) { b.classList.remove('opening'); b.classList.add('closing'); });
+    btns().forEach(function (b) { b.classList.remove('opening'); b.classList.add('closing'); });
     gbtn.classList.remove('dividing'); gbtn.classList.add('dividing-rev');
-    setTimeout(function () { gbtn.classList.remove('dividing-rev'); if (!tOpen) [btn, tbtn].forEach(function (b) { b.hidden = true; b.classList.remove('closing'); }); }, 520);
+    setTimeout(function () { gbtn.classList.remove('dividing-rev'); if (!tOpen) btns().forEach(function (b) { b.hidden = true; b.classList.remove('closing'); }); }, 520);
   }
   // Bedienung eines der Knöpfe verlängert die Anzeige um weitere 6 s
   function keepMenu() { if (tOpen) { clearTimeout(tTimer); tTimer = setTimeout(closeMenu, 6000); } }
@@ -212,6 +221,12 @@
     tbtn = d.createElement('button'); tbtn.type = 'button'; tbtn.className = 'themebtn tonebtn'; tbtn.hidden = true;
     tbtn.addEventListener('click', function () { setTone(r.dataset.tone !== 'soft', true); keepMenu(); });
     d.body.appendChild(tbtn); paintTone(); paintGear(); applyTone();
+    if (d.body.hasAttribute('data-shader-set')) {
+      bbtn = d.createElement('button'); bbtn.type = 'button'; bbtn.className = 'themebtn bgbtn'; bbtn.hidden = true;
+      bbtn.addEventListener('click', function () { if (window.dbzShader) window.dbzShader.cycle(); keepMenu(); });
+      d.body.appendChild(bbtn); paintBg();
+      window.addEventListener('dbz-bg', paintBg); window.addEventListener('load', paintBg);
+    }
     d.addEventListener('keydown', function (e) { if (e.key === 'Escape' && tOpen) { closeMenu(); gbtn.focus(); } });
     addEventListener('load', function () { if (r.dataset.tone === 'soft') applyTone(); });
   }

@@ -436,11 +436,32 @@
     },
     spark: spark,
     bg: bg,
-    setBg: function (key) { if (bgItem) { kill(bgItem); bgItem = null; } bg(key); } // Hintergrund wechseln (Vorschau der Social-Prototypen)
+    setBg: function (key) { if (bgItem) { kill(bgItem); bgItem = null; } if (key) bg(key); else root.classList.remove('dbz-sh'); },
+    // Wählbarer Hintergrund: <body data-shader-set="soA,soT"> – Zahnrad-Menü (theme.js) schaltet durch die Liste und «aus»; Wahl in dbz-bg gespeichert
+    choices: function () { var v = d.body && d.body.getAttribute('data-shader-set'); return v ? v.split(',') : []; },
+    current: function () { return curBg; },
+    cycle: function () {
+      var set = window.dbzShader.choices(); if (!set.length) return;
+      var i = curBg === 'off' ? set.length : set.indexOf(curBg), n = (i + 1) % (set.length + 1);
+      pickBg(n < set.length ? set[n] : 'off', true);
+    }
   };
 
+  var curBg = 'off';
+  function pickBg(k, store) {
+    curBg = k;
+    if (store) { try { localStorage.setItem('dbz-bg', k); } catch (e) {} }
+    window.dbzShader.setBg(k === 'off' ? null : k);
+    window.dispatchEvent(new CustomEvent('dbz-bg', { detail: k }));
+  }
   function auto() {
     readTheme();
+    var set = window.dbzShader.choices();
+    if (set.length) {
+      var sv = ''; try { sv = localStorage.getItem('dbz-bg') || ''; } catch (e) {}
+      pickBg(sv === 'off' ? 'off' : set.indexOf(sv) >= 0 ? sv : set[0], false);
+      return;
+    }
     var k = d.body && d.body.getAttribute('data-shader');
     if (k) bg(k);
   }
