@@ -176,7 +176,7 @@
   }
   // Zahnrad: zeigt nach einem Klick Hell/Dunkel und den Tropfen (Zellteilung nach unten); schliesst nach 6 s ohne Bedienung oder per Klick aufs Zahnrad
   // Hintergrund-Shader (nur Seiten mit data-shader-set): schaltet durch die Auswahl und «aus»
-  var bbtn, sbtns = [], lines = [], bgOpen = false, BGC = { soA: '#ff4d64', soT: '#22b8aa', labA: '#ff9a3c', soM: '#ff4d64' }, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soM: 'Marmor ruber' };
+  var bbtn, sbtns = [], lines = [], bgOpen = false, BGC = { soA: '#ff4d64', soT: '#22b8aa', labA: '#ff9a3c', soK: '#9b6bff', soM: '#ff4d64' }, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soK: 'Aurora', soM: 'Marmor ruber' };
   var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4z"/></svg>', CROSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   // Shader-Knopf: Stern = Fund aus (Klick fächert die Auswahl 1, 2, … im Halbkreis nach links auf), ✕ = Fund an (Klick schaltet aus)
   function paintBg() {
@@ -238,11 +238,11 @@
   // Hintergrund-Auswahl auf allen Seiten (Seiten mit eigenem Shader, data-shader, bleiben wie sie sind); shader.js wird bei Bedarf nachgeladen
   window.dbzBg = function () {
     var b = d.body; if (!b || b.hasAttribute('data-shader')) return '';
-    var set = (b.getAttribute('data-shader-set') || 'soA,soT,labA').split(','), v = ''; try { v = localStorage.getItem('dbz-bg') || ''; } catch (e) {}
+    var set = (b.getAttribute('data-shader-set') || 'soA,soT,labA,soK').split(','), v = ''; try { v = localStorage.getItem('dbz-bg') || ''; } catch (e) {}
     return v === 'off' || set.indexOf(v) >= 0 ? v : (b.getAttribute('data-shader-default') || 'off');
   };
   function mount() {
-    if (!d.body.hasAttribute('data-shader') && !d.body.hasAttribute('data-shader-set')) d.body.setAttribute('data-shader-set', 'soA,soT,labA');
+    if (!d.body.hasAttribute('data-shader') && !d.body.hasAttribute('data-shader-set')) d.body.setAttribute('data-shader-set', 'soA,soT,labA,soK');
     if (window.dbzShader && window.dbzShader.init && d.body.hasAttribute('data-shader-set')) window.dbzShader.init();
     if (d.body.hasAttribute('data-shader-set') && !window.dbzShader && !d.querySelector('script[src*="shader.js"]')) { var ss = d.createElement('script'); ss.src = '/shader.js'; d.head.appendChild(ss); }
     gbtn = d.createElement('button'); gbtn.type = 'button'; gbtn.className = 'themebtn gearbtn'; gbtn.innerHTML = GEAR;
@@ -265,9 +265,9 @@
       var set0 = d.body.getAttribute('data-shader-set').split(','), nSet = set0.length;
       for (var i = 0; i < nSet; i++) (function (i) {
         var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn'; sb.hidden = true; sb.textContent = i + 1;
-        // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten (bei drei Nummern von Hand gesetzte Lage)
-        var P3 = [[-41, -26], [-54, 10], [-33, 43]], fx, fy;
-        if (nSet === 3) { fx = P3[i][0]; fy = P3[i][1]; } else { var an = nSet === 1 ? 0 : (-40 + 80 * i / (nSet - 1)) * Math.PI / 180; fx = -50 * Math.cos(an); fy = 50 * Math.sin(an) + 8; }
+        // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten (bei drei und vier Nummern von Hand gesetzte Lage)
+        var P3 = [[-41, -26], [-54, 10], [-33, 43]], P4 = [[-40, -29], [-56, 4], [-47, 39], [-22, 62]], fx, fy;
+        if (nSet === 3) { fx = P3[i][0]; fy = P3[i][1]; } else if (nSet === 4) { fx = P4[i][0]; fy = P4[i][1]; } else { var an = nSet === 1 ? 0 : (-40 + 80 * i / (nSet - 1)) * Math.PI / 180; fx = -50 * Math.cos(an); fy = 50 * Math.sin(an) + 8; }
         var R = Math.hypot(fx, fy), ang = Math.atan2(fy, -fx);
         sb.style.setProperty('--fx', fx.toFixed(1) + 'px'); sb.style.setProperty('--fy', fy.toFixed(1) + 'px'); sb.style.setProperty('--i', i);
         sb.addEventListener('click', function () { if (window.dbzShader) window.dbzShader.pick(set0[i]); keepMenu(); });

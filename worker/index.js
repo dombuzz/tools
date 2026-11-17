@@ -825,7 +825,7 @@ async function handle(request, env, ctx) {
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
         const tone = url.searchParams.get('s') === '1' ? 'soft' : url.searchParams.get('s') === '0' ? 'normal' : null; // Farbstärke (soft = Sättigung reduziert)
-        const bgp = url.searchParams.get('b'), shader = /^(soA|soT|labA|off)$/.test(bgp || '') ? bgp : null; // gewählter Hintergrund-Shader (nur Social)
+        const bgp = url.searchParams.get('b'), shader = /^(soA|soT|labA|soK|off)$/.test(bgp || '') ? bgp : null; // gewählter Hintergrund-Shader (nur Social)
         await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid, tone, shader) VALUES (?1, datetime('now'), ?2, ?3, ?4, ?5)").bind(tool, theme, cid, tone, shader).run();
         return json({ ok: true }, request);
       }
