@@ -146,10 +146,10 @@
     'vec3 M3(){return mix(vec3(1.,.55,.6),vec3(1.),uLight);}',
     'vec3 G(){return mix(vec3(1.,.8,.75),vec3(.72,.1,.2),uLight);}'].join('\n'));
   SH.soT = marble([
-    'vec3 M0(){return vec3(.02,.1,.09);}',
-    'vec3 M1(){return vec3(.03,.28,.26);}',
-    'vec3 M2(){return vec3(.1,.62,.58);}',
-    'vec3 M3(){return vec3(.85,.98,.95);}',
+    'vec3 M0(){return vec3(.012,.062,.056);}',
+    'vec3 M1(){return vec3(.02,.18,.168);}',
+    'vec3 M2(){return vec3(.065,.4,.375);}',
+    'vec3 M3(){return vec3(.62,.86,.82);}',
     'vec3 G(){return vec3(.95,.78,.4);}'].join('\n'));
 
   // Prototypen für eine vierte Auswahl: U «Aurora» (Violett/Cyan), H «Höhenlinien» (Mint), L «Lava» (Magenta/Violett)
