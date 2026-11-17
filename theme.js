@@ -67,10 +67,11 @@
     'border:1px solid var(--line,#2f2f34);background:var(--card,#1c1c1f);color:var(--muted,#9a9aa2);cursor:pointer;opacity:.7;transition:opacity .15s,border-color .15s,color .15s;box-shadow:none}' +
     '.themebtn:hover,.themebtn:focus-visible{opacity:1;color:var(--text,#ececef);border-color:var(--accent,#ff4d64);background:var(--field,#26262a)}' +
     '.themebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
-    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn.bgbtn{top:132px;--dy:-120px}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn.subbtn{top:132px;right:12px;transform:translate(var(--fx,0),var(--fy,0));font:600 13px/1 system-ui,sans-serif}.themebtn.subbtn[aria-pressed="true"]{opacity:1;color:#fff;background:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
+    '.themebtn.optbtn{top:52px;--dy:-40px}.themebtn.tonebtn{top:92px;--dy:-80px}.themebtn.bgbtn{top:132px;--dy:-120px}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.fanline{position:fixed;top:147.25px;right:28px;width:var(--r,52px);height:1.5px;margin:0;border-radius:1px;transform-origin:100% 50%;transform:rotate(var(--a,0deg));background:color-mix(in srgb,var(--accent,#ff4d64) 55%,var(--line,#2f2f34));z-index:49;pointer-events:none}.fanline[hidden]{display:none}.fanline.opening{animation:dbz-line .5s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--i,0)*.06s + .12s)}.fanline.closing{animation:dbz-line .3s cubic-bezier(.3,.7,.3,1) reverse forwards}.themebtn.subbtn{top:132px;right:12px;transform:translate(var(--fx,0),var(--fy,0));font:600 13px/1 system-ui,sans-serif}.themebtn.subbtn[aria-pressed="true"]{opacity:1;color:#fff;background:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn.bgbtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}.themebtn[hidden]{display:none}.themebtn.tonebtn[aria-pressed="true"]{opacity:1;color:var(--accent,#ff4d64);border-color:var(--accent,#ff4d64)}' +
     '.themebtn.gearbtn svg{transition:transform .5s cubic-bezier(.3,.7,.3,1)}.themebtn.gearbtn[aria-expanded="true"]{opacity:1}.themebtn.gearbtn[aria-expanded="true"] svg{transform:rotate(90deg)}' +
     /* Zellteilung nach unten: der Tropfen löst sich aus dem Modus-Knopf, dieser streckt sich dabei kurz; beim Schliessen läuft alles rückwärts */
     '@keyframes dbz-split{0%{transform:translateY(var(--dy,-40px)) scale(.9);opacity:0}25%{transform:translateY(calc(var(--dy,-40px)*.675)) scale(.82,1.32);opacity:.7}68%{transform:translateY(5px) scale(1.12,.9)}}' +
+    '@keyframes dbz-line{0%{transform:rotate(var(--a)) scaleX(0);opacity:0}100%{transform:rotate(var(--a)) scaleX(1);opacity:1}}' +
     '@keyframes dbz-fan{0%{transform:translate(0,0) scale(.8);opacity:0}30%{opacity:.8}65%{transform:translate(calc(var(--fx)*1.14),calc(var(--fy)*1.14)) scale(1.08,.94)}100%{transform:translate(var(--fx),var(--fy))}}' +
     '@keyframes dbz-parent{0%{transform:none}30%{transform:scale(.93,1.16)}62%{transform:scale(1.05,.95)}100%{transform:none}}' +
     '.themebtn.opening{animation:dbz-split .5s cubic-bezier(.3,.7,.3,1) backwards}.themebtn.tonebtn.opening{animation-delay:.07s}' +
@@ -174,7 +175,7 @@
   }
   // Zahnrad: zeigt nach einem Klick Hell/Dunkel und den Tropfen (Zellteilung nach unten); schliesst nach 6 s ohne Bedienung oder per Klick aufs Zahnrad
   // Hintergrund-Shader (nur Seiten mit data-shader-set): schaltet durch die Auswahl und «aus»
-  var bbtn, sbtns = [], bgOpen = false, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soM: 'Marmor ruber' };
+  var bbtn, sbtns = [], lines = [], bgOpen = false, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soM: 'Marmor ruber' };
   var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4z"/></svg>', CROSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   // Shader-Knopf: Stern = Fund aus (Klick fächert die Auswahl 1, 2, … im Halbkreis nach links auf), ✕ = Fund an (Klick schaltet aus)
   function paintBg() {
@@ -190,14 +191,14 @@
   }
   function openBg() {
     if (bgOpen || !bbtn) return; bgOpen = true; bbtn.setAttribute('aria-expanded', 'true');
-    sbtns.forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
-    setTimeout(function () { sbtns.forEach(function (b) { b.classList.remove('opening'); }); }, 700);
+    sbtns.concat(lines).forEach(function (b) { b.hidden = false; b.classList.remove('closing'); b.classList.add('opening'); });
+    setTimeout(function () { sbtns.concat(lines).forEach(function (b) { b.classList.remove('opening'); }); }, 700);
   }
   function closeBg(now) {
     if (!bgOpen || !bbtn) return; bgOpen = false; bbtn.setAttribute('aria-expanded', 'false');
-    if (now) { sbtns.forEach(function (b) { b.hidden = true; b.classList.remove('opening', 'closing'); }); return; }
-    sbtns.forEach(function (b) { b.classList.remove('opening'); b.classList.add('closing'); });
-    setTimeout(function () { if (!bgOpen) sbtns.forEach(function (b) { b.hidden = true; b.classList.remove('closing'); }); }, 420);
+    if (now) { sbtns.concat(lines).forEach(function (b) { b.hidden = true; b.classList.remove('opening', 'closing'); }); return; }
+    sbtns.concat(lines).forEach(function (b) { b.classList.remove('opening'); b.classList.add('closing'); });
+    setTimeout(function () { if (!bgOpen) sbtns.concat(lines).forEach(function (b) { b.hidden = true; b.classList.remove('closing'); }); }, 420);
   }
   function btns() { return [btn, tbtn, bbtn].filter(Boolean); }
   function bgInit() { if (bbtn && window.dbzShader && window.dbzShader.current() !== 'off') openBg(); }
@@ -252,9 +253,12 @@
       for (var i = 0; i < nSet; i++) (function (i) {
         var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn'; sb.hidden = true; sb.textContent = i + 1;
         // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten
-        var ang = nSet === 1 ? 0 : (-55 + 110 * i / (nSet - 1)) * Math.PI / 180, R = 72;
+        var ang = nSet === 1 ? 0 : (-52 + 104 * i / (nSet - 1)) * Math.PI / 180, R = 54;
         sb.style.setProperty('--fx', (-R * Math.cos(ang)).toFixed(1) + 'px'); sb.style.setProperty('--fy', (R * Math.sin(ang)).toFixed(1) + 'px'); sb.style.setProperty('--i', i);
         sb.addEventListener('click', function () { window.dbzShader.pick(window.dbzShader.choices()[i]); keepMenu(); });
+        var ln = d.createElement('span'); ln.className = 'fanline'; ln.hidden = true; ln.setAttribute('aria-hidden', 'true');
+        ln.style.setProperty('--r', R + 'px'); ln.style.setProperty('--a', (-ang).toFixed(4) + 'rad'); ln.style.setProperty('--i', i);
+        d.body.appendChild(ln); lines.push(ln);
         d.body.appendChild(sb); sbtns.push(sb);
       })(i);
       paintBg();
