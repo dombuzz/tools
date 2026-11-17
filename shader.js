@@ -152,120 +152,9 @@
     'vec3 M3(){return vec3(.62,.86,.82);}',
     'vec3 G(){return vec3(.95,.78,.4);}'].join('\n'));
 
-  // Prototypen für eine vierte Auswahl: U «Aurora» (Violett/Cyan), H «Höhenlinien» (Mint), L «Lava» (Magenta/Violett)
-  SH.soU = SOP + [
-    'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.02;',
-    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
-    ' float w=fbm(vec2(p.x*1.1,t))*2.4+fbm(p*.8+vec2(t,0.))*1.3;',
-    ' float y1=.62+.16*sin(p.x*1.6+w+t*4.);float y2=.40+.14*sin(p.x*1.2+w*1.3-t*3.+2.);',
-    ' float st=.55+.45*fbm(vec2(p.x*9.+w,uv.y*1.5+t*3.));',
-    ' float i1=exp(-pow((uv.y-y1)/.2,2.))*st, i2=exp(-pow((uv.y-y2)/.26,2.))*(.4+.6*st);',
-    ' i1*=calm; i2*=calm;',
-    ' vec3 v=vec3(.55,.25,1.),c2=vec3(.1,.85,.8);',
-    ' vec3 base=mix(vec3(.02,.025,.06),vec3(1.),uLight);',
-    ' vec3 c=base+mix(v*i1*.9+c2*i2*.75,vec3(0.),uLight);',
-    ' c=mix(c,mix(base,mix(v,c2,.5)*.9+.1,.55),uLight*clamp(i1+i2,0.,1.)*.75);',
-    ' c+=mix(vec3(0.),vec3(.05,.03,.09),1.-uLight)*fbm(p*1.5+t);',
-    ' o=fin(c,gl_FragCoord.xy);',
-    '}'].join('\n');
-
-  SH.soH = SOP + [
-    'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.015;',
-    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
-    ' float f=fbm(p*1.15+vec2(t,-t*.7)+fbm(p*.7-t)*.9);',
-    ' float k=f*18.;float fr=fract(k);float dl=min(fr,1.-fr);',
-    ' float maj=step(mod(floor(k+.5),5.),.5);',
-    ' float ln=(1.-smoothstep(.0,.07+.05*maj,dl))*(.45+.55*maj);',
-    ' vec3 bgD=mix(vec3(.02,.05,.04),vec3(.04,.16,.12),smoothstep(.2,.8,f));',
-    ' vec3 bg=mix(bgD,mix(vec3(1.),vec3(.88,.97,.92),smoothstep(.2,.8,f)),uLight);',
-    ' vec3 lc=mix(vec3(.35,.95,.7),vec3(.05,.5,.36),uLight);',
-    ' vec3 c=mix(bg,lc,ln*calm*mix(.8,.7,uLight));',
-    ' o=fin(c,gl_FragCoord.xy);',
-    '}'].join('\n');
-
-  SH.soL = SOP + [
-    'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.05;',
-    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
-    ' float F=0.;',
-    ' for(int i=0;i<6;i++){float fi=float(i);',
-    '  vec2 c=vec2(asp*(.5+.42*sin(t*(.6+.17*fi)+fi*2.1)),.5+.4*cos(t*(.5+.13*fi)+fi*1.7));',
-    '  float r=.1+.045*fract(fi*.37+.2);vec2 d=p-c;F+=r*r/(dot(d,d)+1e-4);}',
-    ' F*=calm;',
-    ' float body=smoothstep(.85,1.25,F);float glow=smoothstep(.15,1.,F);',
-    ' vec3 bg=mix(vec3(.05,.02,.07),vec3(1.,.97,.99),uLight);',
-    ' vec3 cb=mix(vec3(.45,.12,.85),vec3(1.,.28,.62),smoothstep(.9,2.2,F));',
-    ' vec3 c=mix(bg,mix(vec3(.3,.07,.5),vec3(.96,.7,.88),uLight),glow*.7);',
-    ' c=mix(c,mix(cb,mix(cb,vec3(1.),.35),uLight*.0),body*mix(.95,.8,uLight));',
-    ' o=fin(c,gl_FragCoord.xy);',
-    '}'].join('\n');
-
-  // Mischung Aurora + Höhenlinien: K = Linien überall schwach, im Polarlicht leuchtend; J = Linien nur im Polarlicht sichtbar
-  function aurLines(only) { return SOP + [
-    'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.007;',
-    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
-    ' float w=fbm(vec2(p.x*1.1,t))*2.4+fbm(p*.8+vec2(t,0.))*1.3;',
-    ' float y1=.62+.16*sin(p.x*1.3+w*.8+t*2.);float y2=.40+.14*sin(p.x*1.0+w*1.0-t*1.5+2.);',
-    ' float st=.7+.3*fbm(vec2(p.x*4.+w,uv.y*1.2+t*1.2));',
-    ' float i1=exp(-pow((uv.y-y1)/.2,2.))*st*calm, i2=exp(-pow((uv.y-y2)/.26,2.))*(.4+.6*st)*calm;',
-    ' vec3 v=vec3(.27,.15,.52),c2=vec3(.66,.68,.74);',
-    ' vec3 base=mix(vec3(.02,.025,.06),vec3(1.),uLight);',
-    ' vec3 glowc=v*i1*.6+c2*i2*.4;',
-    ' vec3 c=base+mix(glowc,vec3(0.),uLight);',
-    ' c=mix(c,mix(base,mix(v,c2,.5)*.9+.1,.5),uLight*clamp(i1+i2,0.,1.)*.6);',
-    // Höhenlinien über dem Feld
-    ' float f=fbm(p*1.15+vec2(t*.7,-t*.5)+fbm(p*.7-t*.7)*.9);',
-    ' float k=f*16.;float fr=fract(k);float dl=min(fr,1.-fr);',
-    ' float maj=step(mod(floor(k+.5),5.),.5);',
-    ' float ln=(1.-smoothstep(.0,.11+.05*maj,dl))*(.4+.4*maj);',
-    ' float lit=clamp(i1+i2,0.,1.);',
-    ' float amt=' + (only ? 'smoothstep(.12,.7,lit)' : '(.18+.62*smoothstep(.1,.8,lit))') + ';',
-    ' vec3 lc=mix(mix(v,c2,i2/(i1+i2+.001))*.95+.05,mix(v,c2,.5)*.55,uLight);',
-    ' c=mix(c,lc,ln*amt*calm*mix(.6,.55,uLight));',
-    ' o=fin(c,gl_FragCoord.xy);',
-    '}'].join('\n'); }
-  SH.soK = aurLines(false);
-  SH.soJ = aurLines(true);
-
-  // Neue ruhige Prototypen für die vierte Auswahl: P «Seide», Q «Berge», R «Tinte»
-  SH.soP = SOP + [
-    'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.006;',
-    ' float calm=mix(1.,calmP(gl_FragCoord.xy/uDpr),.8);',
-    ' float w=fbm(p*.8+vec2(t,-t*.6))*3.2;',
-    ' float f=sin(p.x*2.1+p.y*1.3+w);float g=sin(p.x*1.2-p.y*2.2+w*1.4+1.7);',
-    ' float sh=.5+.5*f*.7+.5*g*.3;',
-    ' float sheen=pow(smoothstep(.55,1.,.5+.5*f),3.)*.55+pow(smoothstep(.7,1.,.5+.5*g),4.)*.3;',
-    ' vec3 dk=mix(vec3(.02,.018,.045),vec3(.17,.1,.34),sh*sh);',
-    ' dk+=vec3(.62,.62,.72)*sheen*.5*calm;',
-    ' vec3 lt=mix(vec3(.98,.97,1.),vec3(.8,.77,.9),sh*.9)+vec3(-.04)*sheen;',
-    ' vec3 c=mix(dk,lt,uLight);',
-    ' o=fin(c,gl_FragCoord.xy);',
-    '}'].join('\n');
-
-  SH.soQ = SOP + [
-    'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;float t=uTime*.004;',
-    ' vec3 skyT=mix(vec3(.02,.02,.06),vec3(.93,.93,.99),uLight), skyH=mix(vec3(.26,.16,.4),vec3(.98,.9,.96),uLight);',
-    ' vec3 c=mix(skyH,skyT,smoothstep(.2,.95,uv.y));',
-    ' for(int i=0;i<5;i++){float fi=float(i);',
-    '  float x=uv.x*asp*(1.2+.35*fi)+t*(1.2+.5*fi)+fi*9.3;',
-    '  float h=.56-.1*fi+.11*(fbm(vec2(x,fi*3.1))-.5);',
-    '  float m=smoothstep(h+.003,h-.003,uv.y);',
-    '  float depth=fi/4.;',
-    '  vec3 far=mix(vec3(.2,.13,.33),vec3(.84,.8,.93),uLight), near=mix(vec3(.018,.016,.04),vec3(.6,.56,.74),uLight);',
-    '  vec3 lc=mix(far,near,depth);',
-    '  lc=mix(lc,skyH,.3*(1.-depth)*smoothstep(0.,.35,h-uv.y));',
-    '  c=mix(c,lc,m);}',
-    ' o=fin(c,gl_FragCoord.xy);',
-    '}'].join('\n');
-
-  // R «Tinte»: Tintenwolke im Wasser nach Vorbild einer Fotografie – dichte, wulstige Masse am Boden, darüber durchscheinende Schleier
+  // K «Tinte» (Option 4): Tintenwolke im Wasser nach Vorbild einer Fotografie – dichte, wulstige Masse am Boden, darüber durchscheinende Schleier
   // mit dünnen, scharfen Rändern, aufsteigende Säulen und einzelne Blasen. Dunkel: Violett auf Schwarz-Violett, hell: Violett auf Weiss.
-  SH.soR = SOP + [
+  SH.soK = SOP + [
     'void main(){',
     ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.0055;',
     ' float calm=mix(1.,calmP(gl_FragCoord.xy/uDpr),.8);',
@@ -486,7 +375,7 @@
     cv.style.visibility = 'hidden';
     d.body.insertBefore(cv, d.body.firstChild); root.classList.add('dbz-sh');
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
-    var so = /^so[A-C]$|^so[MTUHLKJPQR]$/.test(key), heavy = key === 'labA';
+    var so = /^so[A-C]$|^so[MTK]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
       scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
       size: function () { return [window.innerWidth, window.innerHeight]; },
