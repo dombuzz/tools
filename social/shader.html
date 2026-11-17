@@ -87,10 +87,12 @@ for (const t of TOOLS) {
   <button data-k="soU" aria-pressed="false">X · Aurora</button>
   <button data-k="soH" aria-pressed="false">Y · Höhenlinien</button>
   <button data-k="soL" aria-pressed="false">Z · Lava</button>
+  <button data-k="soK" aria-pressed="false">K · Aurora + Linien</button>
+  <button data-k="soJ" aria-pressed="false">J · nur im Licht</button>
 </div>
 <script>
 (() => {
-  const map = { x: 'soU', y: 'soH', z: 'soL' }, rev = { soU: 'x', soH: 'y', soL: 'z' };
+  const map = { x: 'soU', y: 'soH', z: 'soL', k: 'soK', j: 'soJ' }, rev = { soU: 'x', soH: 'y', soL: 'z', soK: 'k', soJ: 'j' };
   const btns = [...document.querySelectorAll('.pick button')];
   let cur = map[location.hash.slice(1).toLowerCase()] || 'soU';
   const set = k => {

@@ -202,6 +202,34 @@
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
 
+  // Mischung Aurora + Höhenlinien: K = Linien überall schwach, im Polarlicht leuchtend; J = Linien nur im Polarlicht sichtbar
+  function aurLines(only) { return SOP + [
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.02;',
+    ' float calm=calmP(gl_FragCoord.xy/uDpr);',
+    ' float w=fbm(vec2(p.x*1.1,t))*2.4+fbm(p*.8+vec2(t,0.))*1.3;',
+    ' float y1=.62+.16*sin(p.x*1.6+w+t*4.);float y2=.40+.14*sin(p.x*1.2+w*1.3-t*3.+2.);',
+    ' float st=.55+.45*fbm(vec2(p.x*9.+w,uv.y*1.5+t*3.));',
+    ' float i1=exp(-pow((uv.y-y1)/.2,2.))*st*calm, i2=exp(-pow((uv.y-y2)/.26,2.))*(.4+.6*st)*calm;',
+    ' vec3 v=vec3(.55,.25,1.),c2=vec3(.1,.85,.8);',
+    ' vec3 base=mix(vec3(.02,.025,.06),vec3(1.),uLight);',
+    ' vec3 glowc=v*i1*.7+c2*i2*.6;',
+    ' vec3 c=base+mix(glowc,vec3(0.),uLight);',
+    ' c=mix(c,mix(base,mix(v,c2,.5)*.9+.1,.5),uLight*clamp(i1+i2,0.,1.)*.6);',
+    // Höhenlinien über dem Feld
+    ' float f=fbm(p*1.15+vec2(t*.7,-t*.5)+fbm(p*.7-t*.7)*.9);',
+    ' float k=f*16.;float fr=fract(k);float dl=min(fr,1.-fr);',
+    ' float maj=step(mod(floor(k+.5),5.),.5);',
+    ' float ln=(1.-smoothstep(.0,.07+.05*maj,dl))*(.5+.5*maj);',
+    ' float lit=clamp(i1+i2,0.,1.);',
+    ' float amt=' + (only ? 'smoothstep(.12,.7,lit)' : '(.22+.78*smoothstep(.1,.7,lit))') + ';',
+    ' vec3 lc=mix(mix(v,c2,smoothstep(.3,.6,y2*0.+uv.y*0.+i2/(i1+i2+.001)))*1.15+.1,mix(v,c2,.5)*.55,uLight);',
+    ' c=mix(c,lc,ln*amt*calm*mix(.9,.75,uLight));',
+    ' o=fin(c,gl_FragCoord.xy);',
+    '}'].join('\n'); }
+  SH.soK = aurLines(false);
+  SH.soJ = aurLines(true);
+
   // 404-Seite: Blockfehler – Rechtecke blitzen auf wie ein defektes Display, die Textspalte bleibt ruhig
   SH.e4d = [
     'void main(){',
@@ -396,7 +424,7 @@
     cv.style.visibility = 'hidden';
     d.body.insertBefore(cv, d.body.firstChild); root.classList.add('dbz-sh');
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
-    var so = /^so[A-C]$|^so[MTUHL]$/.test(key), heavy = key === 'labA';
+    var so = /^so[A-C]$|^so[MTUHLKJ]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
       scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
       size: function () { return [window.innerWidth, window.innerHeight]; },
