@@ -1,4 +1,3 @@
-e predi Nathanael ca 13:40
 
 ___
 
