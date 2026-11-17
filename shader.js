@@ -162,9 +162,9 @@
     ' vec2 q=vec2(fbm(p*1.1+vec2(t,-t*.5)),fbm(p*1.1+vec2(5.2,1.3)-t*.6));',
     ' vec2 r=vec2(fbm(p*1.4+3.4*q+vec2(1.7,9.2)+t*.4),fbm(p*1.4+3.4*q+vec2(8.3,2.8)-t*.4));',
     ' float f=fbm(p*1.0+3.6*r);',
-    ' vec2 c0=vec2(asp*.66+.07*sin(t*3.),.42+.05*cos(t*2.4));',
+    ' vec2 c0=vec2(asp*.55+.07*sin(t*3.),.45+.05*cos(t*2.4));',
     ' float dist=length((p-c0)*vec2(.85,1.05));',
-    ' float ds=(f*1.3-dist*1.55+.52)*mix(1.,.6,1.-calm);',
+    ' float ds=(f*1.3-dist*.7+.6)*mix(1.,.6,1.-calm);',
     ' float sheet=smoothstep(.2,.62,ds);',
     // feine, scharfe Fäden (gratige Linien) und Kern mit blumenkohlartiger Struktur
     ' float rid=1.-abs(fbm(p*3.4+r*3.2+t)*2.-1.);',
@@ -177,8 +177,13 @@
     '      veD=vec3(.4,.28,.8),liD=vec3(.62,.5,1.),coD=mix(vec3(.06,.025,.14),vec3(.24,.13,.46),tb*.6);',
     ' vec3 cD=mix(bgD,veD,sheet*.42*(.6+.4*rid));cD+=liD*(lines*.5+edge*.07);cD=mix(cD,coD,core*.9);',
     ' vec3 bgL=vec3(.99,.985,1.),veL=vec3(.58,.45,.95),liL=vec3(.3,.18,.72),coL=mix(vec3(.2,.1,.55),vec3(.36,.24,.75),tb*.5);',
-    ' vec3 cL=mix(bgL,veL,sheet*.5*(.6+.4*rid));cL=mix(cL,liL,lines*.45+edge*.06);cL=mix(cL,coL,core*.9);',
-    ' o=fin(mix(cD,cL,uLight),gl_FragCoord.xy);',
+    ' vec3 cL=mix(bgL,veL,sheet*.38*(.6+.4*rid));cL=mix(cL,liL,lines*.4+edge*.06);cL=mix(cL,coL,core*.7);',
+    ' vec2 px=gl_FragCoord.xy/uDpr;vec2 id=floor(px/3.);float h=h21(id+7.);',
+    ' float dens=(lines*1.2+core*.5+sheet*.1)*calm;',
+    ' vec2 cf=fract(px/3.)-.5;float sp=step(1.-.06*dens,h)*smoothstep(.5,.2,length(cf));',
+    ' float tw=.6+.4*sin(uTime*1.5+h*60.);',
+    ' vec3 cS=mix(mix(cD,vec3(.86,.88,.98),sp*tw*.9),mix(cL,vec3(.34,.3,.58),sp*tw*.85),uLight);',
+    ' o=fin(cS,gl_FragCoord.xy);',
     '}'].join('\n');
 
   // 404-Seite: Blockfehler – Rechtecke blitzen auf wie ein defektes Display, die Textspalte bleibt ruhig
