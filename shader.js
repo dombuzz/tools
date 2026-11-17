@@ -266,51 +266,29 @@
   // R «Tinte»: Tintenwolke im Wasser nach Vorbild einer Fotografie – dichte, wulstige Masse am Boden, darüber durchscheinende Schleier
   // mit dünnen, scharfen Rändern, aufsteigende Säulen und einzelne Blasen. Dunkel: Violett auf Schwarz-Violett, hell: Violett auf Weiss.
   SH.soR = SOP + [
-    'float smn(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}',
-    'float rdg(vec2 p){return 1.-abs(vn(p)*2.-1.);}',
-    'vec2 inkW(vec2 p,float t){return vec2(vn(p*1.7+vec2(t,0.))+.5*vn(p*3.3-vec2(0.,t)),vn(p*1.7+vec2(5.2,1.3)-t)+.5*vn(p*3.3+vec2(t,2.)))-.75;}',
-    'float capS(vec2 p,vec2 a,vec2 b,float r0,float r1){vec2 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);return length(pa-ba*h)-mix(r0,r1,h);}',
-    // Abstand zur Tintenmasse (negativ = innen)
-    'float massD(vec2 p,float t,float asp,float xm){',
-    ' vec2 w=inkW(p,t);vec2 q=p+.2*w;',
-    ' float env=clamp(1.-pow(abs((q.x-xm)/(asp*.42)),2.2),0.,1.);',
-    ' float H=.2*env-.03+.16*env*(vn(q*vec2(3.2,2.4)+vec2(0.,t*2.))-.4);',
-    ' float d=q.y-H;',
-    ' d=smn(d,capS(q,vec2(xm-asp*.17,.14),vec2(xm-asp*.2,.62),.06,.03),.12);',
-    ' d=smn(d,capS(q,vec2(xm+asp*.06,.15),vec2(xm+asp*.09,.9),.05,.018),.12);',
-    ' d+=.12*(rdg(q*3.4+w*2.)-.5)+.06*(rdg(q*7.5+w*3.)-.5)+.03*(rdg(q*16.+w*3.)-.5);',
-    ' return d;}',
     'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.006;',
-    ' float calm=mix(1.,calmP(gl_FragCoord.xy/uDpr),.85);',
-    ' float xm=asp*.6;',
-    ' float d=massD(p,t,asp,xm);vec2 e=vec2(.004,0.);',
-    ' float dx=massD(p+e.xy,t,asp,xm)-massD(p-e.xy,t,asp,xm),dy=massD(p+e.yx,t,asp,xm)-massD(p-e.yx,t,asp,xm);',
-    ' vec3 n=normalize(vec3(vec2(dx,dy)/.008*.16,1.));',
-    ' float body=smoothstep(.012,-.012,d);float tr=smoothstep(0.,.14,-d);',
-    ' float l=clamp(dot(n,normalize(vec3(-.5,.6,.65)))*.5+.5,0.,1.);float rim=pow(1.-n.z,1.6);',
-    // durchscheinende Schleier mit scharfen Rändern (Höhenlinien eines verwirbelten Feldes)
-    ' vec2 w=inkW(p,t);',
-    ' float f2=fbm(p*1.5+2.8*w+vec2(t,-t*.6));',
-    ' float reg=exp(-pow(length((p-vec2(xm,.42))*vec2(.9,1.3))/.5,2.))*calm;',
-    ' float sheet=smoothstep(.5,.62,f2)*reg;',
-    ' float edge=(1.-smoothstep(0.,.008,abs(f2-.56)))*reg*.8;',
-    // Blasen
-    ' float bub=0.,bfill=0.;',
-    ' for(int i=0;i<3;i++){float fi=float(i);',
-    '  vec2 c=vec2(xm+asp*.3*sin(fi*2.3+t*2.),.3+.5*fract(fi*.37+.12+t*.2));float r=.018+.03*fract(fi*.61+.2);',
-    '  float dl=length(p-c)-r;bub+=smoothstep(.004,0.,abs(dl));bfill+=smoothstep(0.,-.004,dl);}',
-    ' bub*=reg;bfill*=reg;',
-    // dunkel
-    ' vec3 bgD=mix(vec3(.008,.006,.022),vec3(.055,.03,.11),smoothstep(.7,0.,uv.y)*.9);',
-    ' vec3 cD=mix(bgD,vec3(.3,.18,.66),sheet*.3);cD+=vec3(.62,.5,1.)*(edge*.45+bub*.5)+vec3(.3,.2,.6)*bfill*.1;',
-    ' vec3 bdD=mix(vec3(.5,.37,.95)*(.55+.6*l),mix(vec3(.04,.016,.11),vec3(.2,.12,.42),l),tr)+vec3(.5,.42,.95)*rim*.4;',
-    ' cD=mix(cD,bdD,body*mix(.45,.95,tr)*(.8+.2*fbm(p*5.+w*2.)));',
-    // hell
-    ' vec3 bgL=vec3(.992,.988,1.);',
-    ' vec3 cL=mix(bgL,vec3(.58,.46,.95),sheet*.34);cL=mix(cL,vec3(.3,.18,.74),clamp(edge*.55+bub*.6,0.,1.));cL=mix(cL,vec3(.6,.5,.97),bfill*.18);',
-    ' vec3 bdL=mix(vec3(.66,.54,.97)*(.88+.18*l),mix(vec3(.1,.05,.34),vec3(.32,.22,.68),l),tr)+vec3(-.08,-.07,.03)*rim;',
-    ' cL=mix(cL,bdL,body*mix(.45,.95,tr)*(.8+.2*fbm(p*5.+w*2.)));',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);float t=uTime*.0055;',
+    ' float calm=mix(1.,calmP(gl_FragCoord.xy/uDpr),.8);',
+    // verwirbeltes Feld: Schwaden, Schleier und feine Fäden einer Tintenwolke im Wasser
+    ' vec2 q=vec2(fbm(p*1.1+vec2(t,-t*.5)),fbm(p*1.1+vec2(5.2,1.3)-t*.6));',
+    ' vec2 r=vec2(fbm(p*1.4+3.4*q+vec2(1.7,9.2)+t*.4),fbm(p*1.4+3.4*q+vec2(8.3,2.8)-t*.4));',
+    ' float f=fbm(p*1.0+3.6*r);',
+    ' vec2 c0=vec2(asp*.66+.07*sin(t*3.),.42+.05*cos(t*2.4));',
+    ' float dist=length((p-c0)*vec2(.85,1.05));',
+    ' float ds=(f*1.3-dist*1.55+.52)*mix(1.,.6,1.-calm);',
+    ' float sheet=smoothstep(.2,.62,ds);',
+    // feine, scharfe Fäden (gratige Linien) und Kern mit blumenkohlartiger Struktur
+    ' float rid=1.-abs(fbm(p*3.4+r*3.2+t)*2.-1.);',
+    ' float lines=pow(rid,9.)*sheet*(1.-.5*smoothstep(.7,1.1,ds));',
+    ' float tb=abs(vn(p*6.+r*5.)-.5)*2.+.5*abs(vn(p*13.+r*6.)-.5)*2.;',
+    ' float core=smoothstep(.5,.95,ds)*(.55+.45*smoothstep(.2,.9,tb));',
+    ' float edge=sheet*(1.-sheet)*4.;',
+    // dunkel: leuchtender Violett-Schleier mit dunklem Kern; hell: Tinte auf Weiss
+    ' vec3 bgD=mix(vec3(.012,.012,.035),vec3(.045,.035,.1),smoothstep(.0,.9,1.-uv.y)),',
+    '      veD=vec3(.4,.28,.8),liD=vec3(.62,.5,1.),coD=mix(vec3(.06,.025,.14),vec3(.24,.13,.46),tb*.6);',
+    ' vec3 cD=mix(bgD,veD,sheet*.42*(.6+.4*rid));cD+=liD*(lines*.5+edge*.07);cD=mix(cD,coD,core*.9);',
+    ' vec3 bgL=vec3(.99,.985,1.),veL=vec3(.58,.45,.95),liL=vec3(.3,.18,.72),coL=mix(vec3(.2,.1,.55),vec3(.36,.24,.75),tb*.5);',
+    ' vec3 cL=mix(bgL,veL,sheet*.5*(.6+.4*rid));cL=mix(cL,liL,lines*.45+edge*.06);cL=mix(cL,coL,core*.9);',
     ' o=fin(mix(cD,cL,uLight),gl_FragCoord.xy);',
     '}'].join('\n');
 
