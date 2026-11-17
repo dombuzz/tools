@@ -207,7 +207,7 @@
     if (on) bbtn.style.setProperty('--c', BGC[c] || '#ff4d64'); else bbtn.style.removeProperty('--c');
     var set = window.dbzShader.choices();
     sbtns.forEach(function (b, i) {
-      if (b.rnd) { b.title = 'Fund casual'; b.setAttribute('aria-label', 'Fund casual'); return; }
+      if (b.rnd) { var ro = window.dbzShader.random(), rt = ro ? 'Fund casual activ – cliccar per deactivar' : 'Fund casual: auter fund a mintga visita'; b.title = rt; b.setAttribute('aria-label', rt); b.setAttribute('aria-pressed', ro ? 'true' : 'false'); b.style.setProperty('--c', '#7a7a84'); if (lines[i]) lines[i].classList.toggle('on', ro); return; }
       var k = set[i], t = 'Fund ' + (i + 1) + ': ' + (BGN[k] || k);
       b.title = t; b.setAttribute('aria-label', t); b.setAttribute('aria-pressed', k === c ? 'true' : 'false');
       b.style.setProperty('--c', BGC[k] || '#ff4d64'); if (lines[i]) { lines[i].style.setProperty('--c', BGC[k] || '#ff4d64'); lines[i].classList.toggle('on', k === c); }
@@ -295,7 +295,7 @@
         sb.style.setProperty('--fx', fx.toFixed(1) + 'px'); sb.style.setProperty('--fy', fy.toFixed(1) + 'px'); sb.style.setProperty('--i', i);
         sb.addEventListener('click', function () {
           if (!window.dbzShader) return;
-          if (rnd) { var cur = window.dbzShader.current(), pool = set0.filter(function (k) { return k !== cur; }); if (!pool.length) pool = set0; window.dbzShader.pick(pool[Math.floor(Math.random() * pool.length)]); } else window.dbzShader.pick(set0[i]);
+          if (rnd) window.dbzShader.setRandom(!window.dbzShader.random()); else window.dbzShader.pick(set0[i]);
           keepMenu();
         });
         var ln = d.createElement('span'); ln.className = 'fanline' + (rnd ? ' rnd' : ''); ln.hidden = true; ln.setAttribute('aria-hidden', 'true');

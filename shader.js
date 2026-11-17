@@ -474,6 +474,13 @@
     // Wählbarer Hintergrund: <body data-shader-set="soA,soT"> – Zahnrad-Menü (theme.js) schaltet durch die Liste und «aus»; Wahl in dbz-bg gespeichert
     choices: function () { var v = d.body && d.body.getAttribute('data-shader-set'); return v ? v.split(',') : []; },
     current: function () { return curBg; },
+    // Zufallsmodus: bei jedem Seitenaufruf ein anderer Hintergrund aus dem Set – auch mal keiner («off»); gespeichert als dbz-bg=rnd
+    random: function () { return rndMode; },
+    setRandom: function (on) {
+      var set = window.dbzShader.choices();
+      if (on) { rndMode = true; rndDone = true; try { localStorage.setItem('dbz-bg', 'rnd'); } catch (e) {} pickBg(randPick(set), false); }
+      else { rndMode = false; try { localStorage.setItem('dbz-bg', curBg); } catch (e) {} window.dispatchEvent(new CustomEvent('dbz-bg', { detail: curBg })); }
+    },
     pick: function (k) { pickBg(k, true); },
     init: function () { if (!bgItem) auto(); }, // nach dem Setzen von data-shader-set (theme.js) erneut auswerten
     cycle: function () {
@@ -483,10 +490,17 @@
     }
   };
 
-  var curBg = 'off';
+  var curBg = 'off', rndMode = false, rndDone = false;
+  // Zufallswahl: nie derselbe Hintergrund wie beim letzten Aufruf (dbz-bg-last), «off» ist eine von allen Möglichkeiten
+  function randPick(set) {
+    var all = set.concat(['off']), last = ''; try { last = localStorage.getItem('dbz-bg-last') || ''; } catch (e) {}
+    var pool = all.filter(function (k) { return k !== last; }); if (!pool.length) pool = all;
+    var k = pool[Math.floor(Math.random() * pool.length)]; try { localStorage.setItem('dbz-bg-last', k); } catch (e) {}
+    return k;
+  }
   function pickBg(k, store) {
     curBg = k;
-    if (store) { try { localStorage.setItem('dbz-bg', k); } catch (e) {} }
+    if (store) { rndMode = false; try { localStorage.setItem('dbz-bg', k); } catch (e) {} }
     window.dbzShader.setBg(k === 'off' ? null : k);
     window.dispatchEvent(new CustomEvent('dbz-bg', { detail: k }));
   }
@@ -495,6 +509,7 @@
     var set = window.dbzShader.choices();
     if (set.length) {
       var sv = ''; try { sv = localStorage.getItem('dbz-bg') || ''; } catch (e) {}
+      if (sv === 'rnd') { if (rndDone) return; rndDone = true; rndMode = true; pickBg(randPick(set), false); return; }
       pickBg(sv === 'off' ? 'off' : set.indexOf(sv) >= 0 ? sv : (d.body.getAttribute('data-shader-default') || 'off'), false);
       return;
     }
