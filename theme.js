@@ -265,9 +265,11 @@
       var set0 = d.body.getAttribute('data-shader-set').split(','), nSet = set0.length;
       for (var i = 0; i < nSet; i++) (function (i) {
         var sb = d.createElement('button'); sb.type = 'button'; sb.className = 'themebtn subbtn'; sb.hidden = true; sb.textContent = i + 1;
-        // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten
-        var ang = nSet === 1 ? 0 : (-52 + 104 * i / (nSet - 1)) * Math.PI / 180, R = 54;
-        sb.style.setProperty('--fx', (-R * Math.cos(ang)).toFixed(1) + 'px'); sb.style.setProperty('--fy', (R * Math.sin(ang)).toFixed(1) + 'px'); sb.style.setProperty('--i', i);
+        // Halbkreis nach links um den Shader-Knopf: 1 oben, letzte Nummer unten (bei drei Nummern von Hand gesetzte Lage)
+        var P3 = [[-41, -26], [-54, 10], [-33, 43]], fx, fy;
+        if (nSet === 3) { fx = P3[i][0]; fy = P3[i][1]; } else { var an = nSet === 1 ? 0 : (-40 + 80 * i / (nSet - 1)) * Math.PI / 180; fx = -50 * Math.cos(an); fy = 50 * Math.sin(an) + 8; }
+        var R = Math.hypot(fx, fy), ang = Math.atan2(fy, -fx);
+        sb.style.setProperty('--fx', fx.toFixed(1) + 'px'); sb.style.setProperty('--fy', fy.toFixed(1) + 'px'); sb.style.setProperty('--i', i);
         sb.addEventListener('click', function () { if (window.dbzShader) window.dbzShader.pick(set0[i]); keepMenu(); });
         var ln = d.createElement('span'); ln.className = 'fanline'; ln.hidden = true; ln.setAttribute('aria-hidden', 'true');
         ln.style.setProperty('--r', R + 'px'); ln.style.setProperty('--a', (-ang).toFixed(4) + 'rad'); ln.style.setProperty('--i', i);
