@@ -86,6 +86,6 @@ for (const t of TOOLS) {
   document.getElementById(t.v ? 'g2' : 'g').appendChild(a);
 }
 </script>
-<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/social?s='+(document.documentElement.dataset.tone==='soft'?'1':'0')+(window.dbzCid&&dbzCid()?'&c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
+<script>fetch('https://fragrant-grass-c193.zappa-pfadi.workers.dev/view/social?s='+(document.documentElement.dataset.tone==='soft'?'1':'0')+'&b='+(function(){var v='';try{v=localStorage.getItem('dbz-bg')||''}catch(e){}return /^(soT|labA|off)$/.test(v)?v:'soA'})()+(window.dbzCid&&dbzCid()?'&c='+dbzCid():''),{method:'POST',keepalive:true}).catch(function(){});</script>
 </body>
 </html>

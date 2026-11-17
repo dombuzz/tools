@@ -13,6 +13,7 @@
 //   GET  /likes                 -> {"Resizer2000": 14, ...}            (Total pro Tool)
 //   POST /like/Resizer2000      -> {"tool": "Resizer2000", "count": 15}
 //   POST /use/Resizer2000?c=<Zufalls-ID> -> {"ok": true}   (Tool hat ein Resultat geliefert: Download, Kopie …)
+//   POST /view/social?...&b=soA|soT|labA|off (gewählter Hintergrund-Shader; Spalte views.shader, Auswertung in /stats als shaders = {Variante: {count, users}})
 //   POST /view/Resizer2000?t=light|dark&c=<Zufalls-ID> -> {"ok": true}   (Seite wurde aufgerufen; Tabelle «views» legt der Worker selbst an; c = anonyme Kennung pro Browser)
 //   (geschützt: /ranking, /hourly, /usage, /insights, /export nur mit Authorization: Bearer <FEEDBACK_PASSWORD>; öffentlich: GET /top?range=month|30d|all|week|today, inkl. views pro Tool)
 //   GET  /ranking?range=all     -> Rangliste: all | today | week | 30d | month | lastmonth | YYYY-MM (Kalendermonat, UTC) (optional &scope=main|lab)
@@ -81,6 +82,7 @@ const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, ts INTEGER NOT NULL, body TEXT NOT NULL)'), // Zwischenspeicher für /ranking und /hourly
 ]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
   .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN tone TEXT').run().catch(() => {})) // Spalte «tone» (soft|normal): Sättigung reduziert?
+  .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN shader TEXT').run().catch(() => {})) // Spalte «shader» (soA|soT|labA|off): Hintergrund-Shader auf der Social-Seite
   .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
   .then(() => env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {})) // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
   .then(() => env.DB.prepare('ALTER TABLE favs ADD COLUMN sync INTEGER').run().catch(() => {})) // 1 = beim Abgleich nachgetragen (zählt für «aktuell», nicht als «im Zeitraum gesetzt»)
@@ -666,7 +668,7 @@ async function handle(request, env, ctx) {
         const p = period(range);
         const F = p?.from ?? '0', T = p?.to ?? '9999', pr = q => env.DB.prepare(q);
         // alle Abfragen in einem einzigen Aufruf an die Datenbank (statt nacheinander): deutlich schnellere Antwort
-        const [resultsRaw, usesRaw, viewRows, themeRows, toneRows, clientRows, retRows, nwRows, ucRows, favRows, favNowRows, fcRows, fpRows] = (await env.DB.batch([
+        const [resultsRaw, usesRaw, viewRows, themeRows, toneRows, clientRows, retRows, nwRows, ucRows, favRows, favNowRows, fcRows, fpRows, shRows] = (await env.DB.batch([
           p ? pr('SELECT tool, COUNT(*) AS count FROM clicks WHERE ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC').bind(p.from, p.to ?? '9999')
             : pr('SELECT tool, count FROM likes ORDER BY count DESC'),
           pr('SELECT tool, COUNT(*) AS count FROM uses WHERE ' + EX('uses') + ' AND ts >= ?1 AND ts < ?2 GROUP BY tool ORDER BY count DESC').bind(F, T),
@@ -688,6 +690,8 @@ async function handle(request, env, ctx) {
           // Geräte mit Favoriten: aktuell (mindestens ein ★ gesetzt) und im Zeitraum (mindestens ein ★ gesetzt)
           pr('SELECT COUNT(DISTINCT cid) AS n FROM (SELECT cid, tool, SUM(CASE WHEN added = 1 THEN 1 ELSE -1 END) AS k FROM favs WHERE cid IS NOT NULL AND ' + EX('favs') + ' GROUP BY cid, tool HAVING k > 0)'),
           pr('SELECT COUNT(DISTINCT cid) AS n FROM favs WHERE cid IS NOT NULL AND added = 1 AND COALESCE(sync, 0) = 0 AND ' + EX('favs') + ' AND ts >= ?1 AND ts < ?2').bind(F, T),
+          // Hintergrund-Shader (Social): Aufrufe und Besucher je Variante
+          pr('SELECT shader, COUNT(*) AS count, COUNT(DISTINCT cid) AS users FROM views WHERE shader IS NOT NULL AND ' + NO_STATS_SQL + ' AND ' + EX('views') + ' AND ts >= ?1 AND ts < ?2 GROUP BY shader').bind(F, T),
         ])).map(x => x.results);
         const results = merge(resultsRaw).sort((a, b) => b.count - a.count);
         const total = results.reduce((t, r) => t + r.count, 0);
@@ -712,6 +716,7 @@ async function handle(request, env, ctx) {
         for (const r of themeRows) { themes[r.theme === 'light' || r.theme === 'dark' ? r.theme : 'unknown'] += r.count; if (r.theme === 'light') themes.lightUsers = r.users; else if (r.theme === 'dark') themes.darkUsers = r.users; } // Besucher je Variante (ein Besucher kann in beiden vorkommen)
         const tones = { soft: 0, normal: 0, unknown: 0, softUsers: 0, normalUsers: 0 };
         for (const r of toneRows) { if (r.tone === 'soft') { tones.soft += r.count; tones.softUsers += r.users; } else if (r.tone === 'normal') { tones.normal += r.count; tones.normalUsers += r.users; } else tones.unknown += r.count; }
+        const shaders = Object.fromEntries(shRows.map(r => [r.shader, { count: r.count, users: r.users }]));
         const clients = clientRows[0]?.n || 0;
         const returning = retRows[0]?.n || 0;
         const newClients = range === 'week' ? (nwRows[0]?.n || 0) : null;
@@ -721,7 +726,7 @@ async function handle(request, env, ctx) {
         const favsNow = Object.fromEntries(favNowRows.map(r => [r.tool, Math.max(0, r.n)]));
         const favsTotal = Object.values(favs).reduce((t, n) => t + n, 0);
         const fc = fcRows[0], fp = fpRows[0];
-        const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, saved, savedTotal, views, viewsTotal, themes, tones, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
+        const out = { range, from: p?.from ?? null, to: p?.to ?? null, newClients, total, items: results, usesTotal, uses, saved, savedTotal, views, viewsTotal, themes, tones, shaders, clients, returning, usingClients, usesPerClient, favs, favsNow, favsTotal, favClients: fc?.n || 0, favClientsPeriod: fp?.n || 0 };
         // optional &daily=1: Rohdaten pro Tag und Tool (UTC) -> daily: [{day, tool, uses, likes, views}]
         if (url.searchParams.get('daily') === '1') {
           const from = p?.from ?? '0', to = p?.to ?? '9999';
@@ -820,7 +825,8 @@ async function handle(request, env, ctx) {
         const t = url.searchParams.get('t'), theme = t === 'light' || t === 'dark' ? t : null; // angezeigte Darstellung
         const c = url.searchParams.get('c'), cid = c && /^[A-Za-z0-9-]{8,40}$/.test(c) ? c : null; // anonyme Besucher-Kennung
         const tone = url.searchParams.get('s') === '1' ? 'soft' : url.searchParams.get('s') === '0' ? 'normal' : null; // Farbstärke (soft = Sättigung reduziert)
-        await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid, tone) VALUES (?1, datetime('now'), ?2, ?3, ?4)").bind(tool, theme, cid, tone).run();
+        const bgp = url.searchParams.get('b'), shader = /^(soA|soT|labA|off)$/.test(bgp || '') ? bgp : null; // gewählter Hintergrund-Shader (nur Social)
+        await env.DB.prepare("INSERT INTO views (tool, ts, theme, cid, tone, shader) VALUES (?1, datetime('now'), ?2, ?3, ?4, ?5)").bind(tool, theme, cid, tone, shader).run();
         return json({ ok: true }, request);
       }
 
