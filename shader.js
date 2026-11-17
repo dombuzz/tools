@@ -2,7 +2,7 @@
 // Hintergrund (Canvas hinter der Seite, per Attribut am <body>):
 //   <body data-shader="labA">   Lab-Übersicht: orange Glut statt Millimeterpapier und Warnband
 //   <body data-shader="e4d">    404-Seite: Blockfehler
-//   <body data-shader="soA|soB|soC">   Social (Prototypen): seitenfüllend, dunkel Rot auf Schwarz, hell Rot auf Weiss – A «Nebel», B «Orbs», C «Schleier» (diffus)
+//   <body data-shader="soA|soB|soC">   Social (Prototypen): seitenfüllend, dunkel Rot auf Schwarz, hell Rot auf Weiss – A «Nebelraster», B «Auflösung», C «Bokeh» (Nebel + Raster)
 //   <body data-shader="rcE" data-shader-origin="rec">   Audio-Recorder: Blob um das Element mit dieser ID, folgt dem Pegel
 // Aufnahme-Pegel: dbzShader.level(0..1, übersteuert)  (0 = still, 1 = Vollausschlag)
 // Dank-Moment: dbzShader.spark(element)   (diffuser Schimmer um das Element, z. B. «Gea»-Herz)
@@ -51,61 +51,67 @@
     ' o=outA(c,k);',
     '}'].join('\n');
 
-  // Social (Prototypen, diffus): seitenfüllend. Dunkel: Rot auf Schwarz, hell: Rot auf Weiss. Läuft in kleiner Auflösung (weich), Titelbereich oben links und Kopf der Seite bewusst ruhig.
+  // Social (Prototypen): Nebel + Raster. Dunkel: Rot auf Schwarz, hell: Rot auf Weiss. Titelbereich oben links und Kopf der Seite bewusst ruhig.
   var SOP = [
     'vec3 K0(){return mix(vec3(.05,.05,.056),vec3(1.),uLight);}',
     'vec3 RD(){return mix(vec3(.78,.09,.17),vec3(.9,.2,.3),uLight);}',
     'vec3 RH(){return mix(vec3(1.,.302,.392),vec3(.816,.157,.263),uLight);}',
-    'float calm(vec2 uv){vec2 px=gl_FragCoord.xy/uDpr;float yt=uCss.y-px.y;',
+    // ruhiger Bereich: oben allgemein, oben links (Titel) besonders; px = Pixel (CSS), y von unten
+    'float calmP(vec2 px){float yt=uCss.y-px.y;',
     ' float t=exp(-pow((px.x-170.)/460.,2.))*exp(-pow((yt-100.)/150.,2.));',
-    ' return mix(.55,1.,smoothstep(1.,.2,uv.y))*(1.-.8*t);}',
+    ' return mix(.55,1.,smoothstep(1.,.2,px.y/uCss.y))*(1.-.8*t);}',
+    // Nebel: 0..1, grosse weiche Wolkenfelder
+    'float fogF(vec2 uv,float t){float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);',
+    ' float f=fbm(p*.85+vec2(t,-t*.6)+fbm(p*.6-t)*1.3);float k=smoothstep(.22,.95,f);return k*k*(3.-2.*k);}',
+    // schräg gestelltes Punktraster: f = Lage in der Zelle (-.5..+.5), cpx = Zellmitte in Pixeln
+    'void cellOf(float cs,float a,out vec2 f,out vec2 cpx){',
+    ' vec2 px=gl_FragCoord.xy/uDpr;mat2 R=mat2(cos(a),-sin(a),sin(a),cos(a));',
+    ' vec2 g=R*px/cs;vec2 id=floor(g);f=fract(g)-.5;cpx=transpose(R)*((id+.5)*cs);}',
     'vec4 fin(vec3 c,vec2 fc){c+=(h21(fc+fract(uTime))-.5)*.008;return vec4(clamp(c,0.,1.),1.);}',
     ''].join('\n');
 
-  // A «Nebel»: grosse, weiche Wolkenfelder – kein Kontrast, nur langsam wandernde Dichte
+  // A «Nebelraster»: Punktgrösse folgt der Nebeldichte – dichter Nebel = grosse Punkte, dazu ein leises Glühen
   SH.soA = SOP + [
     'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);',
-    ' float t=uTime*.02;',
-    ' float f=fbm(p*.85+vec2(t,-t*.6)+fbm(p*.6-t)*1.3);',
-    ' float k=smoothstep(.22,.95,f);k=k*k*(3.-2.*k);',
-    ' k*=.62*calm(uv)*mix(1.35,.85,uLight);',
-    ' vec3 c=mix(K0(),RD(),k);',
-    ' c=mix(c,RH(),smoothstep(.45,.62,k)*.18);',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float t=uTime*.02;',
+    ' vec2 f,cp;cellOf(14.,.38,f,cp);',
+    ' float fc=fogF(cp/uCss,t)*calmP(cp);',
+    ' float fg=fogF(uv,t)*calmP(gl_FragCoord.xy/uDpr);',
+    ' float rad=clamp(fc*1.15,0.,1.)*.5;',
+    ' float dm=smoothstep(rad+.07,rad-.07,length(f))*step(.04,rad);',
+    ' vec3 c=mix(K0(),RD(),clamp(fg*.5*mix(1.35,.85,uLight),0.,1.));',
+    ' vec3 col=mix(RD(),RH(),smoothstep(.35,.9,fc));',
+    ' c=mix(c,col,dm*mix(.9,.8,uLight));',
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
 
-  // B «Orbs»: wenige riesige, unscharfe Lichtflecken, die langsam umeinander driften (Gradient-Mesh-Look)
+  // B «Auflösung»: Punkte nur am Rand der Nebelfelder – sie lösen sich im dichten Nebel auf und laufen im Freien aus
   SH.soB = SOP + [
     'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);',
-    ' float t=uTime*.06;float k=0.;',
-    ' for(int i=0;i<5;i++){',
-    '  float fi=float(i);',
-    '  vec2 c=vec2(asp*(.5+.46*sin(t*(.42+.11*fi)+fi*2.3)),.5+.42*sin(t*(.33+.09*fi)+fi*1.7));',
-    '  float r=.30+.12*sin(fi*3.1+t*.8);float d=length(p-c)/r;',
-    '  k+=exp(-d*d*1.35)*(.55+.45*h11(fi+3.));',
-    ' }',
-    ' k=clamp(k,0.,1.)*.66*calm(uv)*mix(1.35,.85,uLight);',
-    ' vec3 c=mix(K0(),RD(),k);',
-    ' c=mix(c,RH(),smoothstep(.5,.75,k)*.16);',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float t=uTime*.02;',
+    ' vec2 f,cp;cellOf(14.,.38,f,cp);',
+    ' float fr=fogF(cp/uCss,t);',
+    ' float edge=pow(4.*fr*(1.-fr),.9)*calmP(cp);',
+    ' float rad=clamp(edge,0.,1.)*.5;',
+    ' float dm=smoothstep(rad+.07,rad-.07,length(f))*step(.04,rad);',
+    ' float fg=fogF(uv,t)*calmP(gl_FragCoord.xy/uDpr);',
+    ' vec3 c=mix(K0(),RD(),clamp(fg*.66*mix(1.35,.85,uLight),0.,1.));',
+    ' vec3 col=mix(RD(),RH(),smoothstep(.3,.8,edge));',
+    ' c=mix(c,col,dm*mix(.85,.75,uLight));',
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
 
-  // C «Schleier»: überlagerte, breite Vorhänge – so weich, dass keine Kanten bleiben
+  // C «Bokeh»: grosses, unscharfes Raster wie Lichter ausser Fokus über dem Nebel
   SH.soC = SOP + [
     'void main(){',
-    ' vec2 uv=gl_FragCoord.xy/uRes;float asp=uCss.x/uCss.y;vec2 p=vec2(uv.x*asp,uv.y);',
-    ' float t=uTime*.045;float k=0.;',
-    ' for(int i=0;i<3;i++){',
-    '  float fi=float(i);',
-    '  float s=p.x*(.7+.22*fi)+.4*sin(p.y*1.5+t*(.9+.3*fi)+fi*2.)+.25*fbm(p*1.1+fi*3.+t);',
-    '  float b=.5+.5*sin(s*2.9+fi*1.9-t*1.3);',
-    '  k+=pow(b,2.4)*.36;',
-    ' }',
-    ' k*=(.4+.6*(1.-uv.y))*calm(uv)*mix(1.35,.85,uLight);',
-    ' vec3 c=mix(K0(),RD(),clamp(k,0.,1.)*.9);',
-    ' c=mix(c,RH(),smoothstep(.5,.8,k)*.14);',
+    ' vec2 uv=gl_FragCoord.xy/uRes;float t=uTime*.02;',
+    ' vec2 f,cp;cellOf(34.,.38,f,cp);',
+    ' float fc=pow(fogF(cp/uCss,t),.75)*calmP(cp);',
+    ' float rad=clamp(fc,0.,1.)*.46;',
+    ' float dm=smoothstep(rad+.34,rad-.2,length(f))*step(.03,rad);',
+    ' float fg=fogF(uv,t)*calmP(gl_FragCoord.xy/uDpr);',
+    ' vec3 c=mix(K0(),RD(),clamp(fg*.5*mix(1.35,.85,uLight),0.,1.));',
+    ' c=mix(c,mix(RD(),RH(),.5),dm*mix(.62,.5,uLight));',
     ' o=fin(c,gl_FragCoord.xy);',
     '}'].join('\n');
 
@@ -305,7 +311,7 @@
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
     var so = /^so[A-C]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
-      scale: so ? .35 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
+      scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
       size: function () { return [window.innerWidth, window.innerHeight]; },
       active: function () {
         if (key === 'rcE') return AU.level > .003 || AU.target > .003 || AU.clearPending ? true : false;
