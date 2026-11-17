@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="rm">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<script src="/shader.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Transfurmescha videos en MP4 vertical (9:16) per las medias socialas – en il browser.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="verticals">
+<meta property="og:description" content="Transfurmescha videos en MP4 vertical (9:16) per las medias socialas – en il browser.">
+<meta property="og:url" content="https://tools.dombuzz.ch/social/verticals">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>verticals</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4d64' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='2.5' width='10' height='19' rx='2'/%3E%3Cpath d='M10.5 9.5v5l4-2.5z'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#121214; --card:#1c1c1f; --text:#ececef; --muted:#9a9aa2;
+    --accent:#ff4d64; --accent-dark:#d93a50; --border:#2f2f34;
+    --ok:#4caf6f; --err:#ff6b7d; --warn:#f0b454; --mono:#26262a; color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:40px 16px; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+  }
+  .container{ width:100%; max-width:640px; }
+  h1{ font-size:1.4rem; margin:0 0 4px; letter-spacing:-0.01em; }
+  h1 .acc{ color:var(--accent); }
+  .subtitle{ color:var(--muted); font-size:0.9rem; margin:0 0 20px; line-height:1.5; }
+  .homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+  .homelink:hover,.homelink:focus-visible{color:var(--accent)}
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:20px; }
+  .lbl{ display:block; font-size:0.8rem; font-weight:600; margin-bottom:6px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  .drop{
+    border:2px dashed var(--border); border-radius:12px; padding:36px 16px; text-align:center;
+    background:var(--mono); cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.over{ border-color:var(--accent); }
+  .drop strong{ display:block; font-size:1rem; margin-bottom:4px; }
+  .drop small{ color:var(--muted); font-size:0.85rem; }
+  select, input[type=number]{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+    background:var(--mono); color:var(--text); font-size:0.95rem; font-family:inherit;
+  }
+  input[type=range]{ width:100%; accent-color:var(--accent); }
+  .row{ display:flex; gap:16px; flex-wrap:wrap; margin-top:18px; }
+  .row > div{ flex:1 1 160px; }
+  button{
+    background:var(--accent); color:var(--on-accent); border:none; border-radius:8px; padding:10px 16px;
+    font-size:0.9rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  button:hover{ background:var(--accent-dark); }
+  button:disabled{ opacity:.5; cursor:default; }
+  button.ghost{ background:transparent; color:var(--muted); border:1px solid var(--border); }
+  button.ghost:hover{ color:var(--text); }
+
+  /* Parameters: zuklappbare Box */
+  details.fold{ padding:0; }
+  details.fold > summary{
+    list-style:none; cursor:pointer; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; border-radius:14px;
+  }
+  details.fold > summary::-webkit-details-marker{ display:none; }
+  details.fold > summary:hover{ color:var(--text); }
+  details.fold > summary:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  details.fold > summary .sum{ text-transform:none; letter-spacing:0; font-weight:400; font-size:.82rem; margin-left:auto; text-align:right; }
+  details.fold > summary::after{
+    content:""; flex:none; width:8px; height:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+    transform:rotate(45deg) translate(-2px,-2px); transition:transform .15s;
+  }
+  details.fold[open] > summary::after{ transform:rotate(-135deg) translate(-2px,-2px); }
+  details.fold .body{ padding:0 24px 22px; }
+  .fixed{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px 20px; margin:0 0 2px; font-size:.88rem; }
+  .fixed dt{ font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  .fixed dd{ margin:0 0 6px; font-weight:600; }
+  .hint{ color:var(--muted); font-size:.8rem; line-height:1.5; margin:14px 0 0; }
+  .rv{ color:var(--text); font-variant-numeric:tabular-nums; }
+
+  .banner{ margin:0 0 20px; padding:10px 12px; border-radius:10px; font-size:.85rem; font-weight:600;
+    background:rgba(240,180,84,.12); border:1px solid rgba(240,180,84,.45); color:#d9962c; }
+
+  .actions{ display:flex; gap:8px; justify-content:flex-end; margin-bottom:12px; flex-wrap:wrap; }
+  .list{ display:flex; flex-direction:column; gap:10px; }
+  .empty{ color:var(--muted); font-size:.88rem; text-align:center; padding:6px 0; }
+  .item{ display:flex; gap:14px; align-items:center; border:1px solid var(--border); border-radius:10px; padding:10px; }
+  .item .th{ width:54px; height:96px; object-fit:cover; border-radius:6px; background:var(--mono); flex:none; }
+  .info{ flex:1; min-width:0; font-size:0.85rem; line-height:1.45; }
+  .name{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta{ color:var(--muted); }
+  .meta b{ color:var(--ok); font-weight:600; }
+  .prog{ height:6px; border-radius:4px; background:var(--mono); overflow:hidden; margin:8px 0 2px; }
+  .prog i{ display:block; height:100%; width:0; background:var(--accent); transition:width .2s; }
+  .err{ color:var(--err); }
+  .btns{ display:flex; flex-direction:column; gap:6px; flex:none; }
+  .btns button{ padding:8px 12px; }
+  video.res{ width:100%; max-height:380px; margin-top:10px; border-radius:8px; background:#000; display:block; }
+  @media (max-width:480px){ .item{ flex-wrap:wrap; } .btns{ flex-direction:row; width:100%; } .btns button{ flex:1; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="homelink" href="/social/">← Social</a>
+  <h1><span class="acc">verticals</span></h1>
+  <p class="subtitle">Transfurmescha videos en MP4 vertical (9:16) per las medias socialas.<br>Tut vegn elavurà en il browser – ils videos na vegnan betg chargiads online.</p>
+
+  <div id="support" class="banner" hidden></div>
+
+  <div class="card">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner videos">
+      <strong>Trair qua ils videos</strong>
+      <small>u cliccar per tscherner · plirs files en ina giada</small>
+    </div>
+    <input type="file" id="file" accept="video/*,.mp4,.mov,.m4v,.mkv,.webm" multiple hidden>
+
+    <div class="row">
+      <div>
+        <label class="lbl" for="variant">Variante d’export</label>
+        <select id="variant"></select>
+      </div>
+    </div>
+  </div>
+
+  <details class="fold card" id="params">
+    <summary><span>Parameters</span><span class="sum" id="sum"></span></summary>
+    <div class="body">
+      <dl class="fixed" id="fixed"></dl>
+      <div class="row">
+        <div>
+          <label class="lbl" for="rf">Qualitad constanta (RF): <span class="rv" id="rfv">22</span></label>
+          <input type="range" id="rf" min="16" max="32" step="1" value="22">
+          <div class="hint" style="margin-top:4px">Pli bass = meglier. Preset: RF 22</div>
+        </div>
+        <div>
+          <label class="lbl" for="ab">Bitrate audio (kbps)</label>
+          <select id="ab">
+            <option>96</option><option>128</option><option selected>160</option><option>192</option><option>256</option><option>320</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="lbl" for="fps">Maletgs/s maximals</label>
+          <select id="fps"><option value="25" selected>25 (preset)</option><option value="30">30</option><option value="50">50</option><option value="0">Originals</option></select>
+        </div>
+        <div>
+          <label class="lbl" for="kf">Intervall da keyframes (s)</label>
+          <input type="number" id="kf" min="1" max="10" step="1" value="2">
+        </div>
+      </div>
+      <p class="hint">Il video vegn codà cun l’encoder H.264 da tes computer (WebCodecs). Quai è bler pli svelt che en in program, ma betg bit per bit sco x264 «fast» en HandBrake. Profil e level tscherna il browser.</p>
+    </div>
+  </details>
+
+  <div class="card">
+    <div class="actions">
+      <button class="ghost" id="clear" data-dbz-hold disabled>Svidar la glista</button>
+      <button class="ghost" id="dlall" disabled>Telechargiar tuts</button>
+      <button id="start" data-dbz-glint disabled>Convertar tut</button>
+    </div>
+    <div class="list" id="list"><div class="empty">Anc nagins videos.</div></div>
+  </div>
+</div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const drop = $('drop'), fileIn = $('file'), listEl = $('list');
+const startBtn = $('start'), clearBtn = $('clear'), dlBtn = $('dlall');
+
+// ---- Variantas d'export (pli tard era autras) ----
+const VARIANTS = {
+  verticals: {
+    label: 'Videos verticals',
+    preset: 'Verticals_rtr_HD_9-16_25fps',
+    suffix: '_verticals',
+    fixed: [
+      ['Format', 'MP4 (A/V sincron)'],
+      ['Video', 'H.264, max. 25 maletgs/s'],
+      ['Grondezza', 'Originala (naginas engrondiziuns)'],
+      ['Audio', 'AAC, stereo'],
+    ],
+    defaults: { rf: 22, ab: 160, fps: 25, kf: 2 },
+  },
+};
+let variant = 'verticals';
+for (const [k, v] of Object.entries(VARIANTS)) { const o = document.createElement('option'); o.value = k; o.textContent = v.label; $('variant').append(o); }
+
+function showVariant() {
+  const v = VARIANTS[variant];
+  $('fixed').innerHTML = '';
+  for (const [t, d] of v.fixed) { const a = document.createElement('div'); a.innerHTML = '<dt></dt><dd></dd>'; a.firstChild.textContent = t; a.lastChild.textContent = d; $('fixed').append(a); }
+  sum();
+}
+function sum() { $('sum').textContent = `RF ${$('rf').value} · AAC ${$('ab').value} kbps · max. ${$('fps').value === '0' ? 'originals' : $('fps').value + ' maletgs/s'}`; }
+$('variant').onchange = () => { variant = $('variant').value; showVariant(); };
+
+// zuletzt gewählte Werte merken
+const KEY = 'dbz-verticals';
+try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); if (s.rf) $('rf').value = s.rf; if (s.ab) $('ab').value = s.ab; if (s.fps != null) $('fps').value = s.fps; if (s.kf) $('kf').value = s.kf; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ rf: $('rf').value, ab: $('ab').value, fps: $('fps').value, kf: $('kf').value })); } catch (e) {} };
+$('rf').oninput = () => { $('rfv').textContent = $('rf').value; sum(); save(); };
+['ab', 'fps', 'kf'].forEach(id => $(id).onchange = () => { sum(); save(); });
+$('rfv').textContent = $('rf').value;
+showVariant();
+
+// ---- Mediabunny (lokal, wird erst bei Bedarf geladen) ----
+let MB = null;
+async function lib() { if (!MB) MB = await import('/vendor/mediabunny/mediabunny.min.mjs'); return MB; }
+
+(async () => {
+  const miss = [];
+  try {
+    if (!('VideoEncoder' in window)) miss.push('WebCodecs');
+    else { const m = await lib(); if (!(await m.canEncodeVideo('avc'))) miss.push('H.264'); if (!(await m.canEncodeAudio('aac'))) miss.push('AAC'); }
+  } catch (e) { miss.push('Mediabunny'); }
+  if (miss.length) { const b = $('support'); b.hidden = false; b.textContent = 'Quest browser na sustegna betg: ' + miss.join(', ') + '. Duvrar Chrome u Edge (actual).'; }
+})();
+
+// ---- Glista ----
+const jobs = [];
+let running = false;
+const fmtDur = s => { s = Math.round(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(2) + ' GB' : b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+const baseName = n => n.replace(/\.[^.]+$/, '');
+
+drop.onclick = () => fileIn.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); } };
+fileIn.onchange = () => { addFiles([...fileIn.files]); fileIn.value = ''; };
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => addFiles([...e.dataTransfer.files]));
+
+function addFiles(files) {
+  for (const f of files) {
+    if (!f.type.startsWith('video/') && !/\.(mp4|mov|m4v|mkv|webm)$/i.test(f.name)) continue;
+    const job = { file: f, status: 'spetga', cls: '', progress: 0, info: 'vegn legì …', thumb: null, url: null, blob: null, conv: null, out: baseName(f.name) + VARIANTS[variant].suffix + '.mp4', w: 0, h: 0 };
+    jobs.push(job); probe(job);
+  }
+  render();
+}
+
+async function probe(job) {
+  let input;
+  try {
+    const m = await lib();
+    input = new m.Input({ source: new m.BlobSource(job.file), formats: m.ALL_FORMATS });
+    const v = await input.getPrimaryVideoTrack();
+    if (!v) throw new Error('nagina spura video');
+    const dur = await input.computeDuration();
+    const st = await v.computePacketStats(120);
+    job.fps = st.averagePacketRate; job.w = v.displayWidth; job.h = v.displayHeight; job.dur = dur;
+    job.info = `${job.w}×${job.h} · ${+job.fps.toFixed(2)} maletgs/s · ${fmtDur(dur)} · ${fmtSize(job.file.size)}`;
+    thumb(job);
+  } catch (e) {
+    job.status = 'Sbagl: il file n’è betg legibel'; job.cls = 'err'; job.info = String(e.message || e);
+  } finally { try { input && input.dispose(); } catch (e) {} }
+  render();
+}
+
+function thumb(job) {
+  const url = URL.createObjectURL(job.file), vid = document.createElement('video');
+  vid.muted = true; vid.preload = 'metadata'; vid.src = url + '#t=0.5';
+  vid.onloadeddata = () => {
+    try { const c = document.createElement('canvas'), s = 192 / vid.videoHeight; c.width = Math.round(vid.videoWidth * s); c.height = 192;
+      c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height); job.thumb = c.toDataURL('image/jpeg', .7); } catch (e) {}
+    URL.revokeObjectURL(url); render();
+  };
+  vid.onerror = () => URL.revokeObjectURL(url);
+}
+
+function render() {
+  listEl.innerHTML = '';
+  if (!jobs.length) listEl.innerHTML = '<div class="empty">Anc nagins videos.</div>';
+  for (const j of jobs) {
+    const el = document.createElement('div'); el.className = 'item'; el.style.flexWrap = 'wrap';
+    el.innerHTML = `<img class="th" alt=""><div class="info"><div class="name"></div><div class="meta"></div><div class="prog"><i></i></div><div class="st"></div></div><div class="btns"></div><div class="out" style="flex:1 0 100%"></div>`;
+    const th = el.querySelector('.th'); if (j.thumb) th.src = j.thumb; else th.style.visibility = 'hidden';
+    el.querySelector('.name').textContent = j.blob ? j.out : j.file.name;
+    el.querySelector('.meta').textContent = j.info;
+    el.querySelector('.prog i').style.width = Math.round(j.progress * 100) + '%';
+    const st = el.querySelector('.st'); st.className = 'st meta ' + j.cls;
+    if (j.status === 'convertescha') st.textContent = `Vegn convertà … ${Math.round(j.progress * 100)} %`;
+    else if (j.blob) st.innerHTML = `<b>Finì</b> · ${fmtSize(j.file.size)} → ${fmtSize(j.blob.size)}`;
+    else st.textContent = j.status;
+    const btns = el.querySelector('.btns');
+    const add = (t, cls, fn) => { const b = document.createElement('button'); b.textContent = t; if (cls) b.className = cls; b.onclick = fn; btns.append(b); };
+    if (j.blob) {
+      add('Telechargiar', '', () => download(j));
+      const out = el.querySelector('.out'); const vd = document.createElement('video'); vd.className = 'res'; vd.controls = true; vd.playsInline = true; vd.src = j.url; out.append(vd);
+    }
+    if (j.status === 'convertescha') add('Interrumper', 'ghost', () => j.conv && j.conv.cancel());
+    else if (!running) add('Allontanar', 'ghost', () => { if (j.url) URL.revokeObjectURL(j.url); jobs.splice(jobs.indexOf(j), 1); render(); });
+    listEl.append(el);
+  }
+  const ready = jobs.some(j => j.status === 'spetga' && j.w);
+  startBtn.disabled = running || !ready;
+  clearBtn.disabled = running || !jobs.length;
+  dlBtn.disabled = !jobs.some(j => j.blob);
+}
+
+function download(j) {
+  const a = document.createElement('a'); a.href = j.url; a.download = j.out;
+  document.body.append(a); a.click(); a.remove();
+}
+dlBtn.onclick = async () => { for (const j of jobs.filter(j => j.blob)) { download(j); await new Promise(r => setTimeout(r, 300)); } };
+clearBtn.onclick = () => { jobs.forEach(j => j.url && URL.revokeObjectURL(j.url)); jobs.length = 0; render(); };
+
+// ---- Convertar ----
+async function convert(job) {
+  const m = await lib();
+  job.status = 'convertescha'; job.cls = ''; job.progress = 0; render();
+  const q = +$('rf').value, maxFps = +$('fps').value, kf = +$('kf').value || 2;
+  const px = (job.w || 1080) * (job.h || 1920);
+  // Ersatz-Bitrate, falls der Quantizer-Modus (≈ CRF) nicht möglich ist
+  const fallback = Math.round(px * 25 * 0.09 * Math.pow(2, (22 - q) / 6));
+  const input = new m.Input({ source: new m.BlobSource(job.file), formats: m.ALL_FORMATS });
+  const output = new m.Output({ format: new m.Mp4OutputFormat({ fastStart: 'in-memory' }), target: new m.BufferTarget() });
+  try {
+    const video = { codec: 'avc', quality: new m.Quality({ quantizer: q, bitrate: fallback, bitrateMode: 'variable' }), keyFrameInterval: kf, forceTranscode: true };
+    if (maxFps && job.fps > maxFps + 0.5) video.frameRate = maxFps;
+    const conv = await m.Conversion.init({ input, output, video, audio: { codec: 'aac', numberOfChannels: 2, bitrate: +$('ab').value * 1000, forceTranscode: true } });
+    job.conv = conv;
+    if (!conv.isValid) throw new Error('Betg pussaivel: ' + (conv.discardedTracks.map(d => d.reason).join(', ') || 'nunenconuschent'));
+    conv.onProgress = p => {
+      job.progress = p;
+      const el = listEl.children[jobs.indexOf(job)];
+      if (el) { el.querySelector('.prog i').style.width = Math.round(p * 100) + '%'; el.querySelector('.st').textContent = `Vegn convertà … ${Math.round(p * 100)} %`; }
+    };
+    await conv.execute();
+    job.blob = new Blob([output.target.buffer], { type: 'video/mp4' });
+    job.url = URL.createObjectURL(job.blob); job.progress = 1; job.status = 'finì'; job.cls = '';
+  } catch (e) {
+    const canceled = e instanceof m.ConversionCanceledError || /cancel/i.test(String(e && e.name));
+    job.status = canceled ? 'Interrutt' : 'Sbagl: ' + (e.message || e); job.cls = canceled ? '' : 'err'; job.progress = 0;
+  } finally { job.conv = null; try { input.dispose(); } catch (e) {} }
+}
+
+startBtn.onclick = async () => {
+  running = true; startBtn.setAttribute('aria-busy', 'true'); render();
+  for (const j of jobs.filter(j => j.status === 'spetga' && j.w)) { await convert(j); render(); }
+  running = false; startBtn.removeAttribute('aria-busy'); render();
+};
+window.addEventListener('beforeunload', e => { if (running) { e.preventDefault(); e.returnValue = ''; } });
+</script>
+<script src="/like.js" defer></script>
+</body>
+</html>
