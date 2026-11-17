@@ -90,6 +90,11 @@
     '.card,.step,.panel,.take,.tw{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border-color:var(--glass-line)!important}' +
     /* Weitere Boxen als Milchglas (Rahmenfarbe bleibt, z. B. der rote Balken links bei .nowc) */
     '.nowc,.wkg,.stage{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}' +
+    'a.tool{background-color:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}' +
+    /* Mit aktivem Shader-Hintergrund: Textfelder, Auswahlfelder und grau hinterlegte Schaltflächen halbdurchsichtig */
+    'html.dbz-sh :is(select,textarea,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=hidden]):not([type=button]):not([type=submit])),' +
+    'html.dbz-sh :is(.seg,.ctog,.wseg,.ratio-seg,.ghost,.btn-secondary,.btn-sm,details.more,.toplink,.recbtn){background-color:color-mix(in srgb,var(--mono,#26262a) 50%,transparent)!important}' +
+    'html.dbz-sh :is(.ghost,.btn-secondary,.btn-sm,.toplink,.recbtn):hover{background-color:color-mix(in srgb,var(--mono,#26262a) 72%,transparent)!important}' +
     /* Zellen leicht durchsichtig: Wochenende, leer/ausserhalb, Lücke, heute – statt voller Flächen, die aus dem Glas herausfallen */
     '.we,.d.we{background-color:color-mix(in srgb,var(--surface2) 55%,transparent)!important}' +
     'td.off,td.off.we,.d.out-plan{background-color:color-mix(in srgb,var(--bg) 40%,transparent)!important}' +
