@@ -85,6 +85,9 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
 .tl .shot.cur{box-shadow:inset 0 0 0 2px var(--text)}
 .tl .el{position:absolute;top:44px;height:5px;border-radius:3px;background:var(--text);opacity:.55}
 .tl .el.s{top:51px;background:var(--warn)}
+.tl .kfm{position:absolute;top:29px;width:9px;height:9px;margin-left:-4.5px;transform:rotate(45deg);background:#ffd24a;border:1px solid #6b5300;pointer-events:none;z-index:2}
+.kfl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.kfl .kfc{border-color:#ffd24a}
 .tl .ph{position:absolute;top:0;bottom:0;width:2px;background:var(--text);pointer-events:none}
 .shots{margin-top:12px;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:8px}
 .shots .r{display:flex;gap:10px;align-items:center;padding:6px 10px;font-size:.84rem;border-top:1px solid var(--line);cursor:pointer}
@@ -173,6 +176,14 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
           <button id="zFace">Centrar sin fatscha</button>
           <button id="zAll">Surpigliar per tut las parts</button>
         </div>
+        <div class="sep"></div>
+        <div class="row mid">
+          <button id="kfAdd">◆ Keyframe tar la posiziun actuala</button>
+          <button id="kfDel" disabled>Stizzar keyframe</button>
+          <button id="kfClr" disabled>Stizzar tut ils keyframes da questa part</button>
+        </div>
+        <div class="kfl" id="kfl"></div>
+        <p class="hint">Mintga part ha ses agens keyframes. Setter ina posiziun (e zoom) sin il maletg e cun in ulteriur keyframe sa move il maletg dutsch da l'ina posiziun a l'autra. Cun keyframes vegn mintga midada da posiziun u zoom memorisada sin il keyframe a la posiziun actuala (u scrivida en in nov).</p>
         <p class="info hidden" id="fstat"></p>
       </section>
 
@@ -244,7 +255,7 @@ let S = { fmt: '9:16', color: '#af001d', logo: true, fade: true, res: '1080', q:
 try { Object.assign(S, JSON.parse(localStorage.getItem('dbz-reels') || '{}')); } catch (e) {}
 const save = () => { try { localStorage.setItem('dbz-reels', JSON.stringify(S)); } catch (e) {} };
 let V = null;            // {file, w, h, dur, fps}
-let shots = [];          // [{a, b, on, cx, cy, z, face}]
+let shots = [];          // [{a, b, on, cx, cy, z, face, kf:[{t,cx,cy,z}]}]
 let els = [];            // [{id, type, text, name, func, a, b, align, y, size}]
 let subs = [], subOn = true;
 let cur = 0, selEl = null, dirty = true, job = null, uid = 1;
@@ -323,6 +334,17 @@ $('fFile').onchange = async e => {
 
 /* ---------- Bild zeichnen (Vorschau und Export benutzen dieselbe Funktion) ---------- */
 // Lage des Videos im Ausgabeformat: z = 1 füllt das Format genau, z < 1 zeigt mehr Bild (Rest unscharf aufgefüllt)
+// Positions-Keyframes pro Teil: sh.kf = [{t, cx, cy, z}] (t = Zeit im Video); dazwischen weich überblendet, davor/danach gehalten
+const smooth = x => x * x * (3 - 2 * x);
+function pose(sh, t) {
+  const k = sh.kf;
+  if (!k || !k.length) return sh;
+  if (t <= k[0].t) return k[0];
+  if (t >= k[k.length - 1].t) return k[k.length - 1];
+  let i = 1; while (k[i].t < t) i++;
+  const a = k[i - 1], b = k[i], u = smooth((t - a.t) / (b.t - a.t || 1));
+  return { cx: a.cx + (b.cx - a.cx) * u, cy: a.cy + (b.cy - a.cy) * u, z: a.z + (b.z - a.z) * u };
+}
 function geom(sh, W, H) {
   const s = Math.max(W / V.w, H / V.h) * sh.z, dw = V.w * s, dh = V.h * s;
   return { dw, dh, x: dw >= W ? -(dw - W) * sh.cx : (W - dw) / 2, y: dh >= H ? -(dh - H) * sh.cy : (H - dh) / 2 };
@@ -379,7 +401,7 @@ function drawEl(c, e, W, H, k, alpha) {
 }
 const fadeA = (t, a, b) => S.fade ? clamp(Math.min((t - a) / .25, (b - t) / .25), 0, 1) : 1;
 function draw(c, W, H, t, sh) {
-  const k = W / 1080, g = geom(sh, W, H);
+  const k = W / 1080, g = geom(pose(sh, t), W, H);
   c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
   if (g.dw < W - .5 || g.dh < H - .5) {   // Hintergrund: unscharfe, formatfüllende Fassung desselben Bildes
     const bw = 48, bh = Math.max(8, Math.round(48 * H / W)); if (blurC.width !== bw || blurC.height !== bh) { blurC.width = bw; blurC.height = bh; }
@@ -417,6 +439,7 @@ function loop() {
     const i = shotAt(t);
     if (!job && i !== cur && !v.paused) { cur = i; syncShotUI(); }
     draw(pctx, pv.width, pv.height, t, shots[job && job.shot != null ? job.shot : i]);
+    { const sh = shots[i]; if (sh.kf.length) $('zoom').value = pose(sh, t).z; }
     $('ph').style.left = (t / V.dur * 100) + '%';
     $('time').textContent = tfmt(t) + ' / ' + tfmt(V.dur);
     dirty = false;
@@ -437,14 +460,38 @@ let drag = null;
 pv.addEventListener('pointerdown', e => { if (!V || job) return; pv.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY }; });
 pv.addEventListener('pointermove', e => {
   if (!drag) return;
-  const sh = shots[cur], [W, H] = outSize(), f = W / pv.getBoundingClientRect().width, g = geom(sh, W, H);
-  if (g.dw > W) sh.cx = clamp(sh.cx - (e.clientX - drag.x) * f / (g.dw - W), 0, 1);
-  if (g.dh > H) sh.cy = clamp(sh.cy - (e.clientY - drag.y) * f / (g.dh - H), 0, 1);
+  const sh = shots[cur], tg = target(), [W, H] = outSize(), f = W / pv.getBoundingClientRect().width, g = geom(tg, W, H);
+  if (g.dw > W) tg.cx = clamp(tg.cx - (e.clientX - drag.x) * f / (g.dw - W), 0, 1);
+  if (g.dh > H) tg.cy = clamp(tg.cy - (e.clientY - drag.y) * f / (g.dh - H), 0, 1);
   drag = { x: e.clientX, y: e.clientY }; sh.face = false; dirty = true;
 });
 pv.addEventListener('pointerup', () => { drag = null; });
 pv.addEventListener('wheel', e => { if (!V || job) return; e.preventDefault(); setZoom(shots[cur].z * (e.deltaY < 0 ? 1.04 : 1 / 1.04)); }, { passive: false });
-function setZoom(z) { shots[cur].z = clamp(z, zMin(), 3); $('zoom').value = shots[cur].z; dirty = true; }
+function setZoom(z, rel) { const tg = target(); tg.z = clamp(z, zMin(), 3); $('zoom').value = tg.z; dirty = true; }
+// Ziel für Änderungen: ohne Keyframes der Teil selbst; mit Keyframes der Keyframe an der Abspielposition (wird bei Bedarf automatisch angelegt)
+function kfNear(sh, t) { const e = .5 / V.fps + 1e-4; return sh.kf.find(k => Math.abs(k.t - t) < e); }
+function target() {
+  const sh = shots[cur];
+  if (!sh.kf.length) return sh;
+  const t = clamp(v.currentTime, sh.a, sh.b); let k = kfNear(sh, t);
+  if (!k) { const p = pose(sh, t); k = { t, cx: p.cx, cy: p.cy, z: p.z }; sh.kf.push(k); sh.kf.sort((a, b) => a.t - b.t); renderKf(); }
+  return k;
+}
+function renderKf() { renderShots(); syncShotUI(); }
+function addKf() {
+  const sh = shots[cur], t = clamp(v.currentTime, sh.a, sh.b);
+  if (!sh.kf.length) sh.kf.push({ t: sh.a, cx: sh.cx, cy: sh.cy, z: sh.z });
+  if (!kfNear(sh, t)) { const p = pose(sh, t); sh.kf.push({ t, cx: p.cx, cy: p.cy, z: p.z }); sh.kf.sort((a, b) => a.t - b.t); }
+  sh.face = false; resetOut(); renderKf();
+}
+function delKf() {
+  const sh = shots[cur]; if (!sh.kf.length) return;
+  const k = kfNear(sh, clamp(v.currentTime, sh.a, sh.b)); if (!k) return;
+  sh.kf.splice(sh.kf.indexOf(k), 1);
+  if (sh.kf.length === 1) { Object.assign(sh, { cx: sh.kf[0].cx, cy: sh.kf[0].cy, z: sh.kf[0].z }); sh.kf = []; }
+  resetOut(); renderKf();
+}
+function clrKf() { const sh = shots[cur]; if (!sh.kf.length) return; const p = pose(sh, clamp(v.currentTime, sh.a, sh.b)); Object.assign(sh, { cx: p.cx, cy: p.cy, z: p.z }); sh.kf = []; resetOut(); renderKf(); }
 
 /* ---------- Video laden ---------- */
 // Springt bildgenau an eine Stelle; Aufrufe laufen nacheinander
@@ -483,7 +530,7 @@ async function take(file) {
     V = null; $('work').classList.add('hidden');
     $('verr').textContent = 'Il browser na po betg leger quest video. Exportar el l\'emprim sco MP4 (H.264).'; $('verr').classList.remove('hidden'); return;
   }
-  shots = [{ a: 0, b: v.duration, on: true, cx: .5, cy: .5, z: 1, face: false }]; els = []; subs = []; cur = 0; selEl = null;
+  shots = [{ a: 0, b: v.duration, on: true, cx: .5, cy: .5, z: 1, face: false, kf: [] }]; els = []; subs = []; cur = 0; selEl = null;
   V = { file, w: v.videoWidth, h: v.videoHeight, dur: v.duration, fps: 25 };
   V.fps = await detectFps();
   $('fps').innerHTML = FPSS.map(f => `<option value="${f[0]}"${f[0] === V.fps ? ' selected' : ''}>${String(f[0]).replace('.', ',')}</option>`).join('');
@@ -509,6 +556,7 @@ function renderShots() {
     const d = document.createElement('div'); d.className = 'shot' + (s.on ? '' : ' off') + (i === cur ? ' cur' : '');
     d.style.left = (s.a / V.dur * 100) + '%'; d.style.width = ((s.b - s.a) / V.dur * 100) + '%'; d.textContent = i + 1; tl.insertBefore(d, $('ph'));
   });
+  shots.forEach(s => s.kf.forEach(k => { const d = document.createElement('div'); d.className = 'kfm'; d.style.left = (k.t / V.dur * 100) + '%'; tl.insertBefore(d, $('ph')); }));
   els.forEach(e => { const d = document.createElement('div'); d.className = 'el'; d.style.left = (e.a / V.dur * 100) + '%'; d.style.width = (Math.max(0, e.b - e.a) / V.dur * 100) + '%'; tl.insertBefore(d, $('ph')); });
   if (subOn) subs.forEach(e => { const d = document.createElement('div'); d.className = 'el s'; d.style.left = (e.a / V.dur * 100) + '%'; d.style.width = ((e.b - e.a) / V.dur * 100) + '%'; tl.insertBefore(d, $('ph')); });
   $('shots').innerHTML = shots.map((s, i) => `<div class="r${i === cur ? ' cur' : ''}" data-i="${i}"><label class="c" title="Exportar questa part"><input type="checkbox" data-on="${i}"${s.on ? ' checked' : ''}></label><b>Part ${i + 1}</b><span class="t">${tfmt(s.a)} – ${tfmt(s.b)} · ${(s.b - s.a).toFixed(1).replace('.', ',')} s</span>${s.face ? '<span title="Centrà sin fatscha">☺</span>' : ''}<span class="sp"></span>${i ? `<button class="sm" data-merge="${i}" title="Stizzar il tagl avant questa part">Unir cun l'antecedenta</button>` : ''}</div>`).join('');
@@ -519,7 +567,9 @@ function renderShots() {
 }
 function syncShotUI() {
   if (!V) return;
-  const sh = shots[cur]; $('zoom').min = zMin(); $('zoom').value = sh.z;
+  const sh = shots[cur]; $('zoom').min = zMin(); $('zoom').value = pose(sh, clamp(v.currentTime, sh.a, sh.b)).z;
+  $('kfl').innerHTML = sh.kf.map((k, j) => `<button class="sm kfc" data-kf="${j}" title="Tar quest keyframe">◆ ${(k.t - sh.a).toFixed(1).replace('.', ',')} s</button>`).join('');
+  $('kfDel').disabled = !sh.kf.length; $('kfClr').disabled = !sh.kf.length;
   $('curShot').textContent = shots.length > 1 ? 'Part ' + (cur + 1) + ' da ' + shots.length : '';
   document.querySelectorAll('#tl .shot').forEach((d, i) => d.classList.toggle('cur', i === cur));
   document.querySelectorAll('#shots .r').forEach((d, i) => d.classList.toggle('cur', i === cur));
@@ -528,14 +578,17 @@ function selectShot(i, jump) { cur = clamp(i, 0, shots.length - 1); if (jump) { 
 $('shots').addEventListener('click', e => {
   if (job) return;
   const m = e.target.closest('[data-merge]'), c = e.target.closest('[data-on]'), r = e.target.closest('.r');
-  if (m) { const i = +m.dataset.merge; shots[i - 1].b = shots[i].b; shots.splice(i, 1); cur = shotAt(v.currentTime); resetOut(); renderShots(); syncShotUI(); }
+  if (m) { const i = +m.dataset.merge, L = shots[i - 1], R = shots[i], kl = L.kf.length ? L.kf : (R.kf.length ? [{ t: L.a, cx: L.cx, cy: L.cy, z: L.z }] : []), kr = R.kf.length ? R.kf : (L.kf.length ? [{ t: R.a, cx: R.cx, cy: R.cy, z: R.z }] : []);
+    L.kf = [...kl, ...kr]; L.b = R.b; shots.splice(i, 1); cur = shotAt(v.currentTime); resetOut(); renderShots(); syncShotUI(); }
   else if (c) { shots[+c.dataset.on].on = c.checked; resetOut(); renderShots(); }
   else if (r) selectShot(+r.dataset.i, true);
 });
 function cutAt(t) {
   t = Math.round(t * V.fps) / V.fps; const i = shotAt(t), s = shots[i];
   if (t - s.a < .15 || s.b - t < .15) return false;
-  shots.splice(i + 1, 0, Object.assign({}, s, { a: t })); s.b = t; return true;
+  const n = Object.assign({}, s, { a: t, kf: [] });
+  if (s.kf.length) { const p = pose(s, t); n.kf = [{ t, cx: p.cx, cy: p.cy, z: p.z }, ...s.kf.filter(k => k.t > t)]; s.kf = [...s.kf.filter(k => k.t < t), { t, cx: p.cx, cy: p.cy, z: p.z }]; }
+  shots.splice(i + 1, 0, n); s.b = t; return true;
 }
 $('cutHere').onclick = () => { if (job || !V) return; if (cutAt(v.currentTime)) { cur = shotAt(v.currentTime); resetOut(); renderShots(); syncShotUI(); } };
 // Zeitleiste: klicken oder ziehen springt an die Stelle
@@ -584,7 +637,7 @@ async function detectCuts() {
       if (cn >= N) break;
     }
     const old = shots[0], pts = [0, ...cuts.filter((t, i) => t > .15 && t < V.dur - .15 && (!i || t - cuts[i - 1] > .15)), V.dur];
-    shots = pts.slice(0, -1).map((a, i) => ({ a, b: pts[i + 1], on: true, cx: .5, cy: .5, z: old ? old.z : 1, face: false }));
+    shots = pts.slice(0, -1).map((a, i) => ({ a, b: pts[i + 1], on: true, cx: .5, cy: .5, z: old ? old.z : 1, face: false, kf: [] }));
     cur = 0; resetOut(); renderShots(); syncShotUI();
     const n = shots.length - 1;
     $('dstat').textContent = n ? `Chattà ${n} ${n === 1 ? 'tagl' : 'tagls'} – ${shots.length} parts.` : 'Chattà nagins tagls. Forsa cun dapli sensibilitad, u metter tagls a maun.';
@@ -627,6 +680,7 @@ async function faceShot(i, classify) {
   const [W, H] = outSize(), g = geom(s, W, H);
   if (g.dw > W) s.cx = clamp((fx * g.dw - W / 2) / (g.dw - W), 0, 1);
   if (g.dh > H) s.cy = clamp((fy * g.dh - H * .42) / (g.dh - H), 0, 1);
+  s.kf.forEach(k => { k.cx = s.cx; k.cy = s.cy; });
   s.face = true; return true;
 }
 async function faceAll(j, bar) {
@@ -648,13 +702,17 @@ function syncFmt() { document.querySelectorAll('#fmt button').forEach(b => b.set
 $('fmt').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || job) return;
   S.fmt = b.dataset.v; save(); syncFmt(); sizePv();
-  if (V) { const m = zMin(); shots.forEach(s => { s.z = Math.max(s.z, m); }); resetOut(); syncShotUI(); }
+  if (V) { const m = zMin(); shots.forEach(s => { s.z = Math.max(s.z, m); s.kf.forEach(k => { k.z = Math.max(k.z, m); }); }); resetOut(); syncShotUI(); }
 });
 $('zoom').oninput = e => { if (V && !job) setZoom(+e.target.value); };
 $('zFill').onclick = () => { if (V && !job) setZoom(1); };
 $('zFit').onclick = () => { if (V && !job) setZoom(zMin()); };
-$('zCenter').onclick = () => { if (V && !job) { shots[cur].cx = shots[cur].cy = .5; shots[cur].face = false; dirty = true; renderShots(); } };
-$('zAll').onclick = () => { if (V && !job) { const s = shots[cur]; shots.forEach(x => { x.cx = s.cx; x.cy = s.cy; x.z = s.z; x.face = false; }); renderShots(); syncShotUI(); } };
+$('zCenter').onclick = () => { if (V && !job) { const tg = target(); tg.cx = tg.cy = .5; shots[cur].face = false; dirty = true; renderShots(); } };
+$('zAll').onclick = () => { if (V && !job) { const s = shots[cur]; shots.forEach(x => { if (x === s) return; x.cx = s.cx; x.cy = s.cy; x.z = s.z; x.face = false; x.kf = s.kf.map(k => ({ t: clamp(x.a + (k.t - s.a), x.a, x.b), cx: k.cx, cy: k.cy, z: k.z })); }); resetOut(); renderShots(); syncShotUI(); } };
+$('kfAdd').onclick = () => { if (V && !job) addKf(); };
+$('kfDel').onclick = () => { if (V && !job) delKf(); };
+$('kfClr').onclick = () => { if (V && !job) clrKf(); };
+$('kfl').addEventListener('click', e => { const b = e.target.closest('[data-kf]'); if (!b || !V || job) return; const sh = shots[cur], k = sh.kf[+b.dataset.kf]; v.pause(); v.currentTime = clamp(k.t, sh.a + .0005, sh.b - .5 / V.fps); dirty = true; });
 
 /* ---------- Texte: Titel, Text, Name und Funktion ---------- */
 const TYPES = { title: 'Tetel', text: 'Text', lower: 'Num' };
