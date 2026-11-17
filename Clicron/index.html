@@ -320,7 +320,7 @@ p.sub{margin:0;color:var(--muted)}
   <a class="homelink" href="/UTstudio#sincronisar">← Subtitle Studio</a>
   <h1>CLIC ICF – <span class="acc">Sincronisar</span></h1>
   <p class="sub">Copia privata per il film CLIC ICF. Ils suttitels DE vegnan chargiads automaticamain, midadas vegnan memorisadas en quest navigatur. Il video: avrir en SharePoint, telechargiar e trair en il champ «Video u audio».</p>
-  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><button type="button" id="vi-golast">⤳ Davosa midada</button><a href="/Clicron/ICF-Film_DE_Untertitel_SRG.srt" download>⤓ SRT memorisà</a></div>
+  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><button type="button" id="vi-golast">⤳ Davosa midada</button><a href="ICF-Film_DE_Untertitel_SRG.srt" id="vi-srtlink" download>⤓ SRT memorisà</a></div>
   <div class="exts"><a class="btn primary ext" href="https://dialogue.rts.ch/rm/tools/video/subtitles-editor/" target="_blank" rel="noopener">Dialog Subtitles editor ↗</a><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
@@ -580,7 +580,7 @@ p.sub{margin:0;color:var(--muted)}
     <div class="row">
       <label>Format <select id="vi-fmt"></select></label>
       <button class="btn primary" id="vi-dl" type="button">Telechargiar</button>
-      <button class="btn primary" id="vi-gh" type="button" title="Memorisar ils suttitels sco SRT en il repository (Clicron/ICF-Film_DE_Untertitel_SRG.srt)">☁ Memorisar en GitHub</button>
+      <button class="btn primary" id="vi-gh" type="button" title="Memorisar ils suttitels sco SRT en il repository (Ordner/ICF-Film_DE_Untertitel_SRG.srt)">☁ Memorisar en GitHub</button>
       <span class="note" id="vi-dlinfo"></span>
     </div>
     <form class="ghtok" id="vi-ghf" hidden>
@@ -593,7 +593,7 @@ p.sub{margin:0;color:var(--muted)}
     <h2><span class="num">3</span> Notizias</h2>
     <textarea id="vi-notetxt" rows="8" spellcheck="true" placeholder="Notizias per il film CLIC ICF – p. ex. «Bloc 120: verifitgar num», «Bloc 45–52: timing anc ina giada» …"></textarea>
     <div class="row">
-      <button class="btn primary" id="vi-notegh" type="button" title="Memorisar las notizias en il repository (Clicron/ICF-notizias.md)">☁ Memorisar notizias en GitHub</button>
+      <button class="btn primary" id="vi-notegh" type="button" title="Memorisar las notizias en il repository (Ordner/ICF-notizias.md)">☁ Memorisar notizias en GitHub</button>
       <span class="note" id="vi-noteinfo">Vegnan memorisadas automaticamain en quest navigatur.</span>
     </div>
   </section>
@@ -1968,7 +1968,8 @@ document.addEventListener('keydown', onKey);
   // lokaler Stand: {t: Zeit, c: Blöcke} (ältere Version: nur Blöcke)
   let saved = null; try { saved = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) {}
   if (Array.isArray(saved)) saved = { t: 0, c: saved };
-  const GH = 'https://api.github.com/repos/dombuzz/tools', GPATH = 'Clicron/' + FN;
+  const GH = 'https://api.github.com/repos/dombuzz/tools', DIR = (location.pathname.split('/')[1] || '').replace(/\.html?$/, '') || 'sincronizer', GPATH = DIR + '/' + FN;
+  { const a = document.getElementById('vi-srtlink'); if (a) a.href = '/' + DIR + '/' + FN; }
   let tok = ''; try { tok = localStorage.getItem('clicron-gh-token') || ''; } catch (e) {}
   const ghH = (x = {}) => Object.assign(tok ? { Authorization: 'Bearer ' + tok } : {}, { Accept: 'application/vnd.github+json' }, x);
   let fromGh = false;
@@ -1979,7 +1980,7 @@ document.addEventListener('keydown', onKey);
       if (r.ok) { const t = await r.text(); if (/-->/.test(t)) return t; }
     } catch (e) {}
     // Pfad der Seite kann /Clicron/, /Clicron/index oder /Clicron/index.html sein – mehrere Orte probieren
-    const p = location.pathname, dirs = [...new Set([p.replace(/[^/]*$/, ''), p.replace(/\/?$/, '/'), '/Clicron/', '/clicron/'])];
+    const p = location.pathname, dirs = [...new Set([p.replace(/[^/]*$/, ''), p.replace(/\/?$/, '/'), '/' + DIR + '/'])];
     for (const d of dirs) { try { const r = await fetch(d + FN, { cache: 'no-cache' }); if (r.ok) { const t = await r.text(); if (/-->/.test(t)) return t; } } catch (e) {} }
     throw 0;
   };
@@ -2038,14 +2039,14 @@ document.addEventListener('keydown', onKey);
   const setPeaks = u => { const pp = b2pk(u), so = Float32Array.from(pp).sort(); pscale = so[Math.floor(so.length * 0.98)] || so[so.length - 1] || 1; peaks = pp; wkey = ''; $('wmsg').textContent = ''; drawWave(); };
   async function loadPeaks() {
     try { const x = localStorage.getItem(PKEY); if (x) { setPeaks(Uint8Array.from(atob(x), c => c.charCodeAt(0))); return true; } } catch (e) {}
-    try { const r = await fetch(GH + '/contents/Clicron/' + PFN + '?ref=main', { headers: ghH({ Accept: 'application/vnd.github.raw+json' }), cache: 'no-store' }); if (r.ok) { const u = new Uint8Array(await r.arrayBuffer()); if (u.length > 100) { setPeaks(u); try { localStorage.setItem(PKEY, u8b64(u)); } catch (e) {} return true; } } } catch (e) {}
+    try { const r = await fetch(GH + '/contents/' + DIR + '/' + PFN + '?ref=main', { headers: ghH({ Accept: 'application/vnd.github.raw+json' }), cache: 'no-store' }); if (r.ok) { const u = new Uint8Array(await r.arrayBuffer()); if (u.length > 100) { setPeaks(u); try { localStorage.setItem(PKEY, u8b64(u)); } catch (e) {} return true; } } } catch (e) {}
     const pth = location.pathname;
-    for (const d of [...new Set([pth.replace(/[^/]*$/, ''), pth.replace(/\/?$/, '/'), '/Clicron/'])]) { try { const r = await fetch(d + PFN, { cache: 'no-cache' }); if (r.ok && !/text\/html/.test(r.headers.get('content-type') || '')) { const u = new Uint8Array(await r.arrayBuffer()); if (u.length > 100) { setPeaks(u); return true; } } } catch (e) {} }
+    for (const d of [...new Set([pth.replace(/[^/]*$/, ''), pth.replace(/\/?$/, '/'), '/' + DIR + '/'])]) { try { const r = await fetch(d + PFN, { cache: 'no-cache' }); if (r.ok && !/text\/html/.test(r.headers.get('content-type') || '')) { const u = new Uint8Array(await r.arrayBuffer()); if (u.length > 100) { setPeaks(u); return true; } } } catch (e) {} }
     return false;
   }
   async function uploadPeaks() {
     if (!peaks || !tok) return false;
-    const u = pk2b(peaks), path = 'Clicron/' + PFN;
+    const u = pk2b(peaks), path = DIR + '/' + PFN;
     const g = await fetch(GH + '/contents/' + path + '?ref=main', { headers: ghH(), cache: 'no-store' });
     const sha = g.ok ? (await g.json()).sha : undefined;
     const r = await fetch(GH + '/contents/' + path, { method: 'PUT', headers: ghH({ 'Content-Type': 'application/json' }), body: JSON.stringify({ message: 'Clicron: Undas da tun gespeichert', content: u8b64(u), sha, branch: 'main' }) });
@@ -2071,7 +2072,7 @@ document.addEventListener('keydown', onKey);
   };
   if (waveOn && hasMedia() && !peaks) decodeWave();
   // ---- Notizias: im Browser laufend, in GitHub als Clicron/ICF-notizias.md ----
-  const NPATH = 'Clicron/ICF-notizias.md', NKEY = 'clicron-icf-notes';
+  const NPATH = DIR + '/ICF-notizias.md', NKEY = 'clicron-icf-notes';
   let note = { t: 0, text: '', up: true }; try { note = Object.assign(note, JSON.parse(localStorage.getItem(NKEY) || '{}')); } catch (e) {}
   const nta = $('notetxt'), ninfo = (t, err) => { $('noteinfo').textContent = t; $('noteinfo').style.color = err ? 'var(--err)' : ''; };
   nta.value = note.text;
