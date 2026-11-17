@@ -211,9 +211,9 @@
     ' float y1=.62+.16*sin(p.x*1.3+w*.8+t*2.);float y2=.40+.14*sin(p.x*1.0+w*1.0-t*1.5+2.);',
     ' float st=.7+.3*fbm(vec2(p.x*4.+w,uv.y*1.2+t*1.2));',
     ' float i1=exp(-pow((uv.y-y1)/.2,2.))*st*calm, i2=exp(-pow((uv.y-y2)/.26,2.))*(.4+.6*st)*calm;',
-    ' vec3 v=vec3(.42,.27,.78),c2=vec3(.17,.58,.58);',
+    ' vec3 v=vec3(.27,.15,.52),c2=vec3(.66,.68,.74);',
     ' vec3 base=mix(vec3(.02,.025,.06),vec3(1.),uLight);',
-    ' vec3 glowc=v*i1*.55+c2*i2*.42;',
+    ' vec3 glowc=v*i1*.6+c2*i2*.4;',
     ' vec3 c=base+mix(glowc,vec3(0.),uLight);',
     ' c=mix(c,mix(base,mix(v,c2,.5)*.9+.1,.5),uLight*clamp(i1+i2,0.,1.)*.6);',
     // Höhenlinien über dem Feld

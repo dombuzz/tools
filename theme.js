@@ -176,7 +176,7 @@
   }
   // Zahnrad: zeigt nach einem Klick Hell/Dunkel und den Tropfen (Zellteilung nach unten); schliesst nach 6 s ohne Bedienung oder per Klick aufs Zahnrad
   // Hintergrund-Shader (nur Seiten mit data-shader-set): schaltet durch die Auswahl und «aus»
-  var bbtn, sbtns = [], lines = [], bgOpen = false, BGC = { soA: '#ff4d64', soT: '#22b8aa', labA: '#ff9a3c', soK: '#9b6bff', soM: '#ff4d64' }, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soK: 'Aurora', soM: 'Marmor ruber' };
+  var bbtn, sbtns = [], lines = [], bgOpen = false, BGC = { soA: '#ff4d64', soT: '#22b8aa', labA: '#ff9a3c', soK: '#8660ee', soM: '#ff4d64' }, BGN = { soA: 'Naiv e raster', soT: 'Petrol ed aur', labA: 'Glut', soK: 'Aurora', soM: 'Marmor ruber' };
   var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4z"/></svg>', CROSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   // Shader-Knopf: Stern = Fund aus (Klick fächert die Auswahl 1, 2, … im Halbkreis nach links auf), ✕ = Fund an (Klick schaltet aus)
   function paintBg() {
