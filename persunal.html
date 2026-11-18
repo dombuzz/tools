@@ -74,6 +74,8 @@ h1 .acc{color:var(--accent)}
 .wholist label:hover{background:var(--mono)}
 .wholist input{accent-color:var(--accent)}
 .wholist label[hidden]{display:none}
+.whosel{max-height:150px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.whosel[hidden]{display:none}
 .whosearch{width:100%;box-sizing:border-box;margin:0 0 8px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font:inherit;font-size:.9rem;text-transform:none;letter-spacing:0;font-weight:400}
 .whosearch:focus{outline:none;border-color:var(--accent)}
 .whonone{padding:8px;font-size:.85rem;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
@@ -173,7 +175,8 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
         <button type="button" class="link wkbtn" id="whobtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="whopop" disabled><span id="wholbl">Emprim chargiar il plan</span><span aria-hidden="true">▾</span></button>
         <div class="wkpop whopop" id="whopop" role="dialog" aria-label="Tscherner persunas" hidden>
           <input type="search" class="whosearch" id="whosearch" placeholder="Tschertgar persuna …" aria-label="Tschertgar persuna" autocomplete="off" spellcheck="false">
-          <div class="wholist" id="wholist" role="group" aria-label="Persunas"></div>
+          <div id="whobox"><div class="wholist whosel" id="whosel" role="group" aria-label="Persunas tschernidas" hidden></div>
+          <div class="wholist" id="wholist" role="group" aria-label="Persunas"></div></div>
           <div class="whonone" id="whonone" hidden>Nagina persuna chattada.</div>
           <button type="button" class="link" id="whoclear">Nagina</button>
         </div>
@@ -271,26 +274,33 @@ const whoSet=new Set(); let whoBuilt=false;
 { const s=store.get("servetsch-who")||""; try{const a=JSON.parse(s); if(Array.isArray(a)) a.forEach(n=>whoSet.add(n)); else if(s) whoSet.add(s)}catch(e){ if(s) whoSet.add(s) } }
 const whopop=$("whopop"), whobtn=$("whobtn");
 function syncWho(){
-  const on=[...$("wholist").querySelectorAll("input:checked")];
+  const on=[...$("whopop").querySelectorAll("input:checked")];
   whobtn.classList.toggle("set",on.length>0);
   $("wholbl").textContent=on.length===0?"Tscherner":on.length===1?on[0].nextElementSibling.textContent:on.length+" persunas";
 }
+let whoNames=[];
+function whoLabel(n){return `<label><input type="checkbox" value="${esc(n)}"${whoSet.has(n)?" checked":""}><span>${esc(DISP[n])}</span></label>`}
+// Gewaehlte Personen stehen fix zuoberst (eigene Liste), die uebrigen darunter
+function renderWhoLists(focusVal){
+  $("whosel").innerHTML=whoNames.filter(n=>whoSet.has(n)).map(whoLabel).join("");
+  $("wholist").innerHTML=whoNames.filter(n=>!whoSet.has(n)).map(whoLabel).join("");
+  $("whosel").hidden=!$("whosel").children.length;
+  filterWho(); syncWho();
+  if(focusVal){const i=[...$("whopop").querySelectorAll("input")].find(x=>x.value===focusVal); if(i) i.focus()}
+}
 function fillWho(){
   if(!plan) return;
-  const box=$("wholist");
-  if(!whoBuilt){ whoBuilt=true;
-    box.innerHTML=plan.names.map(n=>`<label><input type="checkbox" value="${esc(n)}"${whoSet.has(n)?" checked":""}><span>${esc(DISP[n])}</span></label>`).join("");
-  }
-  filterWho(); syncWho();
+  whoNames=plan.names.slice();
+  renderWhoLists();
 }
 const nrm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function filterWho(){
   const w=s=>" "+nrm(s).replace(/[,\-]+/g," ").replace(/\s+/g," ").trim(); // nur Wortanfaenge (Nachname oder Vorname)
   const q=w($("whosearch").value).trimEnd(); let n=0;
   $("wholist").querySelectorAll("label").forEach(l=>{const ok=q.trim()===""||w(l.textContent).includes(q); l.hidden=!ok; if(ok) n++});
-  $("whonone").hidden=n>0;
+  $("whonone").hidden=n>0||q.trim()==="";
 }
-function visWho(){return [...$("wholist").querySelectorAll("label:not([hidden]) input")]}
+function visWho(){return [...$("whosel").querySelectorAll("input"),...$("wholist").querySelectorAll("label:not([hidden]) input")]}
 let taBuf="",taT=0;
 function whoTypeahead(e){
   if(e.key.length!==1||e.key===" "||e.ctrlKey||e.metaKey||e.altKey) return;
@@ -313,20 +323,20 @@ $("whosearch").addEventListener("keydown",e=>{
   if(e.key==="ArrowDown"&&v.length){e.preventDefault();v[0].focus()}
   else if(e.key==="Enter"){e.preventDefault(); if(v.length===1) v[0].click()}
 });
-$("wholist").addEventListener("keydown",e=>{
+$("whobox").addEventListener("keydown",e=>{
   const v=visWho(), i=v.indexOf(document.activeElement);
   if(e.key==="ArrowDown"&&i>=0&&i<v.length-1){e.preventDefault();v[i+1].focus()}
   else if(e.key==="ArrowUp"&&i>=0){e.preventDefault(); i>0?v[i-1].focus():$("whosearch").focus()}
   else whoTypeahead(e);
 });
-$("wholist").addEventListener("change",e=>{
+$("whobox").addEventListener("change",e=>{
   const c=e.target; if(!c.matches("input")) return;
   c.checked?whoSet.add(c.value):whoSet.delete(c.value);
-  syncWho(); render();
+  renderWhoLists(c.value); render();
 });
 $("whoclear").addEventListener("click",()=>{
-  whoSet.clear(); $("wholist").querySelectorAll("input").forEach(i=>i.checked=false);
-  syncWho(); render();
+  whoSet.clear(); renderWhoLists();
+  render();
 });
 document.addEventListener("click",e=>{if(!whopop.hidden&&!e.composedPath().includes($("whopick"))) closeWho()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!whopop.hidden){closeWho();whobtn.focus()}});

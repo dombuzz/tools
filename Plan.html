@@ -84,6 +84,8 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 .wholist label:hover{background:var(--mono)}
 .wholist input{accent-color:var(--accent)}
 .wholist label[hidden]{display:none}
+.whosel{max-height:150px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.whosel[hidden]{display:none}
 .whosearch{width:100%;box-sizing:border-box;margin:0 0 8px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font:inherit;font-size:.9rem;text-transform:none;letter-spacing:0;font-weight:400}
 .whosearch:focus{outline:none;border-color:var(--accent)}
 .whonone{padding:8px;font-size:.85rem;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
@@ -223,7 +225,8 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
         <button type="button" class="link wkbtn" id="whobtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="whopop"><span id="wholbl">nagina</span><span aria-hidden="true">▾</span></button>
         <div class="wkpop whopop" id="whopop" role="dialog" aria-label="Marcar persunas" hidden>
           <input type="search" class="whosearch" id="whosearch" placeholder="Tschertgar persuna …" aria-label="Tschertgar persuna" autocomplete="off" spellcheck="false">
-          <div class="wholist" id="wholist" role="group" aria-label="Persunas"></div>
+          <div id="whobox"><div class="wholist whosel" id="whosel" role="group" aria-label="Persunas tschernidas" hidden></div>
+          <div class="wholist" id="wholist" role="group" aria-label="Persunas"></div></div>
           <div class="whonone" id="whonone" hidden>Nagina persuna chattada.</div>
           <button type="button" class="link" id="whoclear">Nagina</button>
         </div>
@@ -377,16 +380,25 @@ function render(){
 }
 // «Marcar persunas»: mo persunas da la redacziun tschernida, tschernida multipla cun checkboxes
 function syncWho(){
-  const on=[...$("wholist").querySelectorAll("input:checked")];
+  const on=[...$("whopop").querySelectorAll("input:checked")];
   $("whobtn").classList.toggle("set",on.length>0);
   $("wholbl").textContent=on.length===0?"nagina":on.length===1?on[0].nextElementSibling.textContent:on.length+" persunas";
+}
+let whoNames=[];
+function whoLabel(n){return `<label><input type="checkbox" value="${n.replace(/"/g,"&quot;")}"${whoSet.has(n)?" checked":""}><span>${DISP[n].replace(/</g,"&lt;")}</span></label>`}
+// Gewaehlte Personen stehen fix zuoberst (eigene Liste), die uebrigen darunter
+function renderWhoLists(focusVal){
+  $("whosel").innerHTML=whoNames.filter(n=>whoSet.has(n)).map(whoLabel).join("");
+  $("wholist").innerHTML=whoNames.filter(n=>!whoSet.has(n)).map(whoLabel).join("");
+  $("whosel").hidden=!$("whosel").children.length;
+  filterWho(); syncWho();
+  if(focusVal){const i=[...$("whopop").querySelectorAll("input")].find(x=>x.value===focusVal); if(i) i.focus()}
 }
 function fillWho(){
   const box=$("wholist"); if(box.dataset.k===sparte){syncWho();return}
   box.dataset.k=sparte;
-  const list=plan.names.filter(n=>plan.people[sparte].has(n));
-  box.innerHTML=list.map(n=>`<label><input type="checkbox" value="${n.replace(/"/g,"&quot;")}"${whoSet.has(n)?" checked":""}><span>${DISP[n].replace(/</g,"&lt;")}</span></label>`).join("");
-  filterWho(); syncWho();
+  whoNames=plan.names.filter(n=>plan.people[sparte].has(n));
+  renderWhoLists();
 }
 // Tschertgar + chatt cun tastatura (litera = siglir a la proxima persuna cun questa litera)
 const nrm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
@@ -394,9 +406,9 @@ function filterWho(){
   const w=s=>" "+nrm(s).replace(/[,\-]+/g," ").replace(/\s+/g," ").trim(); // nur Wortanfaenge (Nachname oder Vorname)
   const q=w($("whosearch").value).trimEnd(); let n=0;
   $("wholist").querySelectorAll("label").forEach(l=>{const ok=q.trim()===""||w(l.textContent).includes(q); l.hidden=!ok; if(ok) n++});
-  $("whonone").hidden=n>0;
+  $("whonone").hidden=n>0||q.trim()==="";
 }
-function visWho(){return [...$("wholist").querySelectorAll("label:not([hidden]) input")]}
+function visWho(){return [...$("whosel").querySelectorAll("input"),...$("wholist").querySelectorAll("label:not([hidden]) input")]}
 let taBuf="",taT=0;
 function whoTypeahead(e){
   if(e.key.length!==1||e.key===" "||e.ctrlKey||e.metaKey||e.altKey) return;
@@ -464,20 +476,20 @@ $("whosearch").addEventListener("keydown",e=>{
   if(e.key==="ArrowDown"&&v.length){e.preventDefault();v[0].focus()}
   else if(e.key==="Enter"){e.preventDefault(); if(v.length===1) v[0].click()}
 });
-$("wholist").addEventListener("keydown",e=>{
+$("whobox").addEventListener("keydown",e=>{
   const v=visWho(), i=v.indexOf(document.activeElement);
   if(e.key==="ArrowDown"&&i>=0&&i<v.length-1){e.preventDefault();v[i+1].focus()}
   else if(e.key==="ArrowUp"&&i>=0){e.preventDefault(); i>0?v[i-1].focus():$("whosearch").focus()}
   else whoTypeahead(e);
 });
 whobtn.addEventListener("click",()=>whopop.hidden?openWho():closeWho());
-$("wholist").addEventListener("change",e=>{
+$("whobox").addEventListener("change",e=>{
   const c=e.target; if(!c.matches("input")) return;
   c.checked?whoSet.add(c.value):whoSet.delete(c.value);
-  store.set("who",JSON.stringify([...whoSet])); render();
+  store.set("who",JSON.stringify([...whoSet])); renderWhoLists(c.value); render();
 });
 $("whoclear").addEventListener("click",()=>{
-  whoSet.clear(); $("wholist").querySelectorAll("input").forEach(i=>i.checked=false);
+  whoSet.clear(); renderWhoLists();
   store.set("who","[]"); render();
 });
 // zavrar cun clic ordaifer / Escape (composedPath, perquei che las listas vegnan rebuvidas)
