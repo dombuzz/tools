@@ -39,6 +39,9 @@ p.sub{margin:0 0 16px;color:var(--muted)}
 .item .name{font-weight:600;word-break:break-all}
 .item .info{color:var(--muted);font-size:13px}
 .item.err{border-color:var(--err);background:var(--err-bg)}
+.item:not(.err){background:var(--glass)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2)}
+html.dbz-sh a.btn:not(.primary),html.dbz-sh button:not(.primary){background:color-mix(in srgb,var(--panel) 50%,transparent)}
+html.dbz-sh pre{background:color-mix(in srgb,var(--code) 55%,transparent)}
 a.btn,button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer;text-decoration:none}
 .primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-ink)!important;font-weight:600}
 [hidden]{display:none!important}
