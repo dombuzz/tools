@@ -68,6 +68,21 @@ h1 .acc{color:var(--accent)}
 .wko button[aria-pressed="true"]{border-color:var(--accent)}
 .wko small{color:var(--muted);font-size:.78rem}
 .wkpop input[type=date]{width:100%;box-sizing:border-box}
+.whopop{width:260px}
+.wholist{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto}
+.wholist label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text)}
+.wholist label:hover{background:var(--mono)}
+.wholist input{accent-color:var(--accent)}
+.wholist label[hidden]{display:none}
+.whosearch{width:100%;box-sizing:border-box;margin:0 0 8px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font:inherit;font-size:.9rem;text-transform:none;letter-spacing:0;font-weight:400}
+.whosearch:focus{outline:none;border-color:var(--accent)}
+.whonone{padding:8px;font-size:.85rem;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+.wkbtn.set{border-color:var(--accent)}
+.pcap{font-size:.82rem;font-weight:700;margin:10px 0 4px}
+.pcap:first-child{margin-top:0}
+.nowc .pr{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.nowc .pr b{min-width:140px;font-size:.95rem}
+@media (min-width:641px){.wkg.nh .dh{display:none}.wkg.nh .d{min-height:60px}}
 .step.ctl{position:relative;z-index:30}
 input[type=date]{font:inherit;font-size:.95rem;font-weight:400;text-transform:none;letter-spacing:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
 input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -130,7 +145,7 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
     <div class="hd">
       <a class="homelink" href="/Plan">← Plans da teams</a>
       <h1><span class="acc">Persunal</span></h1>
-      <p class="lead">Tscherna ina persuna e vesa tge servetsch ch'ella ha oz, questa emna e las proximas emnas.</p>
+      <p class="lead">Tscherna ina u pliras persunas e vesa tge servetsch ch'ellas han oz, questa emna e las proximas emnas.</p>
     </div>
     <button class="btn-sm" id="aliasbtn" type="button" hidden title="Aliase laden">Aliase</button>
   </header>
@@ -152,11 +167,17 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
   </div>
 
   <div class="step ctl">
-    <h2><span class="num">2</span>Tscherner ina persuna e periada</h2>
+    <h2><span class="num">2</span>Tscherner persunas e perioda</h2>
     <div class="controls">
-      <label class="field" for="who">Persuna
-        <select id="who" disabled><option value="">Emprim chargiar il plan</option></select>
-      </label>
+      <div class="field wkpick" id="whopick">Persunas
+        <button type="button" class="link wkbtn" id="whobtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="whopop" disabled><span id="wholbl">Emprim chargiar il plan</span><span aria-hidden="true">▾</span></button>
+        <div class="wkpop whopop" id="whopop" role="dialog" aria-label="Tscherner persunas" hidden>
+          <input type="search" class="whosearch" id="whosearch" placeholder="Tschertgar persuna …" aria-label="Tschertgar persuna" autocomplete="off" spellcheck="false">
+          <div class="wholist" id="wholist" role="group" aria-label="Persunas"></div>
+          <div class="whonone" id="whonone" hidden>Nagina persuna chattada.</div>
+          <button type="button" class="link" id="whoclear">Nagina</button>
+        </div>
+      </div>
       <label class="field" for="from">A partir da
         <input type="date" id="from">
       </label>
@@ -222,7 +243,7 @@ function buildWk(){
     return `<button type="button" data-d="${iso(x)}" aria-pressed="${iso(x)===cur}">${fmtFull(x)}<small>${n===0?(iso(x)===iso(t)?"oz":"questa emna"):"+ "+n+" emna"+(n>1?"s":"")}</small></button>`}).join("");
   $("wkdate").value=cur;
 }
-function openWk(){ if(customStart&&$("from").value) pickDay=parseIso($("from").value).getDay(); buildWk(); wkpop.hidden=false; wkbtn.setAttribute("aria-expanded","true") }
+function openWk(){ if(typeof closeWho==="function") closeWho(); if(customStart&&$("from").value) pickDay=parseIso($("from").value).getDay(); buildWk(); wkpop.hidden=false; wkbtn.setAttribute("aria-expanded","true") }
 function closeWk(){ wkpop.hidden=true; wkbtn.setAttribute("aria-expanded","false") }
 function pickStart(s){ if(!s) return; $("from").value=s; customStart=true; pickDay=parseIso(s).getDay(); closeWk(); render() }
 wkbtn.addEventListener("click",()=>wkpop.hidden?openWk():closeWk());
@@ -243,6 +264,72 @@ async function askAliases(){
   const c=prompt("Zugangscode für Aliase (bei Dominik erfragen):"); if(!c) return;
   try{await loadAliases(c.trim()); if(plan) setPlan(plan.raw,plan.rawOther); $("status").textContent="Aliase geladen."}catch(e){$("status").textContent=e.message}
 }
+
+
+// ---- Persunas (Mehrfachauswahl mit Suche, wie «Marcar persunas» in Plans da teams)
+const whoSet=new Set(); let whoBuilt=false;
+{ const s=store.get("servetsch-who")||""; try{const a=JSON.parse(s); if(Array.isArray(a)) a.forEach(n=>whoSet.add(n)); else if(s) whoSet.add(s)}catch(e){ if(s) whoSet.add(s) } }
+const whopop=$("whopop"), whobtn=$("whobtn");
+function syncWho(){
+  const on=[...$("wholist").querySelectorAll("input:checked")];
+  whobtn.classList.toggle("set",on.length>0);
+  $("wholbl").textContent=on.length===0?"Tscherner":on.length===1?on[0].nextElementSibling.textContent:on.length+" persunas";
+}
+function fillWho(){
+  if(!plan) return;
+  const box=$("wholist");
+  if(!whoBuilt){ whoBuilt=true;
+    box.innerHTML=plan.names.map(n=>`<label><input type="checkbox" value="${esc(n)}"${whoSet.has(n)?" checked":""}><span>${esc(DISP[n])}</span></label>`).join("");
+  }
+  filterWho(); syncWho();
+}
+const nrm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function filterWho(){
+  const w=s=>" "+nrm(s).replace(/[,\-]+/g," ").replace(/\s+/g," ").trim(); // nur Wortanfaenge (Nachname oder Vorname)
+  const q=w($("whosearch").value).trimEnd(); let n=0;
+  $("wholist").querySelectorAll("label").forEach(l=>{const ok=q.trim()===""||w(l.textContent).includes(q); l.hidden=!ok; if(ok) n++});
+  $("whonone").hidden=n>0;
+}
+function visWho(){return [...$("wholist").querySelectorAll("label:not([hidden]) input")]}
+let taBuf="",taT=0;
+function whoTypeahead(e){
+  if(e.key.length!==1||e.key===" "||e.ctrlKey||e.metaKey||e.altKey) return;
+  const k=nrm(e.key); clearTimeout(taT); taT=setTimeout(()=>taBuf="",800);
+  taBuf+=k; const all=visWho(), cur=all.indexOf(document.activeElement);
+  const hit=i=>nrm(i.nextElementSibling.textContent).startsWith(taBuf);
+  let m=null;
+  if(taBuf.length>1||cur<0){ m=all.find(hit) } else { m=all.slice(cur+1).find(hit)||all.find(hit) }
+  if(!m&&taBuf.length>1){ taBuf=k; m=all.find(hit) }
+  if(m){ e.preventDefault(); m.focus(); m.scrollIntoView({block:"nearest"}) }
+}
+function openWho(){ closeWk(); whopop.hidden=false; whobtn.setAttribute("aria-expanded","true");
+  $("whosearch").value=""; filterWho();
+  if(window.matchMedia&&matchMedia("(hover:hover)").matches) $("whosearch").focus() }
+function closeWho(){ whopop.hidden=true; whobtn.setAttribute("aria-expanded","false") }
+whobtn.addEventListener("click",()=>whopop.hidden?openWho():closeWho());
+$("whosearch").addEventListener("input",filterWho);
+$("whosearch").addEventListener("keydown",e=>{
+  const v=visWho();
+  if(e.key==="ArrowDown"&&v.length){e.preventDefault();v[0].focus()}
+  else if(e.key==="Enter"){e.preventDefault(); if(v.length===1) v[0].click()}
+});
+$("wholist").addEventListener("keydown",e=>{
+  const v=visWho(), i=v.indexOf(document.activeElement);
+  if(e.key==="ArrowDown"&&i>=0&&i<v.length-1){e.preventDefault();v[i+1].focus()}
+  else if(e.key==="ArrowUp"&&i>=0){e.preventDefault(); i>0?v[i-1].focus():$("whosearch").focus()}
+  else whoTypeahead(e);
+});
+$("wholist").addEventListener("change",e=>{
+  const c=e.target; if(!c.matches("input")) return;
+  c.checked?whoSet.add(c.value):whoSet.delete(c.value);
+  syncWho(); render();
+});
+$("whoclear").addEventListener("click",()=>{
+  whoSet.clear(); $("wholist").querySelectorAll("input").forEach(i=>i.checked=false);
+  syncWho(); render();
+});
+document.addEventListener("click",e=>{if(!whopop.hidden&&!e.composedPath().includes($("whopick"))) closeWho()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!whopop.hidden){closeWho();whobtn.focus()}});
 
 function setPlan(entries,other,label){
   const byName={}, dates=new Set(), names=new Set();
@@ -270,9 +357,8 @@ function setPlan(entries,other,label){
   const mlist=[...new Set(ds.map(d=>d.slice(0,7)))].map(m=>{const [y,mo]=m.split("-");return MONTHS[mo-1]+" "+y});
   $("status").className="status ok";
   $("status").innerHTML=`<b>${sorted.length} persunas, ${entries.length+(other||[]).length} servetschs</b> \u00b7 ${mlist.join(", ")} \u00b7 ${esc(plan.label)}`;
-  const sel=$("who"), prev=sel.value||store.get("servetsch-who")||"";
-  sel.innerHTML='<option value="">\u2013 tscherner \u2013</option>'+sorted.map(n=>`<option value="${esc(n)}">${esc(DISP[n])}</option>`).join("");
-  sel.disabled=false; sel.value=sorted.includes(prev)?prev:"";
+  $("whobtn").disabled=false; for(const n of [...whoSet]) if(!plan.names.includes(n)) whoSet.delete(n);
+  whoBuilt=false; fillWho();
   render();
 }
 
@@ -286,7 +372,7 @@ function dayHtml(c,short){
 }
 const cellN=c=>c?c.svc.length+c.raw.length:0;
 
-function weekHtml(start,mine,todayIso,fromIso){
+function weekHtml(start,mine,todayIso,fromIso,nh){
   let cells="", n=0;
   for(let i=0;i<7;i++){
     const d=addDays(start,i), k=iso(d), l=mine[k], inPlan=plan.dates.has(k);
@@ -294,31 +380,40 @@ function weekHtml(start,mine,todayIso,fromIso){
     const cls=["d",d.getDay()%6===0?"we":"",k===todayIso?"today":"",inPlan?"":"out-plan",fromIso&&k<fromIso?"past":""].filter(Boolean).join(" ");
     cells+=`<div class="${cls}"><div class="dh">${DAYS[dayIdx(d)]}<small>${fmt(d)}</small></div><div>${l?dayHtml(l,true):`<span class="${inPlan?"none":"out"}">\u2013</span>`}</div></div>`;
   }
-  return {html:`<div class="wkg">${cells}</div>`,n};
+  return {html:`<div class="wkg${nh?" nh":""}">${cells}</div>`,n};
 }
 const wkHead=(start,n,title)=>{const so=addDays(start,6), a=isoWeek(start), b=isoWeek(so), wk="Emna "+(a===b?a:a+"/"+b);return `<h3><span class="kw">${title||wk}</span><span class="rng">${title?wk+" \u00b7 ":""}${fmt(start)} \u2013 ${fmt(so)}${so.getFullYear()} \u00b7 ${n} servetsch${n===1?"":"s"}</span></h3>`};
 
 function render(){
   syncWk();
-  const out=$("out"), who=$("who").value;
+  const out=$("out"), sel=plan?plan.names.filter(n=>whoSet.has(n)):[];
   if(!plan){out.innerHTML="";return}
-  store.set("servetsch-who",who);
-  if(!who){out.innerHTML='<p class="empty">Tscherna ina persuna per vesair ses servetschs.</p>';return}
+  store.set("servetsch-who",JSON.stringify(sel));
+  if(!sel.length){out.innerHTML='<p class="empty">Tscherna ina u pliras persunas per vesair ses servetschs.</p>';return}
   if(!render.liked){render.liked=true; setTimeout(()=>dispatchEvent(new Event('dbz-success')),20000)} // Nutzung fuer die Statistik zaehlen (wie Plans da teams)
-  const mine=plan.byName[who]||{}, today=new Date(), todayIso=iso(today), todayMon=monday(today);
+  const today=new Date(), todayIso=iso(today), todayMon=monday(today), multi=sel.length>1, mineOf=n=>plan.byName[n]||{};
   let h="";
   // oz
-  const tl=mine[todayIso];
-  h+=`<section><h3><span class="kw">Oz</span><span class="rng">${esc(plan.short[who]||who)}</span></h3><div class="nowc"><div class="dt">${fmtFull(today)}</div>`+
-     (!plan.dates.has(todayIso)?`<span class="none">Oz n'\u00e8 betg en il plan chargi\u00e0.</span>`:tl?dayHtml(tl):`<span class="none">Oz nagin servetsch.</span>`)+`</div></section>`;
+  const nm=n=>esc(plan.short[n]||n);
+  if(!multi){
+    const who=sel[0], tl=mineOf(who)[todayIso];
+    h+=`<section><h3><span class="kw">Oz</span><span class="rng">${nm(who)}</span></h3><div class="nowc"><div class="dt">${fmtFull(today)}</div>`+
+       (!plan.dates.has(todayIso)?`<span class="none">Oz n'\u00e8 betg en il plan chargi\u00e0.</span>`:tl?dayHtml(tl):`<span class="none">Oz nagin servetsch.</span>`)+`</div></section>`;
+  } else {
+    h+=`<section><h3><span class="kw">Oz</span><span class="rng">${sel.length} persunas</span></h3><div class="nowc"><div class="dt">${fmtFull(today)}</div>`+
+       sel.map(n=>{const tl=mineOf(n)[todayIso];
+         return `<div class="pr"><b title="${esc(DISP[n]||n)}">${nm(n)}</b>`+(!plan.dates.has(todayIso)?`<span class="none">Oz n'\u00e8 betg en il plan chargi\u00e0.</span>`:tl?dayHtml(tl):`<span class="none">Nagin servetsch.</span>`)+`</div>`}).join("")+`</div></section>`;
+  }
   // Wochen ab «A partir da»: Standard ab Montag, mit «Entschatta da l'emna» exakt ab dem gewaehlten Tag; Durada = Anzahl Wochen (0 = ganzer Plan)
   const fromIso=$("from").value||todayIso, f=parseIso(fromIso), planFirst=parseIso(plan.first), planLast=parseIso(plan.last);
   const s0=(weeks===0?planFirst:f), start=customStart?s0:monday(s0);
   const need=Math.floor(Math.round((planLast-start)/864e5)/7)+1; // Wochen bis zum Planende
   const nW=weeks===0?Math.max(1,need):Math.max(1,Math.min(weeks,need));
   for(let k=0;k<nW;k++){
-    const m=addDays(start,7*k), w=weekHtml(m,mine,todayIso,weeks===0?"":fromIso), cur=todayIso>=iso(m)&&todayIso<=iso(addDays(m,6));
-    h+=`<section>${wkHead(m,w.n,cur?"Questa emna":"")}${w.html}</section>`;
+    const m=addDays(start,7*k), fi=weeks===0?"":fromIso, cur=todayIso>=iso(m)&&todayIso<=iso(addDays(m,6));
+    const ws=sel.map((n,i)=>({n,w:weekHtml(m,mineOf(n),todayIso,fi,i>0)}));
+    const total=ws.reduce((s,x)=>s+x.w.n,0);
+    h+=`<section>${wkHead(m,total,cur?"Questa emna":"")}`+(multi?ws.map(x=>`<div class="pcap" title="${esc(DISP[x.n]||x.n)}">${nm(x.n)}</div>${x.w.html}`).join(""):ws[0].w.html)+`</section>`;
   }
   out.innerHTML=h;
 }
@@ -354,7 +449,6 @@ file.addEventListener("change",()=>{readPdfs(file.files);file.value=""});
 ["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over")}));
 ["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
 drop.addEventListener("drop",e=>{readPdfs(e.dataTransfer.files)});
-$("who").addEventListener("change",render);
 document.querySelectorAll("#len button").forEach(b=>b.addEventListener("click",()=>setWeeks(+b.dataset.w)));
 document.querySelectorAll("#len button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.w===weeks)));
 $("aliasbtn").addEventListener("click",askAliases); refreshAliases();
