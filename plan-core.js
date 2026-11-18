@@ -84,7 +84,10 @@ const SPARTEN={
     [["Online 1",["O1","O1So","O1Du"]],["Online 2",["O2"]],["Online 3",["O3"]],["Online 4",["O4"]],["Prod Online",["pOn"]]],
     [["Novitads 1",["N1"]],["Novitads 2",["N2"]]],
     [["Grafica",["graf"]]],
-    [["Social",["soc1"]]]],
+    [["Social",["soc1"]]],
+    [["Introducziun",["intr"]]]],
+    // opt = Zeile nur in Wochen zeigen, in denen der Plan sie nennt
+    opt:["Introducziun"],
     // all = jeden Tag besetzt, wd = nur Montag–Freitag (am Wochenende nicht geplant)
     need:{"Online 1":"all","Online 2":"wd","Online 3":"wd","Online 4":"all","Prod Online":"wd"},
     // frei = Wochentage (getDay: 0 So, 6 Sa), an denen der Dienst normalerweise nicht geplant ist; leer statt «–», ausser der Plan nennt dennoch jemanden
@@ -93,7 +96,9 @@ const SPARTEN={
     ["Mod 1",["m1","m1_s"]],["Mod 2",["m2","m2_s","m2_d","mAcc"]],["Mod magazins",["m_ma"]],
     ["Prod radio 1",["p1","p1_s"]],["Prod radio 2",["p2","pV2"]],
     ["ReporterA radio",["rRad","rCGR"]],["Sport",["rSpo","rSph"]],
-    ["Novitads 1",["N1"]],["Novitads 2",["N2"]]]]},
+    ["Novitads 1",["N1"]],["Novitads 2",["N2"]]],
+    [["Introducziun",["intr"]]]],
+    opt:["Introducziun"]},
   televisiun:{name:"Televisiun",blocks:[[
     ["MSG moderaziun",["hMSG"]],["Minisguard",["pMSG","MSG"]],["MSG grafica & tagl",["gr_M","t_MS"]],
     ["TSG producziun",["pTSG"]],["TSG moderaziun",["mTSG"]],["TSG contribuziun",["cTSG","CGTS"]],

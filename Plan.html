@@ -358,7 +358,9 @@ function render(){
       });
       return r+'</tr>';
     };
-    const h=ROWS.map((blk,bi)=>`<div class="tw${bi?' graf':''}${sparte==='newsdesk'&&blk.includes('Online 1')?' nd':''}"><table>${bi?'':head}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
+    // Zeilen aus sp.opt (z. B. «Introducziun») nur in Wochen zeigen, in denen sie im Plan vorkommen
+    const inWeek=sv=>days.some(d=>((map[iso(d)]||{})[sv]||[]).length>0);
+    const h=ROWS.map((blk,bi)=>({blk:blk.filter(sv=>!(sp.opt&&sp.opt.includes(sv))||inWeek(sv)),bi})).filter(x=>x.blk.length).map(({blk,bi})=>`<div class="tw${bi?' graf':''}${sparte==='newsdesk'&&blk.includes('Online 1')?' nd':''}"><table>${bi?'':head}<tbody>`+blk.map(rowHtml).join('')+'</tbody></table></div>').join('');
     const sec=document.createElement('section');
     sec.innerHTML=`<h3><span class="kw">Emna ${isoWeek(s)===isoWeek(days[6])?isoWeek(s):isoWeek(s)+"/"+isoWeek(days[6])}</span><span class="rng">${fmt(days[0])} – ${fmt(days[6])}${days[6].getFullYear()}${whoInfo(cnt)}</span></h3><div class="wk">${h}</div>`;
     out.appendChild(sec);
