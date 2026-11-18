@@ -65,6 +65,17 @@ h1 .acc{color:var(--accent)}
 .wko small{color:var(--muted);font-size:.78rem}
 .wkpop input[type=date]{width:100%;box-sizing:border-box}
 .step.ctl{position:relative;z-index:30}
+.glx[hidden]{display:none}
+.glx summary{cursor:pointer;font-weight:600;font-size:.95rem}
+.glx .hint{margin:8px 0 12px;font-size:.85rem;color:var(--muted)}
+.glx table{width:100%;border-collapse:collapse;font-size:.9rem}
+.glx th{text-align:left;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:4px 8px 6px}
+.glx td{padding:5px 8px;border-top:1px solid var(--border);vertical-align:middle}
+.glx td.k{font-weight:700;white-space:nowrap}
+.glx td.n,.glx td.e{color:var(--muted);font-size:.82rem}
+.glx input{width:100%;min-width:160px;box-sizing:border-box;padding:6px 9px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font:inherit;font-size:.9rem}
+.glx input:focus{outline:none;border-color:var(--accent)}
+.glx .row{display:flex;gap:10px;align-items:center;margin-top:12px}
 input[type=date]{font:inherit;font-size:.95rem;font-weight:400;text-transform:none;letter-spacing:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--mono);color:var(--text)}
 input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .controls{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:end}
@@ -178,6 +189,15 @@ section h3{font-size:1rem;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:4px 10
     </div>
   </div>
 
+  <div class="step glx" id="glx" hidden>
+    <details id="gldet">
+      <summary>Sigladas senza translaziun <span id="glc"></span></summary>
+      <p class="hint">Scriver la translaziun dretg en la tabella (Enter u cliccar ordaifer). Ella vala immediat per tut las persunas e vegn memorisada be en quest browser. «Betg disponibel» marca la sigla sco betg disponibel. Per salvar per adina: «Copiar» e trametter a Dominik.</p>
+      <table><thead><tr><th>Sigla</th><th>Giadas</th><th>Exempel</th><th>Translaziun</th></tr></thead><tbody id="glbody"></tbody></table>
+      <div class="row"><button type="button" class="link" id="glcopy">Copiar las translaziuns</button><span class="note" id="glmsg"></span></div>
+    </details>
+  </div>
+
   <div id="out"></div>
   <p class="note" style="text-align:center;margin:0 auto">Las emnas van dal glindesdi fin la dumengia. Il plan vegn mo en il browser e na vegn betg memorisà (be en questa tab, fin ch'ella vegn serrada).</p>
 </div>
@@ -194,6 +214,16 @@ const NA=new Set(["0130","0135","0120","?","vaca"]); // Zelltexte (Kleinschreibu
 // Glossar: Zelltexte im Plan, die kein Dienst-Code aus Plans da teams sind, aber eine feste Bedeutung haben (Kleinschreibung -> Anzeige).
 // Gilt fuer alle Personen. Neue Eintraege einfach hier ergaenzen.
 const GLOSSAR={"hock":"Hockey Livestream","futu":"Di da futur","plan":"Plan da lavur","disp":"Dispo","adve":"Advent I2DN","lesa":"Les Autres"};
+
+// Eigene Uebersetzungen (nur in diesem Browser, localStorage), ergaenzen das feste Glossar
+const BUILTIN=new Set([...Object.keys(GLOSSAR),...NA]);
+let userGl={}; try{userGl=JSON.parse(store.get("persunal-glossar")||"{}")||{}}catch(e){userGl={}}
+const isNAtext=v=>/^\s*betg disponibel\s*$/i.test(v);
+function applyUserGl(){
+  for(const k of Object.keys(userGl)){ const v=userGl[k]; if(BUILTIN.has(k)) continue;
+    if(isNAtext(v)) NA.add(k); else GLOSSAR[k]=v }
+}
+applyUserGl();
 
 const LABEL={}, ORDER={}; let ord=0;
 for(const k of ["newsdesk","radio","televisiun","ondemand"]) for(const [lab,cs] of SPARTEN[k].blocks.flat()){
@@ -267,8 +297,39 @@ function setPlan(entries,other,label){
   const sel=$("who"), prev=sel.value||store.get("servetsch-who")||"";
   sel.innerHTML='<option value="">\u2013 tscherner \u2013</option>'+sorted.map(n=>`<option value="${esc(n)}">${esc(DISP[n])}</option>`).join("");
   sel.disabled=false; sel.value=sorted.includes(prev)?prev:"";
-  render();
+  render(); renderGl();
 }
+
+// Tabelle «Sigladas senza translaziun»: alle Zelltexte des Plans, die weder Dienst noch festes Glossar sind (plus eigene Eintraege)
+function renderGl(){
+  const stat={}; // key -> {t, n, ex}
+  for(const o of (plan&&plan.rawOther)||[]) for(const tk of o.text.split(/\s+/)){
+    const k=tk.toLowerCase(); if(!k||BUILTIN.has(k)) continue;
+    const s=(stat[k]??={t:tk,n:0,ex:o.name}); s.n++;
+  }
+  const keys=Object.keys(stat).sort((a,b)=>stat[b].n-stat[a].n||a.localeCompare(b));
+  $("glx").hidden=!keys.length&&!Object.keys(userGl).length;
+  const open=$("gldet").open;
+  $("glc").textContent=keys.filter(k=>!userGl[k]).length?`(${keys.filter(k=>!userGl[k]).length})`:"";
+  const row=k=>`<tr><td class="k">${esc(stat[k]?stat[k].t:k)}</td><td class="n">${stat[k]?stat[k].n:"\u2013"}</td><td class="e">${stat[k]?esc(DISP[stat[k].ex]||stat[k].ex):""}</td><td><input type="text" data-k="${esc(k)}" value="${esc(userGl[k]||"")}" placeholder="Translaziun \u2026" aria-label="Translaziun per ${esc(k)}"></td></tr>`;
+  const all=[...keys,...Object.keys(userGl).filter(k=>!stat[k]&&!BUILTIN.has(k))];
+  $("glbody").innerHTML=all.map(row).join("");
+  $("gldet").open=open;
+}
+$("glbody").addEventListener("change",e=>{
+  const i=e.target.closest("input"); if(!i) return;
+  const k=i.dataset.k, v=i.value.trim();
+  const was=userGl[k];
+  if(v) userGl[k]=v; else delete userGl[k];
+  store.set("persunal-glossar",JSON.stringify(userGl));
+  if(was){ delete GLOSSAR[k]; NA.delete(k) } // alte Bedeutung entfernen
+  applyUserGl();
+  if(plan) setPlan(plan.raw,plan.rawOther);
+});
+$("glcopy").addEventListener("click",async()=>{
+  const txt=Object.keys(userGl).map(k=>`${k} = ${userGl[k]}`).join("\n");
+  try{await navigator.clipboard.writeText(txt||"(nagins agens)");$("glmsg").textContent=txt?"Copià.":"Anc nagina translaziun agiuntada."}catch(e){$("glmsg").textContent="Copiar n'è betg reussì."}
+});
 
 // Kurzformen nur fuer die schmalen Tagesspalten der Wochenansicht («Oz» zeigt den vollen Namen)
 const KURZ={"On demand societad e cultura":"OD societad","On demand divertiment":"OD divertiment"};
