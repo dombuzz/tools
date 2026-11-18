@@ -39,6 +39,10 @@ h1 .acc{color:var(--accent)}
 .lead{color:var(--muted);margin:0;font-size:.9rem;line-height:1.5;max-width:65ch}
 .step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:14px}
 .step h2{margin:0;font-size:.95rem;display:flex;gap:10px;align-items:center}
+.step h2.fold{cursor:pointer;user-select:none}
+.step h2.fold .chev{margin-left:auto;color:var(--muted);transition:transform .2s}
+.step.s1closed h2.fold .chev{transform:rotate(-90deg)}
+.step.s1closed .drop,.step.s1closed .bm{display:none}
 .num{font-size:.8rem;font-weight:700;background:var(--accent);color:var(--on-accent);border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
 .drop{border:2px dashed var(--border);border-radius:12px;padding:30px 16px;text-align:center;background:var(--mono);cursor:pointer;transition:border-color .15s;color:var(--muted);font-size:.85rem}
 .drop:hover,.drop.over{border-color:var(--accent)}
@@ -164,7 +168,7 @@ td.gapc{background:var(--gap);color:var(--err);font-size:.75rem;font-weight:600}
   </header>
 
   <div class="step">
-    <h2><span class="num">1</span>Chargiar il plan da lavur</h2>
+    <h2 id="s1h" class="fold" role="button" tabindex="0" aria-expanded="true" aria-controls="drop"><span class="num">1</span>Chargiar il plan da lavur<span class="chev" aria-hidden="true">▾</span></h2>
     <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner ils PDFs u als trair qua"><b>Trair qua ils PDFs</b><small>u cliccar per tscherner · radio/online, televisiun/ondemand e/u tecnica</small></div>
     <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
     <div class="status" id="status"></div>
@@ -528,6 +532,14 @@ if(location.hash==="#sharepoint"){
   }
 }
 $("bmcopy").addEventListener("click",async()=>{const c=$("bmlink").getAttribute("href");try{await navigator.clipboard.writeText(c);$("bmcopy").textContent="Copià ✓"}catch(_){prompt("Code:",c)}});
+
+// Schritt 1 auf-/zuklappbar (Zustand wird im Browser gemerkt)
+{ const h=document.getElementById("s1h"), box=h.closest(".step");
+  const set=c=>{box.classList.toggle("s1closed",c);h.setAttribute("aria-expanded",String(!c));store.set("plan-s1-closed",c?"1":"0")};
+  if(store.get("plan-s1-closed")==="1"){box.classList.add("s1closed");h.setAttribute("aria-expanded","false")}
+  h.addEventListener("click",()=>set(!box.classList.contains("s1closed")));
+  h.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();h.click()}});
+}
 </script>
 
 <script src="/like.js" defer></script>
