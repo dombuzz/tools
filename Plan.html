@@ -42,7 +42,7 @@ h1 .acc{color:var(--accent)}
 .step h2.fold{cursor:pointer;user-select:none}
 .step h2.fold .chev{margin-left:auto;color:var(--muted);transition:transform .2s}
 .step.s1closed h2.fold .chev{transform:rotate(-90deg)}
-.step.s1closed .drop,.step.s1closed .bm{display:none}
+.step.s1closed .drop{display:none}
 .num{font-size:.8rem;font-weight:700;background:var(--accent);color:var(--on-accent);border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
 .drop{border:2px dashed var(--border);border-radius:12px;padding:30px 16px;text-align:center;background:var(--mono);cursor:pointer;transition:border-color .15s;color:var(--muted);font-size:.85rem}
 .drop:hover,.drop.over{border-color:var(--accent)}
@@ -248,6 +248,7 @@ let sparte="newsdesk";
 document.documentElement.lang="rm";
 const $=id=>document.getElementById(id);
 
+let s1lbl=null; // Beschriftung des zuletzt geladenen Plans (Schritt 1 klappt bei neuem Plan zu)
 let plan=null, weeks=1; const sources={}, others={};
 
 async function refreshAliases(){ // beim Start automatisch laden (mit gespeichertem Code, falls der Worker einen verlangt)
@@ -274,6 +275,7 @@ function setPlan(p,save){
   }
   for(const [date,,name] of p.entries){months.add(date.slice(0,7)); names.add(name); dates.add(date)}
   const ds=[...dates].sort();
+  autoCollapseS1(p.label||"");
   plan={...p,maps,rows,people,months,short:shortNames([...names]),names:[...names].sort((a,b)=>DISP[a].localeCompare(DISP[b],"de")),first:ds[0],last:ds[ds.length-1]};
   $("wholist").dataset.k="";
   const mlist=[...months].sort().map(m=>{const [y,mo]=m.split("-");return MONTHS[mo-1]+" "+y});
@@ -533,13 +535,15 @@ if(location.hash==="#sharepoint"){
 }
 $("bmcopy").addEventListener("click",async()=>{const c=$("bmlink").getAttribute("href");try{await navigator.clipboard.writeText(c);$("bmcopy").textContent="Copià ✓"}catch(_){prompt("Code:",c)}});
 
-// Schritt 1 auf-/zuklappbar (Zustand wird im Browser gemerkt)
+// Schritt 1 auf-/zuklappbar; klappt automatisch zu, sobald ein (neuer) Plan geladen ist
 { const h=document.getElementById("s1h"), box=h.closest(".step");
-  const set=c=>{box.classList.toggle("s1closed",c);h.setAttribute("aria-expanded",String(!c));store.set("plan-s1-closed",c?"1":"0")};
-  if(store.get("plan-s1-closed")==="1"){box.classList.add("s1closed");h.setAttribute("aria-expanded","false")}
+  const set=c=>{box.classList.toggle("s1closed",c);h.setAttribute("aria-expanded",String(!c))};
   h.addEventListener("click",()=>set(!box.classList.contains("s1closed")));
   h.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();h.click()}});
 }
+function autoCollapseS1(lbl){ if(lbl===s1lbl) return; s1lbl=lbl;
+  const h=document.getElementById("s1h"); if(!h) return;
+  h.closest(".step").classList.add("s1closed"); h.setAttribute("aria-expanded","false") }
 </script>
 
 <script src="/like.js" defer></script>
