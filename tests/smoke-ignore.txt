@@ -1,0 +1,1 @@
+# Bekannte, bewusst akzeptierte Meldungen (ein Teilstring pro Zeile)

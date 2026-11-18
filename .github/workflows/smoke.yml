@@ -1,0 +1,26 @@
+name: Smoke-Test
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: ["", "--shader", "--light"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install playwright && playwright install --with-deps chromium
+      - name: Seiten laden und auf Fehler prüfen
+        run: python3 tests/smoke.py ${{ matrix.mode }} --shots shots
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots${{ matrix.mode }}
+          path: shots
+          retention-days: 7
