@@ -554,7 +554,7 @@ p.sub{margin:0;color:var(--muted)}
         <div class="pipnote" id="vi-pipnote" hidden><span>⧉ Il video è en in'atgna fanestra.</span><button class="btn" id="vi-pipback" type="button">↙ Turnar enavos</button></div>
         <div class="tools">
           <label>Pass <select id="vi-step"><option value="40">1 maletg (40 ms)</option><option value="100" selected>0,1 s</option><option value="250">0,25 s</option><option value="500">0,5 s</option><option value="1000">1 s</option></select></label>
-          <label class="chk"><input type="checkbox" id="vi-ripple"> Ils blocs suandants era spustar</label>
+          <label class="chk" title="Cun Ctrl smatgà vala il cuntrari da questa tscherna"><input type="checkbox" id="vi-ripple"> Ils blocs suandants era spustar</label>
           <label class="chk"><input type="checkbox" id="vi-follow" checked> Suandar il video</label>
           <label class="chk" title="Il video sa ferma automaticamain cura che ti scrivas en in bloc"><input type="checkbox" id="vi-typepause"> Pausa cun scriver</label>
           <button class="btn" id="vi-undo" type="button" disabled>↶ Annullar</button>
@@ -1484,8 +1484,13 @@ function renderStrip() {
 const step = () => +$('step').value || 100;
 function setStart(c, t) { c.start = Math.max(0, Math.round(t)); if (c.end < c.start + MINMS) c.end = c.start + MINMS; return [c]; }
 function setEnd(c, t) { c.end = Math.max(c.start + MINMS, Math.round(t)); return [c]; }
+// Ctrl gedrückt = Gegenteil der Einstellung «Ils blocs suandants era spustar» (Tastatur und Maus melden den Zustand)
+let ctrlDown = false;
+['keydown', 'keyup', 'pointerdown', 'pointermove', 'mousedown', 'click'].forEach(t => document.addEventListener(t, e => { ctrlDown = !!e.ctrlKey; }, true));
+window.addEventListener('blur', () => { ctrlDown = false; });
+const rippleOn = () => $('ripple').checked !== ctrlDown;
 function moveBlock(c, d) {
-  const i = cues.indexOf(c), grp = $('ripple').checked ? cues.slice(i) : [c];
+  const i = cues.indexOf(c), grp = rippleOn() ? cues.slice(i) : [c];
   d = Math.max(Math.round(d), -Math.min(...grp.map(x => x.start)));
   grp.forEach(x => { x.start += d; x.end += d; });
   return grp;
