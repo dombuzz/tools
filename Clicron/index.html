@@ -513,7 +513,7 @@ p.sub{margin:0;color:var(--muted)}
   <section class="card fold" id="vi-box1">
     <h2><button type="button" class="foldb" id="vi-fold" aria-expanded="true" aria-controls="vi-box1"><span class="num">1</span> Video u audio e suttitels<span class="foldsum" id="vi-foldsum"></span><span class="chev" aria-hidden="true">▾</span></button></h2>
     <div class="drops">
-      <div class="drop" id="vi-dropM" tabindex="0" role="button" aria-label="Tscherner video u audio"><b id="vi-mName">Video u audio</b><small id="vi-mInfo">Trair qua «CLIC ICF v20261111_ low per UT.mp4» u cliccar</small><input id="vi-fileM" type="file" accept="video/*,audio/*,.mkv,.mov,.m4a,.mp3,.wav" hidden></div>
+      <div class="drop" id="vi-dropM" tabindex="0" role="button" aria-label="Tscherner video u audio"><b id="vi-mName">Video u audio</b><small id="vi-mInfo">Trair qua «CLIC ICF v20261119.mp4» u cliccar</small><input id="vi-fileM" type="file" accept="video/*,audio/*,.mkv,.mov,.m4a,.mp3,.wav" hidden></div>
       <div class="drop" id="vi-dropS" tabindex="0" role="button" aria-label="Tscherner in file da suttitels"><b id="vi-sName">Suttitels</b><small id="vi-sInfo">SRT, TTML, VTT … · trair qua u cliccar</small><input id="vi-fileS" type="file" accept=".srt,.ttml,.xml,.vtt,.sbv,.ass,.ssa,.txt" hidden></div>
     </div>
     <p class="note" id="vi-msg" aria-live="polite"></p>
@@ -2169,7 +2169,7 @@ document.addEventListener('keydown', onKey);
     const fail = () => { if (media.getAttribute('src') !== SP) return; media.removeAttribute('src'); media.load(); $('mName').textContent = 'Video u audio'; $('mInfo').textContent = 'SharePoint na lubescha betg il video directamain – telechargiar e trair qua'; $('dropM').classList.remove('ok'); showWork(); msg('Il video da SharePoint n’ha betg pudì vegnir chargià directamain. Avrir «Video en SharePoint», telechargiar e trair en il champ «Video u audio».', true); };
     media.addEventListener('error', fail, { once: true });
     media.src = SP; mediaFile = null; peaks = null;
-    $('mName').textContent = 'CLIC ICF v20261111 (SharePoint)'; $('mInfo').textContent = 'Chargia da SharePoint …'; $('dropM').classList.add('ok'); showWork();
+    $('mName').textContent = 'CLIC ICF v20261119 (SharePoint)'; $('mInfo').textContent = 'Chargia da SharePoint …'; $('dropM').classList.add('ok'); showWork();
   }
 })();
 // Hat das Video den Fokus, würde der Browser zusätzlich selber springen (±5 s) – das unterbinden wir
