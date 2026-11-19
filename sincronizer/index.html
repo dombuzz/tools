@@ -320,7 +320,7 @@ p.sub{margin:0;color:var(--muted)}
   <a class="homelink" href="/UTstudio#sincronisar">← Subtitle Studio</a>
   <h1>CLIC ICF – <span class="acc">Sincronisar</span></h1>
   <p class="sub">Copia privata per il film CLIC ICF. Ils suttitels DE vegnan chargiads automaticamain, midadas vegnan memorisadas en quest navigatur. Il video: avrir en SharePoint, telechargiar e trair en il champ «Video u audio».</p>
-  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><button type="button" id="vi-golast">⤳ Davosa midada</button><a href="ICF-Film_DE_Untertitel_SRG.srt" id="vi-srtlink" download>⤓ SRT memorisà</a></div>
+  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQBLAh5JNdD6TKmOxgm_Vm3sAU2jktl7TvXbdpUWFTdGz4M?e=fHHpVD" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><button type="button" id="vi-golast">⤳ Davosa midada</button><a href="ICF-Film_DE_Untertitel_SRG.srt" id="vi-srtlink" download>⤓ SRT memorisà</a></div>
   <div class="exts"><a class="btn primary ext" href="https://dialogue.rts.ch/rm/tools/video/subtitles-editor/" target="_blank" rel="noopener">Dialog Subtitles editor ↗</a><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
@@ -561,6 +561,7 @@ p.sub{margin:0;color:var(--muted)}
           <button class="btn" id="vi-add" type="button" title="Nov bloc vuid a la posiziun dal video">+ Nov bloc</button>
           <button class="btn" id="vi-fixlong" type="button" title="Rumper tut las lingias che sa surpassan la norma">Rumper lingias lungas</button>
           <button class="btn" id="vi-fixsp" type="button" title="Spazis dubels e spazis a l'ur stizzar">Stizzar spazis dubels</button>
+          <button class="btn" id="vi-fixov" type="button" title="Blocs che sa surpassan: la fin dal pli vegl e l'entschatta dal pli nov vegnan separads a la mesa da la surpassaziun">Separar surpassaziuns</button>
           <button class="btn" id="vi-all" type="button">☑ Marcar tut</button>
         </div>
         <div class="tools mbar" id="vi-mbar" hidden><b id="vi-mcount"></b><button class="btn" data-m="-" type="button">◀ spustar</button><button class="btn" data-m="+" type="button">spustar ▶</button><button class="btn" data-m="del" type="button">✕ Stizzar</button><button class="btn" data-m="none" type="button">Deselectar</button></div>
@@ -1924,6 +1925,21 @@ $('undo').onclick = undo;
 $('add').onclick = addBlock;
 $('fixlong').onclick = () => fixAll('curregì', c => c.lines.some(l => l.length > lim().line) ? wrapLines(c.lines) : null);
 $('fixsp').onclick = () => fixAll('pulì', c => { const nl = c.lines.map(l => l.replace(/[ \t\u00a0]{2,}/g, ' ').trim()).filter(Boolean); return nl.length ? nl : [''];});
+$('fixov').onclick = () => {
+  snap(); const ch = new Set(); let n = 0;
+  for (let pass = 0; pass < 6; pass++) {
+    const s = [...cues].sort((a, b) => a.start - b.start || a.end - b.end); let moved = false;
+    for (let i = 0; i < s.length - 1; i++) {
+      const a = s[i], b = s[i + 1]; if (a.end <= b.start) continue;
+      const m = Math.round((a.end + b.start) / 2);
+      if (m <= a.start || m >= b.end) continue; // zingà bloc ina entaifer l'auter: betg separabel
+      a.end = m; b.start = m; ch.add(a); ch.add(b); n++; moved = true;
+    }
+    if (!moved) break;
+  }
+  if (!ch.size) { if (hist.length) hist.pop(); $('undo').disabled = !hist.length; return msg('Nagina surpassaziun.'); }
+  afterChange([...ch]); msg(`${n} surpassaziun${n === 1 ? '' : 's'} separada${n === 1 ? '' : 's'}.`);
+};
 $('all').onclick = () => { if (marked.size === cues.length) marked.clear(); else cues.forEach(c => marked.add(c.id)); syncMarks(); };
 $('mbar').addEventListener('click', e => {
   const b = e.target.closest('button[data-m]'); if (!b) return; const m = b.dataset.m;
@@ -2143,7 +2159,7 @@ document.addEventListener('keydown', onKey);
   setInterval(store, 1500);
   addEventListener('pagehide', store);
   // Video direkt von SharePoint (download=1 liefert die Datei statt der Player-Seite)
-  const SP = 'https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQB6OoRGKbfaTo7IV-K5HYvGAT46CzW3rHuGm56cpRPn2FE?e=YLm98l&download=1';
+  const SP = 'https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQBLAh5JNdD6TKmOxgm_Vm3sAU2jktl7TvXbdpUWFTdGz4M?e=fHHpVD&download=1';
   if (!hasMedia()) {
     const fail = () => { if (media.getAttribute('src') !== SP) return; media.removeAttribute('src'); media.load(); $('mName').textContent = 'Video u audio'; $('mInfo').textContent = 'SharePoint na lubescha betg il video directamain – telechargiar e trair qua'; $('dropM').classList.remove('ok'); showWork(); msg('Il video da SharePoint n’ha betg pudì vegnir chargià directamain. Avrir «Video en SharePoint», telechargiar e trair en il champ «Video u audio».', true); };
     media.addEventListener('error', fail, { once: true });
