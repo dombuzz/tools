@@ -61,11 +61,11 @@ Gleich beginnt
 die Celebration im ICF Chur.
 
 14
-00:01:15,460 --> 00:01:18,792
+00:01:15,460 --> 00:01:18,092
 Ich bin schon ein bisschen nervös.
 
 15
-00:01:18,792 --> 00:01:24,548
+00:01:18,552 --> 00:01:24,548
 Ich frage mich, wie die Leute
 auf die Kamera reagieren – auf mich.
 
@@ -1456,5 +1456,5 @@ Doch auch ihre Antworten zu
 Homosexualität und Geld
 
 312
-00:23:29,352 --> 00:23:31,352
+00:23:29,322 --> 00:23:31,322
 bleiben teils offen.
