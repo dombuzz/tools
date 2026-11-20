@@ -159,11 +159,25 @@ function applyAll(){
 }
 function ctr(el){const b=el.getBBox();let cx=b.x+b.width/2,cy=b.y+b.height/2;const t=el.transform&&el.transform.baseVal;if(t&&t.numberOfItems){const m=t.consolidate().matrix;[cx,cy]=[m.a*cx+m.c*cy+m.e,m.b*cx+m.d*cy+m.f]}return[cx,cy]}
 function paint(el,col){el.querySelectorAll('text,path,rect,circle').forEach(p=>{const s=p.getAttribute('style')||'';if(/fill:none/.test(s)&&!/stroke/.test(s))return;if(/fill:none/.test(s)&&/stroke/.test(s)){p.setAttribute('style',s.replace(/stroke:[^;]+/,'stroke:'+col));return}p.setAttribute('style',s.replace(/fill:[^;]+/,'fill:'+col))})}
+/* Seite 9: weisser Schwung passt sich an Zeilenzahl und Textbreite an */
+function fitSwoosh(){
+  if(cur.id!=='s4')return;const sw=O('swoosh'),ti=O('titel');if(!sw||!ti)return;const pa=sw.querySelector('path');if(!pa)return;
+  const ts=[...ti.querySelectorAll('text')].filter(t=>t.textContent.trim());if(!ts.length)return;
+  const X0=712.966,R=ts.map(t=>{const b=t.getBBox();return 21+b.x+b.width-X0}),n=Math.min(3,ts.length);
+  let d;pa.style.strokeLinecap='butt';
+  const top='M0,-350C0,-267.157 67.157,-200 150,-200';
+  const turn=T=>`L${T},-200C${T+27.614},-200 ${T+50},-177.615 ${T+50},-150C${T+50},-122.386 ${T+27.614},-100 ${T},-100`;
+  if(n===1)d=top+`L${Math.max(R[0]+8,170)},-200`;
+  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])-33);d=top+turn(T)+'L143.77,-100';pa.style.strokeLinecap='round'}
+  else{const T=Math.max(440,Math.max(R[0],R[1])-33);d=top+turn(T)+'L143.77,-100C116.156,-100 93.77,-77.614 93.77,-50C93.77,-22.386 116.156,0 143.77,0L'+Math.max(R[2]+8,170)+',0'}
+  pa.setAttribute('d',d);
+}
 function applyObj(id){
   const el=O(id),s=st(id),t=el.dataset.t;
   if(t==='text')doText(el,s);else if(t==='label')doLabel(el,s);else if(t==='img')doImg(el,s);else if(t==='cut')doCut(el,s);
   if(s.fill&&(t==='shape'||t==='text'))paint(el,s.fill);
   const w=el.parentNode.dataset&&el.parentNode.dataset.w?el.parentNode:null;
+  if(id==='titel')fitSwoosh();
   if(t==='img'){el.style.display=s.hide?'none':'';return}
   if(!w)return;
   w.style.display=s.hide?'none':'';
