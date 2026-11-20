@@ -93,10 +93,12 @@ input[type=file]{display:none}
           <label style="display:flex;justify-content:space-between;align-items:center"><span>Citat <span class="val" id="qCnt" style="float:none;margin-left:6px"></span></span><span style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="guil"> «&nbsp;&nbsp;» mussar</span></label>
           <textarea id="quote" placeholder="Il citat …"></textarea>
           <label style="display:flex;gap:6px;align-items:center;color:var(--text);margin-top:6px"><input type="checkbox" id="qr"> Citat a dretga (ur dretg)</label>
+          <div class="f"><label>Posiziun verticala dal citat <span class="val" id="qyV"></span></label><input type="range" id="qy" min="-200" max="700" step="1" value="0"></div>
           <div class="hint">Ils guillemets «…» vegnan messs automaticamain (na ils scriver). Las lingias vegnan rumpidas automaticamain; in return fa ina nova lingia.</div>
         </div>
         <div class="f"><label>Num</label><input type="text" id="name" placeholder="p.ex. Simon Zurfluh"></div>
         <div class="f"><label>Funcziun</label><input type="text" id="role" placeholder="p.ex. profi da karate"></div>
+        <div class="f"><label>Posiziun verticala dals navs <span class="val" id="nyV"></span></label><input type="range" id="ny" min="-700" max="400" step="1" value="0"></div>
         <div class="f">
           <label style="display:flex;justify-content:space-between;align-items:center">
             <span>Funtauna dal maletg (suenter «maletg:»)</span>
@@ -328,14 +330,14 @@ function render(c,preview){
   const qc=(S.quote||'').trim().replace(/^[«»"„“”]+|[«»"„“”]+$/g,'').trim(),qt=qc?(S.guil!==false?'«'+qc+'»':qc):'';
   const ql=wrap(c,qt,610);
   c.save();c.fillStyle='#fff';c.shadowColor='rgba(0,0,0,.45)';c.shadowBlur=12;
-  ql.forEach((l,i)=>itText(c,l,S.qr?1010-c.measureText(l).width:70,228.72+85*i));c.restore();
+  ql.forEach((l,i)=>itText(c,l,S.qr?1010-c.measureText(l).width:70,228.72+85*i+(Number(S.qy)||0)));c.restore();
   info.q=ql.length;
   /* Namensschilder: rutschen nach unten, wenn das Zitat länger ist */
   const lastQ=228.72+85*Math.max(0,ql.length-1),dy=Math.max(0,Math.ceil(lastQ+120-819.67));
   if(dy>240)info.over=true;
   c.font=fi(40);
   const nw=S.name?c.measureText(S.name).width:0,rw=S.role?c.measureText(S.role).width:0;
-  const yN=819.67+dy,yR=S.name?889.88+dy:829.88+dy;
+  const ny=Number(S.ny)||0,yN=819.67+dy+ny,yR=(S.name?889.88+dy:829.88+dy)+ny;
   const xR=S.qr?1080-62.13-(rw+56):62.13,xN=S.qr?1080-64.22-(nw+37):64.22;
   if(S.role)tag(c,xR,yR,rw+56,-2,col);
   if(S.name)tag(c,xN,yN,nw+37,1,col);
@@ -396,7 +398,7 @@ function sliders(){
 function fill(){
   $('quote').value=S.quote;$('name').value=S.name;$('role').value=S.role;$('text').value=S.text;$('cta').value=S.cta;$('credit').value=S.credit;
   $('showCr').checked=S.showCr!==false;$('credit').disabled=S.showCr===false;$('credit').style.opacity=S.showCr===false?.45:1;
-  $('arrow').checked=!!S.frizza;$('guil').checked=S.guil!==false;$('qr').checked=!!S.qr;
+  $('arrow').checked=!!S.frizza;$('guil').checked=S.guil!==false;$('qr').checked=!!S.qr;$('qy').value=S.qy||0;$('ny').value=S.ny||0;$('qyV').textContent=(S.qy||0)+' px';$('nyV').textContent=(S.ny||0)+' px';
   sliders();
 }
 function upd(fn){fn();redraw();save()}
@@ -404,6 +406,8 @@ for(const k of ['quote','name','role','text','cta','credit'])$(k).oninput=e=>upd
 $('showCr').onchange=e=>{S.showCr=e.target.checked;fill();redraw();save()};
 $('arrow').onchange=e=>upd(()=>S.frizza=e.target.checked);
 $('guil').onchange=e=>upd(()=>S.guil=e.target.checked);
+$('qy').oninput=e=>{$('qyV').textContent=e.target.value+' px';upd(()=>S.qy=Number(e.target.value))};
+$('ny').oninput=e=>{$('nyV').textContent=e.target.value+' px';upd(()=>S.ny=Number(e.target.value))};
 $('qr').onchange=e=>upd(()=>S.qr=e.target.checked);
 for(const k of ['A','B']){
   $('zoom'+k).oninput=e=>{S[k].zoom=e.target.value/100;$('zv'+k).textContent=e.target.value+'%';redraw();save()};
