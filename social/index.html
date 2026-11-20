@@ -74,8 +74,8 @@ const TOOLS = [
   { id: 'pled',      t: 'Pled da l’emna',    d: 'Maletg senza funs, pled ed idioms.', i: '<path d="M5 19 10 5h4l5 14"/><path d="M7.5 14h9"/>' },
   { id: 'dumonda',   t: 'Dumonda da l’emna', d: 'Maletg cun segn da dumonda e banda.', i: '<path d="M8.5 9a3.5 3.5 0 1 1 5 3.2c-1 .6-1.5 1.3-1.5 2.3"/><path d="M12 18.5v.01"/>' },
   { id: 'verticals', t: 'Verticals', v: 1,  d: 'Videos en MP4 vertical (9:16) per social – en il browser.', i: '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10.5 9.5v5l4-2.5z"/>' },
-  { id: 'clic',      t: 'Clic',      v: 1,    d: 'Templates da «Clic»: tscherner paginas, midar texts, maletgs e colurs – export sco PNG.', i: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/>' },
-  { id: 'reels',     t: 'Reels',     v: 1,    d: 'Videos per social preparar: tagls, maletg centrar, tetels e texts – export sco MP4.', href: '/lab/reels', beta: true, i: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/>' }
+  { id: 'reels',     t: 'Reels',     v: 1,    d: 'Videos per social preparar: tagls, maletg centrar, tetels e texts – export sco MP4.', href: '/lab/reels', beta: true, i: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/>' },
+  { id: 'clic',      t: 'Clic',      v: 1,    d: 'Templates da «Clic»: tscherner paginas, midar texts, maletgs e colurs – export sco PNG.', i: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/>' }
 ];
 /* Alte Adressen: /social#novitads, /social#quote … führen direkt zum Tool */
 { const h = ({ novitads: 'newsdaldi' })[location.hash.slice(1)] || location.hash.slice(1), t = TOOLS.find(x => x.id === h); if (t) location.replace('/social/' + t.id); }
