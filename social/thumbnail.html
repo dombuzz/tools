@@ -104,9 +104,10 @@ input[type=file]{display:none}
           <input type="text" id="credit" placeholder="p.ex. Keystone">
           <div class="hint">Maletgs da RTR: desactivar, la funtauna na dastga betg vegnir inditgada.</div>
         </div>
+        <div class="f"><label>Grondezza dal text <span class="val" id="tsV"></span></label><input type="range" id="tsc" min="10" max="115" step="1" value="100"></div>
         <div id="rotBox" style="display:none">
           <div id="rotList"></div>
-          <div class="hint">Mo las lingias supplementaras (a partir da la 3.): mintga fund colurà po vegnir sbittà singul fin a 15° en mintga direcziun (0° = sco la program).</div>
+          <div class="hint">Mintga fund colurà po vegnir sbittà singul fin a 15° en mintga direcziun (0° = sco la program). Il text cuntegna la lunghezza: maximal fin a l’ur dretg e sanester dal maletg.</div>
         </div>
         <div class="f"><label class="chk"><input type="checkbox" id="logoOn"> Logo RTR</label></div>
       </div>
@@ -156,7 +157,7 @@ const LOGO_SRC='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcEAAAEkCAYAAABXMo
 const PAGES=1,H=1920,VER=1,KEY='social2-thumbnail.v1',PREFIX='thumbnail',NEED=['bdit','light'];
 const SLOTS=[{id:'A',page:0}];
 const FIELDS=[['title','title'],['logoOn','logoOn'],['credit','credit'],['showCr','showCr']];
-function defaults(){return{v:VER,col:'N',title:'Qua tes\ntitel',rots:{},logoOn:true,credit:'',showCr:true}}
+function defaults(){return{v:VER,col:'N',title:'Qua tes\ntitel',rots:{},ts:1,logoOn:true,credit:'',showCr:true}}
 function blank(){const d=defaults();d.title='';d.credit='';return d}
 function slugSrc(){return S.title}
 function render(c,pv){
@@ -166,12 +167,14 @@ function render(c,pv){
     if(S.logoOn)logo(c,70,355);
     /* Titel: Bold Italic 162, Zeilenabstand 184.6, um x = 540 zentriert; Flächen 168 hoch (+2.35°/−0.2°), Text +1.5°/−2.5° */
     c.font=fi(162);
-    const tl=wrap(c,S.title,860),n=tl.length,LH=184.6,Y0=998.2-(n-1)*LH/2,TR=[2.35,-0.2],XR=[1.5,-2.5],PW=[82,61],PL=[36,24];
+    const tl=wrap(c,S.title,860),n=tl.length,PW=[82,61],PL=[36,24],TR=[2.35,-0.2],XR=[1.5,-2.5];
+    const ws0=tl.map(l=>c.measureText(l).width),wmax=Math.max(0,...ws0.map((w,i)=>w+PW[i%2])),smax=wmax?Math.max(.1,1080/wmax):1.15;
+    TSMAX=smax;const ts=Math.min(Math.max(Number(S.ts)||1,.1),smax),LH=184.6*ts,Y0=998.2-(n-1)*LH/2;
     info.cnt.tCnt=n;
-    rotUI(n);
-    const ws=tl.map(l=>c.measureText(l).width);
-    for(let i=n-1;i>=0;i--)if(tl[i])tagC(c,540-(ws[i]+PW[i%2])/2,Y0+LH*i-143,ws[i]+PW[i%2],168,TR[i%2],col,i>=2?Number((S.rots||{})[i])||0:0);
-    tl.forEach((l,i)=>{if(l)txtR(c,l,540-(ws[i]+PW[i%2])/2+PL[i%2],Y0+LH*i,XR[i%2],'#fff',fi(162),true)});
+    rotUI(n);tsUI(smax,ts);
+    const ws=ws0.map(w=>w*ts),ft=fi(162*ts);
+    for(let i=n-1;i>=0;i--)if(tl[i])tagC(c,540-(ws[i]+PW[i%2]*ts)/2,Y0+LH*i-143*ts,ws[i]+PW[i%2]*ts,168*ts,TR[i%2],col,Number((S.rots||{})[i])||0);
+    tl.forEach((l,i)=>{if(l)txtR(c,l,540-(ws[i]+PW[i%2]*ts)/2+PL[i%2]*ts,Y0+LH*i,XR[i%2],'#fff',ft,true)});
     if(n>5)info.warn.push('Il titel è fitg lung – pli paucas lingias èn meglier legiblas.');
     credit(c,70,1596);
   });
@@ -180,11 +183,13 @@ function render(c,pv){
 
 /* Ab der dritten Zeile: je ein Regler pro zusätzliche Zeile (nur die Fläche dreht, Text bleibt) */
 let rotN=-1;
+let TSMAX=1.15;
+function tsUI(smax,ts){const r=$('tsc');if(!r)return;r.max=Math.floor(smax*100);if(document.activeElement!==r)r.value=Math.round(ts*100);$('tsV').textContent=Math.round(ts*100)+'%'}
 function rotUI(n){
-  const box=$('rotBox');if(!box)return;box.style.display=n>2?'':'none';
+  const box=$('rotBox');if(!box)return;box.style.display=n>0?'':'none';
   if(n===rotN)return;rotN=n;const l=$('rotList');l.innerHTML='';
   S.rots=S.rots||{};
-  for(let i=2;i<n;i++){
+  for(let i=0;i<n;i++){
     const d=document.createElement('div');d.className='f';
     const v=Number(S.rots[i])||0;
     d.innerHTML='<label>Lingia '+(i+1)+' <span class="val">'+(v>0?'+':'')+v+'°</span></label><input type="range" min="-15" max="15" step="1" value="'+v+'">';
@@ -194,6 +199,7 @@ function rotUI(n){
   }
 }
 function toolFill(){rotN=-1;rotUI(wrapCount())}
+document.getElementById('tsc').oninput=e=>{S.ts=e.target.value/100;redraw();save()};
 function wrapCount(){const c=document.createElement('canvas').getContext('2d');c.font=fi(162);return wrap(c,S.title,860).length}
 
 /* ===== gemeinsamer Teil aller Social2-Tabs (Zustand, Schriften, Zeichenhilfen, Bild, Export) ===== */
