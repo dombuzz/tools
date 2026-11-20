@@ -45,6 +45,7 @@ button:hover,.btn:hover{border-color:var(--accent)}
 .sp img{display:block;width:100%;height:auto;border-radius:4px;background:#333;margin-bottom:6px}
 .sp small{color:var(--muted);font-size:.78rem}
 /* Bühne */
+.stagewrap.dz{outline:2px dashed var(--accent);outline-offset:-6px}
 .stagewrap{overflow:auto;background:#0b0b0c;border-radius:12px;border:1px solid var(--line);padding:18px;min-height:300px}
 #box{position:relative;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none}
 #box svg{display:block;width:100%;height:auto;cursor:default}
@@ -82,6 +83,7 @@ button:hover,.btn:hover{border-color:var(--accent)}
     <div>
       <div class="tools">
         <span hidden><input type="color" id="gcol" value="#16668d"><button id="gBlue"></button><button id="gGreen"></button></span>
+        <label class="btn pri" for="bgFile" style="margin:0">Maletg per questa pagina …</label><input type="file" id="bgFile" accept="image/*,.heic,.heif" hidden>
         <label class="row" style="margin:0 0 0 auto">Zoom <input type="range" id="vz" min="30" max="150" value="100"></label>
       </div>
       <div class="stagewrap"><div id="box"></div></div>
@@ -282,14 +284,21 @@ function wire(el,s,t){
   document.querySelectorAll('[data-pick]').forEach(i=>i.oninput=()=>{s[i.dataset.pick]=i.value;ch()});
   if($$('p_rst'))$$('p_rst').onclick=()=>{delete S.o[cur.id+'/'+id];save();reloadKeep(id)};
   if($$('p_orig'))$$('p_orig').onclick=()=>{delete imgs[cur.id+(t==='cut'?'cut':id)];reloadKeep(id)};
-  if($$('p_file'))$$('p_file').onchange=async e=>{
-    const f=e.target.files[0];e.target.value='';if(!f)return;
-    const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{
-      if(t==='cut')imgs[cur.id+'cut']={url,w:im.naturalWidth,h:im.naturalHeight};
-      else{imgs[cur.id+id]={url,w:im.naturalWidth,h:im.naturalHeight};delete s.z;delete s.fx;delete s.fy;s.z=1;s.fx=.5;s.fy=.5;
-        const fs=O('fs1');if(fs&&id==='foto'&&cur.id==='s1'){st('fs1').hide=true}}
-      reloadKeep(id)};im.src=url;
-  };
+  if($$('p_file'))$$('p_file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)putImage(f,id,t)};
+}
+function putImage(f,id,t){
+  const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{
+    const s=st(id);
+    if(t==='cut')imgs[cur.id+'cut']={url,w:im.naturalWidth,h:im.naturalHeight};
+    else{imgs[cur.id+id]={url,w:im.naturalWidth,h:im.naturalHeight};delete s.z;delete s.fx;delete s.fy;s.z=1;s.fx=.5;s.fy=.5;s.hide=false;
+      const fs=O('fs1');if(fs&&id==='foto'&&cur.id==='s1'){st('fs1').hide=true}}
+    reloadKeep(id)};im.src=url;
+}
+/* Drag & Drop + Button: Maletg per pagina (Objekt unter dem Cursor, sinon «foto») */
+function dropTarget(e){
+  const el=e&&e.target&&e.target.closest?e.target.closest('[data-o]'):null;
+  if(el&&(el.dataset.t==='img'||el.dataset.t==='cut'))return el;
+  return O('foto');
 }
 async function reloadKeep(id){const keep=cur;await load(keep);select(id)}
 
@@ -362,6 +371,13 @@ async function exportPage(i){
   document.querySelector(`#sp button[data-id="${sp.id}"]`).classList.add('on');
   await loadFonts().catch(()=>{});fontState();
   await load(sp);exports();
+})();
+$('bgFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f&&O('foto'))putImage(f,'foto','img')};
+(function(){const w=document.querySelector('.stagewrap');
+ ['dragenter','dragover'].forEach(n=>w.addEventListener(n,e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){e.preventDefault();w.classList.add('dz')}}));
+ ['dragleave','drop'].forEach(n=>w.addEventListener(n,e=>{if(n==='dragleave'&&w.contains(e.relatedTarget))return;w.classList.remove('dz')}));
+ w.addEventListener('drop',e=>{const f=[...(e.dataTransfer?e.dataTransfer.files:[])].find(x=>/^image\//.test(x.type)||/\.(heic|heif|png|jpe?g|webp)$/i.test(x.name));if(!f)return;e.preventDefault();
+  const el=dropTarget(e);if(!el)return;putImage(f,el.dataset.o,el.dataset.t==='cut'?'cut':'img')});
 })();
 </script>
 <script src="/like.js" defer></script>

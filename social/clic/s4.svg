@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1280 720" version="1.1" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;--clic:#16668d;--clic2:#2e92b1" data-pages="0,0,1280,720">
-    <g transform="matrix(1.325845,0,0,1.000048,0,0)" data-o="bg" data-t="shape" data-n="Verlauf links">
+    <defs><clipPath id="bgclip"><rect x="0" y="0" width="1280" height="720"/></clipPath></defs><g clip-path="url(#bgclip)" data-o="foto" data-t="img" data-n="Maletg dal fund" data-slot="0 0 1280 720" data-nat="1 1" data-z="1" data-fx="0.5" data-fy="0.5"><image width="1" height="1" data-img="1" transform="matrix(1280,0,0,1280,0,-280)" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="/></g><g transform="matrix(1.325845,0,0,1.000048,0,0)" data-o="bg" data-t="shape" data-n="Verlauf links">
         <rect x="0" y="0" width="543.05" height="720" style="fill:url(#_Linear1);"/>
     </g>
     <g id="clic-logo" transform="matrix(-0.024305,-0.058678,0.058678,-0.024305,148.843822,899.728842)" data-o="wirbel" data-t="shape" data-n="Clic-Logo (Wirbel)" data-fill="white">
