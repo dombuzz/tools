@@ -38,7 +38,7 @@ const NAMES = { 'info': 'Infus & datas',
   'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-mov': 'PNG → MOV',
   'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-social2': 'Social2 (früher)',
   'social-profil': 'Social · Profil', 'social-newsdaldi': 'Social · News dal di', 'social-novitads': 'Social · News dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News',
-  'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-clic': 'Social · Clic', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail',
+  'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-clic': 'Social · Clic', 'social-lashow': 'Social · La show', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail',
 };
 
 // Mehrere Seiten unter einer Kennung zusammenzählen (Rohdaten bleiben pro Seite gespeichert)
