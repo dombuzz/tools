@@ -336,10 +336,11 @@ function render(c,preview){
   c.font=fi(40);
   const nw=S.name?c.measureText(S.name).width:0,rw=S.role?c.measureText(S.role).width:0;
   const yN=819.67+dy,yR=S.name?889.88+dy:829.88+dy;
-  if(S.role)tag(c,62.13,yR,rw+56,-2,col);
-  if(S.name)tag(c,64.22,yN,nw+37,1,col);
-  if(S.name)tagText(c,S.name,83.77,yN+43.49,1.5);
-  if(S.role)tagText(c,S.role,91.78,yR+36.43,-0.5);
+  const xR=S.qr?1080-62.13-(rw+56):62.13,xN=S.qr?1080-64.22-(nw+37):64.22;
+  if(S.role)tag(c,xR,yR,rw+56,-2,col);
+  if(S.name)tag(c,xN,yN,nw+37,1,col);
+  if(S.name)tagText(c,S.name,xN+19.55,yN+43.49,1.5);
+  if(S.role)tagText(c,S.role,xR+29.65,yR+36.43,-0.5);
   /* Quelle */
   if(S.credit&&S.showCr!==false){
     c.save();c.font=fl(30);c.fillStyle='#fff';c.shadowColor='rgba(0,0,0,.65)';c.shadowBlur=6;c.textBaseline='middle';
