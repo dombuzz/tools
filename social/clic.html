@@ -146,7 +146,7 @@ async function load(sp){
   svg.querySelectorAll('[data-t=label]').forEach(g=>{const t=g.querySelector('text');g._text=t.textContent;g._tfill=(/fill:([^;]+)/.exec(t.getAttribute('style'))||[0,'white'])[1]});
   buildPanels();applyAll();select(null);fit();
 }
-function fit(){const vb=svg.viewBox.baseVal,z=+$('vz').value/100,avail=Math.max(280,$('box').parentNode.clientWidth-36);$('box').style.width=Math.min(avail*z,vb.width*1.5*z+2000)+'px';frames();placeSel()}
+function fit(){const vb=svg.viewBox.baseVal,z=+$('vz').value/100,avail=Math.max(280,$('box').parentNode.clientWidth-36);const w0=avail*z;$('box').style.width=Math.min(w0,w0*9/16*vb.width/vb.height)+'px';frames();placeSel()}
 
 /* ---------- Anwenden ---------- */
 const O=id=>svg.querySelector('[data-o="'+id+'"]');
