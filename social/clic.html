@@ -167,9 +167,10 @@ function fitSwoosh(){
   let d;pa.style.strokeLinecap='butt';
   const top='M0,-350C0,-267.157 67.157,-200 150,-200';
   const turn=T=>`L${T},-200C${T+27.614},-200 ${T+50},-177.615 ${T+50},-150C${T+50},-122.386 ${T+27.614},-100 ${T},-100`;
-  if(n===1)d=top+`L${Math.max(R[0]+8,170)},-200`;
-  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])-33);d=top+turn(T)+'L143.77,-100';pa.style.strokeLinecap='round'}
-  else{const T=Math.max(440,Math.max(R[0],R[1])-33);d=top+turn(T)+'L143.77,-100C116.156,-100 93.77,-77.614 93.77,-50C93.77,-22.386 116.156,0 143.77,0L'+Math.max(R[2]+8,170)+',0'}
+  const PR=30,TM=88,LM=55,L0=Math.round((21+796-X0)*1000)/1000-LM;   // PR = Rand rechts (gerade Kante), TM = Rand an der rechten Kurve, LM = Rand links
+  if(n===1)d=top+`L${Math.max(R[0]+PR,170)},-200`;
+  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0},-100`}
+  else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+Math.max(R[2]+PR,170)+',0'}
   pa.setAttribute('d',d);
 }
 function applyObj(id){
