@@ -181,7 +181,7 @@ function mkLine(g,txt,x,y,f,style,measure){
 function doText(g,s){
   const b=g._base,size=s.size||g._size,k=size/g._size,fill=s.fill||(/fill:([^;]+)/.exec(b.style)||[0,'white'])[1];
   const style=b.style.replace(/font-size:[\d.]+px/,'font-size:'+size+'px').replace(/fill:[^;]+/,'fill:'+fill);
-  const raw=s.text!=null?s.text:(+g.dataset.w>0?b.lines.join(' '):b.lines.join('\n')),maxW=+g.dataset.w||0,lh=(+g.dataset.lh||size*1.17)*k;
+  let raw=s.text!=null?s.text:(+g.dataset.w>0?b.lines.join(' '):b.lines.join('\n'));if(s.up)raw=raw.toUpperCase();const maxW=+g.dataset.w||0,lh=(+g.dataset.lh||size*1.17)*k;
   g.querySelectorAll('text').forEach(x=>x.remove());
   const meas=mkLine(g,'',b.x,b.y,b.f,style);g.appendChild(meas);
   const width=str=>{meas.textContent='';str.split('**').forEach((seg,i)=>{if(!seg)return;const n=document.createElementNS('http://www.w3.org/2000/svg','tspan');if(i%2&&b.f==='light')n.dataset.f='bold';n.textContent=seg;meas.appendChild(n)});return meas.getComputedTextLength()};
@@ -196,7 +196,7 @@ function doText(g,s){
 }
 function doLabel(g,s){
   const t=g.querySelector('text'),bar=g.querySelector('rect[data-bar]'),size0=+g.dataset.size,size=s.size||size0,k=size/size0;
-  const txt=s.text!=null?s.text:g._text;t.textContent=txt;
+  let txt=s.text!=null?s.text:g._text;if(s.up)txt=txt.toUpperCase();t.textContent=txt;
   t.setAttribute('style',`font-size:${size}px;fill:${s.tfill||g._tfill}`);
   const pad=+g.dataset.pad*k,top=+g.dataset.top*k,h=+g.dataset.h*k,x=+t.getAttribute('x'),y=+t.getAttribute('y');
   let len=0;try{len=t.getComputedTextLength()}catch(e){}
@@ -249,10 +249,12 @@ function props(){
   const el=O(selId),s=st(selId),t=el.dataset.t;let h=`<div class="sub">${el.dataset.n}</div>`;
   if(t==='text'){
     h+=row('Text',`<textarea id="p_text" class="${+el.dataset.w?'':'sm'}">${esc(s.text!=null?s.text:(+el.dataset.w>0?el._base.lines.join(' '):el._base.lines.join('\n')))}</textarea><div class="hint">**fat** per tegnair sin text (cun Light) · Return = nova lingia</div>`);
+    h+=`<div class="f"><button id="p_up" class="${s.up?'pri':''}" style="font-weight:600">AA &nbsp;Tut en maiusclas</button></div>`;
     h+=row('Grondezza <span class="val" id="v_size"></span>',`<input type="range" id="p_size" min="20" max="240" step="1">`);
     h+=row('Colur',colors('fill'));
   }else if(t==='label'){
     h+=row('Text',`<input type="text" id="p_text" value="${esc(s.text!=null?s.text:el._text)}">`);
+    h+=`<div class="f"><button id="p_up" class="${s.up?'pri':''}" style="font-weight:600">AA &nbsp;Tut en maiusclas</button></div>`;
     h+=row('Grondezza <span class="val" id="v_size"></span>',`<input type="range" id="p_size" min="30" max="200" step="1">`);
     h+=row('Colur dal text',colors('tfill'));h+=row('Colur dal trav',colors('bfill'));
   }else if(t==='img'){
@@ -276,6 +278,7 @@ function wire(el,s,t){
   const id=el.dataset.o,ch=()=>{applyObj(id);save();placeSel()};
   const $$=i=>document.getElementById(i);
   if($$('p_text'))$$('p_text').oninput=e=>{s.text=e.target.value;ch()};
+  if($$('p_up'))$$('p_up').onclick=e=>{s.up=!s.up;e.target.classList.toggle('pri',!!s.up);ch()};
   const sl=(i,key,def,fmt)=>{const n=$$(i);if(!n)return;n.value=s[key]!=null?s[key]:def;const v=$$('v_'+i.slice(2));const show=()=>{if(v)v.textContent=fmt?fmt(+n.value):n.value};show();n.oninput=()=>{s[key]=+n.value;show();ch()}};
   sl('p_size','size',t==='text'?el._size:+el.dataset.size);
   sl('p_s','s',1,v=>Math.round(v*100)+' %');sl('p_r','r',0,v=>v+'°');
