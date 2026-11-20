@@ -53,7 +53,7 @@ const grp = t => GROUP[t] || t;
 // Geschätzte Zeitersparnis pro Nutzung in Minuten (Dominiks Schätzung vom 12.11.2026: «vorher» minus «mit Tool»).
 // Schlüssel = Roh-Kennung der Seite; ohne eigenen Eintrag gilt der Wert der Gruppe (z. B. mument → visual).
 // «collage» = Exporte aus dem Tab Collascha in /maletgs (übrige Tabs von maletgs haben keinen Wert).
-const SAVED_MIN = { 'rtr-picture': 0.3, visual: 1, mument: 1, 'social-mument': 1, Resizer2000: 0.3, collage: 2, data: 2, votaziuns: 3 };
+const SAVED_MIN = { 'rtr-picture': 0.3, visual: 1, mument: 1, 'social-mument': 1, 'social-newsdaldi': 2, Resizer2000: 0.3, collage: 2, data: 2, votaziuns: 3 };
 const savedMin = t => SAVED_MIN[t] ?? SAVED_MIN[grp(t)] ?? 0;
 // Seiten, die nicht in der Statistik erscheinen (Statistikseite selbst)
 const NO_STATS = new Set(['stats', 'votgr', 'lab-vischnanca', 'lab-svizra', 'lab-chartas']);
