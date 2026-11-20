@@ -320,7 +320,7 @@ p.sub{margin:0;color:var(--muted)}
   <a class="homelink" href="/UTstudio#sincronisar">← Subtitle Studio</a>
   <h1>CLIC ICF – <span class="acc">Sincronisar</span></h1>
   <p class="sub">Copia privata per il film CLIC ICF. Ils suttitels DE vegnan chargiads automaticamain, midadas vegnan memorisadas en quest navigatur. Il video: avrir en SharePoint, telechargiar e trair en il champ «Video u audio».</p>
-  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQBLAh5JNdD6TKmOxgm_Vm3sAU2jktl7TvXbdpUWFTdGz4M?e=fHHpVD" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><button type="button" id="vi-golast">⤳ Davosa midada</button><a href="ICF-Film_DE_Untertitel_SRG.srt" id="vi-srtlink" download>⤓ SRT memorisà</a></div>
+  <div class="cl-links"><a class="pri" href="https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQD7RFHBCO5tTrKyM1M8GFbAAQM7UyHXDn6OquNaO6Jl7VI?e=RBVA4i" target="_blank" rel="noopener noreferrer">▶ Video en SharePoint ↗</a><button type="button" id="vi-golast">⤳ Davosa midada</button><a href="ICF-Film_DE_Untertitel_SRG.srt" id="vi-srtlink" download>⤓ SRT memorisà</a></div>
   <div class="exts"><a class="btn primary ext" href="https://dialogue.rts.ch/rm/tools/video/subtitles-editor/" target="_blank" rel="noopener">Dialog Subtitles editor ↗</a><a class="btn primary ext" href="https://bakerstreet.rts-digital-ia.ch/de/translation" target="_blank" rel="noopener">u en Bakerstreet ↗</a></div>
   <div class="tabs" role="tablist" aria-label="Subtitle Studio">
     <button type="button" role="tab" data-tab="sp" aria-selected="true" aria-controls="tab-sp">Spustar temps</button>
@@ -513,7 +513,7 @@ p.sub{margin:0;color:var(--muted)}
   <section class="card fold" id="vi-box1">
     <h2><button type="button" class="foldb" id="vi-fold" aria-expanded="true" aria-controls="vi-box1"><span class="num">1</span> Video u audio e suttitels<span class="foldsum" id="vi-foldsum"></span><span class="chev" aria-hidden="true">▾</span></button></h2>
     <div class="drops">
-      <div class="drop" id="vi-dropM" tabindex="0" role="button" aria-label="Tscherner video u audio"><b id="vi-mName">Video u audio</b><small id="vi-mInfo">Trair qua «CLIC ICF v20261119.mp4» u cliccar</small><input id="vi-fileM" type="file" accept="video/*,audio/*,.mkv,.mov,.m4a,.mp3,.wav" hidden></div>
+      <div class="drop" id="vi-dropM" tabindex="0" role="button" aria-label="Tscherner video u audio"><b id="vi-mName">Video u audio</b><small id="vi-mInfo">Trair qua «CLIC ICF (SharePoint)» u cliccar</small><input id="vi-fileM" type="file" accept="video/*,audio/*,.mkv,.mov,.m4a,.mp3,.wav" hidden></div>
       <div class="drop" id="vi-dropS" tabindex="0" role="button" aria-label="Tscherner in file da suttitels"><b id="vi-sName">Suttitels</b><small id="vi-sInfo">SRT, TTML, VTT … · trair qua u cliccar</small><input id="vi-fileS" type="file" accept=".srt,.ttml,.xml,.vtt,.sbv,.ass,.ssa,.txt" hidden></div>
     </div>
     <p class="note" id="vi-msg" aria-live="polite"></p>
@@ -2164,12 +2164,12 @@ document.addEventListener('keydown', onKey);
   setInterval(store, 1500);
   addEventListener('pagehide', store);
   // Video direkt von SharePoint (download=1 liefert die Datei statt der Player-Seite)
-  const SP = 'https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQBLAh5JNdD6TKmOxgm_Vm3sAU2jktl7TvXbdpUWFTdGz4M?e=fHHpVD&download=1';
+  const SP = 'https://srgssr-my.sharepoint.com/:v:/g/personal/dominik_hardegger_rtr_ch/IQD7RFHBCO5tTrKyM1M8GFbAAQM7UyHXDn6OquNaO6Jl7VI?e=RBVA4i&download=1';
   if (!hasMedia()) {
     const fail = () => { if (media.getAttribute('src') !== SP) return; media.removeAttribute('src'); media.load(); $('mName').textContent = 'Video u audio'; $('mInfo').textContent = 'SharePoint na lubescha betg il video directamain – telechargiar e trair qua'; $('dropM').classList.remove('ok'); showWork(); msg('Il video da SharePoint n’ha betg pudì vegnir chargià directamain. Avrir «Video en SharePoint», telechargiar e trair en il champ «Video u audio».', true); };
     media.addEventListener('error', fail, { once: true });
     media.src = SP; mediaFile = null; peaks = null;
-    $('mName').textContent = 'CLIC ICF v20261119 (SharePoint)'; $('mInfo').textContent = 'Chargia da SharePoint …'; $('dropM').classList.add('ok'); showWork();
+    $('mName').textContent = 'CLIC ICF (SharePoint)'; $('mInfo').textContent = 'Chargia da SharePoint …'; $('dropM').classList.add('ok'); showWork();
   }
 })();
 // Hat das Video den Fokus, würde der Browser zusätzlich selber springen (±5 s) – das unterbinden wir
