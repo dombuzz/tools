@@ -108,8 +108,8 @@ const SPREADS=[
  {id:'s1',name:'Paginas 1–4',first:1,n:4,pw:1080,ph:1350},
  {id:'s2',name:'Pagina 5',first:5,n:1,pw:1080,ph:1350},
  {id:'s3',name:'Paginas 6–8',first:6,n:3,pw:1080,ph:1350},
- {id:'s4',name:'Pagina 9 (YouTube)',first:9,n:1,pw:1280,ph:720,alpha:true},
- {id:'s5',name:'Pagina 10',first:10,n:1,pw:2880,ph:1620}
+ {id:'s4',name:'Pagina 9 (YouTube)',first:9,n:1,pw:1280,ph:720,alpha:true,suf:'_Youtube'},
+ {id:'s5',name:'Pagina 10',first:10,n:1,pw:2880,ph:1620,suf:'_Play RTR'}
 ];
 /* ---------- Scrittiras (gemeinsamer Speicher «vischnanca», wie die anderen Social-Tools) ---------- */
 const FB='SRG SSR Type Bold',FL='SRG SSR Type Light',FI='SRG SSR Type Bold Italic',have={bold:false,light:false,bdit:false},KEYS={bold:'font',light:'fontLt',bdit:'fontBdIt'},FNAME={bold:'Bold',light:'Light',bdit:'Bold Italic'},fbuf={};
@@ -381,7 +381,7 @@ async function exportPage(i){
   const img=new Image();
   await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=data}).catch(()=>{$('xmsg').textContent='Export betg reussì.'});
   const cv=document.createElement('canvas');cv.width=cur.pw;cv.height=cur.ph;cv.getContext('2d').drawImage(img,0,0,cur.pw,cur.ph);
-  await new Promise(res=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='clic_pagina-'+(cur.first+i)+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);res()},'image/png'));
+  await new Promise(res=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='clic_pagina-'+(cur.first+i)+(cur.suf||'')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);res()},'image/png'));
   $('xmsg').textContent='Exportà.';placeSel();
 }
 (async()=>{
