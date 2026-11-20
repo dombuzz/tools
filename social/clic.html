@@ -81,8 +81,7 @@ button:hover,.btn:hover{border-color:var(--accent)}
 
     <div>
       <div class="tools">
-        <label class="row" style="margin:0">Colur Clic <input type="color" id="gcol" value="#16668d"></label>
-        <button id="gBlue" title="Blau da Clic">Blau</button><button id="gGreen" title="Uffants">Uffants</button>
+        <span hidden><input type="color" id="gcol" value="#16668d"><button id="gBlue"></button><button id="gGreen"></button></span>
         <label class="row" style="margin:0 0 0 auto">Zoom <input type="range" id="vz" min="30" max="150" value="100"></label>
       </div>
       <div class="stagewrap"><div id="box"></div></div>
@@ -125,7 +124,7 @@ $('fFile').onchange=async e=>{const fs=[...e.target.files];e.target.value='';for
 /* ---------- Zustand ---------- */
 const KEY='clic.v1';
 let S={col:'#16668d',o:{}},cur=SPREADS[0],svg=null,selId=null,imgs={};   // imgs[spread+oid] = {url,w,h}
-try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(j&&j.o)S=Object.assign(S,j)}catch(e){}
+try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(j&&j.o){S=Object.assign(S,j);S.col='#16668d';for(const k in S.o)if(k.endsWith('/pf2'))delete S.o[k]}}catch(e){}
 let sv=0;const save=()=>{clearTimeout(sv);sv=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},300)};
 const st=id=>{const k=cur.id+'/'+id;return S.o[k]||(S.o[k]={})};
 const mixHex=(h,t,a)=>{const p=x=>parseInt(h.slice(x,x+2),16);return '#'+[1,3,5].map(i=>Math.round(p(i)+(t-p(i))*a).toString(16).padStart(2,'0')).join('')};
