@@ -92,6 +92,7 @@ input[type=file]{display:none}
         <div class="f">
           <label style="display:flex;justify-content:space-between;align-items:center"><span>Citat <span class="val" id="qCnt" style="float:none;margin-left:6px"></span></span><span style="display:flex;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="guil"> «&nbsp;&nbsp;» mussar</span></label>
           <textarea id="quote" placeholder="Il citat …"></textarea>
+          <label style="display:flex;gap:6px;align-items:center;color:var(--text);margin-top:6px"><input type="checkbox" id="qr"> Citat a dretga (ur dretg)</label>
           <div class="hint">Ils guillemets «…» vegnan messs automaticamain (na ils scriver). Las lingias vegnan rumpidas automaticamain; in return fa ina nova lingia.</div>
         </div>
         <div class="f"><label>Num</label><input type="text" id="name" placeholder="p.ex. Simon Zurfluh"></div>
@@ -327,7 +328,7 @@ function render(c,preview){
   const qc=(S.quote||'').trim().replace(/^[«»"„“”]+|[«»"„“”]+$/g,'').trim(),qt=qc?(S.guil!==false?'«'+qc+'»':qc):'';
   const ql=wrap(c,qt,610);
   c.save();c.fillStyle='#fff';c.shadowColor='rgba(0,0,0,.45)';c.shadowBlur=12;
-  ql.forEach((l,i)=>itText(c,l,70,228.72+85*i));c.restore();
+  ql.forEach((l,i)=>itText(c,l,S.qr?1010-c.measureText(l).width:70,228.72+85*i));c.restore();
   info.q=ql.length;
   /* Namensschilder: rutschen nach unten, wenn das Zitat länger ist */
   const lastQ=228.72+85*Math.max(0,ql.length-1),dy=Math.max(0,Math.ceil(lastQ+120-819.67));
@@ -394,7 +395,7 @@ function sliders(){
 function fill(){
   $('quote').value=S.quote;$('name').value=S.name;$('role').value=S.role;$('text').value=S.text;$('cta').value=S.cta;$('credit').value=S.credit;
   $('showCr').checked=S.showCr!==false;$('credit').disabled=S.showCr===false;$('credit').style.opacity=S.showCr===false?.45:1;
-  $('arrow').checked=!!S.frizza;$('guil').checked=S.guil!==false;
+  $('arrow').checked=!!S.frizza;$('guil').checked=S.guil!==false;$('qr').checked=!!S.qr;
   sliders();
 }
 function upd(fn){fn();redraw();save()}
@@ -402,6 +403,7 @@ for(const k of ['quote','name','role','text','cta','credit'])$(k).oninput=e=>upd
 $('showCr').onchange=e=>{S.showCr=e.target.checked;fill();redraw();save()};
 $('arrow').onchange=e=>upd(()=>S.frizza=e.target.checked);
 $('guil').onchange=e=>upd(()=>S.guil=e.target.checked);
+$('qr').onchange=e=>upd(()=>S.qr=e.target.checked);
 for(const k of ['A','B']){
   $('zoom'+k).oninput=e=>{S[k].zoom=e.target.value/100;$('zv'+k).textContent=e.target.value+'%';redraw();save()};
   $('ox'+k).oninput=e=>{S[k].ox=e.target.value/100;redraw();save()};
