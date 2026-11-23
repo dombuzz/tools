@@ -132,13 +132,32 @@ async function hlsOf(ch) {
   return { url, note, drm: !!(r.drmList && r.drmList.length) };
 }
 
-async function one(line) {
+// URN aus der Colliaziun lesen (RTR, SRF, RTS, RSI, SWI); nur UUID: alle Sender durchprobieren
+const URN = /urn:(rtr|srf|rts|rsi|swi):(video|audio):([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+async function fetchMc(line) {
+  const u = line.match(URN);
+  if (u) {
+    const urn = ('urn:' + u[1] + ':' + u[2] + ':' + u[3]).toLowerCase();
+    const r = await fetch(API + urn + '.json');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return { urn, j: await r.json() };
+  }
   const m = line.match(UUID);
-  if (!m) return { err: 'Nagina UUID anflada', line };
-  const urn = 'urn:rtr:video:' + m[0].toLowerCase();
-  const r = await fetch(API + urn + '.json');
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const j = await r.json();
+  if (!m) return null;
+  let last = 'HTTP 404';
+  for (const bu of ['rtr', 'srf', 'rts', 'rsi']) {
+    const urn = ('urn:' + bu + ':video:' + m[0]).toLowerCase();
+    const r = await fetch(API + urn + '.json');
+    if (r.ok) return { urn, j: await r.json() };
+    last = 'HTTP ' + r.status;
+  }
+  throw new Error(last);
+}
+
+async function one(line) {
+  const got = await fetchMc(line);
+  if (!got) return { err: 'Nagina UUID anflada', line };
+  const urn = got.urn, j = got.j;
   const ch = (j.chapterList || []).find(c => c.urn === urn) || (j.chapterList || [])[0] || {};
   const acc = new Set(); collect(ch, acc);
   const mp4 = [...acc].sort((a, b) => quality(b) - quality(a));
