@@ -1,124 +1,206 @@
-<!DOCTYPE html>
-<html lang="de">
+<!doctype html>
+<html lang="rm">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<title>Download-Link</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="/theme.js"></script>
+<script src="/motion.js" defer></script>
+<meta name="robots" content="noindex">
+<meta name="description" content="Colliaziuns da telechargiar per videos RTR, era sch’il podcast n’è betg activà.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="dombuzz Tools">
+<meta property="og:title" content="Telechargiar colliaziuns">
+<meta property="og:description" content="Colliaziuns da telechargiar per videos RTR, era sch’il podcast n’è betg activà.">
+<meta property="og:url" content="https://tools.dombuzz.ch/lab/download">
+<meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#121214">
+<title>Telechargiar colliaziuns</title>
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3v12m0 0l-5-5m5 5l5-5M5 20h14' fill='none' stroke='%23ff4d64' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
+
+/* Layout: wie die übrigen Lab-Tools (CSV-Analisa, Höhenprofil, Plan → GeoJSON) – dunkle Karten, Systemschrift 16px, Akzent Koralle, nummerierte Schritte */
+:root{
+  --bg:#121214;--card:#1c1c1f;--field:#26262a;--text:#ececef;--muted:#9a9aa2;
+  --line:#2f2f34;--accent:#ff4d64;--accent-dark:#d93a50;--ok:#4caf6f;--warn:#ffb86b;color-scheme:dark
+}
 *{box-sizing:border-box}
-body{margin:0;background:#111113;color:#e8e8ea;font:16px/1.5 system-ui,sans-serif;padding:40px 16px 64px}
+[hidden]{display:none!important}
+body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-h1{font-size:1.4rem;margin:0}.acc{color:#ff5a5f}
-.badge{font-size:.7rem;border:1px solid #ffb86b;color:#ffb86b;border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:middle}
-.lead{font-size:.9rem;color:#9a9aa2;margin:4px 0 0}
-.card{background:#1c1c1f;border-radius:14px;padding:20px}
-.step{font-size:.95rem;font-weight:600;margin:0 0 10px}.step b{color:#ff5a5f;margin-right:6px}
-label{display:block;font-size:.82rem;color:#9a9aa2;margin-bottom:6px}
-textarea{width:100%;min-height:110px;background:#111113;color:#e8e8ea;border:1px solid #333;border-radius:8px;padding:8px 10px;font:13px ui-monospace,monospace}
-button,.btn{background:#ff5a5f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-size:.9rem;cursor:pointer;text-decoration:none;display:inline-block}
-button.ghost,.btn.ghost{background:transparent;border:1px solid #444;color:#e8e8ea}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
-.item{border-top:1px solid #2a2a2e;padding:14px 0}.item:first-child{border-top:0;padding-top:0}
-.t{font-weight:600}.m{font-size:.82rem;color:#9a9aa2}
-.link{font:12px ui-monospace,monospace;word-break:break-all;background:#111113;border-radius:8px;padding:8px 10px;margin:8px 0}
-.warn{color:#ffb86b;font-size:.85rem}
-details{margin-top:10px}summary{cursor:pointer;color:#9a9aa2;font-size:.85rem}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px 24px}
+header>div{flex:1 1 420px;min-width:0}
+.homelink{display:inline-block;margin:0 0 10px;font-size:.85rem;color:var(--muted);text-decoration:none}
+.homelink:hover,.homelink:focus-visible{color:var(--accent)}
+h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em;text-wrap:balance}
+h1 .acc{color:var(--accent)}
+.labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:1px}
+.lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
+/* Karten */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ph{margin:0 0 2px;font-size:.95rem;font-weight:700;display:flex;gap:10px;align-items:center}
+.num{font-size:.8rem;font-weight:700;background:var(--accent);color:var(--on-accent);border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
+.cap{display:block;font-size:.82rem;color:var(--muted)}
+.hint{color:var(--muted);font-size:.85rem;margin:0}
+select,input[type=text],input[type=number]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--text);font:inherit;font-size:.9rem}
+textarea{width:100%;min-height:90px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--text);font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:9px 14px;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+.btn.sm{padding:5px 10px;font-size:.82rem}
+.warn{color:var(--warn);font-size:.85rem;margin:0}
+/* Resultat */
+.status{font-size:.85rem;color:var(--ok);margin:0;min-height:1.2em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.hdr{display:flex;flex-direction:column;gap:4px}
+.item{display:flex;flex-direction:column;gap:10px;padding:14px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0;padding-top:0}
+.t{font-weight:700}.m{font-size:.82rem;color:var(--muted)}
+.lnk{font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;word-break:break-all;background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;user-select:all}
+.sub{font-size:.82rem;font-weight:700;color:var(--muted);margin:4px 0 0}
+details.raw summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+
 </style>
 </head>
 <body>
 <div class="wrap">
+<header>
   <div>
-    <h1>Download-<span class="acc">Link</span> aus Sendungs-URL<span class="badge">Labor</span></h1>
-    <p class="lead">RTR-Sendungs-Link(s) einfügen, Tool holt die Video-Links über die SRG-Schnittstelle. Pro Zeile eine URL (oder nur die <code>urn:rtr:video:…</code>).</p>
+    <a class="homelink" href="/lab/">← Lab</a>
+    <h1>Telechargiar <span class="acc">colliaziun</span><span class="labbadge">Labor</span></h1>
+    <p class="lead">Colliaziun da l’emissiun RTR encollar. Il tool tschertga la colliaziun da telechargiar (MP4) u, sch’il podcast n’è betg activà, il stream (HLS) cun cumond per telechargiar.</p>
   </div>
+</header>
 
-  <div class="card">
-    <p class="step"><b>1</b>Sendungs-URLs</p>
-    <label for="in">z. B. https://www.rtr.ch/play/tv/telesguard/video/…?urn=urn:rtr:video:68414b1b-…</label>
-    <textarea id="in" spellcheck="false"></textarea>
-    <div class="row">
-      <button id="go">Links holen</button>
-      <button class="ghost" id="clr">Leeren</button>
-      <span id="st" class="m"></span>
-    </div>
+<section class="panel">
+  <h2 class="ph"><span class="num">1</span>Colliaziuns da las emissiuns</h2>
+  <label class="cap" for="in">Ina colliaziun per lingia, p. ex. https://www.rtr.ch/play/tv/clic/video/…?urn=urn:rtr:video:…</label>
+  <textarea id="in" spellcheck="false" placeholder="https://www.rtr.ch/play/tv/telesguard/video/…?urn=urn:rtr:video:…"></textarea>
+  <div class="row">
+    <button class="btn primary" id="go" type="button">Tschertgar colliaziuns</button>
+    <button class="btn" id="clr" type="button">Svidar</button>
+    <p class="status" id="st" role="status"></p>
   </div>
+</section>
 
-  <div class="card" id="outc" style="display:none">
-    <p class="step"><b>2</b>Resultat</p>
-    <div id="out"></div>
-  </div>
+<section class="panel" id="outc" hidden>
+  <h2 class="ph"><span class="num">2</span>Resultat</h2>
+  <div id="out"></div>
+</section>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-const API='https://il.srgssr.ch/integrationlayer/2.1/mediaComposition/byUrn/';
-const UUID=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+const $ = id => document.getElementById(id);
+const API = 'https://il.srgssr.ch/integrationlayer/2.1/mediaComposition/byUrn/';
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function slug(s) { return (s || 'video').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'video'; }
+function quality(u) { const m = u.match(/_q(\d+)\./); return m ? +m[1] : 0; }
 
-// Alle Strings im JSON einsammeln, die wie Video-Dateien aussehen
-function collect(o,acc){
-  if(typeof o==='string'){ if(/^https?:\/\/.+\.mp4(\?|$)/i.test(o)) acc.add(o); }
-  else if(Array.isArray(o)) o.forEach(x=>collect(x,acc));
-  else if(o&&typeof o==='object') Object.values(o).forEach(x=>collect(x,acc));
-}
-function quality(u){const m=u.match(/_q(\d+)\./);return m?+m[1]:0}
-
-async function one(line){
-  const m=line.match(UUID);
-  if(!m) return {err:'Keine UUID gefunden',line};
-  const urn='urn:rtr:video:'+m[0].toLowerCase();
-  const r=await fetch(API+urn+'.json');
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  const j=await r.json();
-  const ch=(j.chapterList||[]).find(c=>c.urn===urn)||(j.chapterList||[])[0]||{};
-  const acc=new Set(); collect(j,acc);
-  const mp4=[...acc].sort((a,b)=>quality(b)-quality(a));
-  const hls=[];
-  (ch.resourceList||[]).forEach(x=>{ if(x.url&&!/\.mp4/i.test(x.url)) hls.push((x.streaming||x.type||'')+' · '+x.url)});
-  return {urn,title:ch.title||'(ohne Titel)',date:ch.date||'',mp4,hls,raw:j};
+// Alle Strings einsammeln, die wie MP4-Dateien aussehen (podcastHdUrl, podcastSdUrl, Ressourcen …)
+function collect(o, acc) {
+  if (typeof o === 'string') { if (/^https?:\/\/.+\.mp4(\?|$)/i.test(o)) acc.add(o); }
+  else if (Array.isArray(o)) o.forEach(x => collect(x, acc));
+  else if (o && typeof o === 'object') Object.values(o).forEach(x => collect(x, acc));
 }
 
-function render(res){
-  const out=$('out'); out.innerHTML='';
-  res.forEach((r,i)=>{
-    const d=document.createElement('div'); d.className='item';
-    if(r.err){ d.innerHTML=`<div class="warn">${esc(r.err)}: ${esc(r.line)}</div>`; out.appendChild(d); return; }
-    let h=`<div class="t">${esc(r.title)}</div><div class="m">${esc(r.date)} · ${esc(r.urn)}</div>`;
-    if(r.mp4.length){
-      r.mp4.forEach((u,k)=>{
-        h+=`<div class="link">${esc(u)}</div>
-        <div class="row"><button data-c="${esc(u)}">Kopieren</button>
-        <a class="btn ghost" href="${esc(u)}" target="_blank" rel="noopener">Öffnen</a>
-        <span class="m">${k===0?'beste Qualität':''} ${quality(u)?'q'+quality(u):''}</span></div>`;
+// HLS-Stream; bei Akamai-Token zuerst ein Token holen (bestmöglich, Fehler werden geschluckt)
+async function hlsOf(ch) {
+  const list = (ch.resourceList || []).filter(x => x.url && /m3u8/i.test(x.url));
+  if (!list.length) return null;
+  const r = list.find(x => x.quality === 'HD') || list[0];
+  let url = r.url, note = '';
+  if (/AKAMAI/i.test(r.tokenType || '')) {
+    try {
+      const acl = new URL(url).pathname.split('/').slice(0, -1).join('/') + '/*';
+      const t = await (await fetch('https://tp.srgssr.ch/akahd/token?acl=' + encodeURIComponent(acl))).json();
+      const ap = t && t.token && t.token.authparams;
+      if (ap) url += (url.includes('?') ? '&' : '?') + ap; else note = 'Token na sa laschà betg tschertgar.';
+    } catch (e) { note = 'Token na sa laschà betg tschertgar (' + e.message + ').'; }
+  }
+  return { url, note, drm: !!(r.drmList && r.drmList.length) };
+}
+
+async function one(line) {
+  const m = line.match(UUID);
+  if (!m) return { err: 'Nagina UUID anflada', line };
+  const urn = 'urn:rtr:video:' + m[0].toLowerCase();
+  const r = await fetch(API + urn + '.json');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  const ch = (j.chapterList || []).find(c => c.urn === urn) || (j.chapterList || [])[0] || {};
+  const acc = new Set(); collect(ch, acc);
+  const mp4 = [...acc].sort((a, b) => quality(b) - quality(a));
+  const hls = await hlsOf(ch);
+  return { urn, title: ch.title || '(senza titel)', date: ch.date || '', mp4, hls, raw: j };
+}
+
+function copyBtn(txt) { return '<button class="btn sm" type="button" data-c="' + esc(txt) + '">Copiar</button>'; }
+
+function render(res) {
+  const out = $('out'); out.innerHTML = '';
+  res.forEach(r => {
+    const d = document.createElement('div'); d.className = 'item';
+    if (r.err) { d.innerHTML = '<p class="warn">' + esc(r.err) + ': ' + esc(r.line) + '</p>'; out.appendChild(d); return; }
+    let h = '<div><div class="t">' + esc(r.title) + '</div><div class="m">' + esc(r.date) + ' · ' + esc(r.urn) + '</div></div>';
+    if (r.mp4.length) {
+      h += '<p class="sub">Telechargiar directamain (MP4)</p>';
+      r.mp4.forEach((u, k) => {
+        h += '<div class="lnk">' + esc(u) + '</div><div class="row">' + copyBtn(u) +
+          '<a class="btn sm" href="' + esc(u) + '" target="_blank" rel="noopener">Avrir ↗</a>' +
+          '<span class="m">' + (k === 0 ? 'meglra qualitad ' : '') + (quality(u) ? 'q' + quality(u) : '') + '</span></div>';
       });
     } else {
-      h+=`<div class="warn">Kein MP4-Download-Link in der Antwort. Evtl. ist das Video nicht zum Download freigegeben.</div>`;
+      h += '<p class="hint">Nagina colliaziun MP4: il podcast n’è probablamain betg activà per quest video.</p>';
     }
-    if(r.hls.length) h+=`<details><summary>Weitere Ressourcen (Streams)</summary>${r.hls.map(x=>`<div class="link">${esc(x)}</div>`).join('')}</details>`;
-    h+=`<details><summary>Rohdaten (JSON)</summary><div class="link" style="white-space:pre-wrap;max-height:300px;overflow:auto">${esc(JSON.stringify(r.raw,null,2))}</div></details>`;
-    d.innerHTML=h; out.appendChild(d);
+    if (r.hls) {
+      const f = slug(r.title) + '.mp4';
+      const ff = 'ffmpeg -i "' + r.hls.url + '" -c copy -bsf:a aac_adtstoasc ' + f;
+      const yt = 'yt-dlp -o ' + f + ' "' + r.hls.url + '"';
+      h += '<p class="sub">Stream (HLS)' + (r.mp4.length ? ' – alternativa' : ' – telechargiar cun ffmpeg') + '</p>' +
+        '<div class="lnk">' + esc(r.hls.url) + '</div><div class="row">' + copyBtn(r.hls.url) + '</div>' +
+        '<div class="lnk">' + esc(ff) + '</div><div class="row">' + copyBtn(ff) + '<span class="m">ffmpeg</span></div>' +
+        '<div class="lnk">' + esc(yt) + '</div><div class="row">' + copyBtn(yt) + '<span class="m">yt-dlp</span></div>';
+      if (r.hls.note) h += '<p class="warn">' + esc(r.hls.note) + '</p>';
+      if (r.hls.drm) h += '<p class="warn">Quest video para da vegnir protegi (DRM) – il stream na funcziunescha forsa betg.</p>';
+    } else if (!r.mp4.length) {
+      h += '<p class="warn">Nagin stream anflà. Il video n’è forsa betg liber u mo en Svizra.</p>';
+    }
+    h += '<details class="raw"><summary>Datas brutas (JSON)</summary><div class="lnk" style="white-space:pre-wrap;max-height:300px;overflow:auto">' + esc(JSON.stringify(r.raw, null, 2)) + '</div></details>';
+    d.innerHTML = h; out.appendChild(d);
   });
-  out.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>{
-    navigator.clipboard.writeText(b.dataset.c); b.textContent='Kopiert'; setTimeout(()=>b.textContent='Kopieren',1200);
+  out.querySelectorAll('button[data-c]').forEach(b => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(b.dataset.c); b.textContent = 'Copià'; dispatchEvent(new Event('dbz-success')); setTimeout(() => b.textContent = 'Copiar', 1200); }
+    catch (e) { b.textContent = 'Betg pussibel'; }
   });
-  $('outc').style.display='block';
+  $('outc').hidden = false;
 }
 
-$('go').onclick=async()=>{
-  const lines=$('in').value.split(/\n/).map(s=>s.trim()).filter(Boolean);
-  if(!lines.length) return;
-  $('st').textContent='Lade …';
-  const res=[];
-  for(const l of lines){
-    try{res.push(await one(l))}
-    catch(e){res.push({err:'Abruf fehlgeschlagen ('+e.message+'). Möglicherweise blockiert der Browser die Anfrage (CORS)',line:l})}
+$('go').onclick = async () => {
+  const lines = $('in').value.split(/\n/).map(s => s.trim()).filter(Boolean);
+  if (!lines.length) return;
+  $('st').textContent = 'Chargiar …';
+  const res = [];
+  for (const l of lines) {
+    try { res.push(await one(l)); }
+    catch (e) { res.push({ err: 'Betg reussì (' + e.message + '). Forsa bloccha il browser la dumonda (CORS)', line: l }); }
   }
-  $('st').textContent='';
+  $('st').textContent = '';
   render(res);
 };
-$('clr').onclick=()=>{$('in').value='';$('outc').style.display='none'};
+$('clr').onclick = () => { $('in').value = ''; $('outc').hidden = true; $('st').textContent = ''; };
 </script>
+<script src="/like.js" defer></script>
 </body>
 </html>
