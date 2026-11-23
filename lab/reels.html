@@ -579,7 +579,7 @@ async function loadPlay() {
   const st = $('pstat'), bw = $('pbarw'), bar = $('pbar'), say = (t, err) => { st.textContent = t; st.classList.toggle('err', !!err); st.classList.remove('hidden'); };
   const m = $('playUrl').value.match(UUID_RE);
   if (!m) return say('Nagina UUID anflada. Encollar la colliaziun cumplaina da Play RTR (cun ?urn=urn:rtr:video:…).', true);
-  const urn = 'urn:rtr:video:' + m[0].toLowerCase(), ctl = playCtl = new AbortController();
+  const urn = 'urn:rtr:video:' + m[0].toLowerCase(), ctl = playCtl = new AbortController(); let step = 'api', list0 = '';
   $('playGo').disabled = true; $('playStop').classList.remove('hidden'); bw.classList.remove('hidden'); bar.style.width = '0'; say('Tschertgel il video …');
   try {
     let j;
@@ -589,7 +589,7 @@ async function loadPlay() {
     const acc = new Set(); collectMp4(ch, acc);
     const list = [...acc].sort((a, b) => qOf(b) - qOf(a));
     if (!list.length) throw new Error('Nagina colliaziun MP4: il podcast n\'è probablamain betg activà per quest video. Alternativa: /lab/download.');
-    say('Chargiar «' + (ch.title || 'video') + '» …');
+    list0 = list[0]; say('Chargiar «' + (ch.title || 'video') + '» …'); step = 'mp4';
     const r = await fetch(list[0], { signal: ctl.signal });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const total = +r.headers.get('content-length') || 0, parts = []; let got = 0;
@@ -608,7 +608,7 @@ async function loadPlay() {
     if (V && V.file === file) { $('name').value = slugOf(ch.title) + '_reel'; say('Chargià: «' + (ch.title || 'video') + '». Tagls e fatschas vegnan tschertgads mo sin dumonda.'); }
     else st.classList.add('hidden');
   } catch (e) {
-    say(e.name === 'AbortError' ? 'Interrut.' : (/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? 'Il browser ha bloccà il download (CORS) u la colliaziun n\'è betg accessibla. Telechargiar il video cun /lab/download e trair el qua.' : e.message), e.name !== 'AbortError');
+    say(e.name === 'AbortError' ? 'Interrut.' : (step === 'mp4' && /Failed to fetch|NetworkError|Load failed/i.test(e.message) ? 'Colliaziun anflada, ma il server dal video (' + (() => { try { return new URL(list0).host; } catch (x) { return 'MP4'; } })() + ') na lascha betg chargiar il file en il browser (CORS). Telechargiar il video cun /lab/download e trair el qua.' : e.message), e.name !== 'AbortError');
   }
   playCtl = null; $('playGo').disabled = !!job; $('playStop').classList.add('hidden'); bw.classList.add('hidden');
 }
