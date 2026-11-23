@@ -119,15 +119,23 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
   <header>
     <a class="homelink" href="/lab/">← Lab</a>
     <h1><span class="acc">Re</span>els<span class="labbadge">Labor</span></h1>
-    <p class="lead">Preparar videos existents per social: chattar tagls, centrar il maletg per il format ad aut, integrar tetels, texts e nums – ed exportar sco MP4. Tut vegn elavurà en il browser, nagins files bandunan tes computer.</p>
+    <p class="lead">Preparar videos existents (file u colliaziun da Play RTR) per social: chattar tagls, centrar il maletg per il format ad aut, integrar tetels, texts e nums – ed exportar sco MP4. Tut vegn elavurà en il browser, nagins files bandunan tes computer.</p>
   </header>
 
   <section class="card" id="loadCard">
     <h2><span class="num">1</span>Chargiar video</h2>
     <div class="drop" id="drop" tabindex="0" role="button"><b>Trair qua il video</b>MP4 (H.264), MOV u WebM – u cliccar per tscherner</div>
     <input type="file" id="file" accept="video/*,.mp4,.mov,.m4v,.webm">
+    <div class="row">
+      <label class="f grow">u colliaziun da Play RTR <input type="text" id="playUrl" spellcheck="false" autocomplete="off" placeholder="https://www.rtr.ch/play/tv/…/video/…?urn=urn:rtr:video:…"></label>
+      <button id="playGo" class="pri">Chargiar da Play RTR</button>
+      <button id="playStop" class="hidden">Interrumper</button>
+    </div>
+    <div class="barw hidden" id="pbarw"><div class="bar" id="pbar"></div></div>
+    <p class="info hidden" id="pstat"></p>
     <p class="info hidden" id="vinfo"></p>
     <p class="info err hidden" id="verr"></p>
+    <p class="hint">Colliaziuns da Play RTR funcziunan mo per videos cun podcast activà (MP4). Tagls e fatschas vegnan tschertgads mo sin dumonda.</p>
     <p class="hint">Files MXF u ProRes na po il browser betg leger – exportar quels l'emprim sco MP4 (H.264). Export il meglier cun Chrome u Edge.</p>
   </section>
 
@@ -154,7 +162,6 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
           <button id="cutHere">Tagl tar la posiziun actuala</button>
           <button id="stopJob" class="hidden">Interrumper</button>
           <label class="f grow">Sensibilitad <input type="range" id="sens" min="10" max="90" value="50"></label>
-          <label class="c"><input type="checkbox" id="autoFace" checked> Centrar sin fatschas</label>
         </div>
         <div class="row mid">
           <button id="setIn" title="Taste I">[ In tar la posiziun</button>
@@ -183,6 +190,7 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
           <button id="zFit">Entir maletg (cun blur)</button>
           <button id="zCenter">Centrar</button>
           <button id="zFace">Centrar sin fatscha</button>
+          <button id="zFaceAll">Centrar tut las parts sin fatschas</button>
           <button id="zAll">Surpigliar per tut las parts</button>
         </div>
         <div class="sep"></div>
@@ -555,6 +563,59 @@ async function take(file) {
   resetOut(); $('dstat').textContent = 'Il video è ina suletta part. «Tschertgar tagls» parta el tar mintga tagl dir.';
   await seek(0); sizePv(); renderShots(); renderEls(); renderSubs(); syncShotUI();
 }
+/* ---------- Play RTR: Colliaziun → MP4 (podcast) → sco file chargiar. Nagins tagls/fatschas automatics. ---------- */
+const PLAY_API = 'https://il.srgssr.ch/integrationlayer/2.1/mediaComposition/byUrn/';
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+const slugOf = t => (t || 'video').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'video';
+const qOf = u => { const m = u.match(/_q(\d+)\./); return m ? +m[1] : 0; };
+function collectMp4(o, acc) {
+  if (typeof o === 'string') { if (/^https?:\/\/.+\.mp4(\?|$)/i.test(o)) acc.add(o); }
+  else if (Array.isArray(o)) o.forEach(x => collectMp4(x, acc));
+  else if (o && typeof o === 'object') Object.values(o).forEach(x => collectMp4(x, acc));
+}
+let playCtl = null;
+async function loadPlay() {
+  if (job || playCtl) return;
+  const st = $('pstat'), bw = $('pbarw'), bar = $('pbar'), say = (t, err) => { st.textContent = t; st.classList.toggle('err', !!err); st.classList.remove('hidden'); };
+  const m = $('playUrl').value.match(UUID_RE);
+  if (!m) return say('Nagina UUID anflada. Encollar la colliaziun cumplaina da Play RTR (cun ?urn=urn:rtr:video:…).', true);
+  const urn = 'urn:rtr:video:' + m[0].toLowerCase(), ctl = playCtl = new AbortController();
+  $('playGo').disabled = true; $('playStop').classList.remove('hidden'); bw.classList.remove('hidden'); bar.style.width = '0'; say('Tschertgel il video …');
+  try {
+    let j;
+    try { const r = await fetch(PLAY_API + urn + '.json', { signal: ctl.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); j = await r.json(); }
+    catch (e) { if (e.name === 'AbortError') throw e; throw new Error('Play RTR n\'è betg accessibel (' + e.message + ').'); }
+    const ch = (j.chapterList || []).find(c => c.urn === urn) || (j.chapterList || [])[0] || {};
+    const acc = new Set(); collectMp4(ch, acc);
+    const list = [...acc].sort((a, b) => qOf(b) - qOf(a));
+    if (!list.length) throw new Error('Nagina colliaziun MP4: il podcast n\'è probablamain betg activà per quest video. Alternativa: /lab/download.');
+    say('Chargiar «' + (ch.title || 'video') + '» …');
+    const r = await fetch(list[0], { signal: ctl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const total = +r.headers.get('content-length') || 0, parts = []; let got = 0;
+    if (r.body && r.body.getReader) {
+      const rd = r.body.getReader();
+      for (;;) {
+        const { done, value } = await rd.read(); if (done) break;
+        parts.push(value); got += value.length;
+        if (total) bar.style.width = (got / total * 100) + '%';
+        st.textContent = 'Chargiar «' + (ch.title || 'video') + '» … ' + (got / 1048576).toFixed(0) + (total ? ' da ' + (total / 1048576).toFixed(0) : '') + ' MB';
+      }
+    } else parts.push(new Uint8Array(await r.arrayBuffer()));
+    const file = new File(parts, slugOf(ch.title) + '.mp4', { type: 'video/mp4' });
+    say('Preparar il video …');
+    await take(file);
+    if (V && V.file === file) { $('name').value = slugOf(ch.title) + '_reel'; say('Chargià: «' + (ch.title || 'video') + '». Tagls e fatschas vegnan tschertgads mo sin dumonda.'); }
+    else st.classList.add('hidden');
+  } catch (e) {
+    say(e.name === 'AbortError' ? 'Interrut.' : (/Failed to fetch|NetworkError|Load failed/i.test(e.message) ? 'Il browser ha bloccà il download (CORS) u la colliaziun n\'è betg accessibla. Telechargiar il video cun /lab/download e trair el qua.' : e.message), e.name !== 'AbortError');
+  }
+  playCtl = null; $('playGo').disabled = !!job; $('playStop').classList.add('hidden'); bw.classList.add('hidden');
+}
+$('playGo').onclick = loadPlay;
+$('playStop').onclick = () => { if (playCtl) playCtl.abort(); };
+$('playUrl').onkeydown = e => { if (e.key === 'Enter') loadPlay(); };
+
 const drop = $('drop'), fileIn = $('file');
 drop.onclick = () => { if (!job) fileIn.click(); };
 drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); drop.click(); } };
@@ -638,8 +699,8 @@ function score(a, b) {
   m /= 2304 * 255; hd /= 2304 * 6;
   return Math.min(m / .09, hd / .13);
 }
-function startJob(kind) { job = { kind, stop: false }; v.pause(); document.body.classList.add('busy'); ['detect', 'cutHere', 'go', 'zFace', 'zAll'].forEach(id => $(id).disabled = true); return job; }
-function endJob() { job = null; ['detect', 'cutHere', 'go', 'zFace', 'zAll'].forEach(id => $(id).disabled = false); dirty = true; }
+function startJob(kind) { job = { kind, stop: false }; v.pause(); document.body.classList.add('busy'); ['detect', 'cutHere', 'go', 'zFace', 'zFaceAll', 'zAll', 'playGo'].forEach(id => $(id).disabled = true); return job; }
+function endJob() { job = null; ['detect', 'cutHere', 'go', 'zFace', 'zFaceAll', 'zAll', 'playGo'].forEach(id => $(id).disabled = false); dirty = true; }
 async function detectCuts() {
   if (job || !V) return;
   const j = startJob('detect'), bar = $('dbar'); $('dbarw').classList.remove('hidden'); $('stopJob').classList.remove('hidden'); bar.style.width = '0';
@@ -664,7 +725,6 @@ async function detectCuts() {
     cur = 0; resetOut(); renderShots(); syncShotUI();
     const n = shots.length - 1;
     $('dstat').textContent = n ? `Chattà ${n} ${n === 1 ? 'tagl' : 'tagls'} – ${shots.length} parts.` : 'Chattà nagins tagls. Forsa cun dapli sensibilitad, u metter tagls a maun.';
-    if (S.face) { $('dstat').textContent += ' Tschertgel fatschas …'; const f = await faceAll(j, bar); $('dstat').textContent = $('dstat').textContent.replace(' Tschertgel fatschas …', f ? ` ${f} ${f === 1 ? 'part centrada' : 'parts centradas'} sin ina fatscha.` : ''); }
   } catch (e) {
     $('dstat').textContent = j.stop ? 'Interrut.' : 'La tschertga n\'è betg reussida.';
   }
@@ -674,7 +734,6 @@ async function detectCuts() {
 $('detect').onclick = detectCuts;
 $('stopJob').onclick = () => { if (job) job.stop = true; };
 $('sens').oninput = e => { S.sens = +e.target.value; save(); };
-$('autoFace').onchange = e => { S.face = e.target.checked; save(); };
 
 /* ---------- Gesichter: Ausschnitt auf das grösste Gesicht zentrieren (pico.js, läuft lokal) ---------- */
 let picoP = null;
@@ -718,6 +777,17 @@ $('zFace').onclick = async () => {
   try { const ok = await faceShot(cur, await loadPico()); st.textContent = ok ? 'Centrà sin la fatscha.' : 'Chattà naginas fatschas en questa part.'; }
   catch (e) { st.textContent = 'La tschertga da fatschas n\'è betg disponibla.'; }
   await seek(shots[cur].a + .5 / V.fps); endJob(); renderShots(); syncShotUI();
+};
+$('zFaceAll').onclick = async () => {
+  if (job || !V) return;
+  const j = startJob('face'), st = $('fstat'), bar = $('dbar'); st.classList.remove('hidden'); st.className = 'info'; st.textContent = 'Tschertgel fatschas …';
+  $('dbarw').classList.remove('hidden'); $('stopJob').classList.remove('hidden'); bar.style.width = '0';
+  try {
+    const n = await faceAll(j, bar);
+    st.textContent = j.stop ? 'Interrut.' : n ? `${n} ${n === 1 ? 'part centrada' : 'parts centradas'} sin ina fatscha.` : 'Chattà naginas fatschas.';
+  } catch (e) { st.textContent = 'La tschertga da fatschas n\'è betg disponibla.'; }
+  $('dbarw').classList.add('hidden'); $('stopJob').classList.add('hidden');
+  await seek(shots[cur].a + .5 / V.fps); endJob(); resetOut(); renderShots(); syncShotUI();
 };
 
 /* ---------- Format und Ausschnitt ---------- */
@@ -907,7 +977,7 @@ $('stopX').onclick = () => { if (job) job.stop = true; };
 ['res', 'q', 'fps'].forEach(id => $(id).onchange = () => { if (id !== 'fps') { S[id] = $(id).value; save(); } resetOut(); });
 
 /* ---------- Start ---------- */
-$('sens').value = S.sens; $('autoFace').checked = S.face; $('color').value = S.color; $('logo').checked = S.logo; $('fade').checked = S.fade; $('res').value = S.res; $('q').value = S.q;
+$('sens').value = S.sens; $('color').value = S.color; $('logo').checked = S.logo; $('fade').checked = S.fade; $('res').value = S.res; $('q').value = S.q;
 syncFmt(); sizePv(); loadFonts(); requestAnimationFrame(loop);
 window.addEventListener('beforeunload', e => { if (V && (els.length || shots.length > 1)) { e.preventDefault(); e.returnValue = ''; } });
 </script>
