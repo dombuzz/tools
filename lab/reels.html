@@ -85,6 +85,9 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
 .tl .shot.cur{box-shadow:inset 0 0 0 2px var(--text)}
 .tl .el{position:absolute;top:44px;height:5px;border-radius:3px;background:var(--text);opacity:.55}
 .tl .el.s{top:51px;background:var(--warn)}
+.tl .iom{position:absolute;top:0;height:58px;pointer-events:none;z-index:1}
+.tl .iom.dim{background:rgba(0,0,0,.55)}
+.tl .iom.mk{width:3px;margin-left:-1.5px;background:#ffd24a}
 .tl .kfm{position:absolute;top:29px;width:9px;height:9px;margin-left:-4.5px;transform:rotate(45deg);background:#ffd24a;border:1px solid #6b5300;pointer-events:none;z-index:2}
 .kfl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .kfl .kfc{border-color:#ffd24a}
@@ -153,10 +156,16 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
           <label class="f grow">Sensibilitad <input type="range" id="sens" min="10" max="90" value="50"></label>
           <label class="c"><input type="checkbox" id="autoFace" checked> Centrar sin fatschas</label>
         </div>
+        <div class="row mid">
+          <button id="setIn" title="Taste I">[ In tar la posiziun</button>
+          <button id="setOut" title="Taste O">Out tar la posiziun ]</button>
+          <button id="clrIO" disabled>Rom resettar</button>
+          <span class="info" id="ioInfo" style="margin:0"></span>
+        </div>
         <div class="barw hidden" id="dbarw"><div class="bar" id="dbar"></div></div>
         <p class="info" id="dstat">Il video è ina suletta part. «Tschertgar tagls» parta el tar mintga tagl dir.</p>
         <div class="shots" id="shots"></div>
-        <p class="hint">Parts senza crutschet na vegnan betg exportadas. Cliccar sin ina part per la tscherner.</p>
+        <p class="hint">In/Out (tastas I e O): exportescha mo il material tranter in ed out. Parts senza crutschet na vegnan betg exportadas. Cliccar sin ina part per la tscherner.</p>
       </section>
 
       <section class="card">
@@ -258,6 +267,9 @@ let V = null;            // {file, w, h, dur, fps}
 let shots = [];          // [{a, b, on, cx, cy, z, face, kf:[{t,cx,cy,z}]}]
 let els = [];            // [{id, type, text, name, func, a, b, align, y, size}]
 let subs = [], subOn = true;
+let io = { a: 0, b: 0 };   // In-/Out-Punkt in Sekunden: nur dieser Bereich wird exportiert
+const ioOn = () => V && (io.a > 1e-3 || io.b < V.dur - 1e-3);
+const clipS = s => [Math.max(s.a, io.a), Math.min(s.b, io.b)];
 let cur = 0, selEl = null, dirty = true, job = null, uid = 1;
 const outSize = (w = 1080) => { const [a, b] = FMT[S.fmt]; return [w, Math.round(w * b / a / 2) * 2]; };
 const fpsStr = () => (FPSS.find(f => f[0] === V.fps) || [0, String(V.fps)])[1];
@@ -432,6 +444,7 @@ function loop() {
   requestAnimationFrame(loop);
   if (V && shots.length && (dirty || !v.paused)) {
     const t = v.currentTime;
+    if (!job && !v.paused && ioOn()) { if (t >= io.b - 1e-3) { v.pause(); v.currentTime = io.b; } else if (t < io.a - 1e-3) v.currentTime = io.a; }
     if (!job && !v.paused) {   // beim Abspielen ausgeschaltete Teile überspringen
       const i = shotAt(t);
       if (!shots[i].on) { const n = shots.findIndex((s, j) => j > i && s.on); if (n < 0) { v.pause(); } else v.currentTime = shots[n].a + .001; }
@@ -448,10 +461,11 @@ function loop() {
 v.addEventListener('seeked', () => { dirty = true; });
 v.addEventListener('play', () => { $('play').textContent = '❚❚'; });
 v.addEventListener('pause', () => { $('play').textContent = '▶'; dirty = true; });
-$('play').onclick = () => { if (job) return; if (v.paused) { if (v.currentTime >= V.dur - .05) v.currentTime = 0; v.play(); } else v.pause(); };
+$('play').onclick = () => { if (job) return; if (v.paused) { if (v.currentTime >= io.b - .05 || v.currentTime < io.a - 1e-3) v.currentTime = io.a; v.play(); } else v.pause(); };
 const step = d => { if (job) return; v.pause(); v.currentTime = clamp((Math.round(v.currentTime * V.fps) + d) / V.fps + .0005, 0, V.dur); };
 $('fb1').onclick = () => step(-1); $('ff1').onclick = () => step(1);
 document.addEventListener('keydown', e => {
+  if (V && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && !e.ctrlKey && !e.metaKey && !e.altKey && /^[ioIO]$/.test(e.key)) { $(/^[iI]$/.test(e.key) ? 'setIn' : 'setOut').click(); return; }
   if (!V || /INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName)) return;
   if (e.key === ' ') { e.preventDefault(); $('play').click(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); } else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
 });
@@ -531,7 +545,7 @@ async function take(file) {
     $('verr').textContent = 'Il browser na po betg leger quest video. Exportar el l\'emprim sco MP4 (H.264).'; $('verr').classList.remove('hidden'); return;
   }
   shots = [{ a: 0, b: v.duration, on: true, cx: .5, cy: .5, z: 1, face: false, kf: [] }]; els = []; subs = []; cur = 0; selEl = null;
-  V = { file, w: v.videoWidth, h: v.videoHeight, dur: v.duration, fps: 25 };
+  V = { file, w: v.videoWidth, h: v.videoHeight, dur: v.duration, fps: 25 }; io = { a: 0, b: v.duration };
   V.fps = await detectFps();
   $('fps').innerHTML = FPSS.map(f => `<option value="${f[0]}"${f[0] === V.fps ? ' selected' : ''}>${String(f[0]).replace('.', ',')}</option>`).join('');
   $('name').value = file.name.replace(/\.[^.]+$/, '') + '_reel';
@@ -551,16 +565,22 @@ drop.addEventListener('drop', e => { const f = [...e.dataTransfer.files].find(x 
 
 /* ---------- Teile (zwischen zwei Schnitten) ---------- */
 function renderShots() {
-  const tl = $('tl'); tl.querySelectorAll('.shot,.el').forEach(x => x.remove());
+  const tl = $('tl'); tl.querySelectorAll('.shot,.el,.iom').forEach(x => x.remove());
   shots.forEach((s, i) => {
     const d = document.createElement('div'); d.className = 'shot' + (s.on ? '' : ' off') + (i === cur ? ' cur' : '');
     d.style.left = (s.a / V.dur * 100) + '%'; d.style.width = ((s.b - s.a) / V.dur * 100) + '%'; d.textContent = i + 1; tl.insertBefore(d, $('ph'));
   });
   shots.forEach(s => s.kf.forEach(k => { const d = document.createElement('div'); d.className = 'kfm'; d.style.left = (k.t / V.dur * 100) + '%'; tl.insertBefore(d, $('ph')); }));
   els.forEach(e => { const d = document.createElement('div'); d.className = 'el'; d.style.left = (e.a / V.dur * 100) + '%'; d.style.width = (Math.max(0, e.b - e.a) / V.dur * 100) + '%'; tl.insertBefore(d, $('ph')); });
+  if (ioOn()) {
+    const m = (cls, l, w) => { const d = document.createElement('div'); d.className = 'iom ' + cls; d.style.left = (l / V.dur * 100) + '%'; if (w != null) d.style.width = (w / V.dur * 100) + '%'; tl.insertBefore(d, $('ph')); };
+    if (io.a > 1e-3) { m('dim', 0, io.a); m('mk', io.a); }
+    if (io.b < V.dur - 1e-3) { m('dim', io.b, V.dur - io.b); m('mk', io.b); }
+  }
+  $('clrIO').disabled = !ioOn(); $('ioInfo').textContent = ioOn() ? 'Export: ' + tfmt(io.a) + ' – ' + tfmt(io.b) + ' (' + tfmt(io.b - io.a) + ')' : 'Tut il video vegn exportà.';
   if (subOn) subs.forEach(e => { const d = document.createElement('div'); d.className = 'el s'; d.style.left = (e.a / V.dur * 100) + '%'; d.style.width = ((e.b - e.a) / V.dur * 100) + '%'; tl.insertBefore(d, $('ph')); });
   $('shots').innerHTML = shots.map((s, i) => `<div class="r${i === cur ? ' cur' : ''}" data-i="${i}"><label class="c" title="Exportar questa part"><input type="checkbox" data-on="${i}"${s.on ? ' checked' : ''}></label><b>Part ${i + 1}</b><span class="t">${tfmt(s.a)} – ${tfmt(s.b)} · ${(s.b - s.a).toFixed(1).replace('.', ',')} s</span>${s.face ? '<span title="Centrà sin fatscha">☺</span>' : ''}<span class="sp"></span>${i ? `<button class="sm" data-merge="${i}" title="Stizzar il tagl avant questa part">Unir cun l'antecedenta</button>` : ''}</div>`).join('');
-  const on = shots.filter(s => s.on), tot = on.reduce((x, s) => x + s.b - s.a, 0);
+  const on = shots.filter(s => s.on), tot = on.reduce((x, s) => x + Math.max(0, clipS(s)[1] - clipS(s)[0]), 0);
   $('xstat').dataset.sum = `${on.length} ${on.length === 1 ? 'part' : 'parts'} · ${tfmt(tot)}`;
   if (!job && !$('dl').href) $('xstat').textContent = 'Vegn exportà: ' + $('xstat').dataset.sum + '.';
   dirty = true;
@@ -591,6 +611,9 @@ function cutAt(t) {
   shots.splice(i + 1, 0, n); s.b = t; return true;
 }
 $('cutHere').onclick = () => { if (job || !V) return; if (cutAt(v.currentTime)) { cur = shotAt(v.currentTime); resetOut(); renderShots(); syncShotUI(); } };
+$('setIn').onclick = () => { if (job || !V) return; const t = Math.round(v.currentTime * V.fps) / V.fps; if (t >= io.b - .1) io.b = V.dur; io.a = clamp(t, 0, V.dur); resetOut(); renderShots(); };
+$('setOut').onclick = () => { if (job || !V) return; const t = Math.round(v.currentTime * V.fps) / V.fps; if (t <= io.a + .1) io.a = 0; io.b = clamp(t, 0, V.dur); resetOut(); renderShots(); };
+$('clrIO').onclick = () => { if (job || !V) return; io = { a: 0, b: V.dur }; resetOut(); renderShots(); };
 // Zeitleiste: klicken oder ziehen springt an die Stelle
 const tl = $('tl'); let scrub = false;
 const tlSeek = e => { const r = tl.getBoundingClientRect(), t = clamp((e.clientX - r.left) / r.width, 0, 1) * V.dur; v.currentTime = Math.min(t, V.dur - .01); cur = shotAt(t); syncShotUI(); };
@@ -816,7 +839,7 @@ async function exportVideo() {
   V.fps = +$('fps').value;
   const fps = V.fps, [W, H] = outSize(+$('res').value), bitrate = +$('q').value * 1e6 * (W / 1080);
   // ausgewählte Teile → Bildnummern; zusammenhängende Teile ergeben einen Tonabschnitt
-  const parts = shots.map((s, i) => ({ i, n0: Math.round(s.a * fps), n1: Math.round(s.b * fps) })).filter(p => shots[p.i].on && p.n1 > p.n0);
+  const parts = shots.map((s, i) => { const [ca, cb] = clipS(s); return { i, n0: Math.round(ca * fps), n1: Math.round(cb * fps) }; }).filter(p => shots[p.i].on && p.n1 > p.n0);
   if (!parts.length) { xs('Naginas parts tschernidas per l\'export.', 'err'); return; }
   const ranges = []; for (const p of parts) { const l = ranges[ranges.length - 1]; if (l && l.n1 === p.n0) l.n1 = p.n1; else ranges.push({ n0: p.n0, n1: p.n1 }); }
   const total = parts.reduce((x, p) => x + p.n1 - p.n0, 0);
