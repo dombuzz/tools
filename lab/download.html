@@ -179,6 +179,67 @@ function range() {
   return { on: true, a, b, tag: '-' + (a || '0').replace(/[:.]/g, '-') + '_' + (b || 'fin').replace(/[:.]/g, '-') };
 }
 
+
+// ---- Direkt im Browser laden (nur HLS, nur wenn der Server es erlaubt) ----
+function toSec(t) { if (!t) return null; const p = t.split(':').map(Number); return p.reduce((a, x) => a * 60 + x, 0); }
+function absUrl(u, base) { return new URL(u, base).href; }
+async function getText(u) { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }
+
+async function browserDownload(r, rg, setSt) {
+  const auth = (r.hls.url.match(/[?&](hdnts=[^&]+)/) || [])[1] || '';
+  const withAuth = u => (auth && !/hdnts=/.test(u)) ? u + (u.includes('?') ? '&' : '?') + auth : u;
+  // 1. Master: beste Variante wählen
+  setSt('Playlist …');
+  const master = await getText(r.hls.url);
+  let media = r.hls.url;
+  const ml = master.split(/\r?\n/);
+  let best = -1, warnAudio = /#EXT-X-MEDIA:.*TYPE=AUDIO.*URI=/.test(master);
+  for (let i = 0; i < ml.length; i++) {
+    if (!ml[i].startsWith('#EXT-X-STREAM-INF')) continue;
+    const bw = +((ml[i].match(/BANDWIDTH=(\d+)/) || [])[1] || 0);
+    const next = ml.slice(i + 1).find(x => x && !x.startsWith('#'));
+    if (next && bw > best) { best = bw; media = withAuth(absUrl(next, r.hls.url)); }
+  }
+  // 2. Segmentliste
+  setSt('Segmente …');
+  const pl = await getText(media);
+  if (/#EXT-X-KEY:(?!METHOD=NONE)/.test(pl)) throw new Error('Stream è criptà (AES), betg pussibel en il browser');
+  const lines = pl.split(/\r?\n/);
+  let init = null, t = 0, segs = [];
+  for (let i = 0; i < lines.length; i++) {
+    const L = lines[i];
+    if (L.startsWith('#EXT-X-MAP')) { const m = L.match(/URI="([^"]+)"/); if (m) init = withAuth(absUrl(m[1], media)); }
+    if (L.startsWith('#EXTINF')) {
+      const d = parseFloat(L.slice(8));
+      const next = lines.slice(i + 1).find(x => x && !x.startsWith('#'));
+      if (next) segs.push({ u: withAuth(absUrl(next, media)), s: t, e: t + d });
+      t += d;
+    }
+  }
+  if (!segs.length) throw new Error('Nagins segments anflads');
+  const a = toSec(rg.a) ?? 0, b = toSec(rg.b) ?? Infinity;
+  const pick = segs.filter(x => x.e > a && x.s < b);
+  if (!pick.length) throw new Error('Il toc è ordaifer la durada dal video (' + Math.round(t) + ' sec)');
+  // 3. Segmente laden
+  const parts = [];
+  if (init) parts.push(await (await fetch(init)).arrayBuffer());
+  let bytes = 0;
+  for (let i = 0; i < pick.length; i++) {
+    const rr = await fetch(pick[i].u);
+    if (!rr.ok) throw new Error('HTTP ' + rr.status + ' tar segment ' + (i + 1));
+    const buf = await rr.arrayBuffer(); bytes += buf.byteLength; parts.push(buf);
+    setSt('Chargiar ' + (i + 1) + '/' + pick.length + ' (' + (bytes / 1048576).toFixed(1) + ' MB)');
+  }
+  const ext = init ? '.mp4' : '.ts';
+  const blob = new Blob(parts, { type: init ? 'video/mp4' : 'video/mp2t' });
+  const url = URL.createObjectURL(blob);
+  const el = document.createElement('a'); el.href = url; el.download = slug(r.title) + (rg.on ? rg.tag : '') + ext;
+  document.body.appendChild(el); el.click(); el.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  dispatchEvent(new Event('dbz-success'));
+  return 'Terminà · ' + (bytes / 1048576).toFixed(1) + ' MB · ' + el.download + (warnAudio ? ' · Attenziun: tun separà, forsa mancha il tun' : '');
+}
+
 function copyBtn(txt) { return '<button class="btn sm" type="button" data-c="' + esc(txt) + '">Copiar</button>'; }
 
 let LAST = [];
@@ -187,7 +248,7 @@ function render(res) {
   const rg = range();
   const out = $('out'); out.innerHTML = '';
   if (rg.bad) { const w = document.createElement('p'); w.className = 'warn'; w.textContent = 'Temp betg valid (p. ex. 11:00 u 1:02:30). Il toc vegn ignorà.'; out.appendChild(w); }
-  res.forEach(r => {
+  res.forEach((r, i) => {
     const d = document.createElement('div'); d.className = 'item';
     if (r.err) { d.innerHTML = '<p class="warn">' + esc(r.err) + ': ' + esc(r.line) + '</p>'; out.appendChild(d); return; }
     let h = '<div><div class="t">' + esc(r.title) + '</div><div class="m">' + esc(r.date) + ' · ' + esc(r.urn) + '</div></div>';
@@ -213,7 +274,8 @@ function render(res) {
       h += '<p class="sub">Stream (HLS)' + (r.mp4.length ? ' – alternativa' : ' – telechargiar cun ffmpeg') + '</p>' +
         '<div class="lnk">' + esc(r.hls.url) + '</div><div class="row">' + copyBtn(r.hls.url) + '</div>' +
         '<div class="lnk">' + esc(ff) + '</div><div class="row">' + copyBtn(ff) + '<span class="m">ffmpeg</span></div>' +
-        '<div class="lnk">' + esc(yt) + '</div><div class="row">' + copyBtn(yt) + '<span class="m">yt-dlp</span></div>';
+        '<div class="lnk">' + esc(yt) + '</div><div class="row">' + copyBtn(yt) + '<span class="m">yt-dlp</span></div>' +
+        '<div class="row"><button class="btn primary sm" type="button" data-dl="' + i + '">Chargiar en il browser' + (rg.on ? ' (mo il toc)' : '') + '</button><span class="m" id="dl-' + i + '">' + (rg.on ? '' : 'tut il video · sco .ts') + '</span></div>';
       if (r.hls.note) h += '<p class="warn">' + esc(r.hls.note) + '</p>';
       if (r.hls.drm) h += '<p class="warn">Quest video para da vegnir protegi (DRM) – il stream na funcziunescha forsa betg.</p>';
     } else if (!r.mp4.length) {
@@ -225,6 +287,12 @@ function render(res) {
   out.querySelectorAll('button[data-c]').forEach(b => b.onclick = async () => {
     try { await navigator.clipboard.writeText(b.dataset.c); b.textContent = 'Copià'; dispatchEvent(new Event('dbz-success')); setTimeout(() => b.textContent = 'Copiar', 1200); }
     catch (e) { b.textContent = 'Betg pussibel'; }
+  });
+  out.querySelectorAll('button[data-dl]').forEach(b => b.onclick = async () => {
+    const i = +b.dataset.dl, st = $('dl-' + i); b.disabled = true;
+    try { st.textContent = await browserDownload(res[i], range(), x => st.textContent = x); }
+    catch (e) { st.textContent = 'Betg reussì: ' + e.message + '. Probablamain bloccha il server l’access dal browser (CORS) – utilisar ffmpeg u yt-dlp.'; }
+    b.disabled = false;
   });
   $('outc').hidden = false;
 }
