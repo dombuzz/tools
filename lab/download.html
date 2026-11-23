@@ -87,6 +87,11 @@ details.raw summary{cursor:pointer;color:var(--muted);font-size:.85rem}
   <label class="cap" for="in">Ina colliaziun per lingia, p. ex. https://www.rtr.ch/play/tv/clic/video/…?urn=urn:rtr:video:…</label>
   <textarea id="in" spellcheck="false" placeholder="https://www.rtr.ch/play/tv/telesguard/video/…?urn=urn:rtr:video:…"></textarea>
   <div class="row">
+    <label class="cap" for="t0">Da</label><input type="text" id="t0" inputmode="numeric" placeholder="11:00" style="width:90px">
+    <label class="cap" for="t1">Fin</label><input type="text" id="t1" inputmode="numeric" placeholder="14:00" style="width:90px">
+    <span class="hint">opziunal: mo in toc telechargiar (min:sec u h:min:sec)</span>
+  </div>
+  <div class="row">
     <button class="btn primary" id="go" type="button">Tschertgar colliaziuns</button>
     <button class="btn" id="clr" type="button">Svidar</button>
     <p class="status" id="st" role="status"></p>
@@ -165,10 +170,23 @@ async function one(line) {
   return { urn, title: ch.title || '(senza titel)', date: ch.date || '', mp4, hls, raw: j };
 }
 
+const TIME = /^\d+(:\d{1,2}){0,2}(\.\d+)?$/;
+function range() {
+  const a = $('t0').value.trim(), b = $('t1').value.trim();
+  const ok = x => !x || TIME.test(x);
+  if (!a && !b) return { on: false };
+  if (!ok(a) || !ok(b)) return { on: false, bad: true };
+  return { on: true, a, b, tag: '-' + (a || '0').replace(/[:.]/g, '-') + '_' + (b || 'fin').replace(/[:.]/g, '-') };
+}
+
 function copyBtn(txt) { return '<button class="btn sm" type="button" data-c="' + esc(txt) + '">Copiar</button>'; }
 
+let LAST = [];
 function render(res) {
+  LAST = res;
+  const rg = range();
   const out = $('out'); out.innerHTML = '';
+  if (rg.bad) { const w = document.createElement('p'); w.className = 'warn'; w.textContent = 'Temp betg valid (p. ex. 11:00 u 1:02:30). Il toc vegn ignorà.'; out.appendChild(w); }
   res.forEach(r => {
     const d = document.createElement('div'); d.className = 'item';
     if (r.err) { d.innerHTML = '<p class="warn">' + esc(r.err) + ': ' + esc(r.line) + '</p>'; out.appendChild(d); return; }
@@ -180,13 +198,18 @@ function render(res) {
           '<a class="btn sm" href="' + esc(u) + '" target="_blank" rel="noopener">Avrir ↗</a>' +
           '<span class="m">' + (k === 0 ? 'meglra qualitad ' : '') + (quality(u) ? 'q' + quality(u) : '') + '</span></div>';
       });
+      if (rg.on) {
+        const fm = slug(r.title) + rg.tag + '.mp4';
+        const fc = 'ffmpeg ' + (rg.a ? '-ss ' + rg.a + ' ' : '') + (rg.b ? '-to ' + rg.b + ' ' : '') + '-i "' + r.mp4[0] + '" -c copy ' + fm;
+        h += '<p class="sub">Mo il toc ' + esc((rg.a || '0') + ' – ' + (rg.b || 'fin')) + ' (ffmpeg)</p><div class="lnk">' + esc(fc) + '</div><div class="row">' + copyBtn(fc) + '</div>';
+      }
     } else {
       h += '<p class="hint">Nagina colliaziun MP4: il podcast n’è probablamain betg activà per quest video.</p>';
     }
     if (r.hls) {
-      const f = slug(r.title) + '.mp4';
-      const ff = 'ffmpeg -i "' + r.hls.url + '" -c copy -bsf:a aac_adtstoasc ' + f;
-      const yt = 'yt-dlp -o ' + f + ' "' + r.hls.url + '"';
+      const f = slug(r.title) + (rg.on ? rg.tag : '') + '.mp4';
+      const ff = 'ffmpeg ' + (rg.a ? '-ss ' + rg.a + ' ' : '') + (rg.b ? '-to ' + rg.b + ' ' : '') + '-i "' + r.hls.url + '" -c copy -bsf:a aac_adtstoasc ' + f;
+      const yt = 'yt-dlp ' + (rg.on ? '--download-sections "*' + (rg.a || '0') + '-' + (rg.b || 'inf') + '" ' : '') + '-o ' + f + ' "' + r.hls.url + '"';
       h += '<p class="sub">Stream (HLS)' + (r.mp4.length ? ' – alternativa' : ' – telechargiar cun ffmpeg') + '</p>' +
         '<div class="lnk">' + esc(r.hls.url) + '</div><div class="row">' + copyBtn(r.hls.url) + '</div>' +
         '<div class="lnk">' + esc(ff) + '</div><div class="row">' + copyBtn(ff) + '<span class="m">ffmpeg</span></div>' +
@@ -218,7 +241,8 @@ $('go').onclick = async () => {
   $('st').textContent = '';
   render(res);
 };
-$('clr').onclick = () => { $('in').value = ''; $('outc').hidden = true; $('st').textContent = ''; };
+$('t0').oninput = $('t1').oninput = () => { if (LAST.length) render(LAST); };
+$('clr').onclick = () => { $('in').value = ''; $('t0').value = ''; $('t1').value = ''; LAST = []; $('outc').hidden = true; $('st').textContent = ''; };
 </script>
 <script src="/like.js" defer></script>
 </body>
