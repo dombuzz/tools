@@ -119,24 +119,13 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
   <header>
     <a class="homelink" href="/lab/">← Lab</a>
     <h1><span class="acc">Re</span>els<span class="labbadge">Labor</span></h1>
-    <p class="lead">Preparar videos existents (file u colliaziun da Play RTR) per social: chattar tagls, centrar il maletg per il format ad aut, integrar tetels, texts e nums – ed exportar sco MP4. Tut vegn elavurà en il browser, nagins files bandunan tes computer.</p>
+    <p class="lead">Preparar videos existents per social: chattar tagls, centrar il maletg per il format ad aut, integrar tetels, texts e nums – ed exportar sco MP4. Tut vegn elavurà en il browser, nagins files bandunan tes computer.</p>
   </header>
 
   <section class="card" id="loadCard">
     <h2><span class="num">1</span>Chargiar video</h2>
     <div class="drop" id="drop" tabindex="0" role="button"><b>Trair qua il video</b>MP4 (H.264), MOV u WebM – u cliccar per tscherner</div>
     <input type="file" id="file" accept="video/*,.mp4,.mov,.m4v,.webm">
-    <div class="row">
-      <label class="f grow">u colliaziun da Play RTR <input type="text" id="playUrl" spellcheck="false" autocomplete="off" placeholder="https://www.rtr.ch/play/tv/…/video/…?urn=urn:rtr:video:…"></label>
-      <button id="playGo" class="pri">Chargiar da Play RTR</button>
-      <button id="playStop" class="hidden">Interrumper</button>
-    </div>
-    <div class="barw hidden" id="pbarw"><div class="bar" id="pbar"></div></div>
-    <p class="info hidden" id="pstat"></p>
-    <div class="row hidden" id="plinks"></div>
-    <p class="info hidden" id="vinfo"></p>
-    <p class="info err hidden" id="verr"></p>
-    <p class="hint">Per videos da Play RTR cun podcast activà (MP4) cuntanscha il tool la colliaziun; sch'il server na lascha betg chargiar il file, vegnan mussadas las colliaziuns da telechargiar. Tagls e fatschas vegnan tschertgads mo sin dumonda.</p>
     <p class="hint">Files MXF u ProRes na po il browser betg leger – exportar quels l'emprim sco MP4 (H.264). Export il meglier cun Chrome u Edge.</p>
   </section>
 
@@ -564,63 +553,6 @@ async function take(file) {
   resetOut(); $('dstat').textContent = 'Il video è ina suletta part. «Tschertgar tagls» parta el tar mintga tagl dir.';
   await seek(0); sizePv(); renderShots(); renderEls(); renderSubs(); syncShotUI();
 }
-/* ---------- Play RTR: Colliaziun → MP4 (podcast) → sco file chargiar. Nagins tagls/fatschas automatics. ---------- */
-const PLAY_API = 'https://il.srgssr.ch/integrationlayer/2.1/mediaComposition/byUrn/';
-const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-const slugOf = t => (t || 'video').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'video';
-const qOf = u => { const m = u.match(/_q(\d+)\./); return m ? +m[1] : 0; };
-function collectMp4(o, acc) {
-  if (typeof o === 'string') { if (/^https?:\/\/.+\.mp4(\?|$)/i.test(o)) acc.add(o); }
-  else if (Array.isArray(o)) o.forEach(x => collectMp4(x, acc));
-  else if (o && typeof o === 'object') Object.values(o).forEach(x => collectMp4(x, acc));
-}
-let playCtl = null;
-async function loadPlay() {
-  if (job || playCtl) return;
-  const st = $('pstat'), bw = $('pbarw'), bar = $('pbar'), say = (t, err) => { st.textContent = t; st.classList.toggle('err', !!err); st.classList.remove('hidden'); };
-  $('plinks').classList.add('hidden');
-  const m = $('playUrl').value.match(UUID_RE);
-  if (!m) return say('Nagina UUID anflada. Encollar la colliaziun cumplaina da Play RTR (cun ?urn=urn:rtr:video:…).', true);
-  const urn = 'urn:rtr:video:' + m[0].toLowerCase(), ctl = playCtl = new AbortController(); let step = 'api', list0 = '', all = [];
-  $('playGo').disabled = true; $('playStop').classList.remove('hidden'); bw.classList.remove('hidden'); bar.style.width = '0'; say('Tschertgel il video …');
-  try {
-    let j;
-    try { const r = await fetch(PLAY_API + urn + '.json', { signal: ctl.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); j = await r.json(); }
-    catch (e) { if (e.name === 'AbortError') throw e; throw new Error('Play RTR n\'è betg accessibel (' + e.message + ').'); }
-    const ch = (j.chapterList || []).find(c => c.urn === urn) || (j.chapterList || [])[0] || {};
-    const acc = new Set(); collectMp4(ch, acc);
-    const list = [...acc].sort((a, b) => qOf(b) - qOf(a));
-    if (!list.length) throw new Error('Nagina colliaziun MP4: il podcast n\'è probablamain betg activà per quest video. Alternativa: /lab/download.');
-    all = list; list0 = list[0]; say('Chargiar «' + (ch.title || 'video') + '» …'); step = 'mp4';
-    const r = await fetch(list[0], { signal: ctl.signal });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const total = +r.headers.get('content-length') || 0, parts = []; let got = 0;
-    if (r.body && r.body.getReader) {
-      const rd = r.body.getReader();
-      for (;;) {
-        const { done, value } = await rd.read(); if (done) break;
-        parts.push(value); got += value.length;
-        if (total) bar.style.width = (got / total * 100) + '%';
-        st.textContent = 'Chargiar «' + (ch.title || 'video') + '» … ' + (got / 1048576).toFixed(0) + (total ? ' da ' + (total / 1048576).toFixed(0) : '') + ' MB';
-      }
-    } else parts.push(new Uint8Array(await r.arrayBuffer()));
-    const file = new File(parts, slugOf(ch.title) + '.mp4', { type: 'video/mp4' });
-    say('Preparar il video …');
-    await take(file);
-    if (V && V.file === file) { $('name').value = slugOf(ch.title) + '_reel'; say('Chargià: «' + (ch.title || 'video') + '». Tagls e fatschas vegnan tschertgads mo sin dumonda.'); }
-    else st.classList.add('hidden');
-  } catch (e) {
-    say(e.name === 'AbortError' ? 'Interrut.' : (step === 'mp4' && /Failed to fetch|NetworkError|Load failed/i.test(e.message) ? 'Colliaziun anflada, ma il server dal video (' + (() => { try { return new URL(list0).host; } catch (x) { return 'MP4'; } })() + ') na lascha betg chargiar il file en il browser (CORS). Telechargiar il file cun ils buttuns sutvart (u cun /lab/download) e trair el en il champ survart.' : e.message), e.name !== 'AbortError');
-  }
-  const cors = step === 'mp4' && all.length && !V;
-  $('plinks').innerHTML = cors ? all.slice(0, 2).map((u, i) => `<a class="btn${i ? '' : ' pri'}" href="${esc(u)}" target="_blank" rel="noopener">${i ? 'SD' : 'HD'} telechargiar ↗</a>`).join('') : '';
-  $('plinks').classList.toggle('hidden', !cors);
-  playCtl = null; $('playGo').disabled = !!job; $('playStop').classList.add('hidden'); bw.classList.add('hidden');
-}
-$('playGo').onclick = loadPlay;
-$('playStop').onclick = () => { if (playCtl) playCtl.abort(); };
-$('playUrl').onkeydown = e => { if (e.key === 'Enter') loadPlay(); };
-
 const drop = $('drop'), fileIn = $('file');
 drop.onclick = () => { if (!job) fileIn.click(); };
 drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); drop.click(); } };
@@ -704,8 +636,8 @@ function score(a, b) {
   m /= 2304 * 255; hd /= 2304 * 6;
   return Math.min(m / .09, hd / .13);
 }
-function startJob(kind) { job = { kind, stop: false }; v.pause(); document.body.classList.add('busy'); ['detect', 'cutHere', 'go', 'zFace', 'zFaceAll', 'zAll', 'playGo'].forEach(id => $(id).disabled = true); return job; }
-function endJob() { job = null; ['detect', 'cutHere', 'go', 'zFace', 'zFaceAll', 'zAll', 'playGo'].forEach(id => $(id).disabled = false); dirty = true; }
+function startJob(kind) { job = { kind, stop: false }; v.pause(); document.body.classList.add('busy'); ['detect', 'cutHere', 'go', 'zFace', 'zFaceAll', 'zAll'].forEach(id => $(id).disabled = true); return job; }
+function endJob() { job = null; ['detect', 'cutHere', 'go', 'zFace', 'zFaceAll', 'zAll'].forEach(id => $(id).disabled = false); dirty = true; }
 async function detectCuts() {
   if (job || !V) return;
   const j = startJob('detect'), bar = $('dbar'); $('dbarw').classList.remove('hidden'); $('stopJob').classList.remove('hidden'); bar.style.width = '0';
