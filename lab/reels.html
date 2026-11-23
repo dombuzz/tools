@@ -100,6 +100,13 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
 .shots .r .sp{margin-left:auto}
 .barw{height:8px;border-radius:4px;background:var(--field);overflow:hidden;margin-top:14px}
 .bar{height:100%;width:0;background:var(--accent)}
+.lstat{margin-top:14px}
+.lstat .nm{font-size:.88rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lstat .barw{margin-top:8px}
+.lstat.run .bar{width:40%;animation:ind 1.1s ease-in-out infinite}
+.lstat.done .bar{width:100%;animation:none}
+@keyframes ind{0%{margin-left:-40%}100%{margin-left:100%}}
+.drop.loading{border-style:solid;border-color:var(--accent)}
 /* Elemente */
 .els{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .elc{border:1px solid var(--line);border-radius:10px}
@@ -126,6 +133,9 @@ code{background:var(--field);border-radius:4px;padding:1px 5px;font-size:.85em}
     <h2><span class="num">1</span>Chargiar video</h2>
     <div class="drop" id="drop" tabindex="0" role="button"><b>Trair qua il video</b>MP4 (H.264), MOV u WebM – u cliccar per tscherner</div>
     <input type="file" id="file" accept="video/*,.mp4,.mov,.m4v,.webm">
+    <div class="lstat hidden" id="lstat" role="status"><div class="nm" id="lnm"></div><div class="barw"><div class="bar"></div></div><p class="info" id="ltx" style="margin-top:8px"></p></div>
+    <p class="info hidden" id="vinfo"></p>
+    <p class="info err hidden" id="verr"></p>
     <p class="hint">Files MXF u ProRes na po il browser betg leger – exportar quels l'emprim sco MP4 (H.264). Export il meglier cun Chrome u Edge.</p>
   </section>
 
@@ -530,8 +540,16 @@ async function detectFps() {
   const f = 1 / d[Math.floor(d.length / 2)], best = FPSS.map(x => x[0]).sort((a, b) => Math.abs(a - f) - Math.abs(b - f))[0];
   return Math.abs(best - f) / f < .04 ? best : 25;
 }
+let lTimer = 0;
+function loadUi(file, txt, state) {
+  clearTimeout(lTimer); const l = $('lstat');
+  $('lnm').textContent = file.name + ' · ' + (file.size / 1048576).toFixed(1).replace('.', ',') + ' MB'; $('ltx').textContent = txt;
+  l.classList.remove('hidden'); l.classList.toggle('run', state === 'run'); l.classList.toggle('done', state === 'done'); $('drop').classList.toggle('loading', state === 'run');
+  if (state !== 'run') lTimer = setTimeout(() => l.classList.add('hidden'), state === 'done' ? 2500 : 6000);
+}
 async function take(file) {
   if (job) return;
+  loadUi(file, 'Leger il video …', 'run');
   $('verr').classList.add('hidden'); $('vinfo').classList.add('hidden');
   if (v.src) URL.revokeObjectURL(v.src);
   v.pause(); v.src = URL.createObjectURL(file);
@@ -539,11 +557,12 @@ async function take(file) {
     await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('codec')); setTimeout(() => rej(new Error('codec')), 20000); });
     if (!v.videoWidth || !isFinite(v.duration)) throw new Error('codec');
   } catch (e) {
-    V = null; $('work').classList.add('hidden');
+    V = null; $('work').classList.add('hidden'); loadUi(file, 'Il file n\'è betg legibel.', 'err');
     $('verr').textContent = 'Il browser na po betg leger quest video. Exportar el l\'emprim sco MP4 (H.264).'; $('verr').classList.remove('hidden'); return;
   }
   shots = [{ a: 0, b: v.duration, on: true, cx: .5, cy: .5, z: 1, face: false, kf: [] }]; els = []; subs = []; cur = 0; selEl = null;
   V = { file, w: v.videoWidth, h: v.videoHeight, dur: v.duration, fps: 25 }; io = { a: 0, b: v.duration };
+  loadUi(file, 'Preparar il video …', 'run');
   V.fps = await detectFps();
   $('fps').innerHTML = FPSS.map(f => `<option value="${f[0]}"${f[0] === V.fps ? ' selected' : ''}>${String(f[0]).replace('.', ',')}</option>`).join('');
   $('name').value = file.name.replace(/\.[^.]+$/, '') + '_reel';
@@ -552,6 +571,7 @@ async function take(file) {
   $('vinfo').classList.remove('hidden'); $('work').classList.remove('hidden');
   resetOut(); $('dstat').textContent = 'Il video è ina suletta part. «Tschertgar tagls» parta el tar mintga tagl dir.';
   await seek(0); sizePv(); renderShots(); renderEls(); renderSubs(); syncShotUI();
+  loadUi(file, '✓ Chargià', 'done');
 }
 const drop = $('drop'), fileIn = $('file');
 drop.onclick = () => { if (!job) fileIn.click(); };
