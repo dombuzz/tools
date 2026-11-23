@@ -187,6 +187,17 @@ function toSec(t) { if (!t) return null; const p = t.split(':').map(Number); ret
 function absUrl(u, base) { return new URL(u, base).href; }
 async function getText(u) { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }
 
+// MPEG-TS zu MP4 (H.264/AAC bleiben unverändert), mit mediabunny aus /vendor
+async function tsToMp4(blob) {
+  const m = await import('/vendor/mediabunny/mediabunny.min.mjs');
+  const input = new m.Input({ source: new m.BlobSource(blob), formats: m.ALL_FORMATS });
+  const output = new m.Output({ format: new m.Mp4OutputFormat(), target: new m.BufferTarget() });
+  const conv = await m.Conversion.init({ input, output });
+  if (!conv.isValid) throw new Error('Format betg sustegnì');
+  await conv.execute();
+  return new Blob([output.target.buffer], { type: 'video/mp4' });
+}
+
 async function browserDownload(r, rg, setSt) {
   const auth = (r.hls.url.match(/[?&](hdnts=[^&]+)/) || [])[1] || '';
   const withAuth = u => (auth && !/hdnts=/.test(u)) ? u + (u.includes('?') ? '&' : '?') + auth : u;
@@ -232,14 +243,19 @@ async function browserDownload(r, rg, setSt) {
     const buf = await rr.arrayBuffer(); bytes += buf.byteLength; parts.push(buf);
     setSt('Chargiar ' + (i + 1) + '/' + pick.length + ' (' + (bytes / 1048576).toFixed(1) + ' MB)');
   }
-  const ext = init ? '.mp4' : '.ts';
-  const blob = new Blob(parts, { type: init ? 'video/mp4' : 'video/mp2t' });
+  // Ohne Vorspann sind es MPEG-TS-Stücke: im Browser zu MP4 umpacken (ohne neu zu kodieren), sonst als .ts speichern
+  let blob = new Blob(parts, { type: init ? 'video/mp4' : 'video/mp2t' });
+  let ext = init ? '.mp4' : '.ts', note = '';
+  if (!init) {
+    try { setSt('Ad MP4 midar …'); blob = await tsToMp4(blob); ext = '.mp4'; }
+    catch (e) { note = ' · Midar ad MP4 n’ha betg funcziunà (' + e.message + '), memorisà sco .ts'; }
+  }
   const url = URL.createObjectURL(blob);
   const el = document.createElement('a'); el.href = url; el.download = slug(r.title) + (rg.on ? rg.tag : '') + ext;
   document.body.appendChild(el); el.click(); el.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
   dispatchEvent(new Event('dbz-success'));
-  return 'Terminà · ' + (bytes / 1048576).toFixed(1) + ' MB · ' + el.download + (warnAudio ? ' · Attenziun: tun separà, forsa mancha il tun' : '');
+  return 'Terminà · ' + (blob.size / 1048576).toFixed(1) + ' MB · ' + el.download + note + (warnAudio ? ' · Attenziun: tun separà, forsa mancha il tun' : '');
 }
 
 function copyBtn(txt) { return '<button class="btn sm" type="button" data-c="' + esc(txt) + '">Copiar</button>'; }
@@ -277,7 +293,7 @@ function render(res) {
         '<div class="lnk">' + esc(r.hls.url) + '</div><div class="row">' + copyBtn(r.hls.url) + '</div>' +
         '<div class="lnk">' + esc(ff) + '</div><div class="row">' + copyBtn(ff) + '<span class="m">ffmpeg</span></div>' +
         '<div class="lnk">' + esc(yt) + '</div><div class="row">' + copyBtn(yt) + '<span class="m">yt-dlp</span></div>' +
-        '<div class="row"><button class="btn primary sm" type="button" data-dl="' + i + '">Chargiar en il browser' + (rg.on ? ' (mo il toc)' : '') + '</button><span class="m" id="dl-' + i + '">' + (rg.on ? '' : 'tut il video · sco .ts') + '</span></div>';
+        '<div class="row"><button class="btn primary sm" type="button" data-dl="' + i + '">Chargiar en il browser' + (rg.on ? ' (mo il toc)' : '') + '</button><span class="m" id="dl-' + i + '">' + (rg.on ? '' : 'tut il video · sco MP4') + '</span></div>';
       if (r.hls.note) h += '<p class="warn">' + esc(r.hls.note) + '</p>';
       if (r.hls.drm) h += '<p class="warn">Quest video para da vegnir protegi (DRM) – il stream na funcziunescha forsa betg.</p>';
     } else if (!r.mp4.length) {
