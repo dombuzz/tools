@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Download-Link</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#111113;color:#e8e8ea;font:16px/1.5 system-ui,sans-serif;padding:40px 16px 64px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-size:1.4rem;margin:0}.acc{color:#ff5a5f}
+.badge{font-size:.7rem;border:1px solid #ffb86b;color:#ffb86b;border-radius:99px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.lead{font-size:.9rem;color:#9a9aa2;margin:4px 0 0}
+.card{background:#1c1c1f;border-radius:14px;padding:20px}
+.step{font-size:.95rem;font-weight:600;margin:0 0 10px}.step b{color:#ff5a5f;margin-right:6px}
+label{display:block;font-size:.82rem;color:#9a9aa2;margin-bottom:6px}
+textarea{width:100%;min-height:110px;background:#111113;color:#e8e8ea;border:1px solid #333;border-radius:8px;padding:8px 10px;font:13px ui-monospace,monospace}
+button,.btn{background:#ff5a5f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-size:.9rem;cursor:pointer;text-decoration:none;display:inline-block}
+button.ghost,.btn.ghost{background:transparent;border:1px solid #444;color:#e8e8ea}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.item{border-top:1px solid #2a2a2e;padding:14px 0}.item:first-child{border-top:0;padding-top:0}
+.t{font-weight:600}.m{font-size:.82rem;color:#9a9aa2}
+.link{font:12px ui-monospace,monospace;word-break:break-all;background:#111113;border-radius:8px;padding:8px 10px;margin:8px 0}
+.warn{color:#ffb86b;font-size:.85rem}
+details{margin-top:10px}summary{cursor:pointer;color:#9a9aa2;font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Download-<span class="acc">Link</span> aus Sendungs-URL<span class="badge">Labor</span></h1>
+    <p class="lead">RTR-Sendungs-Link(s) einfügen, Tool holt die Video-Links über die SRG-Schnittstelle. Pro Zeile eine URL (oder nur die <code>urn:rtr:video:…</code>).</p>
+  </div>
+
+  <div class="card">
+    <p class="step"><b>1</b>Sendungs-URLs</p>
+    <label for="in">z. B. https://www.rtr.ch/play/tv/telesguard/video/…?urn=urn:rtr:video:68414b1b-…</label>
+    <textarea id="in" spellcheck="false"></textarea>
+    <div class="row">
+      <button id="go">Links holen</button>
+      <button class="ghost" id="clr">Leeren</button>
+      <span id="st" class="m"></span>
+    </div>
+  </div>
+
+  <div class="card" id="outc" style="display:none">
+    <p class="step"><b>2</b>Resultat</p>
+    <div id="out"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const API='https://il.srgssr.ch/integrationlayer/2.1/mediaComposition/byUrn/';
+const UUID=/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+// Alle Strings im JSON einsammeln, die wie Video-Dateien aussehen
+function collect(o,acc){
+  if(typeof o==='string'){ if(/^https?:\/\/.+\.mp4(\?|$)/i.test(o)) acc.add(o); }
+  else if(Array.isArray(o)) o.forEach(x=>collect(x,acc));
+  else if(o&&typeof o==='object') Object.values(o).forEach(x=>collect(x,acc));
+}
+function quality(u){const m=u.match(/_q(\d+)\./);return m?+m[1]:0}
+
+async function one(line){
+  const m=line.match(UUID);
+  if(!m) return {err:'Keine UUID gefunden',line};
+  const urn='urn:rtr:video:'+m[0].toLowerCase();
+  const r=await fetch(API+urn+'.json');
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  const ch=(j.chapterList||[]).find(c=>c.urn===urn)||(j.chapterList||[])[0]||{};
+  const acc=new Set(); collect(j,acc);
+  const mp4=[...acc].sort((a,b)=>quality(b)-quality(a));
+  const hls=[];
+  (ch.resourceList||[]).forEach(x=>{ if(x.url&&!/\.mp4/i.test(x.url)) hls.push((x.streaming||x.type||'')+' · '+x.url)});
+  return {urn,title:ch.title||'(ohne Titel)',date:ch.date||'',mp4,hls,raw:j};
+}
+
+function render(res){
+  const out=$('out'); out.innerHTML='';
+  res.forEach((r,i)=>{
+    const d=document.createElement('div'); d.className='item';
+    if(r.err){ d.innerHTML=`<div class="warn">${esc(r.err)}: ${esc(r.line)}</div>`; out.appendChild(d); return; }
+    let h=`<div class="t">${esc(r.title)}</div><div class="m">${esc(r.date)} · ${esc(r.urn)}</div>`;
+    if(r.mp4.length){
+      r.mp4.forEach((u,k)=>{
+        h+=`<div class="link">${esc(u)}</div>
+        <div class="row"><button data-c="${esc(u)}">Kopieren</button>
+        <a class="btn ghost" href="${esc(u)}" target="_blank" rel="noopener">Öffnen</a>
+        <span class="m">${k===0?'beste Qualität':''} ${quality(u)?'q'+quality(u):''}</span></div>`;
+      });
+    } else {
+      h+=`<div class="warn">Kein MP4-Download-Link in der Antwort. Evtl. ist das Video nicht zum Download freigegeben.</div>`;
+    }
+    if(r.hls.length) h+=`<details><summary>Weitere Ressourcen (Streams)</summary>${r.hls.map(x=>`<div class="link">${esc(x)}</div>`).join('')}</details>`;
+    h+=`<details><summary>Rohdaten (JSON)</summary><div class="link" style="white-space:pre-wrap;max-height:300px;overflow:auto">${esc(JSON.stringify(r.raw,null,2))}</div></details>`;
+    d.innerHTML=h; out.appendChild(d);
+  });
+  out.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>{
+    navigator.clipboard.writeText(b.dataset.c); b.textContent='Kopiert'; setTimeout(()=>b.textContent='Kopieren',1200);
+  });
+  $('outc').style.display='block';
+}
+
+$('go').onclick=async()=>{
+  const lines=$('in').value.split(/\n/).map(s=>s.trim()).filter(Boolean);
+  if(!lines.length) return;
+  $('st').textContent='Lade …';
+  const res=[];
+  for(const l of lines){
+    try{res.push(await one(l))}
+    catch(e){res.push({err:'Abruf fehlgeschlagen ('+e.message+'). Möglicherweise blockiert der Browser die Anfrage (CORS)',line:l})}
+  }
+  $('st').textContent='';
+  render(res);
+};
+$('clr').onclick=()=>{$('in').value='';$('outc').style.display='none'};
+</script>
+</body>
+</html>
