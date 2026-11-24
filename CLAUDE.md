@@ -15,7 +15,7 @@ Sammlung kleiner Web-Tools für die RTR-Redaktion (Rumantsch). Reines HTML/CSS/J
 
 ## Gemeinsame Dateien (wirken auf fast jede Seite)
 - `theme.js`: Hell/Dunkel, Farbstärke, Zahnrad-Menü, Shader-Fächer, Testmodus (`?test`), Milchglas-Regeln für Boxen, Felder und Zellen.
-- `shader.js`: WebGL-Hintergründe. Auswahl pro Seite über `<body data-shader-set="soA,soT,labA,soK">`. Wahl in `localStorage` unter `dbz-bg`; `rnd` = Zufallsmodus (pro Aufruf ein anderer Hintergrund, auch «off»).
+- `shader.js`: WebGL-Hintergründe. Auswahl pro Seite über `<body data-shader-set="soA,soT,labA,soK">`. Wahl in `localStorage` unter `dbz-bg`; `rnd` = Zufallsmodus (pro Aufruf ein anderer Hintergrund aus dem Set, nie «off», mit zufälligem Zeit-Startwert).
 - `motion.js`: Animationen, Hover-Effekte.
 - `like.js`: Likes, Seitenaufrufe, Nutzung, Frage nach dem ersten Erfolg (Download, Kopie oder Event `dbz-success`). Teil-Tools melden sich über `window.dbzUseTool`.
 - `sw.js`: Offline-Cache. **Bei jeder Änderung an einer gemeinsamen Datei die Version `dbz-vN` hochzählen**, sonst sehen Nutzer:innen alte Dateien.

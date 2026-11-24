@@ -382,7 +382,7 @@
     var orgSel = d.body.getAttribute('data-shader-origin'), orgEl = orgSel && d.getElementById(orgSel);
     var so = /^so[A-C]$|^so[MTK]$/.test(key), heavy = key === 'labA';
     bgItem = add(cv, key, {
-      scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1,
+      scale: key === 'soC' ? .5 : so ? .75 : heavy ? .5 : 1, maxDpr: so ? 1 : 1.5, minDt: heavy || so ? 33 : 0, still: still, need: 1, seed: rndMode ? rndSeed() : 0,
       size: function () { return [window.innerWidth, window.innerHeight]; },
       active: function () {
         if (key === 'rcE') return AU.level > .003 || AU.target > .003 || AU.clearPending ? true : false;
@@ -474,7 +474,7 @@
     // Wählbarer Hintergrund: <body data-shader-set="soA,soT"> – Zahnrad-Menü (theme.js) schaltet durch die Liste und «aus»; Wahl in dbz-bg gespeichert
     choices: function () { var v = d.body && d.body.getAttribute('data-shader-set'); return v ? v.split(',') : []; },
     current: function () { return curBg; },
-    // Zufallsmodus: bei jedem Seitenaufruf ein anderer Hintergrund aus dem Set – auch mal keiner («off»); gespeichert als dbz-bg=rnd
+    // Zufallsmodus: bei jedem Seitenaufruf ein anderer Hintergrund aus dem Set (nie «off»), dazu ein zufälliger Zeit-Startwert; gespeichert als dbz-bg=rnd
     random: function () { return rndMode; },
     setRandom: function (on) {
       var set = window.dbzShader.choices();
@@ -491,9 +491,13 @@
   };
 
   var curBg = 'off', rndMode = false, rndDone = false;
-  // Zufallswahl: nie derselbe Hintergrund wie beim letzten Aufruf (dbz-bg-last), «off» ist eine von allen Möglichkeiten
+  // Zufälliger Zeit-Startwert (Sekunden), einmal pro Seitenaufruf; nur im Zufallsmodus. Bis 3600 s: bei den Zeitfaktoren der Shader
+  // (0,0055 bis 0,05) verschiebt das das Feld um ca. 20 bis 180 Einheiten, und die Werte bleiben in highp (WebGL2 Pflicht) genau genug.
+  var rndSeedV = -1;
+  function rndSeed() { if (rndSeedV < 0) rndSeedV = Math.random() * 3600; return rndSeedV; }
+  // Zufallswahl: nie derselbe Hintergrund wie beim letzten Aufruf (dbz-bg-last), «off» gehört nicht zum Pool
   function randPick(set) {
-    var all = set.concat(['off']), last = ''; try { last = localStorage.getItem('dbz-bg-last') || ''; } catch (e) {}
+    var all = set.slice(), last = ''; if (!all.length) return 'off'; try { last = localStorage.getItem('dbz-bg-last') || ''; } catch (e) {}
     var pool = all.filter(function (k) { return k !== last; }); if (!pool.length) pool = all;
     var k = pool[Math.floor(Math.random() * pool.length)]; try { localStorage.setItem('dbz-bg-last', k); } catch (e) {}
     return k;
