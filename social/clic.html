@@ -161,21 +161,19 @@ function ctr(el){const b=el.getBBox();let cx=b.x+b.width/2,cy=b.y+b.height/2;con
 function paint(el,col){el.querySelectorAll('text,path,rect,circle').forEach(p=>{const s=p.getAttribute('style')||'';if(/fill:none/.test(s)&&!/stroke/.test(s))return;if(/fill:none/.test(s)&&/stroke/.test(s)){p.setAttribute('style',s.replace(/stroke:[^;]+/,'stroke:'+col));return}p.setAttribute('style',s.replace(/fill:[^;]+/,'fill:'+col))})}
 /* Seite 9: weisser Schwung passt sich an Zeilenzahl und Textbreite an */
 function fitSwoosh(){
-  if(cur.id!=='s4')return;const sw=O('swoosh'),ti=O('titel');if(!sw||!ti)return;const pa=sw.querySelector('path');if(!pa)return;
+  if(cur.id!=='s4')return;const sw=O('swoosh'),ti=O('titel');if(!sw||!ti)return;const pa=[...sw.querySelectorAll('path')].find(p=>!p.closest('mask'));if(!pa)return;
   const ts=[...ti.querySelectorAll('text')].filter(t=>t.textContent.trim());if(!ts.length)return;
   const X0=712.966,R=ts.map(t=>{const b=t.getBBox();return 21+b.x+b.width-X0}),n=Math.min(3,ts.length);
-  let d;pa.style.strokeLinecap='butt';pa.style.strokeWidth='101px';   // Bänder verschmolzen; nur an den Kurven bleibt ein schmaler Schlitz (Maske unten)
-  const slits=[];let rnd=0;   // rnd = Ende von Zeile 3, wird unter dem Schlitz rund abgeschlossen
+  // Ein durchgehender Strich: die Lücke zwischen den Bändern ergibt sich aus der Strichbreite (kein Masken-Schlitz, keine Spitzen)
+  sw.querySelectorAll('mask').forEach(m=>m.remove());pa.removeAttribute('mask');
+  const W=90;let d;pa.style.strokeLinecap=n>=3?'round':'butt';pa.style.strokeWidth=W+'px';
   const top='M0,-350C0,-267.157 67.157,-200 150,-200';
   const turn=T=>`L${T},-200C${T+27.614},-200 ${T+50},-177.615 ${T+50},-150C${T+50},-122.386 ${T+27.614},-100 ${T},-100`;
-  const PR=30,TM=82,LM=55,L0=Math.round((21+796-X0)*1000)/1000-LM;   // PR = Rand rechts (gerade Kante), TM = Rand an der rechten Kurve, LM = Rand links
+  const PR=30,TM=88,LM=55,L0=Math.round((21+796-X0)*1000)/1000-LM;   // PR = Rand rechts (gerade Kante), TM = Rand an der rechten Kurve, LM = Rand links
   if(n===1)d=top+`L${Math.max(R[0]+PR,170)},-200`;
-  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0},-100`;slits.push([-400,-150,T+12,-150])}
-  else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;const E=Math.max(R[2]+TM-30,190);slits.push([-400,-150,T+12,-150],[B-12,-50,9000,-50]);rnd=E;d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+E+',0'}
+  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0},-100`}
+  else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+Math.max(R[2]+TM-W/2-20,170)+',0'}
   pa.setAttribute('d',d);
-  let mk=sw.querySelector('mask');const NS='http://www.w3.org/2000/svg';
-  if(!mk){mk=document.createElementNS(NS,'mask');mk.id='swm';mk.setAttribute('maskUnits','userSpaceOnUse');mk.setAttribute('x','-2000');mk.setAttribute('y','-2000');mk.setAttribute('width','9000');mk.setAttribute('height','4000');sw.insertBefore(mk,pa);pa.setAttribute('mask','url(#swm)')}
-  mk.innerHTML='<rect x="-2000" y="-2000" width="9000" height="4000" fill="white"/>'+(rnd?`<rect x="${rnd-47}" y="-45" width="400" height="120" fill="black"/><rect x="${rnd-400}" y="-43" width="400" height="93.5" rx="46.75" fill="white"/>`:'')+slits.map(l=>`<path d="M${l[0]},${l[1]}L${l[2]},${l[3]}" stroke="black" stroke-width="14" stroke-linecap="round" fill="none"/>`).join('');
 }
 /* eingegebener Titel für den Dateinamen: «clic_<Titel>_pagina-N» (nur wenn der Titel geändert wurde) */
 function titleName(){
