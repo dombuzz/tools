@@ -36,7 +36,7 @@ const NAMES = { 'info': 'Infus & datas',
   'data': 'Memorisar grafica Datawrapper', 'votaziuns': 'Graficas dumengias da votaziuns', 'avis-votelec': 'Avis sin votaziuns ed elecziuns', 'tschertga': 'Tschertga rtr.ch',
   'lab-csv': 'CSV-Analisa', 'lab-plan2geo': 'Plan → GeoJSON', 'lab-idioms': 'Pleds en ils idioms',
   'lab-hoehenprofil': 'Höhenprofil', 'lab-hockey': 'Hockey regiunal', 'lab-download': 'Telechargiar dal Play RTR', 'lab-mov': 'PNG → MOV',
-  'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-social2': 'Social2 (früher)',
+  'lab-chat-generator': 'Chat-Generator', 'lab-reels': 'Reels', 'lab-surselvavotings': 'surselvavotings', 'lab-social2': 'Social2 (früher)',
   'social-profil': 'Social · Profil', 'social-newsdaldi': 'Social · News dal di', 'social-novitads': 'Social · News dal di', 'social-mument': 'Social · #mument', 'social-quote': 'Social · Quote solo', 'social-breaking': 'Social · Breaking News',
   'social-dumonda': 'Social · Dumonda da l’emna', 'social-cifra': 'Social · Cifra da l’emna', 'social-focus': 'Social · Focus', 'social-clic': 'Social · Clic', 'social-lashow': 'Social · La show', 'social-novitad': 'Social · Novitad', 'social-pled': 'Social · Pled da l’emna', 'social-thumbnail': 'Social · Thumbnail',
 };
