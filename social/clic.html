@@ -215,13 +215,19 @@ function doText(g,s){
 }
 function doLabel(g,s){
   const t=g.querySelector('text'),bar=g.querySelector('rect[data-bar]'),size0=+g.dataset.size,size=s.size||size0,k=size/size0;
-  let txt=s.text!=null?s.text:g._text;if(s.up)txt=txt.toUpperCase();t.textContent=txt;
-  t.setAttribute('style',`font-size:${size}px;fill:${s.tfill||g._tfill}`);
-  const pad=+g.dataset.pad*k,top=+g.dataset.top*k,h=+g.dataset.h*k,x=+t.getAttribute('x'),y=+t.getAttribute('y');
-  let len=0;try{len=t.getComputedTextLength()}catch(e){}
-  if(!len)len=txt.length*size*.5;
-  bar.setAttribute('x',x-pad);bar.setAttribute('y',y-top);bar.setAttribute('width',len+2*pad);bar.setAttribute('height',h);
-  bar.setAttribute('style','fill:'+(s.bfill||g.dataset.bar));
+  let txt=s.text!=null?s.text:g._text;if(s.up)txt=txt.toUpperCase();
+  g.querySelectorAll('[data-xl]').forEach(x=>x.remove());
+  const lines=txt.split('\n'),style=`font-size:${size}px;fill:${s.tfill||g._tfill}`,fillBar=s.bfill||g.dataset.bar;
+  const pad=+g.dataset.pad*k,top=+g.dataset.top*k,h=+g.dataset.h*k,gap=(+g.dataset.gap||10)*k,x=+t.getAttribute('x'),y0=+t.getAttribute('y');
+  lines.forEach((ln,i)=>{
+    let tt=t,bb=bar;
+    if(i){tt=t.cloneNode(false);bb=bar.cloneNode(false);tt.dataset.xl=1;bb.dataset.xl=1;g.appendChild(bb);g.appendChild(tt)}
+    tt.textContent=ln;tt.setAttribute('style',style);tt.setAttribute('y',y0+i*(h+gap));
+    let len=0;try{len=tt.getComputedTextLength()}catch(e){}
+    if(!len)len=ln.length*size*.5;
+    bb.setAttribute('x',x-pad);bb.setAttribute('y',y0+i*(h+gap)-top);bb.setAttribute('width',len+2*pad);bb.setAttribute('height',h);
+    bb.setAttribute('style','fill:'+fillBar);
+  });
 }
 /* Foto: Slot + Zoom + Position */
 function doImg(g,s){
@@ -272,7 +278,7 @@ function props(){
     h+=row('Grondezza <span class="val" id="v_size"></span>',`<input type="range" id="p_size" min="20" max="240" step="1">`);
     h+=row('Colur',colors('fill'));
   }else if(t==='label'){
-    h+=row('Text',`<input type="text" id="p_text" value="${esc(s.text!=null?s.text:el._text)}">`);
+    h+=row('Text',`<textarea id="p_text" class="sm">${esc(s.text!=null?s.text:el._text)}</textarea><div class="hint">Return = nova lingia (mintga lingia survegn in agen trav)</div>`);
     h+=`<div class="f"><button id="p_up" class="${s.up?'pri':''}" style="font-weight:600">AA &nbsp;Tut en maiusclas</button></div>`;
     h+=row('Grondezza <span class="val" id="v_size"></span>',`<input type="range" id="p_size" min="30" max="200" step="1">`);
     h+=row('Colur dal text',colors('tfill'));h+=row('Colur dal trav',colors('bfill'));
