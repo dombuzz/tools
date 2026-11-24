@@ -177,6 +177,12 @@ function fitSwoosh(){
   if(!mk){mk=document.createElementNS(NS,'mask');mk.id='swm';mk.setAttribute('maskUnits','userSpaceOnUse');mk.setAttribute('x','-2000');mk.setAttribute('y','-2000');mk.setAttribute('width','9000');mk.setAttribute('height','4000');sw.insertBefore(mk,pa);pa.setAttribute('mask','url(#swm)')}
   mk.innerHTML='<rect x="-2000" y="-2000" width="9000" height="4000" fill="white"/>'+slits.map(l=>`<path d="M${l[0]},${l[1]}L${l[2]},${l[3]}" stroke="black" stroke-width="12" stroke-linecap="round" fill="none"/>`).join('');
 }
+/* eingegebener Titel für den Dateinamen: «clic_<Titel>_pagina-N» (nur wenn der Titel geändert wurde) */
+function titleName(){
+  const el=O('titel'),sx=el&&st('titel');if(!el||!sx||sx.text==null)return '';
+  let t=String(sx.text).replace(/\*\*/g,'').replace(/[\u2013\u2014]/g,'-').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80).trim();
+  return t?t+'_':'';
+}
 function applyObj(id){
   const el=O(id),s=st(id),t=el.dataset.t;
   if(t==='text')doText(el,s);else if(t==='label')doLabel(el,s);else if(t==='img')doImg(el,s);else if(t==='cut')doCut(el,s);
@@ -391,7 +397,7 @@ async function exportPage(i){
   const img=new Image();
   await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=data}).catch(()=>{$('xmsg').textContent='Export betg reussì.'});
   const cv=document.createElement('canvas');cv.width=cur.pw;cv.height=cur.ph;cv.getContext('2d').drawImage(img,0,0,cur.pw,cur.ph);
-  await new Promise(res=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='clic_pagina-'+(cur.first+i)+(cur.suf||'')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);res()},'image/png'));
+  await new Promise(res=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='clic_'+titleName()+'pagina-'+(cur.first+i)+(cur.suf||'')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);res()},'image/png'));
   $('xmsg').textContent='Exportà.';placeSel();
 }
 (async()=>{
