@@ -10,7 +10,7 @@
 <meta name="description" content="Charta da la regiun da sanadad Surselva sco PNG (1920 × 1080, funs transparent) – colurar vischnancas, midar texts ed exportar.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
-<meta property="og:title" content="surselvavotings">
+<meta property="og:title" content="Surselvavotings">
 <meta property="og:description" content="Charta da la regiun da sanadad Surselva sco PNG (1920 × 1080, funs transparent) – colurar vischnancas, midar texts ed exportar.">
 <meta property="og:url" content="https://tools.dombuzz.ch/lab/surselvavotings">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
@@ -20,7 +20,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#121214">
 <meta name="color-scheme" content="dark light">
-<title>surselvavotings</title>
+<title>Surselvavotings</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M18 30 L40 20 L62 30 L82 22 L82 72 L62 80 L40 70 L18 78 Z M40 20 V70 M62 30 V80' fill='none' stroke='%23ff4d64' stroke-width='9' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
@@ -35,6 +35,8 @@ body{margin:0;padding:40px 16px 64px;background:var(--bg);color:var(--text);font
 .homelink:hover,.homelink:focus-visible{color:var(--accent)}
 h1{font-size:1.4rem;margin:0 0 4px;letter-spacing:-.01em}
 h1 .acc{color:var(--accent)}
+.ttl{display:inline-block;transform-origin:50% 60%;backface-visibility:hidden}
+.wrap header{perspective:600px}
 .labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:middle}
 .lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
 .layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:18px;align-items:start}
@@ -90,7 +92,7 @@ label.ck{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:.88rem;c
 <div class="wrap">
   <header>
     <a class="homelink" href="/lab/">← Lab</a>
-    <h1>surselva<span class="acc">votings</span><span class="labbadge">Labor</span></h1>
+    <h1><span id="ttl" class="ttl"><span>Surselva</span><span class="acc">voting</span></span><span class="labbadge">Labor</span></h1>
     <p class="lead">Charta da la regiun da sanadad Surselva sco PNG (1920 × 1080) cun funs transparent. Colurar las vischnancas, midar ils texts ed exportar. Ins na sto installar nagut – tut vegn elavurà en il browser.</p>
   </header>
 
@@ -460,6 +462,23 @@ $('download').onclick = () => {
   img.onerror = () => { $('download').textContent = 'Exportar n\u2019ha betg funcziunà – chargiar danovamain la pagina'; };
   img.src = url;
 };
+
+/* Titel: alle 10 s Flip zwischen «Surselvavoting» und «Sanasurselva» (0.5 s) */
+(() => {
+  const ttl = $('ttl'), names = [['Surselva', 'voting'], ['Sana', 'surselva']];
+  let i = 0;
+  const set = n => { ttl.children[0].textContent = n[0]; ttl.children[1].textContent = n[1]; };
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setInterval(() => {
+    if (document.hidden) return;
+    i = 1 - i;
+    if (calm || !ttl.animate) { set(names[i]); return; }
+    ttl.animate([{ transform: 'rotateX(0)' }, { transform: 'rotateX(90deg)' }], { duration: 250, easing: 'ease-in', fill: 'forwards' }).finished.then(() => {
+      set(names[i]);
+      return ttl.animate([{ transform: 'rotateX(-90deg)' }, { transform: 'rotateX(0)' }], { duration: 250, easing: 'ease-out', fill: 'forwards' }).finished;
+    }).then(() => ttl.getAnimations().forEach(a => a.cancel())).catch(() => {});
+  }, 10000);
+})();
 
 render();
 </script>
