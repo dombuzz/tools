@@ -166,12 +166,13 @@ function fitSwoosh(){
   const X0=712.966,R=ts.map(t=>{const b=t.getBBox();return 21+b.x+b.width-X0}),n=Math.min(3,ts.length);
   // Ein durchgehender Strich: die Lücke zwischen den Bändern ergibt sich aus der Strichbreite (kein Masken-Schlitz, keine Spitzen)
   sw.querySelectorAll('mask').forEach(m=>m.remove());pa.removeAttribute('mask');
-  const W=90;let d;pa.style.strokeLinecap=n>=3?'round':'butt';pa.style.strokeWidth=W+'px';
+  const W=90;let d;pa.style.strokeLinecap='round';   // alle Enden rund
+  pa.style.strokeWidth=W+'px';
   const top='M0,-350C0,-267.157 67.157,-200 150,-200';
   const turn=T=>`L${T},-200C${T+27.614},-200 ${T+50},-177.615 ${T+50},-150C${T+50},-122.386 ${T+27.614},-100 ${T},-100`;
   const PR=30,TM=88,LM=55,L0=Math.round((21+796-X0)*1000)/1000-LM;   // PR = Rand rechts (gerade Kante), TM = Rand an der rechten Kurve, LM = Rand links
-  if(n===1)d=top+`L${Math.max(R[0]+PR,170)},-200`;
-  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0},-100`}
+  if(n===1)d=top+`L${Math.max(R[0]+TM-W/2-20,170)},-200`;
+  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0+W/2-20},-100`}
   else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+Math.max(R[2]+TM-W/2-20,170)+',0'}
   pa.setAttribute('d',d);
 }
