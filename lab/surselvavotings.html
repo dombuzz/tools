@@ -92,7 +92,7 @@ label.ck{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:.88rem;c
 <div class="wrap">
   <header>
     <a class="homelink" href="/lab/">← Lab</a>
-    <h1><span id="ttl" class="ttl"><span>Surselva</span><span class="acc">voting</span></span><span class="labbadge">Labor</span></h1>
+    <h1><span id="ttl" class="ttl"><span>Surselva</span><span class="acc">votings</span></span><span class="labbadge">Labor</span></h1>
     <p class="lead">Charta da la regiun da sanadad Surselva sco PNG (1920 × 1080) cun funs transparent. Colurar las vischnancas, midar ils texts ed exportar. Ins na sto installar nagut – tut vegn elavurà en il browser.</p>
   </header>
 
@@ -463,9 +463,9 @@ $('download').onclick = () => {
   img.src = url;
 };
 
-/* Titel: alle 10 s Flip zwischen «Surselvavoting» und «Sanasurselva» (0.5 s) */
+/* Titel: alle 10 s Flip zwischen «Surselvavotings» und «Sanasurselva» (0.5 s) */
 (() => {
-  const ttl = $('ttl'), names = [['Surselva', 'voting'], ['Sana', 'surselva']];
+  const ttl = $('ttl'), names = [['Surselva', 'votings'], ['Sana', 'surselva']];
   let i = 0;
   const set = n => { ttl.children[0].textContent = n[0]; ttl.children[1].textContent = n[1]; };
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
