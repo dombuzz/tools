@@ -171,7 +171,7 @@ function fitSwoosh(){
   const PR=30,TM=82,LM=55,L0=Math.round((21+796-X0)*1000)/1000-LM;   // PR = Rand rechts (gerade Kante), TM = Rand an der rechten Kurve, LM = Rand links
   if(n===1)d=top+`L${Math.max(R[0]+PR,170)},-200`;
   else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0},-100`;slits.push([-400,-150,T+12,-150])}
-  else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;slits.push([-400,-150,T+12,-150],[B-12,-50,9000,-50]);d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+Math.max(R[2]+TM-50,170)+',0'}
+  else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;const E=Math.max(R[2]+TM-50,170);slits.push([-400,-150,T+12,-150],[B-12,-50,E,-50]);d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+E+',0'}
   pa.setAttribute('d',d);
   let mk=sw.querySelector('mask');const NS='http://www.w3.org/2000/svg';
   if(!mk){mk=document.createElementNS(NS,'mask');mk.id='swm';mk.setAttribute('maskUnits','userSpaceOnUse');mk.setAttribute('x','-2000');mk.setAttribute('y','-2000');mk.setAttribute('width','9000');mk.setAttribute('height','4000');sw.insertBefore(mk,pa);pa.setAttribute('mask','url(#swm)')}
