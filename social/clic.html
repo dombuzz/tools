@@ -170,12 +170,12 @@ function fitSwoosh(){
   const turn=T=>`L${T},-200C${T+27.614},-200 ${T+50},-177.615 ${T+50},-150C${T+50},-122.386 ${T+27.614},-100 ${T},-100`;
   const PR=30,TM=82,LM=55,L0=Math.round((21+796-X0)*1000)/1000-LM;   // PR = Rand rechts (gerade Kante), TM = Rand an der rechten Kurve, LM = Rand links
   if(n===1)d=top+`L${Math.max(R[0]+PR,170)},-200`;
-  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0},-100`;slits.push([T-100,-150,T+12,-150])}
-  else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;slits.push([T-100,-150,T+12,-150],[B-12,-50,B+115,-50]);d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+Math.max(R[2]+TM-50,170)+',0'}
+  else if(n===2){const T=Math.max(220,Math.max(R[0],R[1])+TM-93);d=top+turn(T)+`L${L0},-100`;slits.push([-400,-150,T+12,-150])}
+  else{const T=Math.max(440,Math.max(R[0],R[1])+TM-93),B=129.77;slits.push([-400,-150,T+12,-150],[B-12,-50,9000,-50]);d=top+turn(T)+`L${B},-100C${B-27.614},-100 ${B-50},-77.614 ${B-50},-50C${B-50},-22.386 ${B-27.614},0 ${B},0L`+Math.max(R[2]+TM-50,170)+',0'}
   pa.setAttribute('d',d);
   let mk=sw.querySelector('mask');const NS='http://www.w3.org/2000/svg';
   if(!mk){mk=document.createElementNS(NS,'mask');mk.id='swm';mk.setAttribute('maskUnits','userSpaceOnUse');mk.setAttribute('x','-2000');mk.setAttribute('y','-2000');mk.setAttribute('width','9000');mk.setAttribute('height','4000');sw.insertBefore(mk,pa);pa.setAttribute('mask','url(#swm)')}
-  mk.innerHTML='<rect x="-2000" y="-2000" width="9000" height="4000" fill="white"/>'+slits.map(l=>`<path d="M${l[0]},${l[1]}L${l[2]},${l[3]}" stroke="black" stroke-width="12" stroke-linecap="round" fill="none"/>`).join('');
+  mk.innerHTML='<rect x="-2000" y="-2000" width="9000" height="4000" fill="white"/>'+slits.map(l=>`<path d="M${l[0]},${l[1]}L${l[2]},${l[3]}" stroke="black" stroke-width="14" stroke-linecap="round" fill="none"/>`).join('');
 }
 /* eingegebener Titel für den Dateinamen: «clic_<Titel>_pagina-N» (nur wenn der Titel geändert wurde) */
 function titleName(){
