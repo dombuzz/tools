@@ -166,7 +166,7 @@ function fitSwoosh(){
   const X0=712.966,R=ts.map(t=>{const b=t.getBBox();return 21+b.x+b.width-X0}),n=Math.min(3,ts.length);
   // Ein durchgehender Strich: die Lücke zwischen den Bändern ergibt sich aus der Strichbreite (kein Masken-Schlitz, keine Spitzen)
   sw.querySelectorAll('mask').forEach(m=>m.remove());pa.removeAttribute('mask');
-  const W=90;let d;pa.style.strokeLinecap='round';   // alle Enden rund
+  const W=84;let d;pa.style.strokeLinecap='round';   // alle Enden rund
   pa.style.strokeWidth=W+'px';
   const top='M0,-350C0,-267.157 67.157,-200 150,-200';
   const turn=T=>`L${T},-200C${T+27.614},-200 ${T+50},-177.615 ${T+50},-150C${T+50},-122.386 ${T+27.614},-100 ${T},-100`;
