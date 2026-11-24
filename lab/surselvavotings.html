@@ -118,6 +118,7 @@ label.ck{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:.88rem;c
         <label class="sl"><span class="l">Grondezza text</span><input type="range" id="fontSize" min="10" max="40" step="1" value="21"></label>
         <label class="sl"><span class="l">Grossezza lingias</span><input type="range" id="strokeW" min="0.5" max="6" step="0.1" value="2"></label>
         <label class="ck"><input type="checkbox" id="shadow" checked> Sumbriva sut la charta</label>
+        <label class="ck"><input type="checkbox" id="showNames" checked> Mussar ils nums da las vischnancas</label>
       </section>
 
       <section class="card">
@@ -411,6 +412,7 @@ function render() {
   const cx = 960 + parseFloat($('mapX').value), cy = 540 + parseFloat($('mapY').value);
   const tx = cx - (MAP_BBOX.x + MAP_BBOX.w / 2) * s, ty = cy - (MAP_BBOX.y + MAP_BBOX.h / 2) * s;
   $('mapInner').setAttribute('transform', `translate(${tx},${ty}) scale(${s})`);
+  $('labels').setAttribute('display', $('showNames').checked ? 'inline' : 'none');
   $('shapes').setAttribute('filter', $('shadow').checked ? 'url(#dropShadow)' : '');
   const sw = parseFloat($('strokeW').value) / s;
   const fs = parseFloat($('fontSize').value) / s;
@@ -428,7 +430,7 @@ function render() {
   });
   renderLegend();
 }
-['mapScale','mapX','mapY','fontSize','strokeW','shadow'].forEach(id => $(id).oninput = render);
+['mapScale','mapX','mapY','fontSize','strokeW','shadow','showNames'].forEach(id => $(id).oninput = render);
 ['legendOn','legA','legB','legC','legColor'].forEach(id => $(id).oninput = renderLegend);
 $('resetColors').onclick = () => { state.munis.forEach(m => m.color = 'none'); render(); };
 $('resetLabels').onclick = () => { state.munis.forEach(m => { const d = DEFAULTS[m.key]; m.x = d.x; m.y = d.y; m.rot = d.rot || 0; }); render(); };
