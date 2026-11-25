@@ -246,15 +246,15 @@ async function logsToday(env) {
     return v;
   } catch (e) { return { configured: true, error: 'fetch' }; }
 }
-// Zwischenspeicher (2 Minuten) für die Statistik-Abfragen: zuerst im Speicher des Workers, sonst eine Zeile in der Tabelle «cache»
-const CACHE_MS = 2 * 60 * 1000, mem = new Map();
+// Zwischenspeicher für die Statistik-Abfragen (2 Minuten für «heute», 10 Minuten für alle längeren Zeiträume, die viele Zeilen lesen): zuerst im Speicher des Workers, sonst eine Zeile in der Tabelle «cache»
+const CACHE_MS = 2 * 60 * 1000, CACHE_LONG_MS = 10 * 60 * 1000, mem = new Map();
 async function cached(request, env, parts, url, compute) {
   const k = parts[0] + url.search;
-  const now = Date.now(), hit = mem.get(k);
-  if (hit && now - hit.ts < CACHE_MS) return new Response(hit.body, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(request) } });
+  const now = Date.now(), hit = mem.get(k), ttl = ['week', 'month', '30d', 'all'].includes(url.searchParams.get('range')) ? CACHE_LONG_MS : CACHE_MS;
+  if (hit && now - hit.ts < ttl) return new Response(hit.body, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(request) } });
   await ensureViews(env);
   const { results: [row] } = await env.DB.prepare('SELECT body, ts FROM cache WHERE k = ?1').bind(k).all();
-  if (row && now - row.ts < CACHE_MS) { mem.set(k, row); return new Response(row.body, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(request) } }); }
+  if (row && now - row.ts < ttl) { mem.set(k, row); return new Response(row.body, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors(request) } }); }
   const res = await compute();
   if (res.status === 200) {
     const body = await res.clone().text(), e = { ts: now, body };

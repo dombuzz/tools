@@ -567,9 +567,10 @@
   });
   // ⟳ anklicken = sofort aktualisieren
   document.getElementById('updbtn').onclick = () => { if (started && !document.getElementById('upd').classList.contains('busy')) load(lastRange, true); };
-  // alle 5 Minuten neu laden, solange die Seite offen und sichtbar ist (holt nach dem Zurückkehren nach)
-  const EVERY = 5 * 60 * 1000;
-  const tick = () => { if (started && !document.hidden && Date.now() - lastOk >= EVERY - 2000) load(lastRange, true); };
+  // automatisch neu laden, solange die Seite offen und sichtbar ist (holt nach dem Zurückkehren nach): «heute» alle 5 Minuten,
+  // längere Zeiträume alle 15 Minuten, «alles» nur von Hand (⟳) – die grossen Abfragen lesen sonst zu viele Zeilen aus der Datenbank
+  const everyMs = () => lastRange === 'today' ? 5 * 60 * 1000 : lastRange === 'all' ? 0 : 15 * 60 * 1000;
+  const tick = () => { const e = everyMs(); if (e && started && !document.hidden && Date.now() - lastOk >= e - 2000) load(lastRange, true); };
   setInterval(tick, 30 * 1000);
   document.addEventListener('visibilitychange', tick);
   // Diagramm pro Tag (reines SVG, Balken oder Linie); vals = Werte je Tag des Monats
