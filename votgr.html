@@ -166,6 +166,7 @@ async function gr169(svgText, o) {
 
 /* ---------- Färbt die unkolorierte VeWork-Karte (Algorithmus wie auf der Plattform) ---------- */
 function grColor(cc) {
+  cc = cc.data || cc;
   var COL = ['#045a8d', '#1d6b98', '#367ba4', '#4f8caf', '#689cbb', '#c76676', '#be4d5f', '#b53348', '#ab1a31', '#a2001a'];
   var byBfs = {};
   (cc.records || []).forEach(function (r) { byBfs[r.bfs_number] = r; });
@@ -279,7 +280,7 @@ async function grRun(C) {
       var I = byId[ids[k]], suf = suffixOf(I, L), name = nameOf(I), label = (suf ? suf + ': ' : '') + name;
       try {
         var cc = await getJ('/data/publication/issues/' + I.id + '/counting_circles.json');
-        var svg = cc.map ? grColor(cc) : null;
+        var svg = (cc.data || cc).map ? grColor(cc) : null;
         if (!svg) { say('⏳ ' + esc(label) + ': anc nagins resultats.'); continue; }
         grSave(await gr169(svg, C), I.date + '_' + slug(name) + (suf ? '_' + slug(suf) : '') + '.png');
         say('✅ ' + esc(label));
