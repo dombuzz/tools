@@ -39,13 +39,13 @@ h1 .acc{color:var(--accent)}
 .wrap header{perspective:600px}
 .labbadge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,77,100,.45);border-radius:999px;padding:2px 10px;margin:0 0 0 8px;vertical-align:middle}
 .lead{color:var(--muted);margin:0;font-size:.9rem;max-width:70ch}
-.layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:18px;align-items:start}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);gap:18px;align-items:start}
 .layout>*,.card,.side{min-width:0}
 select{min-width:0;max-width:100%}
 .muni{min-width:0}
 .muni input[type=text]:not(.pct){min-width:0;flex:1 1 0}
-.side{display:flex;flex-direction:column;gap:18px;order:1}
-.preview{order:2;position:sticky;top:16px}
+.side{display:flex;flex-direction:column;gap:18px;order:2}
+.preview{order:1;position:sticky;top:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
 .card h2{margin:0 0 14px;font-size:.95rem;display:flex;gap:10px;align-items:center}
 .num{font-size:.8rem;font-weight:700;background:var(--accent);color:var(--on-accent,#121214);border-radius:50%;width:24px;height:24px;display:inline-grid;place-items:center;flex:none}
