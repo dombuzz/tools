@@ -199,6 +199,7 @@ body[data-mode="pct"] .m-col{display:none!important}
         <label class="sl"><span class="l">Posiziun X</span><input type="range" id="bgX" min="-1" max="1" step="0.01" value="0"></label>
         <label class="sl"><span class="l">Posiziun Y</span><input type="range" id="bgY" min="-1" max="1" step="0.01" value="0"></label>
         <label class="sl"><span class="l">Opacitad</span><input type="range" id="bgOpacity" min="0" max="1" step="0.01" value="1"></label>
+        <label class="sl"><span class="l">Blur</span><input type="range" id="bgBlur" min="0" max="60" step="1" value="0"></label>
         <div class="row"><button class="ghost" id="bgRemove">Allontanar il maletg</button></div>
         <p class="info">Senza maletg resta il funs transparent en il PNG.</p>
       </section>
@@ -220,6 +221,10 @@ body[data-mode="pct"] .m-col{display:none!important}
             <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
               <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/>
             </filter>
+            <filter id="bgBlurF" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2720" height="1880" color-interpolation-filters="sRGB">
+              <feGaussianBlur id="bgBlurStd" stdDeviation="0" edgeMode="duplicate"/>
+            </filter>
+            <clipPath id="cvClip"><rect x="0" y="0" width="1920" height="1080"/></clipPath>
           </defs>
           <g id="bgLayer"></g>
           <g id="mapLayer">
@@ -578,11 +583,18 @@ function renderBg() {
   const w = state.bgW * cover, h = state.bgH * cover;
   const x = (1920 - w) / 2 + parseFloat($('bgX').value) * Math.max(0, (w - 1920) / 2);
   const y = (1080 - h) / 2 + parseFloat($('bgY').value) * Math.max(0, (h - 1080) / 2);
+  const blur = parseFloat($('bgBlur').value);   // Gauss'scher Weichzeichner in px der 1920×1080-Fläche
+  // Bei Blur das Bild minimal vergrössern, damit die weichgezeichneten Ränder ausserhalb der Fläche liegen (kein transparenter Saum)
+  const grow = Math.ceil(blur * 3), k = Math.max((w + 2 * grow) / w, (h + 2 * grow) / h);
+  const iw = w * k, ih = h * k, ix = x - (iw - w) / 2, iy = y - (ih - h) / 2;
   const img = document.createElementNS(SVGNS, 'image');
   img.setAttribute('href', state.bg);
-  img.setAttribute('x', x); img.setAttribute('y', y); img.setAttribute('width', w); img.setAttribute('height', h);
+  img.setAttribute('x', ix); img.setAttribute('y', iy); img.setAttribute('width', iw); img.setAttribute('height', ih);
   img.setAttribute('preserveAspectRatio', 'none');
   img.setAttribute('opacity', $('bgOpacity').value);
+  $('bgBlurStd').setAttribute('stdDeviation', blur);
+  if (blur > 0) img.setAttribute('filter', 'url(#bgBlurF)');
+  bgLayer.setAttribute('clip-path', 'url(#cvClip)');
   bgLayer.appendChild(img);
 }
 $('bgFile').onchange = e => {
@@ -596,7 +608,7 @@ $('bgFile').onchange = e => {
   rd.readAsDataURL(f);
 };
 $('bgRemove').onclick = () => { state.bg = null; $('bgFile').value = ''; renderBg(); };
-['bgZoom','bgX','bgY','bgOpacity'].forEach(id => $(id).oninput = renderBg);
+['bgZoom','bgX','bgY','bgOpacity','bgBlur'].forEach(id => $(id).oninput = renderBg);
 
 /* ---------- Rendern ---------- */
 function render() {
