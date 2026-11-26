@@ -346,7 +346,7 @@
     '/srt2ttml': ['Trair in file SRT en la surfatscha u tutgar per tscherner.', 'Il tool convertescha il file en TTML tenor il model da RTR (sco en Subtitle Edit) e ta dat el per telechargiar.'],
     '/UTstudio': ['«Spustar temps» sposta tut ils suttitels per in temp fix (uras, minutas, secundas u maletgs).', '«Cumparegliar» mussa differenzas tranter dus files (A e B): temps, suttitels che mancan.', '«RM → DE»: «Copiar & avrir ALAS», translatar, copiar il resultat e «Integrar dal clipboard» – il tool reparta il text automaticamain sin ils timecodes.', '«Sincronisar»: cun «⧉ Atgna fanestra» va il video en ina fanestra separada – la glista da text survegn tut la ladezza. Esc = play/pausa, era durant scriver.'],
     '/data': ['Integrar il link d’ina grafica Datawrapper u d’in artitgel RTR cun grafica.', 'Tscherner format, resoluziun e tge che duai esser visibel (titel, descripziun, byline, funtauna).', 'Lura telechargiar sco PNG – per Magazin e Il di è 16:9 il format adattà.'],
-    '/votgr': ['Tscherner la votaziun – las chartas da las vischnancas vegnan chargiadas directamain dad abstimmungen.gr.ch.', 'Telechargiar sco PNG en 4K (16:9). Era per votaziuns futuras, senza tschertgar links.']
+    '/votgr': ['Tscherner la votaziun – las chartas da las vischnancas vegnan chargiadas directamain da VeWork (vework-public.gr.ch).', 'Telechargiar sco PNG en 4K (16:9). Era per votaziuns futuras, senza tschertgar links.']
   };
   var ALIAS = { '/mument': '/social/mument', '/layers': '/maletgs', '/collascha': '/maletgs', '/colurs': '/maletgs', '/rotar': '/maletgs', '/spustar': '/UTstudio', '/cumparegliar': '/UTstudio', '/subs': '/UTstudio', '/studio': '/UTstudio' };
   function mount() {

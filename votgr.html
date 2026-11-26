@@ -8,11 +8,11 @@
 <script>if(/[?&]embed\b/.test(location.search))document.documentElement.classList.add("embed")</script>
 <script src="/motion.js" defer></script>
 <meta name="robots" content="noindex">
-<meta name="description" content="Chartas da las vischnancas dad abstimmungen.gr.ch sco PNG en 4K (16:9) – per mintga votaziun, era per las futuras. Nagins links necessaris.">
+<meta name="description" content="Chartas da las vischnancas da VeWork (vework-public.gr.ch) sco PNG en 4K (16:9) – per mintga votaziun, era per las futuras. Nagins links necessaris.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="dombuzz Tools">
 <meta property="og:title" content="Chartas da votaziun 16:9">
-<meta property="og:description" content="Chartas da las vischnancas dad abstimmungen.gr.ch sco PNG en 4K (16:9) – per mintga votaziun, era per las futuras. Nagins links necessaris.">
+<meta property="og:description" content="Chartas da las vischnancas da VeWork (vework-public.gr.ch) sco PNG en 4K (16:9) – per mintga votaziun, era per las futuras. Nagins links necessaris.">
 <meta property="og:url" content="https://tools.dombuzz.ch/votgr">
 <meta property="og:image" content="https://tools.dombuzz.ch/og-hexagon.png">
 <meta property="og:image:width" content="1200">
@@ -72,7 +72,7 @@ h1 .acc{color:var(--acc)}
 <main>
   <a class="homelink" href="/">← Tools</a>
   <h1>Chartas da votaziun <span class="acc">16:9</span></h1>
-  <p class="sub">Chartas da las vischnancas dad abstimmungen.gr.ch sco PNG en 4K (16:9) – per mintga votaziun, era per las futuras. Nagins links necessaris.</p>
+  <p class="sub">Chartas da las vischnancas da VeWork (vework-public.gr.ch) sco PNG en 4K (16:9) – per mintga votaziun, era per las futuras. Nagins links necessaris.</p>
 
   <button id="gear" type="button" aria-label="Parameters" title="Parameters" aria-expanded="false">⚙</button>
   <section class="card" id="settings" hidden>
@@ -90,21 +90,21 @@ h1 .acc{color:var(--acc)}
     <p><a class="bm" id="bm" href="#" title="Trair en la trav da segnapaginas">⬇ Chartas GR 16:9</a></p>
     <ol>
       <li><b>Trair ina giada il buttun cotschen en la trav da segnapaginas</b> (mussar la trav: Cmd/Ctrl + Shift + B).</li>
-      <li><a href="https://abstimmungen.gr.ch/" target="_blank" rel="noopener">abstimmungen.gr.ch</a> avrir e cliccar sin il segnapagina.</li>
+      <li><a href="https://vework-public.gr.ch/app/publication/de" target="_blank" rel="noopener">vework-public.gr.ch</a> avrir e cliccar sin il segnapagina.</li>
     </ol>
-    <p style="margin-bottom:4px">Cun il clic s'avra sin la pagina dal chantun ina selecziun:</p>
+    <p style="margin-bottom:4px">Cun il clic s'avra sin la pagina dal chantun (VeWork) ina selecziun:</p>
     <table>
-      <tr><td>Tscherner l'onn</td><td>tut ils onns che il chantun maina en l'archiv (enavos fin il 2013)</td></tr>
+      <tr><td>Tscherner l'onn</td><td>tut ils onns che VeWork mussa (enavos fin il 2020)</td></tr>
       <tr><td>Marcar il di da votaziun / ils projects</td><td>dumengia entira u projects singuls – tants sco giavischà, era sur pliras datas</td></tr>
-      <tr><td>Preselecziun</td><td>pagina iniziala → la dumengia la pli actuala · pagina da l'archiv → questa data · pagina dal project → mo quest project</td></tr>
+      <tr><td>Preselecziun</td><td>pagina iniziala → la dumengia la pli actuala · pagina da la dumengia → questa data · pagina dal project → mo quest project</td></tr>
     </table>
-    <p style="margin-bottom:0"><small>La glista vegn dumandada live tar il chantun tar mintga clic – novas votaziuns cumparan automaticamain, i na sto vegnir adattà nagut. Cuntraproposta/dumonda decisiva survegnan mintgamai ina atgna charta. Sch'i vegn annunzià «anc betg creà», generescha il chantun anc la charta – spetgar intgins minutas. Elecziuns da persunas n'èn betg cuntegnidas.</small></p>
+    <p style="margin-bottom:0"><small>La glista vegn dumandada live tar il chantun tar mintga clic – novas votaziuns cumparan automaticamain, i na sto vegnir adattà nagut. Cuntraproposta/dumonda decisiva survegnan mintgamai ina atgna charta. Las vischnancas anc betg dumbradas vegnan mussadas sco surfaza strihada. Sch'i vegn annunzià «anc nagins resultats», n'èn anc naginas vuschs avant maun. Elecziuns da persunas n'èn betg cuntegnidas.</small></p>
   </section>
 
   <section class="card">
-    <h2>2 · Alternativa: trair qua ils files SVG</h2>
-    <p style="margin-top:0">Sch'il segnapagina na funcziuna ina giada betg: avrir la charta SVG, memorisar cun Cmd/Ctrl + S e la deponer qua.</p>
-    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner files SVG"><b>Trair qua ils files SVG</b><small>u cliccar per tscherner</small><input type="file" id="file" accept=".svg,image/svg+xml" multiple hidden></div>
+    <h2>2 · Alternativa: trair qua ils files JSON</h2>
+    <p style="margin-top:0">Sch'il segnapagina na funcziuna ina giada betg: avrir sin vework-public.gr.ch il file <code>/data/publication/issues/&lt;ID&gt;/counting_circles.json</code>, memorisar cun Cmd/Ctrl + S e la deponer qua (era files SVG èn pussaivels).</p>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Tscherner files JSON u SVG"><b>Trair qua ils files JSON u SVG</b><small>u cliccar per tscherner</small><input type="file" id="file" accept=".json,.svg,application/json,image/svg+xml" multiple hidden></div>
     <div id="log"></div>
     <div class="grid" id="out"></div>
   </section>
@@ -164,13 +164,45 @@ async function gr169(svgText, o) {
   return await new Promise(function (res) { c.toBlob(res, 'image/png'); });
 }
 
+/* ---------- Färbt die unkolorierte VeWork-Karte (Algorithmus wie auf der Plattform) ---------- */
+function grColor(cc) {
+  var COL = ['#045a8d', '#1d6b98', '#367ba4', '#4f8caf', '#689cbb', '#c76676', '#be4d5f', '#b53348', '#ab1a31', '#a2001a'];
+  var byBfs = {};
+  (cc.records || []).forEach(function (r) { byBfs[r.bfs_number] = r; });
+  var doc = new DOMParser().parseFromString(cc.map, 'image/svg+xml'), svg = doc.documentElement, NS = 'http://www.w3.org/2000/svg';
+  var defs = doc.createElementNS(NS, 'defs');
+  COL.forEach(function (c, i) {
+    var pt = doc.createElementNS(NS, 'pattern');
+    pt.setAttribute('id', 'hatched' + i); pt.setAttribute('patternUnits', 'userSpaceOnUse'); pt.setAttribute('width', 10); pt.setAttribute('height', 10);
+    var rc = doc.createElementNS(NS, 'rect'); rc.setAttribute('width', 10); rc.setAttribute('height', 10); rc.setAttribute('fill', c);
+    var pa = doc.createElementNS(NS, 'path'); pa.setAttribute('d', 'M-1,1 l5,-5 M0,10 l10,-10 M9,11 l5,-5'); pa.setAttribute('stroke', '#fff'); pa.setAttribute('stroke-width', 1);
+    pt.appendChild(rc); pt.appendChild(pa); defs.appendChild(pt);
+  });
+  svg.insertBefore(defs, svg.firstChild);
+  var n = 0;
+  Array.prototype.forEach.call(svg.querySelectorAll('path[id^="region_"]'), function (el) {
+    var rec = byBfs[el.id.replace('region_', '')];
+    var pc = rec && rec.results && rec.results.poll_data ? rec.results.poll_data.yes_votes_percentage : null;
+    var fill = '#dbdbdb';
+    if (pc != null && !isNaN(pc)) {
+      var i = pc === 50 ? 5 : Math.ceil(10 - pc / 100 * 10) - 1;
+      i = Math.max(0, Math.min(9, i));
+      fill = rec.finished ? COL[i] : 'url(#hatched' + i + ')';
+      n++;
+    }
+    el.setAttribute('fill', fill);
+  });
+  if (!n) return null;
+  return new XMLSerializer().serializeToString(svg);
+}
+
 function grSave(blob, name) {
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
 }
 
-/* ---------- Läuft im Lesezeichen auf abstimmungen.gr.ch ---------- */
+/* ---------- Läuft im Lesezeichen auf vework-public.gr.ch ---------- */
 async function grRun(C) {
   var old = document.getElementById('gr169box'); if (old) old.remove();
   var box = document.createElement('div'); box.id = 'gr169box'; document.body.appendChild(box);
@@ -180,47 +212,55 @@ async function grRun(C) {
   box.querySelector('#grX').onclick = function () { box.remove(); };
   var body = box.querySelector('#grBody'), logEl = box.querySelector('#grLog');
   var say = function (t) { logEl.innerHTML += t + '<br>'; logEl.scrollIntoView({ block: 'end' }); };
-  if (!/(^|\.)abstimmungen\.gr\.ch$/.test(location.hostname)) {
-    body.innerHTML = 'Per plaschair avrir l\'emprim abstimmungen.gr.ch e lura cliccar anc ina giada …';
-    setTimeout(function () { location.href = 'https://abstimmungen.gr.ch/'; }, 2500); return;
+  if (location.hostname !== 'vework-public.gr.ch') {
+    body.innerHTML = 'Per plaschair avrir l\'emprim vework-public.gr.ch e lura cliccar anc ina giada …';
+    setTimeout(function () { location.href = 'https://vework-public.gr.ch/app/publication/de'; }, 2500); return;
   }
   var getJ = function (u) { return fetch(u, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
   var slug = function (s) { return (s || '').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/[àâ]/g, 'a').replace(/[èéê]/g, 'e').replace(/[ìî]/g, 'i').replace(/[òô]/g, 'o').replace(/[ùû]/g, 'u').replace(/[^A-Za-z0-9]+/g, '').slice(0, 60) || 'Karte'; };
-  var tr = function (o) { return o ? (o[C.lang] || o.de_CH || o[Object.keys(o)[0]]) : ''; };
-  var pathOf = function (u) { return new URL(u, location.origin).pathname; };
+  var L = (C.lang || 'rm').slice(0, 2);
+  var tr = function (o) { return o ? (o[L] || o.rm || o.de || o[Object.keys(o)[0]]) : ''; };
   var fmt = function (d) { var p = d.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; };
+  var LBL = { alternative_draft: { rm: 'Cuntraproposta', de: 'Gegenvorschlag' }, tie_break: { rm: 'Dumonda decisiva', de: 'Stichfrage' } };
 
-  /* Kontext: auf welcher Seite wurde geklickt? */
-  var p = location.pathname, m, ctxVote = null, ctxDate = null;
-  if ((m = p.match(/^\/vote\/([^\/]+)/))) ctxVote = '/vote/' + m[1];
-  if ((m = p.match(/^\/archive\/(\d{4}-\d{2}-\d{2})/))) ctxDate = m[1];
-  var idx;
-  try { idx = await getJ('/json'); } catch (e) { body.innerHTML = '❌ Survista betg legibla: ' + esc(e.message); return; }
-  var latest = (idx.results || []).filter(function (r) { return r.type === 'vote'; }).map(function (r) { return r.date; }).sort().pop();
-  if (ctxVote) { try { ctxDate = (await getJ(ctxVote + '/json')).date; } catch (e) {} }
-  var selDate = ctxDate || latest || '';
-  var years = Object.keys(idx.archive || {}).sort().reverse();
-  if (selDate && years.indexOf(selDate.slice(0, 4)) < 0) years.unshift(selDate.slice(0, 4));
+  var PD;
+  try { PD = (await getJ('/data/publication/polling_days.json')).data; } catch (e) { body.innerHTML = '❌ Survista betg legibla: ' + esc(e.message); return; }
+  var isPoll = function (i) { return i.type === 'poll_simple' || i.type === 'poll_complex'; };
+  var days = PD.filter(function (d) { return d.issues.some(isPoll); }).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+  if (!days.length) { body.innerHTML = 'Naginas votaziuns chattadas.'; return; }
+  var byId = {}; PD.forEach(function (d) { d.issues.forEach(function (i) { byId[i.id] = i; }); });
+  var grp = function (i) { return i.poll_info && i.poll_info.main_poll_id ? i.poll_info.main_poll_id : i.id; };
+  /* Name: bei Vorlagen mit Gegenvorschlag ist short_title oft nur «Initiative» → dann der lange Titel */
+  var nameOf = function (i) {
+    var m = byId[grp(i)] || i, s = tr(m.short_title), t = tr(m.title);
+    return (m.type === 'poll_complex' && t) ? t : (s || t);
+  };
+  var suffixOf = function (i, lang) { var st = i.poll_info && i.poll_info.subtype; return LBL[st] ? LBL[st][lang] : ''; };
+
+  /* Kontext: Datum und Vorlage aus der URL (/app/publication/de/2026-09-27/e1/countingCircles) */
+  var m = location.pathname.match(/\/(\d{4}-\d{2}-\d{2})(?:\/([^\/]+))?/);
+  var selDate = m ? m[1] : days[0].date, selFid = m && m[2] && m[2] !== 'issues' ? m[2] : null;
+  if (!days.some(function (d) { return d.date === selDate; })) selDate = days[0].date;
+  var selGrp = null;
+  if (selFid) { var hit = (days.filter(function (d) { return d.date === selDate; })[0] || { issues: [] }).issues.filter(function (i) { return i.frontend_id === selFid; })[0]; if (hit) selGrp = grp(hit); }
+
+  var years = []; days.forEach(function (d) { var y = d.date.slice(0, 4); if (years.indexOf(y) < 0) years.push(y); });
   var sel = 'background:#2a2a2e;color:#fff;border:1px solid #444;color-scheme:dark;border-radius:6px;padding:5px 8px;font:inherit';
   body.innerHTML = '<label>Onn <select id="grY" style="' + sel + '">' + years.map(function (y) { return '<option>' + y + '</option>'; }).join('') + '</select></label>' +
     '<div id="grList" style="margin:10px 0;max-height:52vh;overflow:auto;border-top:1px solid #444;border-bottom:1px solid #444;padding:6px 0"></div>' +
     '<button id="grGo" style="background:#c00018;color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:700;cursor:pointer">Telechargiar las tschernidas</button>';
   var ySel = body.querySelector('#grY'), list = body.querySelector('#grList');
-  if (selDate) ySel.value = selDate.slice(0, 4);
+  ySel.value = selDate.slice(0, 4);
 
-  async function loadYear(y) {
-    list.innerHTML = 'Chargel ' + y + ' …';
-    var L; try { L = await getJ('/archive/' + y + '/json'); } catch (e) { list.innerHTML = '❌ ' + esc(e.message); return; }
-    var byDate = {};
-    (L.results || []).filter(function (r) { return r.type === 'vote'; }).forEach(function (r) { (byDate[r.date] = byDate[r.date] || []).push(r); });
-    var dates = Object.keys(byDate).sort().reverse();
-    if (!dates.length) { list.innerHTML = 'Naginas votaziuns en il ' + y + '.'; return; }
-    list.innerHTML = dates.map(function (d) {
-      var on = d === selDate;
-      return '<details ' + (on ? 'open' : '') + ' style="margin:2px 0"><summary style="cursor:pointer;padding:3px 0"><label><input type="checkbox" class="grD" ' + (on && !ctxVote ? 'checked' : '') + '> <b>' + fmt(d) + '</b> <span style="opacity:.6">(' + byDate[d].length + ')</span></label></summary>' +
-        byDate[d].map(function (r) {
-          var u = pathOf(r.url), chk = on && (!ctxVote || ctxVote === u);
-          return '<label style="display:block;padding:2px 0 2px 22px"><input type="checkbox" class="grV" data-u="' + esc(u) + '" ' + (chk ? 'checked' : '') + '> ' + esc(tr(r.title)) + '</label>';
+  function loadYear(y) {
+    var ds = days.filter(function (d) { return d.date.slice(0, 4) === y; });
+    list.innerHTML = ds.map(function (d) {
+      var on = d.date === selDate, polls = d.issues.filter(isPoll).sort(function (a, b) { return (a.sort_key || 0) - (b.sort_key || 0) || a.id - b.id; });
+      return '<details ' + (on ? 'open' : '') + ' style="margin:2px 0"><summary style="cursor:pointer;padding:3px 0"><label><input type="checkbox" class="grD" ' + (on && !selGrp ? 'checked' : '') + '> <b>' + fmt(d.date) + '</b> <span style="opacity:.6">(' + polls.length + ')</span></label></summary>' +
+        polls.map(function (i) {
+          var chk = on && (!selGrp || selGrp === grp(i)), suf = suffixOf(i, L);
+          var lbl = (suf ? '<span style="opacity:.7">' + esc(suf) + ' · </span>' : '') + esc(suf ? nameOf(i) : (i.type === 'poll_complex' ? nameOf(i) : (tr(i.short_title) || nameOf(i))));
+          return '<label style="display:block;padding:2px 0 2px 22px"><input type="checkbox" class="grV" data-id="' + i.id + '" ' + (chk ? 'checked' : '') + '> ' + lbl + '</label>';
         }).join('') + '</details>';
     }).join('');
     list.querySelectorAll('.grD').forEach(function (cb) {
@@ -228,39 +268,23 @@ async function grRun(C) {
     });
   }
   ySel.onchange = function () { loadYear(ySel.value); };
-  await loadYear(ySel.value);
+  loadYear(ySel.value);
 
   body.querySelector('#grGo').onclick = async function () {
-    var votes = Array.prototype.map.call(list.querySelectorAll('.grV:checked'), function (v) { return v.getAttribute('data-u'); });
+    var ids = Array.prototype.map.call(list.querySelectorAll('.grV:checked'), function (v) { return +v.getAttribute('data-id'); });
     logEl.innerHTML = '';
-    if (!votes.length) { say('Per plaschair marcar almain in project.'); return; }
+    if (!ids.length) { say('Per plaschair marcar almain in project.'); return; }
     var btn = this; btn.disabled = true; btn.style.opacity = .5;
-    var LBL = { 'proposal': 'Vorlage', 'counter-proposal': 'Gegenvorschlag', 'tie-breaker': 'Stichfrage' };
-    for (var i = 0; i < votes.length; i++) {
-      var V, name;
-      try { V = await getJ(votes[i] + '/json'); } catch (e) { say('❌ ' + esc(votes[i]) + ': ' + esc(e.message)); continue; }
-      name = tr(V.short_title) || tr(V.title) || votes[i].split('/').pop();
-      var found = [];
-      (function walk(o, path) {
-        if (!o) return;
-        if (typeof o === 'string') { if (/entities-map-svg/.test(o) || (C.districts && /districts-map-svg/.test(o))) found.push({ url: o, path: path }); return; }
-        if (typeof o === 'object') Object.keys(o).forEach(function (k) { walk(o[k], path.concat(k)); });
-      })((V.media || {}).maps, []);
-      if (!found.length) { say('⏳ ' + esc(name) + ': anc nagina charta disponibla.'); continue; }
-      for (var j = 0; j < found.length; j++) {
-        var f = found[j];
-        var extra = f.path.map(function (k) { return k.replace(/-?(entities|districts)$/, ''); }).filter(function (k) { return k && !/^\d+$/.test(k); }).map(function (k) { return LBL[k] || k; }).join('-');
-        var suf = (extra ? '_' + slug(extra) : '') + (/districts/.test(f.url) ? '_Regionen' : '');
-        var label = name + (suf ? ' (' + suf.replace(/^_/, '').replace(/_/g, ', ') + ')' : '');
-        try {
-          var r = await fetch(pathOf(f.url), { cache: 'no-store' });
-          var t = await r.text();
-          if (r.status !== 200 || !((r.headers.get('content-type') || '').indexOf('svg') >= 0 || /^\s*(<\?xml|<svg)/.test(t))) { say('⏳ ' + esc(label) + ': anc betg creà – pli tard anc ina giada.'); continue; }
-          grSave(await gr169(t, C), (V.date || '') + '_' + slug(name) + suf + '_16x9.png');
-          say('✅ ' + esc(label));
-          await new Promise(function (z) { setTimeout(z, 500); });
-        } catch (e) { say('❌ ' + esc(label) + ': ' + esc(e.message)); }
-      }
+    for (var k = 0; k < ids.length; k++) {
+      var I = byId[ids[k]], suf = suffixOf(I, L), name = nameOf(I), label = (suf ? suf + ': ' : '') + name;
+      try {
+        var cc = await getJ('/data/publication/issues/' + I.id + '/counting_circles.json');
+        var svg = cc.map ? grColor(cc) : null;
+        if (!svg) { say('⏳ ' + esc(label) + ': anc nagins resultats.'); continue; }
+        grSave(await gr169(svg, C), I.date + '_' + slug(name) + (suf ? '_' + slug(suf) : '') + '.png');
+        say('✅ ' + esc(label));
+        await new Promise(function (z) { setTimeout(z, 500); });
+      } catch (e) { say('❌ ' + esc(label) + ': ' + esc(e.message)); }
     }
     say('<span style="opacity:.6">Fatg.</span>');
     btn.disabled = false; btn.style.opacity = 1;
@@ -273,7 +297,7 @@ function cfg() {
   return { noLegend: true, districts: false, lang: $('lang').value, pad: +$('pad').value || 0, w: +$('w').value || 1920 };
 }
 function buildBookmarklet() {
-  var code = '(function(){' + gr169.toString() + grSave.toString() + grRun.toString() + 'grRun(' + JSON.stringify(cfg()) + ');})();';
+  var code = '(function(){' + gr169.toString() + grColor.toString() + grSave.toString() + grRun.toString() + 'grRun(' + JSON.stringify(cfg()) + ');})();';
   $('bm').href = 'javascript:' + encodeURIComponent(code);
 }
 $('gear').onclick = function () { var s = $('settings'); s.hidden = !s.hidden; this.setAttribute('aria-expanded', String(!s.hidden)); };
@@ -299,7 +323,9 @@ file.onchange = function () { files(file.files); file.value = ''; };
 async function files(list) {
   for (var f of list) {
     try {
-      var name = f.name.replace(/\.svg$/i, '') + '_16x9.png', blob = await gr169(await f.text(), cfg());
+      var name = f.name.replace(/\.(svg|json)$/i, '') + '.png', txt = await f.text(), svg = /\.json$/i.test(f.name) ? grColor(JSON.parse(txt)) : txt;
+      if (!svg) throw new Error('anc nagins resultats');
+      var blob = await gr169(svg, cfg());
       show(blob, name); grSave(blob, name); log('✅ ' + name);
     } catch (e) { log('❌ ' + f.name + ': ' + e.message); }
   }
