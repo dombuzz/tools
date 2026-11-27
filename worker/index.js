@@ -68,8 +68,10 @@ const merge = rows => Object.values(rows.filter(r => !NO_STATS.has(r.tool)).redu
 }, {}));
 
 // Tabelle für Seitenaufrufe bei Bedarf anlegen (einmal pro Worker-Start)
-let viewsReady;
-const ensureViews = env => viewsReady ||= env.DB.batch([
+let viewsReady = false; // nur ein Flag, kein Promise: Promises dürfen nicht über Anfragen hinweg geteilt werden
+const ensureViews = async env => {
+  if (viewsReady) return;
+  await env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS views (tool TEXT NOT NULL, ts TEXT NOT NULL)'),
   env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
   env.DB.prepare('CREATE TABLE IF NOT EXISTS favs (tool TEXT NOT NULL, ts TEXT NOT NULL, cid TEXT, added INTEGER NOT NULL)'), // ☆ gesetzt (1) / entfernt (0)
@@ -80,13 +82,15 @@ const ensureViews = env => viewsReady ||= env.DB.batch([
   env.DB.prepare('CREATE INDEX IF NOT EXISTS favs_ts ON favs (ts)'),
   env.DB.prepare('CREATE TABLE IF NOT EXISTS usage (day TEXT PRIMARY KEY, r INTEGER NOT NULL DEFAULT 0, w INTEGER NOT NULL DEFAULT 0)'), // gelesene/geschriebene Zeilen pro Tag (UTC)
   env.DB.prepare('CREATE TABLE IF NOT EXISTS cache (k TEXT PRIMARY KEY, ts INTEGER NOT NULL, body TEXT NOT NULL)'), // Zwischenspeicher für /ranking und /hourly
-]).then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {})) // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
-  .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN tone TEXT').run().catch(() => {})) // Spalte «tone» (soft|normal): Sättigung reduziert?
-  .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN shader TEXT').run().catch(() => {})) // Spalte «shader» (soA|soT|labA|off): Hintergrund-Shader auf der Social-Seite
-  .then(() => env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {})) // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
-  .then(() => env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {})) // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
-  .then(() => env.DB.prepare('ALTER TABLE favs ADD COLUMN sync INTEGER').run().catch(() => {})) // 1 = beim Abgleich nachgetragen (zählt für «aktuell», nicht als «im Zeitraum gesetzt»)
-  .catch(e => { viewsReady = null; throw e; });
+  ]);
+  await env.DB.prepare('ALTER TABLE views ADD COLUMN theme TEXT').run().catch(() => {}); // Spalte «theme» (light|dark) nachrüsten; Fehler = schon vorhanden
+  await env.DB.prepare('ALTER TABLE views ADD COLUMN tone TEXT').run().catch(() => {}); // Spalte «tone» (soft|normal): Sättigung reduziert?
+  await env.DB.prepare('ALTER TABLE views ADD COLUMN shader TEXT').run().catch(() => {}); // Spalte «shader» (soA|soT|labA|off): Hintergrund-Shader auf der Social-Seite
+  await env.DB.prepare('ALTER TABLE views ADD COLUMN cid TEXT').run().catch(() => {}); // Spalte «cid» (anonyme Besucher-Kennung) nachrüsten
+  await env.DB.prepare('ALTER TABLE uses ADD COLUMN cid TEXT').run().catch(() => {}); // auch bei den Nutzungen (für «Nutzungen pro Besucher»)
+  await env.DB.prepare('ALTER TABLE favs ADD COLUMN sync INTEGER').run().catch(() => {}); // 1 = beim Abgleich nachgetragen (zählt für «aktuell», nicht als «im Zeitraum gesetzt»)
+  viewsReady = true;
+};
 
 function cors(request) {
   const origin = request.headers.get('Origin') || '';
@@ -268,14 +272,18 @@ async function cached(request, env, parts, url, compute) {
 // Formular «Propostas, giavischs, critica?» unten in den Tools (like.js). Nicht in Statistiken.
 // Lesen/Löschen nur mit Passwort: Secret FEEDBACK_PASSWORD (Cloudflare → Worker → Settings → Variables and Secrets).
 // Hinweis bei neuem Feedback: Teams (Secret TEAMS_WEBHOOK_URL) und/oder Mail über Resend (Secret RESEND_API_KEY) – Cloudflare → Worker → Settings → Variables and Secrets.
-let fbReady;
-const ensureFeedback = env => fbReady ||= env.DB.batch([
+let fbReady = false;
+const ensureFeedback = async env => {
+  if (fbReady) return;
+  await env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, tool TEXT NOT NULL, name TEXT, text TEXT NOT NULL, iph TEXT)'),
   env.DB.prepare('CREATE INDEX IF NOT EXISTS feedback_ts ON feedback (ts)'),
-]).then(() => env.DB.prepare("ALTER TABLE feedback ADD COLUMN status TEXT NOT NULL DEFAULT 'nov'").run().catch(() => {})) // Status: nov | lavur | liquida | stizza
-  .then(() => env.DB.prepare('ALTER TABLE feedback ADD COLUMN page TEXT').run().catch(() => {})) // Seite + offener Tab beim Absenden, z. B. /social#novitad
-  .then(() => env.DB.prepare('ALTER TABLE feedback ADD COLUMN note TEXT').run().catch(() => {})) // eigene Notiz zum Eintrag (nur in /feedback sichtbar)
-  .catch(e => { fbReady = null; throw e; });
+  ]);
+  await env.DB.prepare("ALTER TABLE feedback ADD COLUMN status TEXT NOT NULL DEFAULT 'nov'").run().catch(() => {}); // Status: nov | lavur | liquida | stizza
+  await env.DB.prepare('ALTER TABLE feedback ADD COLUMN page TEXT').run().catch(() => {}); // Seite + offener Tab beim Absenden, z. B. /social#novitad
+  await env.DB.prepare('ALTER TABLE feedback ADD COLUMN note TEXT').run().catch(() => {}); // eigene Notiz zum Eintrag (nur in /feedback sichtbar)
+  fbReady = true;
+};
 const FB_STATUS = ['nov', 'lavur', 'liquida', 'stizza'];
 async function sha256(s) {
   const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
